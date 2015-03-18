@@ -1,6 +1,6 @@
 pragma Ada_2012;
 
-package body Conts.Lists is
+package body Conts.Lists_Impl is
    pragma Suppress (All_Checks);
 
    ------------
@@ -26,7 +26,27 @@ package body Conts.Lists is
          N.Previous := Self.Tail;
          Self.Tail := N;
       end if;
+
+      Self.Size := Self.Size + 1;
    end Append;
+
+   ------------
+   -- Length --
+   ------------
+
+   function Length (Self : List) return Count_Type is
+   begin
+      return Self.Size;
+   end Length;
+
+   --------------
+   -- Capacity --
+   --------------
+
+   function Capacity (Self : List) return Count_Type is
+   begin
+      return Count_Type'Last;
+   end Capacity;
 
    -----------
    -- First --
@@ -75,4 +95,28 @@ package body Conts.Lists is
       end if;
    end Next;
 
-end Conts.Lists;
+   ----------
+   -- Next --
+   ----------
+
+   procedure Next (Self : List; Position : in out Cursor) is
+   begin
+      Position := Next (Self, Position);
+   end Next;
+
+   function Native_Count_If_Greater_Than
+      (Self : List; E2 : Element_Type) return Natural
+   is
+      N : Node_Access := Self.Head;
+      Count : Natural := 0;
+   begin
+      while N /= null loop
+         if N.Element > E2 then
+            Count := Count + 1;
+         end if;
+         N := N.Next;
+      end loop;
+      return Count;
+   end Native_Count_If_Greater_Than;
+
+end Conts.Lists_Impl;

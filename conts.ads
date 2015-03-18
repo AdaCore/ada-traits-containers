@@ -1,5 +1,7 @@
 package Conts is
 
+   subtype Count_Type is Natural;
+
    generic
       type Container (<>) is limited private;
       type Cursor is private;

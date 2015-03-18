@@ -21,12 +21,13 @@ begin
          (Element_Type   => Integer,
           Enable_Asserts => True);
       use Conts_Int_Lists;
-      package Forward_Cursors is new Conts.Forward_Cursors_Traits
-        (Container    => Conts_Int_Lists.List,
-         Cursor       => Conts_Int_Lists.Cursor,
-         Element_Type => Integer);
+      --package Forward_Cursors is new Conts.Forward_Cursors_Traits
+      --  (Container    => Conts_Int_Lists.List,
+      --   Cursor       => Conts_Int_Lists.Cursor,
+      --   Element_Type => Integer);
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Forward_Cursors);
+      function Native is new Conts_Int_Lists.Lists.Native_Count_If_Greater_Than;
       V2 : Conts_Int_Lists.List;
       It : Conts_Int_Lists.Cursor;
    begin
@@ -74,6 +75,15 @@ begin
       end loop;
       D := Clock - Start;
       Ada.Text_IO.Put_Line ("Conts.Lists.List, Count with count_if = "
+         & Co'Img & " => " & D'Img);
+
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         Co := Co + Native (V2, 3);
+      end loop;
+      D := Clock - Start;
+      Ada.Text_IO.Put_Line ("Conts.Lists.List, Count using private field = "
          & Co'Img & " => " & D'Img);
    end;
 
