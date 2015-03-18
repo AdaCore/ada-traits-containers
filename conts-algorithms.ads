@@ -6,5 +6,6 @@ package Conts.Algorithms is
       (Self      : Cursors.Container;
        Predicate : access function (E : Cursors.Element_Type) return Boolean)
       return Natural;
+   --  Should we have a version that takes a 'From:Cursor' parameter ?
 
 end Conts.Algorithms;

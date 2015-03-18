@@ -6,6 +6,7 @@ package Conts is
       type Container (<>) is limited private;
       type Cursor is private;
       type Element_Type (<>) is private;
+      No_Element : Cursor;
       with function First (Self : Container) return Cursor is <>;
       with function Element (Self : Container; Position : Cursor)
          return Element_Type is <>;

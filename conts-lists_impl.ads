@@ -8,10 +8,6 @@ generic
    --  If True, extra asserts are added to the code. Apart from them, this
    --  code runs with all compiler checks disabled.
 
-   Bounded : Boolean := False;
-   --  Whether the container should be bounded (maximum capacity but no memory
-   --  allocation) or not.
-
 package Conts.Lists_Impl is
    pragma Suppress (All_Checks);
 

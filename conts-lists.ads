@@ -36,5 +36,6 @@ package Conts.Lists is
    package Forward_Cursors is new Forward_Cursors_Traits
       (Container    => List,
        Cursor       => Cursor,
-       Element_Type => Element_Type);
+       Element_Type => Element_Type,
+       No_Element   => No_Element);
 end Conts.Lists;

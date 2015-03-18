@@ -1,198 +1,212 @@
+with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Calendar;       use Ada.Calendar;
+with Ada.Text_IO;        use Ada.Text_IO;
+with Conts.Lists;
+with Conts.Algorithms;
+with Conts.Adaptors;     use Conts.Adaptors;
+with Taggeds;
+
 package body Perf_Support is
 
-   -------------------
-   -- Generic_Count --
-   -------------------
-
-   function Generic_Count
-      (Start : Cursors.Cursor; F : Predicate.Obj'Class) return Natural
-   is
-      C : Natural := 0;
-      S : Cursors.Cursor := Start;
-   begin
-      while Cursors.Has_Element (S) loop
-         if F.Call (Cursors.Element (S)) then
-            C := C + 1;
-         end if;
-         Cursors.Next (S);
-      end loop;
-      return C;
-   end Generic_Count;
-
-   -----------
-   -- Count --
-   -----------
-
-   function Count
-      (L : Integer_Lists.List;
-       Predicate : access function (P : Integer) return Boolean)
-      return Natural
-   is
-      use Integer_Lists;
-      C : Natural := 0;
-      S : Integer_Lists.Cursor := L.First;
-   begin
-      while Has_Element (S) loop
-         if Predicate (Element (S)) then
-            C := C + 1;
-         end if;
-         Next (S);
-      end loop;
-      return C;
-   end Count;
-
-   -----------------------------
-   -- Count_With_Generic_Func --
-   -----------------------------
-
-   function Count_With_Generic_Func
-      (L : Mylists.My_Integer_Lists.List) return Natural
-   is
-      use Mylists.My_Integer_Lists;
-      C : Natural := 0;
-      S : Cursor := L.First;
-   begin
-      while Has_Element (S) loop
-         if Predicate (Element (S)) then
-            C := C + 1;
-         end if;
-         Next (S);
-      end loop;
-      return C;
-   end Count_With_Generic_Func;
+   function Greater_Than_3 (P : Integer) return Boolean is (P > 3)
+      with Inline => True;
 
    ----------------------
-   -- Count_With_Equal --
+   -- Test_Conts_Lists --
    ----------------------
 
-   function Count_With_Equal
-      (L : Integer_Lists.List;
-       Predicate : access function (P : Integer) return Boolean)
-      return Natural
-   is
-      use Integer_Lists;
-      C : Natural := 0;
-      S : Integer_Lists.Cursor := L.First;
+   procedure Test_Conts_Lists is
+      package Conts_Int_Lists is new Conts.Lists
+         (Element_Type   => Integer,
+          Enable_Asserts => True);
+      use Conts_Int_Lists;
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Forward_Cursors);
+      function Native is new Conts_Int_Lists.Lists.Native_Count_If_Greater_Than;
+
+      V2 : Conts_Int_Lists.List;
+      It : Conts_Int_Lists.Cursor;
+      Start : Time;
+      D     : Duration;
+      Co    : Natural;
    begin
-      while S /= No_Element loop
-         if Predicate (Element (S)) then
-            C := C + 1;
-         end if;
-         Next (S);
+      Start := Clock;
+      for C in 1 .. Items_Count loop
+         V2.Append (2);
       end loop;
-      return C;
-   end Count_With_Equal;
+      V2.Append (5);
+      V2.Append (6);
+      D := Clock - Start;
+      Ada.Text_IO.Put_Line ("Conts.Lists.List, Fill => " & D'Img);
 
-   ------------------------
-   -- Count_Separate_Pkg --
-   ------------------------
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         It := V2.First;
+         while V2.Has_Element (It) loop
+            if V2.Element (It) > 3 then
+               Co := Co + 1;
+            end if;
+            It := V2.Next (It);
+         end loop;
+      end loop;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Conts.Lists.List, Count with explicit loop => "
+         & D'Img);
 
-   function Count_Separate_Pkg
-      (L : Mylists.My_Integer_Lists.List;
-       Predicate : access function (P : Integer) return Boolean)
-      return Natural
-   is
-      use Mylists.My_Integer_Lists;
-      C : Natural := 0;
-      S : Cursor := L.First;
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         for E of V2 loop
+            if E > 3 then
+               Co := Co + 1;
+            end if;
+         end loop;
+      end loop;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Conts.Lists.List, Count with for..of loop => "
+         & D'Img);
+
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         Co := Co + Count_If (V2, Greater_Than_3'Access);
+      end loop;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Conts.Lists.List, Count with count_if => "
+          & D'Img);
+
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         Co := Co + Native (V2, 3);
+      end loop;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Conts.Lists.List, Count using private field => "
+         & D'Img);
+   end Test_Conts_Lists;
+
+   ------------------
+   -- Test_Ada2012 --
+   ------------------
+
+   procedure Test_Ada2012 is
+      package Lists is new Ada.Containers.Doubly_Linked_Lists (Integer);
+      use Lists;
+      package Adaptors is new List_Adaptors (Lists);
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Adaptors.Forward_Cursors);
+
+      Start : Time;
+      D     : Duration;
+      V     : Lists.List;
+      It    : Lists.Cursor;
+      Co    : Natural;
    begin
-      while Has_Element (S) loop
-         if Predicate (Element (S)) then
-            C := C + 1;
-         end if;
-         Next (S);
+      Start := Clock;
+      for C in 1 .. Items_Count loop
+         V.Append (2);
       end loop;
-      return C;
-   end Count_Separate_Pkg;
+      V.Append (5);
+      V.Append (6);
+      D := Clock - Start;
+      Ada.Text_IO.Put_Line ("Ada2012, Fill => " & D'Img);
 
-   -------------------------
-   -- Count_With_Iterator --
-   -------------------------
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         It := V.First;
+         while Has_Element (It) loop
+            if Element (It) > 3 then
+               Co := Co + 1;
+            end if;
+            Next (It);
+         end loop;
+      end loop;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Ada2012, Count with explicit loop => " & D'Img);
 
-   function Count_With_Iterator
-      (L : Integer_Lists.List;
-       Predicate : access function (P : Integer) return Boolean)
-      return Natural
-   is
-      use Integer_Lists;
-      C : Natural := 0;
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         for E of V loop
+            if E > 3 then
+               Co := Co + 1;
+            end if;
+         end loop;
+      end loop;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Ada2012, Count with for..of loop => " & D'Img);
+
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         Co := Co + Count_If (V, Greater_Than_3'Access);
+      end loop;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Ada2012, Count with count_if => " & D'Img);
+
+   end Test_Ada2012;
+
+   -----------------
+   -- Test_Tagged --
+   -----------------
+
+   procedure Test_Tagged is
+      package Lists is new Taggeds (Integer);
+      use Lists;
+      V : Lists.List;
+      Start : Time;
+      D     : Duration;
+      Co    : Natural;
+      It    : Lists.List_Cursor;
    begin
-      for Int of L loop
-         if Predicate (Int) then
-            C := C + 1;
-         end if;
+      Start := Clock;
+      for C in 1 .. Items_Count loop
+         V.Append (2);
       end loop;
-      return C;
-   end Count_With_Iterator;
+      V.Append (5);
+      V.Append (6);
+      D := Clock - Start;
+      Ada.Text_IO.Put_Line ("Tagged type, Fill => " & D'Img);
 
-   --------------------------
-   -- Containers_Hierarchy --
-   --------------------------
-
-   package body Containers_Hierarchy is
-      overriding function First (C : List) return Forward_Cursor'Class is
-      begin
-         return List_Cursor'(C => C.L.First);
-      end First;
-
-      overriding procedure Append (C : in out List; P : T) is
-      begin
-         Internal_Lists.Append (C.L, P);
-      end Append;
-
-      overriding function Element (C : List_Cursor) return T is
-      begin
-         return Internal_Lists.Element (C.C);
-      end Element;
-
-      overriding procedure Next (C : in out List_Cursor) is
-      begin
-         Internal_Lists.Next (C.C);
-      end Next;
-
-      overriding function Has_Element (C : List_Cursor) return Boolean is
-      begin
-         return Internal_Lists.Has_Element (C.C);
-      end Has_Element;
-   end Containers_Hierarchy;
-
-   ---------------------------
-   -- Generic_Count_Virtual --
-   ---------------------------
-
-   function Generic_Count_Virtual
-      (C : Containers.Forward_Cursor'Class) return Natural
-   is
-      Result : Natural := 0;
-      C2 : Containers.Forward_Cursor'Class := C;
-   begin
-      while C2.Has_Element loop
-         if Predicate (C2.Element) then
-            Result := Result + 1;
-         end if;
-         C2.Next;
+      Start := Clock;
+      Co := 0;
+      for Dummy in 1 .. Repeat loop
+         It := List_Cursor (V.First);
+         while It.Has_Element loop
+            if It.Element > 3 then
+               Co := Co + 1;
+            end if;
+            It.Next;
+         end loop;
       end loop;
-      return Result;
-   end Generic_Count_Virtual;
-
-   ------------------------
-   -- Count_With_Functor --
-   ------------------------
-
-   function Count_With_Functor
-      (L : Integer_Lists.List; F : Predicate.Obj'Class) return Natural
-   is
-      use Integer_Lists;
-      C : Natural := 0;
-      S : Integer_Lists.Cursor := L.First;
-   begin
-      while S /= No_Element loop
-         if F.Call (Element (S)) then
-            C := C + 1;
-         end if;
-         Next (S);
-      end loop;
-      return C;
-   end Count_With_Functor;
+      D := Clock - Start;
+      if Co /= 20 then
+         raise Program_Error;
+      end if;
+      Ada.Text_IO.Put_Line ("Tagged type, explicit loop => " & D'Img);
+   end Test_Tagged;
 
 end Perf_Support;
