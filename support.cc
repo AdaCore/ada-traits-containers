@@ -40,6 +40,10 @@ void test_cpp() {
    }
    elapsed_secs = double(clock() - begin) / CLOCKS_PER_SEC;
    std::cout << "C++ Count with count_if " << count << " in " << elapsed_secs << std::endl;
+
+   // in C++, none of the functions are virtual methods, so there is no
+   // dynamic dispatching.
+
 }
 
 extern "C" {

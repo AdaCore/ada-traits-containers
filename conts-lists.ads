@@ -21,20 +21,20 @@ package Conts.Lists is
    No_Element : constant Cursor := Lists.No_Element;
 
    procedure Append
-      (Self : in out List; Element : Element_Type) renames Lists.Append;
-   function Length (Self : List) return Count_Type renames Lists.Length;
-   function First (Self : List) return Cursor renames Lists.First;
-   function Element (Self : List; Position : Cursor) return Element_Type
+      (Self : in out List'Class; Element : Element_Type) renames Lists.Append;
+   function Length (Self : List'Class) return Count_Type renames Lists.Length;
+   function First (Self : List'Class) return Cursor renames Lists.First;
+   function Element (Self : List'Class; Position : Cursor) return Element_Type
       renames Lists.Element;
-   function Has_Element (Self : List; Position : Cursor) return Boolean
+   function Has_Element (Self : List'Class; Position : Cursor) return Boolean
       renames Lists.Has_Element;
-   function Next (Self : List; Position : Cursor) return Cursor
+   function Next (Self : List'Class; Position : Cursor) return Cursor
       renames Lists.Next;
    --  Renames for all the subprograms in Lists, for people that do not use
    --  the Ada2012 notation for primitive operations.
 
    package Forward_Cursors is new Forward_Cursors_Traits
-      (Container    => List,
+      (Container    => List'Class,
        Cursor       => Cursor,
        Element_Type => Element_Type,
        No_Element   => No_Element);

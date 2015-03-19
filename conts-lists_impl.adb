@@ -8,7 +8,7 @@ package body Conts.Lists_Impl is
    ------------
 
    procedure Append
-      (Self    : in out List;
+      (Self    : in out List'Class;
        Element : Element_Type)
    is
       N : Node_Access := new Node'
@@ -34,7 +34,7 @@ package body Conts.Lists_Impl is
    -- Length --
    ------------
 
-   function Length (Self : List) return Count_Type is
+   function Length (Self : List'Class) return Count_Type is
    begin
       return Self.Size;
    end Length;
@@ -43,7 +43,7 @@ package body Conts.Lists_Impl is
    -- Capacity --
    --------------
 
-   function Capacity (Self : List) return Count_Type is
+   function Capacity (Self : List'Class) return Count_Type is
    begin
       return Count_Type'Last;
    end Capacity;
@@ -52,7 +52,7 @@ package body Conts.Lists_Impl is
    -- First --
    -----------
 
-   function First (Self : List) return Cursor is
+   function First (Self : List'Class) return Cursor is
    begin
       return (Current => Self.Head);
    end First;
@@ -61,7 +61,7 @@ package body Conts.Lists_Impl is
    -- Element --
    -------------
 
-   function Element (Self : List; Position : Cursor) return Element_Type is
+   function Element (Self : List'Class; Position : Cursor) return Element_Type is
       pragma Unreferenced (Self);
    begin
       if Enable_Asserts and then Position.Current = null then
@@ -75,7 +75,7 @@ package body Conts.Lists_Impl is
    -- Has_Element --
    -----------------
 
-   function Has_Element (Self : List; Position : Cursor) return Boolean is
+   function Has_Element (Self : List'Class; Position : Cursor) return Boolean is
       pragma Unreferenced (Self);
    begin
       return Position.Current /= null;
@@ -85,7 +85,7 @@ package body Conts.Lists_Impl is
    -- Next --
    ----------
 
-   function Next (Self : List; Position : Cursor) return Cursor is
+   function Next (Self : List'Class; Position : Cursor) return Cursor is
       pragma Unreferenced (Self);
    begin
       if Position.Current = null then
@@ -99,24 +99,9 @@ package body Conts.Lists_Impl is
    -- Next --
    ----------
 
-   procedure Next (Self : List; Position : in out Cursor) is
+   procedure Next (Self : List'Class; Position : in out Cursor) is
    begin
       Position := Next (Self, Position);
    end Next;
-
-   function Native_Count_If_Greater_Than
-      (Self : List; E2 : Element_Type) return Natural
-   is
-      N : Node_Access := Self.Head;
-      Count : Natural := 0;
-   begin
-      while N /= null loop
-         if N.Element > E2 then
-            Count := Count + 1;
-         end if;
-         N := N.Next;
-      end loop;
-      return Count;
-   end Native_Count_If_Greater_Than;
 
 end Conts.Lists_Impl;

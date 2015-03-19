@@ -1,6 +1,13 @@
 pragma Ada_2012;
 with Ada.Finalization;   use Ada.Finalization;
 
+--  Design: in C++ STL, none of the methods are virtual, so there is no
+--  dynamic dispatching. We achieve the same here by using 'Class parameters.
+--  This still let's use Ada2012 dot notation (the reason why we use a tagged
+--  type, in addition to the Iterable aspect), while increasing the
+--  performance (the count-with-explicit-loop goes from 0.25s to 0.51s when we
+--  do not use 'Class parameters).
+
 generic
    type Element_Type is private;
 
@@ -12,13 +19,13 @@ package Conts.Lists_Impl is
    pragma Suppress (All_Checks);
 
    type List is tagged private
-      with Iterable => (First       => First,
-                        Next        => Next,
-                        Has_Element => Has_Element,
-                        Element     => Element);
+      with Iterable => (First       => First_Primitive,
+                        Next        => Next_Primitive,
+                        Has_Element => Has_Element_Primitive,
+                        Element     => Element_Primitive);
 
    procedure Append
-      (Self    : in out List;
+      (Self    : in out List'Class;
        Element : Element_Type)
       with Global => null,
            Pre    => Length (Self) + 1 <= Capacity (Self);
@@ -27,13 +34,13 @@ package Conts.Lists_Impl is
    --  Raises: Storage_Error if Enable_Asserts is True and the node can't
    --     be allocated.
 
-   function Length (Self : List) return Count_Type
+   function Length (Self : List'Class) return Count_Type
       with Inline => True,
            Global => null;
    --  Return the number of elements in the list.
    --  Complexity: linear  (in practice, constant)
 
-   function Capacity (Self : List) return Count_Type
+   function Capacity (Self : List'Class) return Count_Type
       with Inline => True,
            Global => null;
    --  Return the maximal number of elements in the list. This will be
@@ -43,17 +50,17 @@ package Conts.Lists_Impl is
    type Cursor is private;
    No_Element : constant Cursor;
 
-   function First (Self : List) return Cursor
+   function First (Self : List'Class) return Cursor
       with Inline => True,
            Global => null;
-   function Element (Self : List; Position : Cursor) return Element_Type
+   function Element (Self : List'Class; Position : Cursor) return Element_Type
       with Inline => True,
            Global => null,
            Pre    => Has_Element (Self, Position);
-   function Has_Element (Self : List; Position : Cursor) return Boolean
+   function Has_Element (Self : List'Class; Position : Cursor) return Boolean
       with Inline => True,
            Global => null;
-   function Next (Self : List; Position : Cursor) return Cursor
+   function Next (Self : List'Class; Position : Cursor) return Cursor
       with Inline => True,
            Global => null,
            Pre    => Has_Element (Self, Position) or else
@@ -62,16 +69,26 @@ package Conts.Lists_Impl is
    --  and post conditions.
    --  Complexity: constant for all cursor operations.
 
-   procedure Next (Self : List; Position : in out Cursor)
+   procedure Next (Self : List'Class; Position : in out Cursor)
       with Inline => True,
            Global => null,
            Pre    => Has_Element (Self, Position) or else
                      Position = No_Element;
 
-   generic
-      with function ">" (E1, E2 : Element_Type) return Boolean is <>;
-   function Native_Count_If_Greater_Than (Self : List; E2 : Element_Type) return Natural;
-   --  Tmp, for measuring performance
+   function First_Primitive (Self : List) return Cursor is (First (Self));
+   function Element_Primitive
+      (Self : List; Position : Cursor) return Element_Type
+      is (Element (Self, Position));
+   function Has_Element_Primitive
+      (Self : List; Position : Cursor) return Boolean
+      is (Has_Element (Self, Position));
+   function Next_Primitive
+      (Self : List; Position : Cursor) return Cursor
+      is (Next (Self, Position));
+   --  These are only needed because the Iterable aspect expects a parameter
+   --  of type List instead of List'Class. But then it means that the loop is
+   --  doing a lot of dynamic dispatching, and is twice as slow as a loop using
+   --  an explicit cursor.
 
 private
    type Node;

@@ -1,5 +1,8 @@
 --  This package contains a simple list implemented via interfaces
 --  and tagged types, only used for testing performance
+--
+--  The primitive operations on cursor do not receive the container as
+--  a parameter, which means this cannot be used for formal containers.
 
 with Ada.Containers.Doubly_Linked_Lists;
 
