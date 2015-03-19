@@ -18,7 +18,7 @@ package body Perf_Support is
    procedure Test_Conts_Lists is
       package Conts_Int_Lists is new Conts.Lists
          (Element_Type   => Integer,
-          Enable_Asserts => True);
+          Enable_Asserts => False);
       use Conts_Int_Lists;
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Forward_Cursors);

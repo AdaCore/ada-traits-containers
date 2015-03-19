@@ -1,0 +1,78 @@
+
+Designing new efficient containers
+==================================
+
+Goals
+-----
+
+- Contains should be efficient
+  We will compare with other languages (C++, Python and Lua)
+
+- We need to be able to add preconditions
+  In particular, we need containers for SPARK. They do not have to share
+  implementation with containers used in other contexts, but it would be
+  nice if we could share more of the spec.
+  Technically speaking, one of the things this imposes is to pass the
+  container in parameter to the various cursor function (Element, First,...)
+
+- Containers must be readable from multiple tasks in parallel
+  No writting in flags for instance (M223-003)
+
+- We would like to avoid the multiplication of packages for Bounded/Unbounded,
+  constrained/unconstrained, formal or not,...
+
+- Avoid a case with dangling cursors (M124-015)
+  If we write a function that returns a container, and use it as:
+
+      declare
+         C : Cursor := My_Function.First;
+      begin
+         ... C references deallocated memory since My_Function's result
+         ... has been finalized
+
+Proposal
+--------
+
+- Some example of code is provided that tests the various proposals against
+  Ada2012 and C++ STL containers.
+
+- Manu: One of the limitations with the Ada2012 containers is that we cannot
+  write algorithms that work with any type of container (for instance counting
+  the number of elements matching a criteria) without having a lot of formal
+  parameters.
+  One proposal is to introduce explicit Traits generic packages.
+  See the code in Conts.Forward_Cursors_Traits, and the algorithm in
+  Conts.Algorithms.
+  This technique is inspired by what C++ does. In particular, the Boost Graph
+  library uses it for all graph algorithms, so that they can be used on
+  user-specific data structures, not just on a graph type provided by Boost.
+
+- Manu: for ease of use, I propose to make container types tagged
+  This means that we can use the nice Ada2012 dot notation to call the
+  operations.
+
+- Manu: The for..of loop is really nice when writting code.
+  In its current implementation, though, it is grossly inefficient (see the
+  results in the test and LC14-015) because the standard forces the use of
+  controlled types.
+  One proposal is to reuse the gnat-specific Iterable aspect, which is just
+  a thin wrapper around First, Has_Element, Element and Next. This loop is
+  as fast as manipulating the cursors directly.
+
+- Manu: In C++ STL, none of the methods are virtual, for efficiency.
+  The equivalent in Ada is be to make all the cursor operations use
+  non-dispatching operations, with a 'Class parameter.
+  One limitation is that this doesn't work with the Iterable aspect, but this
+  could presumably be enhanced (this is why the for..of loop in the example
+  is currently twice as slow as the explicit loop, that's the cost of
+  dynamic dispatching).
+
+- Manu: code should be compiled with -gnatp for efficiency.
+  To leave some safety for users that want/need it, we can add a new formal
+  boolean parameter that tells the compiler whether to add explicit checks.
+
+Running the test
+----------------
+
+gprbuild -Pdefault
+./obj/perf
