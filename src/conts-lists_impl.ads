@@ -81,6 +81,10 @@ package Conts.Lists_Impl is
       with Inline => True,
            Global => null,
            Pre    => Has_Element (Self, Position);
+   function Previous (Self : List'Class; Position : Cursor) return Cursor
+      with Inline => True,
+           Global => null,
+           Pre    => Has_Element (Self, Position);
    --  We pass the container explicitly for the sake of writing the pre
    --  and post conditions.
    --  Complexity: constant for all cursor operations.

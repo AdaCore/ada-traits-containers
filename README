@@ -93,3 +93,19 @@ Running the test
 
 gprbuild -Pdefault
 ./perf
+
+Todo
+----
+
+- Use reference_type similar for Element, with automatic derefence, so that
+  indefinite containers can have a single Element instead of also having
+  Stored_Element for efficiency.
+  A similar solution is also needed to prevent users from freeing the access
+  type returned by Stored_Element, or modifying the pointed element in place
+  (which is incorrect for some containers)
+
+- Implement bounded containers, sharing the same implementation
+  Seems like this would be two extra parameters to Conts.Lists_Impl to
+  control the allocation and deallocation of nodes. Then
+  Conts.Bounded_Lists would subclass the List and have a discriminant
+  Capacity, as well as a field for the buffer.

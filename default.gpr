@@ -10,7 +10,7 @@ project Default is
    end Naming;
 
    package Builder is
-      for Switches ("Ada") use ("-j0");
+      for Switches ("Ada") use ("-j0", "-m");
    end Builder;
 
    package Compiler is

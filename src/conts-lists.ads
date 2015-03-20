@@ -35,11 +35,14 @@ package Conts.Lists is
       renames Lists.Has_Element;
    function Next (Self : List'Class; Position : Cursor) return Cursor
       renames Lists.Next;
+   function Previous (Self : List'Class; Position : Cursor) return Cursor
+      renames Lists.Previous;
    --  Renames for all the subprograms in Lists, for people that do not use
    --  the Ada2012 notation for primitive operations.
 
-   package Forward_Cursors is new Forward_Cursors_Traits
+   package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
       (Container    => List'Class,
        Cursor       => Cursor,
        Element_Type => Element_Type);
+   package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
 end Conts.Lists;

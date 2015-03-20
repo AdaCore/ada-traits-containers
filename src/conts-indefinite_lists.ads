@@ -31,16 +31,19 @@ package Conts.Indefinite_Lists is
    --  ??? Should we rename all subprograms from Lists for those people
    --  that do not use Ada2012 dot notation, as done in conts-lists.ads
 
-   package Forward_Cursors is new Forward_Cursors_Traits
+   package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
       (Container    => List'Class,
        Cursor       => Cursor,
        Element_Type => Element_Type);
+   package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
 
-   package Forward_Cursors_Access is new Forward_Cursors_Traits
+   package Bidirectional_Cursors_Access is new Bidirectional_Cursors_Traits
       (Container    => List'Class,
        Cursor       => Cursor,
        Element_Type => Element_Access,
        Element      => Stored_Element);
+   package Forward_Cursors_Access
+      renames Bidirectional_Cursors_Access.Forward_Cursors;
    --  Another version of cursors that manipulates the Element_Access. These
    --  might be more efficient.
 end Conts.Indefinite_Lists;

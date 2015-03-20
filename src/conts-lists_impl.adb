@@ -111,6 +111,20 @@ package body Conts.Lists_Impl is
       end if;
    end Next;
 
+   --------------
+   -- Previous --
+   --------------
+
+   function Previous (Self : List'Class; Position : Cursor) return Cursor is
+      pragma Unreferenced (Self);
+   begin
+      if Position.Current = null then
+         return Position;
+      else
+         return (Current => Position.Current.Previous);
+      end if;
+   end Previous;
+
    ----------
    -- Next --
    ----------
