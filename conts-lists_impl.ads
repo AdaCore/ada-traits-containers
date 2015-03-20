@@ -9,7 +9,23 @@ with Ada.Finalization;   use Ada.Finalization;
 --  do not use 'Class parameters).
 
 generic
-   type Element_Type is private;
+   type Element_Type (<>) is private;
+   --  The element type visible to the user (in parameter to Append, and
+   --  returned by Element, for instance)
+
+   type Stored_Element_Type is private;
+   --  The type of elements stored internally. This must be unconstrained.
+
+   with function Convert_From (E : Element_Type) return Stored_Element_Type;
+   with function Convert_To (E : Stored_Element_Type) return Element_Type;
+   --  Converting between the two types
+
+   with procedure Release (E : in out Stored_Element_Type) is null;
+   --  Called whenever a value of Element_Type is removed from the table.
+   --  This can be used to add unconstrained types to the list: Element_Type
+   --  would then be a pointer to that type, and Release is a call to
+   --  Unchecked_Deallocation.
+   --  Convenient wrappers are available in Conts.Adaptors.
 
    Enable_Asserts : Boolean := False;
    --  If True, extra asserts are added to the code. Apart from them, this
@@ -17,6 +33,7 @@ generic
 
 package Conts.Lists_Impl is
    pragma Suppress (All_Checks);
+   pragma Unreferenced (Release);
 
    type List is tagged private
       with Iterable => (First       => First_Primitive,
@@ -94,7 +111,7 @@ private
    type Node;
    type Node_Access is access Node;
    type Node is record
-      Element  : Element_Type;
+      Element  : Stored_Element_Type;
       Previous : Node_Access;
       Next     : Node_Access;
       --  A doubly-linked list needs both Previous and Next, but adding

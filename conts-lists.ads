@@ -9,9 +9,15 @@ generic
    --  code runs with all compiler checks disabled.
 
 package Conts.Lists is
+
+   function Identity (E : Element_Type) return Element_Type is (E);
+   pragma Inline (Identity);
    package Lists is new Conts.Lists_Impl
-      (Element_Type   => Element_Type,
-       Enable_Asserts => Enable_Asserts);
+      (Element_Type        => Element_Type,
+       Stored_Element_Type => Element_Type,
+       Convert_From        => Identity,
+       Convert_To          => Identity,
+       Enable_Asserts      => Enable_Asserts);
    use Lists;
    --  The actual types are defined in a different package, so that they are
    --  already frozen when we declare the Cursors packages below.

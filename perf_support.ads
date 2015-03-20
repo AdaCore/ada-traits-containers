@@ -1,5 +1,3 @@
-with Ada.Containers.Doubly_Linked_Lists;
-
 package Perf_Support is
 
    --  Performance testing when using generics, virtual methods and
@@ -88,17 +86,22 @@ package Perf_Support is
    Repeat      : constant := 10;
    Items_Count : constant := 10_000_000;
 
-   procedure Test_Conts_Lists;
+   procedure Test_Lists_Int;
+   procedure Test_Lists_Int_Indefinite;
+   procedure Test_Lists_Str;
    --  Perform the tests for our own Conts containers
 
-   procedure Test_Cpp;
-   pragma Import (C, Test_Cpp, "test_c");
+   procedure Test_Cpp_Int;
+   pragma Import (C, Test_Cpp_Int, "test_c_int");
+   procedure Test_Cpp_Str;
+   pragma Import (C, Test_Cpp_Str, "test_c_str");
    --  Perform C++ testing
 
-   procedure Test_Ada2012;
+   procedure Test_Ada2012_Int;
+   procedure Test_Ada2012_Str;
    --  Test Ada2012 containers
 
-   procedure Test_Tagged;
+   procedure Test_Tagged_Int;
    --  Test when the list is implemented as tagged types
 
 end Perf_Support;

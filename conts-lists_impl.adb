@@ -12,7 +12,7 @@ package body Conts.Lists_Impl is
        Element : Element_Type)
    is
       N : Node_Access := new Node'
-         (Element => Element, Previous => null, Next => null);
+         (Element => Convert_From (Element), Previous => null, Next => null);
    begin
       if Enable_Asserts and then N = null then
          raise Storage_Error with "Allocating node failed";
@@ -44,6 +44,7 @@ package body Conts.Lists_Impl is
    --------------
 
    function Capacity (Self : List'Class) return Count_Type is
+      pragma Unreferenced (Self);
    begin
       return Count_Type'Last;
    end Capacity;
@@ -68,7 +69,7 @@ package body Conts.Lists_Impl is
          raise Program_Error with "Invalid position in list";
       end if;
 
-      return Position.Current.Element;
+      return Convert_To (Position.Current.Element);
    end Element;
 
    -----------------

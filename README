@@ -47,6 +47,17 @@ Proposal
   library uses it for all graph algorithms, so that they can be used on
   user-specific data structures, not just on a graph type provided by Boost.
 
+  With this in place, the Count_If algorithm is written only once for all
+  containers that we test (definite/indefinite, or Ada2012 containers)
+
+  Implementation detail: because of Ada's freezing rules, we need to define
+    the container in another package (conts.lists_impl) and then have
+    another package (conts.lists) that instantiate that package and provide
+    the various cursors packages.
+    This also requires renaming a lot of subprograms for cases when people
+    do not use Ada2012 dot notation. These renamings could be generated
+    automatically.
+
 - Manu: for ease of use, I propose to make container types tagged
   This means that we can use the nice Ada2012 dot notation to call the
   operations.
@@ -58,6 +69,10 @@ Proposal
   One proposal is to reuse the gnat-specific Iterable aspect, which is just
   a thin wrapper around First, Has_Element, Element and Next. This loop is
   as fast as manipulating the cursors directly.
+
+  Implementation detail: the Iterable pragma does not work when the element
+    type is unconstrained. This could likely be improved by generating a
+    local declare block in such cases.
 
 - Manu: In C++ STL, none of the methods are virtual, for efficiency.
   The equivalent in Ada is be to make all the cursor operations use

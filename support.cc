@@ -1,53 +1,99 @@
 #include <algorithm>
 #include <iostream>
+#include <iomanip>
 #include <ctime>
 #include <list>
+#include <string>
 
 bool IsGreaterThan3 (int i) { return i > 3; }
+bool startsWithStr (std::string s) { return s.substr(0, 3) == "str"; }
+
+const int items_count = 10000000;
+
+void print_time(double elapsed) {
+   if (elapsed == 0.0) {
+      std::cout << "             |";
+   } else {
+      std::cout << " " << std::fixed << std::setprecision(5) << elapsed << "     |";
+   }
+}
 
 void test_cpp() {
    std::list<int>  v;
 
    std::clock_t begin = clock();
-   for (int c = 1; c <= 10000000; c++) {
+   for (int c = 1; c <= items_count; c++) {
       v.push_back(2);
    }
    v.push_back(5);
    v.push_back(6);
-   double elapsed_secs = double(clock() - begin) / CLOCKS_PER_SEC;
-   std::cout << "C++ Fill V  => " << elapsed_secs << "\n";
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 
 
    begin = clock();
    int count = 0;
-   for (int repeat = 0; repeat < 10; repeat ++) {
-      std::list<int>::const_iterator it (v.begin());
-      while (it != v.end()) {
-         if (*it > 3) {
-            count ++;
-         }
-         it ++;
+   std::list<int>::const_iterator it (v.begin());
+   while (it != v.end()) {
+      if (*it > 3) {
+         count ++;
       }
+      it ++;
    }
-   elapsed_secs = double(clock() - begin) / CLOCKS_PER_SEC;
-   std::cout << "C++ Count " << count << " in " << elapsed_secs << std::endl;
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   if (count != 2) {
+      std::cout << "C++ error while counting" << std::endl;
+   }
+
+   print_time(0.0);
 
 
    begin = clock();
-   count = 0;
-   for (int repeat = 0; repeat < 10; repeat ++) {
-      count += std::count_if (v.begin(), v.end(), IsGreaterThan3);
+   count = std::count_if (v.begin(), v.end(), IsGreaterThan3);
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   if (count != 2) {
+      std::cout << "C++ error while counting" << std::endl;
    }
-   elapsed_secs = double(clock() - begin) / CLOCKS_PER_SEC;
-   std::cout << "C++ Count with count_if " << count << " in " << elapsed_secs << std::endl;
+}
 
-   // in C++, none of the functions are virtual methods, so there is no
-   // dynamic dispatching.
+void test_cpp_string() {
+   std::list<std::string>  v;
 
+   std::clock_t begin = clock();
+   for (int c = 1; c <= items_count; c++) {
+      v.push_back("str1");
+   }
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+
+
+   begin = clock();
+   int count = 0;
+   std::list<std::string>::const_iterator it (v.begin());
+   while (it != v.end()) {
+      if (startsWithStr(*it)) {
+         count ++;
+      }
+      it ++;
+   }
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   if (count != items_count) {
+      std::cout << "C++ error while counting" << std::endl;
+   }
+
+   print_time(0.0);
+
+   begin = clock();
+   count = std::count_if (v.begin(), v.end(), startsWithStr);
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   if (count != items_count) {
+      std::cout << "C++ error while counting" << std::endl;
+   }
 }
 
 extern "C" {
-   void test_c() {
+   void test_c_int() {
       test_cpp();
+   }
+   void test_c_str() {
+      test_cpp_string();
    }
 }
