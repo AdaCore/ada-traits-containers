@@ -1,15 +1,24 @@
 project Default is
    for Main use ("perf.adb");
    for Object_Dir use "obj";
+   for Source_Dirs use ("src");
+   for Exec_Dir use ".";
    for Languages use ("Ada", "C++");
+
    package Naming is
       for Implementation_Suffix ("C++") use ".cc";
    end Naming;
+
+   package Builder is
+      for Switches ("Ada") use ("-j0");
+   end Builder;
+
    package Compiler is
       for Switches ("Ada") use ("-O2", "-gnat12", --  "-gnatp", "-gnatn",
          "-gnatwu", "-g");
       for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
    end Compiler;
+
    package Binder is
       for Switches ("Ada") use ("-E");
    end Binder;

@@ -90,4 +90,4 @@ Running the test
 ----------------
 
 gprbuild -Pdefault
-./obj/perf
+./perf
