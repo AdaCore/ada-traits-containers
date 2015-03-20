@@ -6,7 +6,7 @@
 #include <string>
 
 bool IsGreaterThan3 (int i) { return i > 3; }
-bool startsWithStr (std::string s) { return s.substr(0, 3) == "str"; }
+bool startsWithStr (const std::string& s) { return s.substr(0, 3) == "str"; }
 
 const int items_count = 10000000;
 
@@ -44,7 +44,16 @@ void test_cpp() {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-   print_time(0.0);
+   count = 0;
+   for (auto e : v) {
+      if (e > 3) {
+         count ++;
+      }
+   }
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   if (count != 2) {
+      std::cout << "C++ error while counting" << std::endl;
+   }
 
 
    begin = clock();
@@ -79,7 +88,18 @@ void test_cpp_string() {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-   print_time(0.0);
+
+   count = 0;
+   for (auto e : v) {
+      if (startsWithStr(e)) {
+         count ++;
+      }
+   }
+   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   if (count != items_count) {
+      std::cout << "C++ error while counting" << std::endl;
+   }
+
 
    begin = clock();
    count = std::count_if (v.begin(), v.end(), startsWithStr);

@@ -6,7 +6,11 @@ project Default is
       for Implementation_Suffix ("C++") use ".cc";
    end Naming;
    package Compiler is
-      for Switches ("Ada") use ("-O2", "-gnat12", "-gnatp", "-gnatn", "-gnatwu");
-      for Switches ("C++") use ("-O2", "-finline");
+      for Switches ("Ada") use ("-O2", "-gnat12", --  "-gnatp", "-gnatn",
+         "-gnatwu", "-g");
+      for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
    end Compiler;
+   package Binder is
+      for Switches ("Ada") use ("-E");
+   end Binder;
 end Default;

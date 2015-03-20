@@ -6,6 +6,10 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 package Conts.Adaptors is
 
+   -------------------------------------
+   -- Adaptor for doubly linked lists --
+   -------------------------------------
+
    generic
       with package Lists is new Ada.Containers.Doubly_Linked_Lists (<>);
    package List_Adaptors is
@@ -25,10 +29,12 @@ package Conts.Adaptors is
       package Forward_Cursors is new Forward_Cursors_Traits
          (Container    => List,
           Cursor       => Cursor,
-          Element_Type => Element_Type,
-          No_Element   => Lists.No_Element);
-
+          Element_Type => Element_Type);
    end List_Adaptors;
+
+   ------------------------------------------------
+   -- Adaptor for indefinite doubly linked lists --
+   ------------------------------------------------
 
    generic
       with package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists (<>);
@@ -49,8 +55,33 @@ package Conts.Adaptors is
       package Forward_Cursors is new Forward_Cursors_Traits
          (Container    => List,
           Cursor       => Cursor,
-          Element_Type => Element_Type,
-          No_Element   => Lists.No_Element);
+          Element_Type => Element_Type);
    end Indefinite_List_Adaptors;
+
+   ------------------------
+   -- Adaptor for arrays --
+   ------------------------
+
+   generic
+      type Index_Type is (<>);
+      type Element_Type is private;
+      type Array_Type is array (Index_Type range <>) of Element_Type;
+   package Array_Adaptors is
+      function First (Self : Array_Type) return Index_Type is (Self'First);
+      function Element
+         (Self : Array_Type; Position : Index_Type) return Element_Type
+         is (Self (Position));
+      function Has_Element
+         (Self : Array_Type; Position : Index_Type) return Boolean
+         is (Position in Self'Range);
+      function Next
+         (Self : Array_Type; Position : Index_Type) return Index_Type
+         is (Index_Type'Succ (Position));
+
+      package Forward_Cursors is new Forward_Cursors_Traits
+         (Container    => Array_Type,
+          Cursor       => Index_Type,
+          Element_Type => Element_Type);
+   end Array_Adaptors;
 
 end Conts.Adaptors;

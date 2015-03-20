@@ -83,8 +83,9 @@ package Perf_Support is
    -- Tests --
    -----------
 
-   Repeat      : constant := 10;
-   Items_Count : constant := 10_000_000;
+   Items_Count : constant := 2_000_000;
+   --  Can't use more, since otherwise allocating an Ada array on the stack
+   --  results in a Storage_Error.
 
    procedure Test_Lists_Int;
    procedure Test_Lists_Int_Indefinite;
@@ -98,8 +99,12 @@ package Perf_Support is
    --  Perform C++ testing
 
    procedure Test_Ada2012_Int;
+   procedure Test_Ada2012_Int_Indefinite;
    procedure Test_Ada2012_Str;
    --  Test Ada2012 containers
+
+   procedure Test_Arrays_Int;
+   --  Test standard Ada arrays
 
    procedure Test_Tagged_Int;
    --  Test when the list is implemented as tagged types

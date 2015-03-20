@@ -19,16 +19,15 @@ package body Perf_Support is
    function Starts_With_Str (S : String) return Boolean is
       (S'Length > 3 and then S (S'First .. S'First + 2) = "str");
 
-   procedure Print_Time (D : Duration);
-   procedure Print_Time (D : Duration) is
+   procedure Print_Time (D : Duration; Extra : String := "");
+   procedure Print_Time (D : Duration; Extra : String := "") is
       S : constant String := D'Img;
       Sub : constant String :=
          S (S'First .. Integer'Min (S'Last, S'First + 7));
    begin
-      if D = 0.0 then
-         Put ("             |");
+      if D = 0.0 then Put ((Extra'Length .. 12 => ' ') & Extra & '|');
       else
-         Put (Sub & (Sub'Length .. 12 => ' ') & '|');
+         Put (Sub & Extra & (Sub'Length + Extra'Length .. 12 => ' ') & '|');
       end if;
    end Print_Time;
 
@@ -144,7 +143,7 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start);
+         Print_Time (Clock - Start, Extra => "(1)");
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -211,7 +210,7 @@ package body Perf_Support is
          --  if Co /= Items_Count then
          --     raise Program_Error;
          --  end if;
-         Print_Time (0.0);
+         Print_Time (0.0, Extra => "(2)");
 
          Start := Clock;
          Co := Count_If (V2, Starts_With_Str'Access);
@@ -277,6 +276,7 @@ package body Perf_Support is
          end if;
 
          Start := Clock;
+         --  ??? Why do we need a cast here
          Co := Count_If (List (V), Starts_With_Str'Access);
          Print_Time (Clock - Start);
          if Co /= Items_Count then
@@ -288,6 +288,63 @@ package body Perf_Support is
    begin
       Do_Test (V);
    end Test_Ada2012_Str;
+
+   ---------------------
+   -- Test_Arrays_Int --
+   ---------------------
+
+   procedure Test_Arrays_Int is
+      type Int_Array is array (Integer range <>) of Integer;
+      package Adaptors is new Array_Adaptors
+         (Index_Type   => Integer,
+          Element_Type => Integer,
+          Array_Type   => Int_Array);
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Adaptors.Forward_Cursors);
+
+      V     : Int_Array (1 .. Items_Count + 2);
+      Start : Time;
+      Co    : Natural;
+   begin
+      Start := Clock;
+      for C in 1 .. Items_Count loop
+         V (C) := 2;
+      end loop;
+      V (V'Last - 1) := 5;
+      V (V'Last) := 6;
+      Print_Time (Clock - Start);
+
+      Start := Clock;
+      Co := 0;
+      for It in V'Range loop
+         if V (It) > 3 then
+            Co := Co + 1;
+         end if;
+      end loop;
+      Print_Time (Clock - Start);
+      if Co /= 2 then
+         raise Program_Error;
+      end if;
+
+      Start := Clock;
+      Co := 0;
+      for E of V loop
+         if E > 3 then
+            Co := Co + 1;
+         end if;
+      end loop;
+      Print_Time (Clock - Start);
+      if Co /= 2 then
+         raise Program_Error;
+      end if;
+
+      Start := Clock;
+      Co := Count_If (V, Greater_Than_3'Access);
+      Print_Time (Clock - Start);
+      if Co /= 2 then
+         raise Program_Error;
+      end if;
+   end Test_Arrays_Int;
 
    ----------------------
    -- Test_Ada2012_Int --
@@ -352,6 +409,71 @@ package body Perf_Support is
    begin
       Do_Test (V);
    end Test_Ada2012_Int;
+
+   ---------------------------------
+   -- Test_Ada2012_Int_Indefinite --
+   ---------------------------------
+
+   procedure Test_Ada2012_Int_Indefinite is
+      package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
+         (Integer);
+      use Lists;
+      package Adaptors is new Indefinite_List_Adaptors (Lists);
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Adaptors.Forward_Cursors);
+
+      procedure Do_Test (V : in out Lists.List'Class);
+      procedure Do_Test (V : in out Lists.List'Class) is
+         Start : Time;
+         It    : Lists.Cursor;
+         Co    : Natural;
+      begin
+         Start := Clock;
+         for C in 1 .. Items_Count loop
+            V.Append (2);
+         end loop;
+         V.Append (5);
+         V.Append (6);
+         Print_Time (Clock - Start);
+
+         Start := Clock;
+         Co := 0;
+         It := V.First;
+         while Has_Element (It) loop
+            if Element (It) > 3 then
+               Co := Co + 1;
+            end if;
+            Next (It);
+         end loop;
+         Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := 0;
+         for E of V loop
+            if E > 3 then
+               Co := Co + 1;
+            end if;
+         end loop;
+         Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := Count_If (List (V), Greater_Than_3'Access);
+         Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+      end Do_Test;
+
+      V  : Lists.List;
+   begin
+      Do_Test (V);
+   end Test_Ada2012_Int_Indefinite;
 
    ---------------------
    -- Test_Tagged_Int --

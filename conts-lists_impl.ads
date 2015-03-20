@@ -65,7 +65,6 @@ package Conts.Lists_Impl is
    --  Complexity: constant
 
    type Cursor is private;
-   No_Element : constant Cursor;
 
    function First (Self : List'Class) return Cursor
       with Inline => True,
@@ -80,8 +79,7 @@ package Conts.Lists_Impl is
    function Next (Self : List'Class; Position : Cursor) return Cursor
       with Inline => True,
            Global => null,
-           Pre    => Has_Element (Self, Position) or else
-                     Position = No_Element;
+           Pre    => Has_Element (Self, Position);
    --  We pass the container explicitly for the sake of writing the pre
    --  and post conditions.
    --  Complexity: constant for all cursor operations.
@@ -89,8 +87,7 @@ package Conts.Lists_Impl is
    procedure Next (Self : List'Class; Position : in out Cursor)
       with Inline => True,
            Global => null,
-           Pre    => Has_Element (Self, Position) or else
-                     Position = No_Element;
+           Pre    => Has_Element (Self, Position);
 
    function First_Primitive (Self : List) return Cursor is (First (Self));
    function Element_Primitive
@@ -129,5 +126,4 @@ private
    type Cursor is record
       Current : Node_Access;
    end record;
-   No_Element : constant Cursor := (Current => null);
 end Conts.Lists_Impl;

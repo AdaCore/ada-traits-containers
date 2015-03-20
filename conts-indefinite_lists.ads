@@ -27,7 +27,6 @@ package Conts.Indefinite_Lists is
 
    subtype List is Lists.List;
    subtype Cursor is Lists.Cursor;
-   No_Element : constant Cursor := Lists.No_Element;
 
    --  ??? Should we rename all subprograms from Lists for those people
    --  that do not use Ada2012 dot notation, as done in conts-lists.ads
@@ -35,6 +34,5 @@ package Conts.Indefinite_Lists is
    package Forward_Cursors is new Forward_Cursors_Traits
       (Container    => List'Class,
        Cursor       => Cursor,
-       Element_Type => Element_Type,
-       No_Element   => No_Element);
+       Element_Type => Element_Type);
 end Conts.Indefinite_Lists;

@@ -24,7 +24,6 @@ package Conts.Lists is
 
    subtype List is Lists.List;
    subtype Cursor is Lists.Cursor;
-   No_Element : constant Cursor := Lists.No_Element;
 
    procedure Append
       (Self : in out List'Class; Element : Element_Type) renames Lists.Append;
@@ -42,6 +41,5 @@ package Conts.Lists is
    package Forward_Cursors is new Forward_Cursors_Traits
       (Container    => List'Class,
        Cursor       => Cursor,
-       Element_Type => Element_Type,
-       No_Element   => No_Element);
+       Element_Type => Element_Type);
 end Conts.Lists;
