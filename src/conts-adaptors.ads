@@ -25,6 +25,7 @@ package Conts.Adaptors is
          is (Lists.Has_Element (Position));
       function Next (Self : List; Position : Cursor) return Cursor
          is (Lists.Next (Position));
+      pragma Inline (Element, Has_Element, Next, First);
 
       package Forward_Cursors is new Forward_Cursors_Traits
          (Container    => List,
@@ -51,6 +52,7 @@ package Conts.Adaptors is
          is (Lists.Has_Element (Position));
       function Next (Self : List; Position : Cursor) return Cursor
          is (Lists.Next (Position));
+      pragma Inline (Element, Has_Element, Next, First);
 
       package Forward_Cursors is new Forward_Cursors_Traits
          (Container    => List,
@@ -77,6 +79,7 @@ package Conts.Adaptors is
       function Next
          (Self : Array_Type; Position : Index_Type) return Index_Type
          is (Index_Type'Succ (Position));
+      pragma Inline (Element, Has_Element, Next, First);
 
       package Forward_Cursors is new Forward_Cursors_Traits
          (Container    => Array_Type,

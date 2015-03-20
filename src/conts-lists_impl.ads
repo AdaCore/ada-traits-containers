@@ -69,7 +69,8 @@ package Conts.Lists_Impl is
    function First (Self : List'Class) return Cursor
       with Inline => True,
            Global => null;
-   function Element (Self : List'Class; Position : Cursor) return Element_Type
+   function Element
+      (Self : List'Class; Position : Cursor) return Element_Type
       with Inline => True,
            Global => null,
            Pre    => Has_Element (Self, Position);
@@ -83,6 +84,16 @@ package Conts.Lists_Impl is
    --  We pass the container explicitly for the sake of writing the pre
    --  and post conditions.
    --  Complexity: constant for all cursor operations.
+
+   function Stored_Element
+      (Self : List'Class; Position : Cursor) return Stored_Element_Type
+      with Inline => True,
+           Global => null,
+           Pre    => Has_Element (Self, Position);
+   --  Accessing directly the stored element might be more efficient in a lot
+   --  of cases.
+   --  ??? Can we prevent users from freeing the pointer (when it is a
+   --  pointer), or changing the element in place ?
 
    procedure Next (Self : List'Class; Position : in out Cursor)
       with Inline => True,
@@ -99,6 +110,8 @@ package Conts.Lists_Impl is
    function Next_Primitive
       (Self : List; Position : Cursor) return Cursor
       is (Next (Self, Position));
+   pragma Inline (First_Primitive, Element_Primitive);
+   pragma Inline (Has_Element_Primitive, Next_Primitive);
    --  These are only needed because the Iterable aspect expects a parameter
    --  of type List instead of List'Class. But then it means that the loop is
    --  doing a lot of dynamic dispatching, and is twice as slow as a loop using

@@ -6,9 +6,9 @@
 #include <string>
 
 bool IsGreaterThan3 (int i) { return i > 3; }
-bool startsWithStr (const std::string& s) { return s.substr(0, 3) == "str"; }
+bool startsWithStr (const std::string& s) { return s[0] == 's'; }
 
-const int items_count = 10000000;
+extern const int items_count;
 
 void print_time(double elapsed) {
    if (elapsed == 0.0) {

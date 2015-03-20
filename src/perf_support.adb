@@ -17,7 +17,8 @@ package body Perf_Support is
       with Inline => True;
 
    function Starts_With_Str (S : String) return Boolean is
-      (S'Length > 3 and then S (S'First .. S'First + 2) = "str");
+      (S (S'First) = 's');
+   pragma Inline (Starts_With_Str);
 
    procedure Print_Time (D : Duration; Extra : String := "");
    procedure Print_Time (D : Duration; Extra : String := "") is
@@ -161,6 +162,74 @@ package body Perf_Support is
       Do_Test (V);
    end Test_Lists_Int;
 
+   ---------------------------
+   -- Test_Lists_Str_Access --
+   ---------------------------
+
+   procedure Test_Lists_Str_Access is
+      package Lists is new Conts.Indefinite_Lists
+         (Element_Type   => String,
+          Enable_Asserts => False);
+      use Lists;
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Forward_Cursors_Access);
+
+      function Starts_With_Str (S : Lists.Element_Access) return Boolean is
+         (S (S'First) = 's');
+      pragma Inline (Starts_With_Str);
+
+      procedure Do_Test (V2 : in out Lists.List'Class);
+      procedure Do_Test (V2 : in out Lists.List'Class) is
+         It    : Lists.Cursor;
+         Start : Time;
+         Co    : Natural;
+      begin
+         Start := Clock;
+         for C in 1 .. Items_Count loop
+            V2.Append ("str1");
+         end loop;
+         Print_Time (Clock - Start);
+
+         Start := Clock;
+         Co := 0;
+         It := V2.First;
+         while V2.Has_Element (It) loop
+            if Starts_With_Str (V2.Stored_Element (It).all) then
+               Co := Co + 1;
+            end if;
+            It := V2.Next (It);
+         end loop;
+         Print_Time (Clock - Start);
+         if Co /= Items_Count then
+            raise Program_Error;
+         end if;
+
+         --  Start := Clock;
+         --  Co := 0;
+         --  for E of V2 loop  -- GNAT: unconstrained subtype not allowed
+         --     if Starts_With_Str (E) then
+         --        Co := Co + 1;
+         --     end if;
+         --  end loop;
+         --  Print_Time (Clock - Start);
+         --  if Co /= Items_Count then
+         --     raise Program_Error;
+         --  end if;
+         Print_Time (0.0, Extra => "(2)");
+
+         Start := Clock;
+         Co := Count_If (V2, Starts_With_Str'Access);
+         Print_Time (Clock - Start);
+         if Co /= Items_Count then
+            raise Program_Error;
+         end if;
+      end Do_Test;
+
+      V : Lists.List;
+   begin
+      Do_Test (V);
+   end Test_Lists_Str_Access;
+
    --------------------
    -- Test_Lists_Str --
    --------------------
@@ -302,12 +371,15 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Forward_Cursors);
 
-      V     : Int_Array (1 .. Items_Count + 2);
+      Local_Items_Count : constant := 2_000_000;
+      --  Can't use more items for an array on the stack
+
+      V     : Int_Array (1 .. Local_Items_Count + 2);
       Start : Time;
       Co    : Natural;
    begin
       Start := Clock;
-      for C in 1 .. Items_Count loop
+      for C in 1 .. Local_Items_Count loop
          V (C) := 2;
       end loop;
       V (V'Last - 1) := 5;

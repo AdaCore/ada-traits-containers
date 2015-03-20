@@ -14,8 +14,10 @@ project Default is
    end Builder;
 
    package Compiler is
-      for Switches ("Ada") use ("-O2", "-gnat12", --  "-gnatp", "-gnatn",
-         "-gnatwu", "-g");
+      for Switches ("Ada") use ("-O2", "-gnat12", "-gnatp", "-gnatn",
+         "-gnatwu"
+         --  ,"-g"
+         );
       for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
    end Compiler;
 

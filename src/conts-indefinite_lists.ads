@@ -35,4 +35,12 @@ package Conts.Indefinite_Lists is
       (Container    => List'Class,
        Cursor       => Cursor,
        Element_Type => Element_Type);
+
+   package Forward_Cursors_Access is new Forward_Cursors_Traits
+      (Container    => List'Class,
+       Cursor       => Cursor,
+       Element_Type => Element_Access,
+       Element      => Stored_Element);
+   --  Another version of cursors that manipulates the Element_Access. These
+   --  might be more efficient.
 end Conts.Indefinite_Lists;

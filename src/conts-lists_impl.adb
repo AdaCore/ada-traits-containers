@@ -72,6 +72,21 @@ package body Conts.Lists_Impl is
       return Convert_To (Position.Current.Element);
    end Element;
 
+   --------------------
+   -- Stored_Element --
+   --------------------
+
+   function Stored_Element
+      (Self : List'Class; Position : Cursor) return Stored_Element_Type is
+      pragma Unreferenced (Self);
+   begin
+      if Enable_Asserts and then Position.Current = null then
+         raise Program_Error with "Invalid position in list";
+      end if;
+
+      return Position.Current.Element;
+   end Stored_Element;
+
    -----------------
    -- Has_Element --
    -----------------

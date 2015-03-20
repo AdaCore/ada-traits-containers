@@ -5,21 +5,22 @@ Designing new efficient containers
 Goals
 -----
 
-- Contains should be efficient
+- Containers should be efficient
   We will compare with other languages (C++, Python and Lua)
 
 - We need to be able to add preconditions
   In particular, we need containers for SPARK. They do not have to share
   implementation with containers used in other contexts, but it would be
-  nice if we could share more of the spec.
+  nice if we could share the spec.
   Technically speaking, one of the things this imposes is to pass the
-  container in parameter to the various cursor function (Element, First,...)
+  container in parameter to the various cursor functions (Element, First,...)
+  and avoid dynamic memory allocations.
 
 - Containers must be readable from multiple tasks in parallel
   No writting in flags for instance (M223-003)
 
 - We would like to avoid the multiplication of packages for Bounded/Unbounded,
-  constrained/unconstrained, formal or not,...
+  constrained/indefinite, formal or not,...
 
 - Avoid a case with dangling cursors (M124-015)
   If we write a function that returns a container, and use it as:
@@ -48,7 +49,8 @@ Proposal
   user-specific data structures, not just on a graph type provided by Boost.
 
   With this in place, the Count_If algorithm is written only once for all
-  containers that we test (definite/indefinite, or Ada2012 containers)
+  containers that we test (definite/indefinite, Ada2012 containers or standard
+  Ada arrays)
 
   Implementation detail: because of Ada's freezing rules, we need to define
     the container in another package (conts.lists_impl) and then have
