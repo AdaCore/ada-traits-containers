@@ -103,9 +103,15 @@ Todo
   A similar solution is also needed to prevent users from freeing the access
   type returned by Stored_Element, or modifying the pointed element in place
   (which is incorrect for some containers)
+  Using a reference seems much slower than using an access to element_type,
+  even though the reference is not controlled.
+  Can we store the reference directly in the container ?
 
-- Implement bounded containers, sharing the same implementation
-  Seems like this would be two extra parameters to Conts.Lists_Impl to
-  control the allocation and deallocation of nodes. Then
-  Conts.Bounded_Lists would subclass the List and have a discriminant
-  Capacity, as well as a field for the buffer.
+- Bounded containers
+  Capacity is currently a formal generic parameter. Would be better if it was
+  a discriminant of the type itself, since that would require fewer
+  instantiations.
+
+- Array adaptors
+  Is there a way not to pass the index_type and component_type explicitly
+  as part of the formal containers ? (perhaps a Arr'Component_Type) ?

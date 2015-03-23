@@ -1,5 +1,9 @@
+--  Unbounded lists of unconstrained elements
+
 with Ada.Unchecked_Deallocation;
+with Conts.Generic_Elements;
 with Conts.Lists_Impl;
+with Conts.Unbounded_List_Nodes;
 
 generic
    type Element_Type (<>) is private;
@@ -16,13 +20,19 @@ package Conts.Indefinite_Lists is
    function To_Element_Type (E : Element_Access) return Element_Type
       is (E.all);
    pragma Inline (To_Element_Access, To_Element_Type);
-   package Lists is new Conts.Lists_Impl
+
+   package Elements is new Conts.Generic_Elements
       (Element_Type        => Element_Type,
        Stored_Element_Type => Element_Access,
        Convert_From        => To_Element_Access,
        Convert_To          => To_Element_Type,
-       Release             => Unchecked_Free,
-       Enable_Asserts      => Enable_Asserts);
+       Release             => Unchecked_Free);
+
+   package Nodes is new Conts.Unbounded_List_Nodes (Elements);
+
+   package Lists is new Conts.Lists_Impl
+      (All_Nodes      => Nodes.Nodes,
+       Enable_Asserts => Enable_Asserts);
    use Lists;
 
    subtype List is Lists.List;

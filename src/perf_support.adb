@@ -4,6 +4,7 @@ with Ada.Calendar;       use Ada.Calendar;
 with Ada.Text_IO;        use Ada.Text_IO;
 with Conts.Lists;
 with Conts.Indefinite_Lists;
+with Conts.Bounded_Lists;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
 with Taggeds;
@@ -79,7 +80,7 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start);
+         Print_Time (Clock - Start, Extra => "(1)");
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -161,6 +162,72 @@ package body Perf_Support is
    begin
       Do_Test (V);
    end Test_Lists_Int;
+
+   ------------------------
+   -- Test_Lists_Bounded --
+   ------------------------
+
+   procedure Test_Lists_Bounded is
+      package Lists is new Conts.Bounded_Lists
+         (Element_Type   => Integer,
+          Capacity       => Small_Items_Count + 2,
+          Enable_Asserts => False);
+      use Lists;
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Forward_Cursors);
+
+      procedure Do_Test (V2 : in out Lists.List'Class);
+      procedure Do_Test (V2 : in out Lists.List'Class) is
+         It : Lists.Cursor;
+         Start : Time;
+         Co    : Natural;
+      begin
+         Start := Clock;
+         for C in 1 .. Small_Items_Count loop
+            V2.Append (2);
+         end loop;
+         V2.Append (5);
+         V2.Append (6);
+         Print_Time (Clock - Start);
+
+         Start := Clock;
+         Co := 0;
+         It := V2.First;
+         while V2.Has_Element (It) loop
+            if V2.Element (It) > 3 then
+               Co := Co + 1;
+            end if;
+            It := V2.Next (It);
+         end loop;
+         Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := 0;
+         for E of V2 loop
+            if E > 3 then
+               Co := Co + 1;
+            end if;
+         end loop;
+         Print_Time (Clock - Start, Extra => "(1)");
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := Count_If (V2, Greater_Than_3'Access);
+         Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+      end Do_Test;
+
+      V : Lists.List;
+   begin
+      Do_Test (V);
+   end Test_Lists_Bounded;
 
    ---------------------------
    -- Test_Lists_Str_Access --
@@ -371,15 +438,12 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Forward_Cursors);
 
-      Local_Items_Count : constant := 2_000_000;
-      --  Can't use more items for an array on the stack
-
-      V     : Int_Array (1 .. Local_Items_Count + 2);
+      V     : Int_Array (1 .. Small_Items_Count + 2);
       Start : Time;
       Co    : Natural;
    begin
       Start := Clock;
-      for C in 1 .. Local_Items_Count loop
+      for C in 1 .. Small_Items_Count loop
          V (C) := 2;
       end loop;
       V (V'Last - 1) := 5;

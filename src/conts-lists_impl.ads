@@ -1,5 +1,7 @@
-pragma Ada_2012;
-with Ada.Finalization;   use Ada.Finalization;
+--  A generic and general list implementation
+--  By providing appropriate values for the formal parameters, the same
+--  implementation can be used for bounded and unbounded containers, or for
+--  constrained and unconstrained elements.
 
 --  Design: in C++ STL, none of the methods are virtual, so there is no
 --  dynamic dispatching. We achieve the same here by using 'Class parameters.
@@ -8,39 +10,33 @@ with Ada.Finalization;   use Ada.Finalization;
 --  performance (the count-with-explicit-loop goes from 0.25s to 0.51s when we
 --  do not use 'Class parameters).
 
+pragma Ada_2012;
+with Conts.Generic_List_Nodes;
+with Ada.Finalization;      use Ada.Finalization;
+
 generic
-   type Element_Type (<>) is private;
-   --  The element type visible to the user (in parameter to Append, and
-   --  returned by Element, for instance)
-
-   type Stored_Element_Type is private;
-   --  The type of elements stored internally. This must be unconstrained.
-
-   with function Convert_From (E : Element_Type) return Stored_Element_Type;
-   with function Convert_To (E : Stored_Element_Type) return Element_Type;
-   --  Converting between the two types
-
-   with procedure Release (E : in out Stored_Element_Type) is null;
-   --  Called whenever a value of Element_Type is removed from the table.
-   --  This can be used to add unconstrained types to the list: Element_Type
-   --  would then be a pointer to that type, and Release is a call to
-   --  Unchecked_Deallocation.
-   --  Convenient wrappers are available in Conts.Adaptors.
-
+   with package All_Nodes is new Conts.Generic_List_Nodes (<>);
+  
    Enable_Asserts : Boolean := False;
    --  If True, extra asserts are added to the code. Apart from them, this
    --  code runs with all compiler checks disabled.
-
+  
 package Conts.Lists_Impl is
-   pragma Suppress (All_Checks);
-   pragma Unreferenced (Release);
-
+   --  A doubly-linked list needs both Previous and Next, but adding
+   --  Previous has a significant impact on performance:
+   --                               forward-list  doubly-linked   C++
+   --       10_000_000 inserts       0.46454        0.52211      0.51946
+   --       traversing list          0.150259       0.25763      0.25771
+   
    type List is tagged private
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
+   subtype Element_Type is All_Nodes.Elements.Element_Type;
+   subtype Stored_Element_Type is All_Nodes.Elements.Stored_Element_Type;
+   
    procedure Append
       (Self    : in out List'Class;
        Element : Element_Type)
@@ -50,22 +46,22 @@ package Conts.Lists_Impl is
    --  Complexity: constant
    --  Raises: Storage_Error if Enable_Asserts is True and the node can't
    --     be allocated.
-
+   
    function Length (Self : List'Class) return Count_Type
       with Inline => True,
            Global => null;
    --  Return the number of elements in the list.
    --  Complexity: linear  (in practice, constant)
-
+   
    function Capacity (Self : List'Class) return Count_Type
       with Inline => True,
            Global => null;
    --  Return the maximal number of elements in the list. This will be
    --  Count_Type'Last for unbounded containers.
    --  Complexity: constant
-
+   
    type Cursor is private;
-
+   
    function First (Self : List'Class) return Cursor
       with Inline => True,
            Global => null;
@@ -88,7 +84,7 @@ package Conts.Lists_Impl is
    --  We pass the container explicitly for the sake of writing the pre
    --  and post conditions.
    --  Complexity: constant for all cursor operations.
-
+   
    function Stored_Element
       (Self : List'Class; Position : Cursor) return Stored_Element_Type
       with Inline => True,
@@ -98,12 +94,12 @@ package Conts.Lists_Impl is
    --  of cases.
    --  ??? Can we prevent users from freeing the pointer (when it is a
    --  pointer), or changing the element in place ?
-
+   
    procedure Next (Self : List'Class; Position : in out Cursor)
       with Inline => True,
            Global => null,
            Pre    => Has_Element (Self, Position);
-
+   
    function First_Primitive (Self : List) return Cursor is (First (Self));
    function Element_Primitive
       (Self : List; Position : Cursor) return Element_Type
@@ -120,27 +116,20 @@ package Conts.Lists_Impl is
    --  of type List instead of List'Class. But then it means that the loop is
    --  doing a lot of dynamic dispatching, and is twice as slow as a loop using
    --  an explicit cursor.
-
+   
 private
-   type Node;
-   type Node_Access is access Node;
-   type Node is record
-      Element  : Stored_Element_Type;
-      Previous : Node_Access;
-      Next     : Node_Access;
-      --  A doubly-linked list needs both Previous and Next, but adding
-      --  Previous has a significant impact on performance:
-      --                               forward-list  doubly-linked   C++
-      --       10_000_000 inserts       0.46454        0.52211      0.51946
-      --       traversing list          0.150259       0.25763      0.25771
-   end record;
-
    type List is new Controlled with record
-      Head, Tail : Node_Access;
+      Nodes : All_Nodes.Container;
+      Head, Tail : All_Nodes.Node_Access;
       Size : Natural := 0;
    end record;
-
+   --  controlled just to check for performance for now.
+   --  Formal containers should not use controlled types, but it might be
+   --  necessary to implement some strategies like automatic memory handling
+   --  or copy-on-assign for instance.
+   
    type Cursor is record
-      Current : Node_Access;
+      Current : All_Nodes.Node_Access;
    end record;
+
 end Conts.Lists_Impl;

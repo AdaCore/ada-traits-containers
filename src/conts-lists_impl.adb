@@ -1,7 +1,8 @@
 pragma Ada_2012;
 
 package body Conts.Lists_Impl is
-   pragma Suppress (All_Checks);
+
+   use All_Nodes;
 
    ------------
    -- Append --
@@ -11,19 +12,23 @@ package body Conts.Lists_Impl is
       (Self    : in out List'Class;
        Element : Element_Type)
    is
-      N : Node_Access := new Node'
-         (Element => Convert_From (Element), Previous => null, Next => null);
+      N : Node_Access;
    begin
-      if Enable_Asserts and then N = null then
+      Allocate
+         (Self.Nodes,
+          All_Nodes.Elements.Convert_From (Element),
+          New_Node => N);
+
+      if Enable_Asserts and then N = Null_Access then
          raise Storage_Error with "Allocating node failed";
       end if;
 
-      if Self.Tail = null then
+      if Self.Tail = Null_Access then
          Self.Tail := N;
          Self.Head := Self.Tail;
       else
-         Self.Tail.Next := N;
-         N.Previous := Self.Tail;
+         Set_Next (Self.Nodes, Self.Tail, Next => N);
+         Set_Previous (Self.Nodes, N, Previous => Self.Tail);
          Self.Tail := N;
       end if;
 
@@ -63,13 +68,13 @@ package body Conts.Lists_Impl is
    -------------
 
    function Element (Self : List'Class; Position : Cursor) return Element_Type is
-      pragma Unreferenced (Self);
    begin
-      if Enable_Asserts and then Position.Current = null then
+      if Enable_Asserts and then Position.Current = Null_Access then
          raise Program_Error with "Invalid position in list";
       end if;
 
-      return Convert_To (Position.Current.Element);
+      return All_Nodes.Elements.Convert_To
+         (Get_Element (Self.Nodes, Position.Current));
    end Element;
 
    --------------------
@@ -78,13 +83,12 @@ package body Conts.Lists_Impl is
 
    function Stored_Element
       (Self : List'Class; Position : Cursor) return Stored_Element_Type is
-      pragma Unreferenced (Self);
    begin
-      if Enable_Asserts and then Position.Current = null then
+      if Enable_Asserts and then Position.Current = Null_Access then
          raise Program_Error with "Invalid position in list";
       end if;
 
-      return Position.Current.Element;
+      return Get_Element (Self.Nodes, Position.Current);
    end Stored_Element;
 
    -----------------
@@ -94,7 +98,7 @@ package body Conts.Lists_Impl is
    function Has_Element (Self : List'Class; Position : Cursor) return Boolean is
       pragma Unreferenced (Self);
    begin
-      return Position.Current /= null;
+      return Position.Current /= Null_Access;
    end Has_Element;
 
    ----------
@@ -102,12 +106,11 @@ package body Conts.Lists_Impl is
    ----------
 
    function Next (Self : List'Class; Position : Cursor) return Cursor is
-      pragma Unreferenced (Self);
    begin
-      if Position.Current = null then
+      if Position.Current = Null_Access then
          return Position;
       else
-         return (Current => Position.Current.Next);
+         return (Current => Get_Next (Self.Nodes, Position.Current));
       end if;
    end Next;
 
@@ -116,12 +119,11 @@ package body Conts.Lists_Impl is
    --------------
 
    function Previous (Self : List'Class; Position : Cursor) return Cursor is
-      pragma Unreferenced (Self);
    begin
-      if Position.Current = null then
+      if Position.Current = Null_Access then
          return Position;
       else
-         return (Current => Position.Current.Previous);
+         return (Current => Get_Previous (Self.Nodes, Position.Current));
       end if;
    end Previous;
 

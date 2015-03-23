@@ -83,15 +83,18 @@ package Perf_Support is
    -- Tests --
    -----------
 
-   Items_Count : constant Integer := 10_000_000;
+   Items_Count : constant Integer := 600_000;
    pragma Export (C, Items_Count, "items_count");
-   --  Can't use more, since otherwise allocating an Ada array on the stack
-   --  results in a Storage_Error.
+
+   Small_Items_Count : constant Integer := 600_000;
+   --  In some cases, we can't allocate as many items as Items_Count (when
+   --  using Ada arrays). In such cases, we use a smaller number of items.
 
    procedure Test_Lists_Int;
    procedure Test_Lists_Int_Indefinite;
    procedure Test_Lists_Str;
    procedure Test_Lists_Str_Access;
+   procedure Test_Lists_Bounded;
    --  Perform the tests for our own Conts containers
 
    procedure Test_Cpp_Int;

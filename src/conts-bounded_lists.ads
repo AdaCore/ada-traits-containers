@@ -1,18 +1,19 @@
---  Unbounded lists of constrained elements
+--  Bounded lists of constrained elements
 
 pragma Ada_2012;
 with Conts.Generic_Elements;
 with Conts.Lists_Impl;
-with Conts.Unbounded_List_Nodes;
+with Conts.Bounded_List_Nodes;
 
 generic
    type Element_Type is private;
+   Capacity : Count_Type;
 
    Enable_Asserts : Boolean := False;
    --  If True, extra asserts are added to the code. Apart from them, this
    --  code runs with all compiler checks disabled.
 
-package Conts.Lists is
+package Conts.Bounded_Lists is
 
    function Identity (E : Element_Type) return Element_Type is (E);
    pragma Inline (Identity);
@@ -22,7 +23,8 @@ package Conts.Lists is
        Convert_From        => Identity,
        Convert_To          => Identity);
 
-   package Nodes is new Conts.Unbounded_List_Nodes (Elements);
+   package Nodes is new Conts.Bounded_List_Nodes
+      (Elements, Capacity => Capacity);
 
    package Lists is new Conts.Lists_Impl
       (All_Nodes      => Nodes.Nodes,
@@ -52,4 +54,5 @@ package Conts.Lists is
        Cursor       => Cursor,
        Element_Type => Element_Type);
    package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
-end Conts.Lists;
+
+end Conts.Bounded_Lists;
