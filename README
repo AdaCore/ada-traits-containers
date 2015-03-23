@@ -83,6 +83,22 @@ Proposal for sharing generic algorithms
 - By convention, all _Traits packages have a plural in their name, as in
   Cursors_Traits, Elements_Traits, List_Nodes_Traits.
 
+Proposal for sharing code
+-------------------------
+
+Currently, there is no sharing of code between Doubly_Linked_Lists,
+and Indefinite_Doubly_Linked_Lists, Bounded_Doubly_Linked_Lists and
+Formal_Doubly_Linked_Lists.
+
+The proposal here is to share as much code as possible, through additional
+formal generic parameters. For instance, by providing a traits package for
+Elements, we can handle constrained and unconstrained elements with the
+same code (and an additional conversion operator for an element_type to
+an access to it in the case of unconstrained types).
+
+Likewise, bounded and unbounded implementations are mostly the same once we
+abstract the type of nodes.
+
 Misc Proposals
 --------------
 
