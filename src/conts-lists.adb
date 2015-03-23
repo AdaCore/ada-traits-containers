@@ -2,7 +2,12 @@ pragma Ada_2012;
 
 package body Conts.Lists is
 
-   package body Bounded_List_Node_Traits is
+   -------------------------------
+   -- Bounded_List_Nodes_Traits --
+   -------------------------------
+
+   package body Bounded_List_Nodes_Traits is
+
       --------------
       -- Allocate --
       --------------
@@ -48,9 +53,17 @@ package body Conts.Lists is
       begin
          Self.Nodes (N).Previous := Previous;
       end Set_Previous;
-   end Bounded_List_Node_Traits;
+   end Bounded_List_Nodes_Traits;
 
-   package body Unbounded_List_Node_Traits is
+   ---------------------------------
+   -- Unbounded_List_Nodes_Traits --
+   ---------------------------------
+
+   package body Unbounded_List_Nodes_Traits is
+
+      --------------
+      -- Allocate --
+      --------------
    
       procedure Allocate
          (Self    : in out Nodes_Container;
@@ -64,6 +77,10 @@ package body Conts.Lists is
             N.Element := Element;
          end if;
       end Allocate;
+
+      --------------
+      -- Set_Next --
+      --------------
    
       procedure Set_Next
          (Self : in out Nodes_Container; N, Next : Node_Access)
@@ -72,6 +89,10 @@ package body Conts.Lists is
       begin
          N.Next := Next;
       end Set_Next;
+
+      ------------------
+      -- Set_Previous --
+      ------------------
    
       procedure Set_Previous
          (Self : in out Nodes_Container; N, Previous : Node_Access)
@@ -81,7 +102,11 @@ package body Conts.Lists is
          N.Previous := Previous;
       end Set_Previous;
    
-   end Unbounded_List_Node_Traits;
+   end Unbounded_List_Nodes_Traits;
+
+   -------------------
+   -- Generic_Lists --
+   -------------------
 
    package body Generic_Lists is
       use All_Nodes;

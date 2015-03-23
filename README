@@ -31,34 +31,63 @@ Goals
          ... C references deallocated memory since My_Function's result
          ... has been finalized
 
-Proposal
---------
+Proposal for sharing generic algorithms
+---------------------------------------
 
-- Some example of code is provided that tests the various proposals against
-  Ada2012 and C++ STL containers.
+- One of the very strong limitations of the Ada containers is that they have
+  no relationship with each other. As such, if we want to write an algorithm
+  that counts the number of items that match a predicate, we will need several
+  packages. Since lists themselves have no relationship with each other, these
+  have to be generic packages:
+     generic
+        with package Lists is new Doubly_Linked_Lists (<>);
+     procedure Algo;
 
-- Manu: One of the limitations with the Ada2012 containers is that we cannot
-  write algorithms that work with any type of container (for instance counting
-  the number of elements matching a criteria) without having a lot of formal
-  parameters.
-  One proposal is to introduce explicit Traits generic packages.
-  See the code in Conts.Forward_Cursors_Traits, and the algorithm in
-  Conts.Algorithms.
+  One alternative is to pass instead lots of formal generic parameters that
+  describe how to manipulate the list and its cursors:
+     generic
+        type List is tagged private;
+        type Cursor is private;
+        with function First (Self : List) return Cursor;
+        ...
+     procedure Algo;
+
+  The approach proposed in our new containers is to group these generic
+  parameters into a set of Traits packages. These traits packages are only
+  used as a grouping of parameters, and have no body. So our algorithm
+  above would be declared as:
+     generic
+        with package Cursors is new Forward_Cursor_Traits (<>);
+     procedure Algo;
+  and all the functions to manipulate the cursor are available by accessing
+  actual parameters of the Cursors package.
+
+  Several such traits packages are declared in conts.ads, to describe how
+  to access elements (Conts.Element_Traits) whether they are definite or
+  indefinite; how to manipulate cursors (forward, bidirectional, ...)
+
+  All provided containers will pre-instantiate those traits as appropriate,
+  in particular the cursor traits. Algorithms should then be written as
+  described above. In fact, it is possible to instantiate those traits
+  packages for other types of containers, like the Ada containers, or even
+  standard Ada arrays, as show in conts-adaptors.ads.
+   
+  With this in place, the Count_If algorithm is written only once for all
+  containers that we test (definite/indefinite, Ada2012 containers or standard
+  Ada arrays).
+
   This technique is inspired by what C++ does. In particular, the Boost Graph
   library uses it for all graph algorithms, so that they can be used on
   user-specific data structures, not just on a graph type provided by Boost.
 
-  With this in place, the Count_If algorithm is written only once for all
-  containers that we test (definite/indefinite, Ada2012 containers or standard
-  Ada arrays)
+- By convention, all _Traits packages have a plural in their name, as in
+  Cursors_Traits, Elements_Traits, List_Nodes_Traits.
 
-  Implementation detail: because of Ada's freezing rules, we need to define
-    the container in another package (conts.lists_impl) and then have
-    another package (conts.lists) that instantiate that package and provide
-    the various cursors packages.
-    This also requires renaming a lot of subprograms for cases when people
-    do not use Ada2012 dot notation. These renamings could be generated
-    automatically.
+Misc Proposals
+--------------
+
+- Some example of code is provided that tests the various proposals against
+  Ada2012 and C++ STL containers.
 
 - Manu: for ease of use, I propose to make container types tagged
   This means that we can use the nice Ada2012 dot notation to call the

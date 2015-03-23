@@ -6,8 +6,8 @@ generic
 
 package Conts.Lists.Unbounded_Indefinite is
 
-   package Elements is new Indefinite_Element_Traits (Element_Type);
-   package Nodes is new Unbounded_List_Node_Traits
+   package Elements is new Indefinite_Elements_Traits (Element_Type);
+   package Nodes is new Unbounded_List_Nodes_Traits
       (Elements.Elements);
    package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,

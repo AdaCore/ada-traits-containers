@@ -31,11 +31,11 @@ package Conts is
       --  would then be a pointer to that type, and Release is a call to
       --  Unchecked_Deallocation.
       
-   package Element_Traits is
+   package Elements_Traits is
       --  pragma Unreferenced (Convert_From, Convert_To, Release);
       --  Can't use the pragma above since other packages need those. But then
       --  the compiler is complaining that these formal parameters are unused
-   end Element_Traits;
+   end Elements_Traits;
 
    -------------------------------------
    -- Definite (constrained) elements --
@@ -43,15 +43,15 @@ package Conts is
 
    generic
       type Element_Type is private;
-   package Definite_Element_Traits is
+   package Definite_Elements_Traits is
       function Identity (E : Element_Type) return Element_Type is (E);
       pragma Inline (Identity);
-      package Elements is new Element_Traits
+      package Elements is new Elements_Traits
          (Element_Type        => Element_Type,
           Stored_Element_Type => Element_Type,
           Convert_From        => Identity,
           Convert_To          => Identity);
-   end Definite_Element_Traits;
+   end Definite_Elements_Traits;
 
    -----------------------------------------
    -- Indefinite (unconstrained) elements --
@@ -59,7 +59,7 @@ package Conts is
 
    generic
       type Element_Type (<>) is private;
-   package Indefinite_Element_Traits is
+   package Indefinite_Elements_Traits is
       type Element_Access is access all Element_Type;
 
       procedure Unchecked_Free is new Ada.Unchecked_Deallocation
@@ -70,13 +70,13 @@ package Conts is
          is (E.all);
       pragma Inline (To_Element_Access, To_Element_Type);
 
-      package Elements is new Element_Traits
+      package Elements is new Elements_Traits
          (Element_Type        => Element_Type,
           Stored_Element_Type => Element_Access,
           Convert_From        => To_Element_Access,
           Convert_To          => To_Element_Type,
           Release             => Unchecked_Free);
-   end Indefinite_Element_Traits;
+   end Indefinite_Elements_Traits;
 
    -------------
    -- Cursors --

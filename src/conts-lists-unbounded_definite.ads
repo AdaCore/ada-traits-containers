@@ -11,8 +11,8 @@ generic
 
 package Conts.Lists.Unbounded_Definite is
 
-   package Elements is new Definite_Element_Traits (Element_Type);
-   package Nodes is new Unbounded_List_Node_Traits
+   package Elements is new Definite_Elements_Traits (Element_Type);
+   package Nodes is new Unbounded_List_Nodes_Traits
       (Elements.Elements);
    package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,
@@ -36,6 +36,7 @@ package Conts.Lists.Unbounded_Definite is
       renames Lists.Previous;
    --  Renames for all the subprograms in Lists, for people that do not use
    --  the Ada2012 notation for primitive operations.
+   --  Alternatively, people should "use" the Lists nested package.
 
    package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
       (Container    => List'Class,

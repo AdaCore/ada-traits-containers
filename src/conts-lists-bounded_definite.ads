@@ -12,8 +12,8 @@ generic
 
 package Conts.Lists.Bounded_Definite is
 
-   package Elements is new Definite_Element_Traits (Element_Type);
-   package Nodes is new Bounded_List_Node_Traits
+   package Elements is new Definite_Elements_Traits (Element_Type);
+   package Nodes is new Bounded_List_Nodes_Traits
       (Elements.Elements, Capacity => Capacity);
    package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,

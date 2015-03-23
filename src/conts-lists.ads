@@ -26,7 +26,7 @@ package Conts.Lists is
    --  an indirection via a generic package is negligible.
 
    generic
-      with package Elements is new Element_Traits (<>);
+      with package Elements is new Elements_Traits (<>);
       --  The type of elements stored in nodes
      
       type Container is private;
@@ -70,12 +70,12 @@ package Conts.Lists is
           Previous : Node_Access) is <>;
       --  Change the next and previous elements for a node
    
-   package List_Node_Traits is
+   package List_Nodes_Traits is
       --  pragma Unreferenced (Null_Access, Allocate, Get_Element, Get_Next);
       --  pragma Unreferenced (Get_Previous, Set_Next, Set_Previous);
       --  ??? Other packages need those, but the compiler is complaining that
       --  these formal parameters are unused in this package.
-   end List_Node_Traits;
+   end List_Nodes_Traits;
 
    ------------------------
    -- Bounded list nodes --
@@ -84,9 +84,9 @@ package Conts.Lists is
    --  allocation is needed
    
    generic
-      with package Elements is new Element_Traits (<>);
+      with package Elements is new Elements_Traits (<>);
       Capacity : Count_Type;
-   package Bounded_List_Node_Traits is
+   package Bounded_List_Nodes_Traits is
    
       subtype Stored_Element_Type is Elements.Stored_Element_Type;
    
@@ -127,13 +127,13 @@ package Conts.Lists is
       pragma Inline (Allocate, Set_Next, Set_Previous);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
    
-      package Nodes is new List_Node_Traits
+      package Nodes is new List_Nodes_Traits
          (Elements     => Elements,
           Container    => Nodes_Container,
           Node_Access  => Node_Access,
           Null_Access  => Null_Node_Access,
           Allocate     => Allocate);
-   end Bounded_List_Node_Traits;
+   end Bounded_List_Nodes_Traits;
 
    --------------------------
    -- Unbounded_List_Nodes --
@@ -142,8 +142,8 @@ package Conts.Lists is
    --  The cursors are also direct access types to the data.
 
    generic
-      with package Elements is new Element_Traits (<>);
-   package Unbounded_List_Node_Traits is
+      with package Elements is new Elements_Traits (<>);
+   package Unbounded_List_Nodes_Traits is
    
       subtype Stored_Element_Type is Elements.Stored_Element_Type;
    
@@ -174,13 +174,13 @@ package Conts.Lists is
       pragma Inline (Allocate, Set_Next, Set_Previous);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
    
-      package Nodes is new List_Node_Traits
+      package Nodes is new List_Nodes_Traits
          (Elements     => Elements,
           Container    => Nodes_Container,
           Node_Access  => Node_Access,
           Null_Access  => null,
           Allocate     => Allocate);
-   end Unbounded_List_Node_Traits;
+   end Unbounded_List_Nodes_Traits;
 
    -----------
    -- Lists --
@@ -198,7 +198,7 @@ package Conts.Lists is
    --  do not use 'Class parameters).
 
    generic
-      with package All_Nodes is new List_Node_Traits (<>);
+      with package All_Nodes is new List_Nodes_Traits (<>);
      
       Enable_Asserts : Boolean := False;
       --  If True, extra asserts are added to the code. Apart from them, this
