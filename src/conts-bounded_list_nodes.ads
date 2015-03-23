@@ -3,11 +3,10 @@
 --  allocation is needed
 
 pragma Ada_2012;
-with Conts.Generic_Elements;
 with Conts.Generic_List_Nodes;
 
 generic
-   with package Elements is new Conts.Generic_Elements (<>);
+   with package Elements is new Element_Traits (<>);
    Capacity : Count_Type;
 package Conts.Bounded_List_Nodes is
 

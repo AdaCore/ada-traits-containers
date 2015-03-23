@@ -1,7 +1,6 @@
 --  Unbounded lists of unconstrained elements
 
 with Ada.Unchecked_Deallocation;
-with Conts.Generic_Elements;
 with Conts.Lists_Impl;
 with Conts.Unbounded_List_Nodes;
 
@@ -21,7 +20,7 @@ package Conts.Indefinite_Lists is
       is (E.all);
    pragma Inline (To_Element_Access, To_Element_Type);
 
-   package Elements is new Conts.Generic_Elements
+   package Elements is new Element_Traits
       (Element_Type        => Element_Type,
        Stored_Element_Type => Element_Access,
        Convert_From        => To_Element_Access,

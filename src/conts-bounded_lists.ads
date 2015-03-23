@@ -1,7 +1,6 @@
 --  Bounded lists of constrained elements
 
 pragma Ada_2012;
-with Conts.Generic_Elements;
 with Conts.Lists_Impl;
 with Conts.Bounded_List_Nodes;
 
@@ -17,7 +16,7 @@ package Conts.Bounded_Lists is
 
    function Identity (E : Element_Type) return Element_Type is (E);
    pragma Inline (Identity);
-   package Elements is new Conts.Generic_Elements
+   package Elements is new Element_Traits
       (Element_Type        => Element_Type,
        Stored_Element_Type => Element_Type,
        Convert_From        => Identity,

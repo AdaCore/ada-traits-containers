@@ -10,10 +10,9 @@
 --  an indirection via a generic package is negligible.
 
 pragma Ada_2012;
-with Conts.Generic_Elements;
 
 generic
-   with package Elements is new Conts.Generic_Elements (<>);
+   with package Elements is new Element_Traits (<>);
    --  The type of elements stored in nodes
   
    type Container is private;

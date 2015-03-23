@@ -2,11 +2,10 @@
 --  Such nodes are implemented via standard access types
 
 pragma Ada_2012;
-with Conts.Generic_Elements;
 with Conts.Generic_List_Nodes;
 
 generic
-   with package Elements is new Conts.Generic_Elements (<>);
+   with package Elements is new Element_Traits (<>);
 package Conts.Unbounded_List_Nodes is
 
    subtype Stored_Element_Type is Elements.Stored_Element_Type;
