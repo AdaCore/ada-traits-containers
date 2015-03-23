@@ -1,8 +1,6 @@
 --  Unbounded lists of unconstrained elements
 
-with Ada.Unchecked_Deallocation;
 with Conts.Lists_Impl;
-with Conts.Unbounded_List_Nodes;
 
 generic
    type Element_Type (<>) is private;
@@ -11,8 +9,9 @@ generic
 package Conts.Indefinite_Lists is
 
    package Elements is new Unconstrained_Element_Traits (Element_Type);
-   package Nodes is new Conts.Unbounded_List_Nodes (Elements.Elements);
-   package Lists is new Conts.Lists_Impl
+   package Nodes is new Conts.Lists_Impl.Unbounded_List_Node_Traits
+      (Elements.Elements);
+   package Lists is new Conts.Lists_Impl.Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
    use Lists;

@@ -2,7 +2,6 @@
 
 pragma Ada_2012;
 with Conts.Lists_Impl;
-with Conts.Bounded_List_Nodes;
 
 generic
    type Element_Type is private;
@@ -15,9 +14,9 @@ generic
 package Conts.Bounded_Lists is
 
    package Elements is new Constrained_Element_Traits (Element_Type);
-   package Nodes is new Conts.Bounded_List_Nodes
+   package Nodes is new Conts.Lists_Impl.Bounded_List_Node_Traits
       (Elements.Elements, Capacity => Capacity);
-   package Lists is new Conts.Lists_Impl
+   package Lists is new Conts.Lists_Impl.Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
    use Lists;
