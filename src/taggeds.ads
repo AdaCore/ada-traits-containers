@@ -1,5 +1,8 @@
 --  This package contains a simple list implemented via interfaces
---  and tagged types, only used for testing performance
+--  and tagged types, only used for testing performance of having a lot
+--  of dynamic dispatching.
+--  Such containers are slower, and the algorithms cannot so easily be
+--  adapted to other user-defined containers.
 --
 --  The primitive operations on cursor do not receive the container as
 --  a parameter, which means this cannot be used for formal containers.

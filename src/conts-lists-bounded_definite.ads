@@ -1,7 +1,6 @@
 --  Bounded lists of constrained elements
 
 pragma Ada_2012;
-with Conts.Lists_Impl;
 
 generic
    type Element_Type is private;
@@ -11,12 +10,12 @@ generic
    --  If True, extra asserts are added to the code. Apart from them, this
    --  code runs with all compiler checks disabled.
 
-package Conts.Bounded_Lists is
+package Conts.Lists.Bounded_Definite is
 
-   package Elements is new Constrained_Element_Traits (Element_Type);
-   package Nodes is new Conts.Lists_Impl.Bounded_List_Node_Traits
+   package Elements is new Definite_Element_Traits (Element_Type);
+   package Nodes is new Bounded_List_Node_Traits
       (Elements.Elements, Capacity => Capacity);
-   package Lists is new Conts.Lists_Impl.Generic_Lists
+   package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
    use Lists;
@@ -45,4 +44,4 @@ package Conts.Bounded_Lists is
        Element_Type => Element_Type);
    package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
 
-end Conts.Bounded_Lists;
+end Conts.Lists.Bounded_Definite;

@@ -1,6 +1,6 @@
 pragma Ada_2012;
 
-package body Conts.Lists_Impl is
+package body Conts.Lists is
 
    package body Bounded_List_Node_Traits is
       --------------
@@ -219,4 +219,4 @@ package body Conts.Lists_Impl is
       end Next;
    end Generic_Lists;
 
-end Conts.Lists_Impl;
+end Conts.Lists;

@@ -2,9 +2,9 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Calendar;       use Ada.Calendar;
 with Ada.Text_IO;        use Ada.Text_IO;
-with Conts.Lists;
-with Conts.Indefinite_Lists;
-with Conts.Bounded_Lists;
+with Conts.Lists.Unbounded_Definite;
+with Conts.Lists.Unbounded_Indefinite;
+with Conts.Lists.Bounded_Definite;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
 with Taggeds;
@@ -38,16 +38,16 @@ package body Perf_Support is
    -------------------------------
 
    procedure Test_Lists_Int_Indefinite is
-      package Conts_Int_Lists is new Conts.Indefinite_Lists
+      package Lists is new Conts.Lists.Unbounded_Indefinite
          (Element_Type   => Integer,
           Enable_Asserts => False);
-      use Conts_Int_Lists;
+      use Lists;
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Forward_Cursors);
 
-      procedure Do_Test (V2 : in out Conts_Int_Lists.List'Class);
-      procedure Do_Test (V2 : in out Conts_Int_Lists.List'Class) is
-         It : Conts_Int_Lists.Cursor;
+      procedure Do_Test (V2 : in out Lists.List'Class);
+      procedure Do_Test (V2 : in out Lists.List'Class) is
+         It : Lists.Cursor;
          Start : Time;
          Co    : Natural;
       begin
@@ -93,7 +93,7 @@ package body Perf_Support is
          end if;
       end Do_Test;
 
-      V : Conts_Int_Lists.List;
+      V : Lists.List;
    begin
       Do_Test (V);
    end Test_Lists_Int_Indefinite;
@@ -103,16 +103,16 @@ package body Perf_Support is
    --------------------
 
    procedure Test_Lists_Int is
-      package Conts_Int_Lists is new Conts.Lists
+      package Lists is new Conts.Lists.Unbounded_Definite
          (Element_Type   => Integer,
           Enable_Asserts => False);
-      use Conts_Int_Lists;
+      use Lists;
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Forward_Cursors);
 
-      procedure Do_Test (V2 : in out Conts_Int_Lists.List'Class);
-      procedure Do_Test (V2 : in out Conts_Int_Lists.List'Class) is
-         It : Conts_Int_Lists.Cursor;
+      procedure Do_Test (V2 : in out Lists.List'Class);
+      procedure Do_Test (V2 : in out Lists.List'Class) is
+         It : Lists.Cursor;
          Start : Time;
          Co    : Natural;
       begin
@@ -158,7 +158,7 @@ package body Perf_Support is
          end if;
       end Do_Test;
 
-      V : Conts_Int_Lists.List;
+      V : Lists.List;
    begin
       Do_Test (V);
    end Test_Lists_Int;
@@ -168,7 +168,7 @@ package body Perf_Support is
    ------------------------
 
    procedure Test_Lists_Bounded is
-      package Lists is new Conts.Bounded_Lists
+      package Lists is new Conts.Lists.Bounded_Definite
          (Element_Type   => Integer,
           Capacity       => Small_Items_Count + 2,
           Enable_Asserts => False);
@@ -234,7 +234,7 @@ package body Perf_Support is
    ---------------------------
 
    procedure Test_Lists_Str_Access is
-      package Lists is new Conts.Indefinite_Lists
+      package Lists is new Conts.Lists.Unbounded_Indefinite
          (Element_Type   => String,
           Enable_Asserts => False);
       use Lists;
@@ -302,7 +302,7 @@ package body Perf_Support is
    --------------------
 
    procedure Test_Lists_Str is
-      package Lists is new Conts.Indefinite_Lists
+      package Lists is new Conts.Lists.Unbounded_Indefinite
          (Element_Type   => String,
           Enable_Asserts => False);
       use Lists;

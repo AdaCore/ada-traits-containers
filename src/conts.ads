@@ -37,9 +37,13 @@ package Conts is
       --  the compiler is complaining that these formal parameters are unused
    end Element_Traits;
 
+   -------------------------------------
+   -- Definite (constrained) elements --
+   -------------------------------------
+
    generic
       type Element_Type is private;
-   package Constrained_Element_Traits is
+   package Definite_Element_Traits is
       function Identity (E : Element_Type) return Element_Type is (E);
       pragma Inline (Identity);
       package Elements is new Element_Traits
@@ -47,11 +51,15 @@ package Conts is
           Stored_Element_Type => Element_Type,
           Convert_From        => Identity,
           Convert_To          => Identity);
-   end Constrained_Element_Traits;
+   end Definite_Element_Traits;
+
+   -----------------------------------------
+   -- Indefinite (unconstrained) elements --
+   -----------------------------------------
 
    generic
       type Element_Type (<>) is private;
-   package Unconstrained_Element_Traits is
+   package Indefinite_Element_Traits is
       type Element_Access is access all Element_Type;
 
       procedure Unchecked_Free is new Ada.Unchecked_Deallocation
@@ -68,7 +76,7 @@ package Conts is
           Convert_From        => To_Element_Access,
           Convert_To          => To_Element_Type,
           Release             => Unchecked_Free);
-   end Unconstrained_Element_Traits;
+   end Indefinite_Element_Traits;
 
    -------------
    -- Cursors --

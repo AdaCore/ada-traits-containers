@@ -115,3 +115,12 @@ Todo
 - Array adaptors
   Is there a way not to pass the index_type and component_type explicitly
   as part of the formal containers ? (perhaps a Arr'Component_Type) ?
+
+- SPARK
+  needs limited, non-controlled containers (could be done in conts-lists.ads,
+  not in conts-lists_impl.ads). Controlled can be done through another Traits
+  package.
+  Need an implementation of cursors for unbounded containers where the cursor
+  is an index into an array of access types. We do not want to use access
+  types directly, since that makes it harder to write post-condition using the
+  old and new value of iterators.

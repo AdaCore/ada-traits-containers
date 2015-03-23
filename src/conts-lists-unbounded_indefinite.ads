@@ -1,17 +1,15 @@
 --  Unbounded lists of unconstrained elements
 
-with Conts.Lists_Impl;
-
 generic
    type Element_Type (<>) is private;
    Enable_Asserts : Boolean := False;
 
-package Conts.Indefinite_Lists is
+package Conts.Lists.Unbounded_Indefinite is
 
-   package Elements is new Unconstrained_Element_Traits (Element_Type);
-   package Nodes is new Conts.Lists_Impl.Unbounded_List_Node_Traits
+   package Elements is new Indefinite_Element_Traits (Element_Type);
+   package Nodes is new Unbounded_List_Node_Traits
       (Elements.Elements);
-   package Lists is new Conts.Lists_Impl.Generic_Lists
+   package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
    use Lists;
@@ -38,4 +36,4 @@ package Conts.Indefinite_Lists is
       renames Bidirectional_Cursors_Access.Forward_Cursors;
    --  Another version of cursors that manipulates the Element_Access. These
    --  might be more efficient.
-end Conts.Indefinite_Lists;
+end Conts.Lists.Unbounded_Indefinite;
