@@ -14,17 +14,9 @@ generic
 
 package Conts.Bounded_Lists is
 
-   function Identity (E : Element_Type) return Element_Type is (E);
-   pragma Inline (Identity);
-   package Elements is new Element_Traits
-      (Element_Type        => Element_Type,
-       Stored_Element_Type => Element_Type,
-       Convert_From        => Identity,
-       Convert_To          => Identity);
-
+   package Elements is new Constrained_Element_Traits (Element_Type);
    package Nodes is new Conts.Bounded_List_Nodes
-      (Elements, Capacity => Capacity);
-
+      (Elements.Elements, Capacity => Capacity);
    package Lists is new Conts.Lists_Impl
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);

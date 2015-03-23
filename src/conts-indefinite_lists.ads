@@ -10,25 +10,8 @@ generic
 
 package Conts.Indefinite_Lists is
 
-   type Element_Access is access all Element_Type;
-
-   procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-      (Element_Type, Element_Access);
-   function To_Element_Access (E : Element_Type) return Element_Access
-      is (new Element_Type'(E));
-   function To_Element_Type (E : Element_Access) return Element_Type
-      is (E.all);
-   pragma Inline (To_Element_Access, To_Element_Type);
-
-   package Elements is new Element_Traits
-      (Element_Type        => Element_Type,
-       Stored_Element_Type => Element_Access,
-       Convert_From        => To_Element_Access,
-       Convert_To          => To_Element_Type,
-       Release             => Unchecked_Free);
-
-   package Nodes is new Conts.Unbounded_List_Nodes (Elements);
-
+   package Elements is new Unconstrained_Element_Traits (Element_Type);
+   package Nodes is new Conts.Unbounded_List_Nodes (Elements.Elements);
    package Lists is new Conts.Lists_Impl
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
@@ -36,6 +19,7 @@ package Conts.Indefinite_Lists is
 
    subtype List is Lists.List;
    subtype Cursor is Lists.Cursor;
+   subtype Element_Access is Elements.Element_Access;
 
    --  ??? Should we rename all subprograms from Lists for those people
    --  that do not use Ada2012 dot notation, as done in conts-lists.ads

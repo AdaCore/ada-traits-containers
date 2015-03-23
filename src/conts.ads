@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Ada.Unchecked_Deallocation;
 
 package Conts is
 
@@ -35,6 +36,39 @@ package Conts is
       --  Can't use the pragma above since other packages need those. But then
       --  the compiler is complaining that these formal parameters are unused
    end Element_Traits;
+
+   generic
+      type Element_Type is private;
+   package Constrained_Element_Traits is
+      function Identity (E : Element_Type) return Element_Type is (E);
+      pragma Inline (Identity);
+      package Elements is new Element_Traits
+         (Element_Type        => Element_Type,
+          Stored_Element_Type => Element_Type,
+          Convert_From        => Identity,
+          Convert_To          => Identity);
+   end Constrained_Element_Traits;
+
+   generic
+      type Element_Type (<>) is private;
+   package Unconstrained_Element_Traits is
+      type Element_Access is access all Element_Type;
+
+      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+         (Element_Type, Element_Access);
+      function To_Element_Access (E : Element_Type) return Element_Access
+         is (new Element_Type'(E));
+      function To_Element_Type (E : Element_Access) return Element_Type
+         is (E.all);
+      pragma Inline (To_Element_Access, To_Element_Type);
+
+      package Elements is new Element_Traits
+         (Element_Type        => Element_Type,
+          Stored_Element_Type => Element_Access,
+          Convert_From        => To_Element_Access,
+          Convert_To          => To_Element_Type,
+          Release             => Unchecked_Free);
+   end Unconstrained_Element_Traits;
 
    -------------
    -- Cursors --
