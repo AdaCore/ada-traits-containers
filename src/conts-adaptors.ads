@@ -38,7 +38,8 @@ package Conts.Adaptors is
    ------------------------------------------------
 
    generic
-      with package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists (<>);
+      with package Lists is
+         new Ada.Containers.Indefinite_Doubly_Linked_Lists (<>);
    package Indefinite_List_Adaptors is
       subtype Element_Type is Lists.Element_Type;
       subtype List is Lists.List;

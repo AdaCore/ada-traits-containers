@@ -13,9 +13,15 @@ procedure Perf is
    end Fewer_Items;
 
 begin
-   Put_Line ("+--- lists of integers ---------------------------------------------------+");
-   Put_Line ("Type              | fill        |explicit loop| for..of     | count_if    |");
-   Put_Line ("+-----------------+-------------+-------------+-------------+-------------+");
+   Put_Line
+      ("+--- lists of integers"
+       & " ---------------------------------------------------+");
+   Put_Line
+      ("Type              "
+       & "| fill        |explicit loop| for..of     | count_if    |");
+   Put_Line
+      ("+-----------------+-------------+-------------"
+       & "+-------------+-------------+");
    Put ("Lists (definite)  |"); Test_Lists_Int;     New_Line;
    Put ("Lists (indefinite)|"); Test_Lists_Int_Indefinite;     New_Line;
    Put ("Lists (bounded)   |"); Test_Lists_Bounded; Fewer_Items;
@@ -26,7 +32,9 @@ begin
    Put ("Tagged            |"); Test_Tagged_Int;    New_Line;
 
    New_Line;
-   Put_Line ("+--- lists of strings (test if first char is s) --------------------------+");
+   Put_Line
+      ("+--- lists of strings (test if first char is s)"
+       & " --------------------------+");
    Put ("Lists             |"); Test_Lists_Str;        New_Line;
    Put ("Lists (3)         |"); Test_Lists_Str_Access; New_Line;
    Put ("C++               |"); Test_Cpp_Str;          New_Line;

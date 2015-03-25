@@ -13,22 +13,20 @@ package body Conts.Lists is
       --------------
 
       procedure Allocate
-         (Self    : in out Nodes_Container;
+         (Self    : in out Nodes_List'Class;
           Element : Stored_Element_Type;
           N       : out Node_Access)
       is
-         --  N : Node_Array renames Container.Nodes;
-
       begin
          if Self.Free > 0 then
             N := Node_Access (Self.Free);
-            Self.Free := Integer (Self.Nodes (N).Next);
+            Self.Free := Integer (Self.Nodes (Count_Type (N)).Next);
          else
             N := Node_Access (abs Self.Free + 1);
             Self.Free := Self.Free - 1;
          end if;
 
-         Self.Nodes (N) := 
+         Self.Nodes (Count_Type (N)) :=
             (Element  => Element,
              Previous => Null_Node_Access,
              Next     => Null_Node_Access);
@@ -39,9 +37,9 @@ package body Conts.Lists is
       --------------
 
       procedure Set_Next
-         (Self : in out Nodes_Container; N, Next : Node_Access) is
+         (Self : in out Nodes_List'Class; N, Next : Node_Access) is
       begin
-         Self.Nodes (N).Next := Next;
+         Self.Nodes (Count_Type (N)).Next := Next;
       end Set_Next;
 
       ------------------
@@ -49,9 +47,9 @@ package body Conts.Lists is
       ------------------
 
       procedure Set_Previous
-         (Self : in out Nodes_Container; N, Previous : Node_Access) is
+         (Self : in out Nodes_List'Class; N, Previous : Node_Access) is
       begin
-         Self.Nodes (N).Previous := Previous;
+         Self.Nodes (Count_Type (N)).Previous := Previous;
       end Set_Previous;
    end Bounded_List_Nodes_Traits;
 
@@ -64,9 +62,9 @@ package body Conts.Lists is
       --------------
       -- Allocate --
       --------------
-   
+
       procedure Allocate
-         (Self    : in out Nodes_Container;
+         (Self    : in out Nodes_Container'Class;
           Element : Stored_Element_Type;
           N       : out Node_Access)
       is
@@ -81,9 +79,9 @@ package body Conts.Lists is
       --------------
       -- Set_Next --
       --------------
-   
+
       procedure Set_Next
-         (Self : in out Nodes_Container; N, Next : Node_Access)
+         (Self : in out Nodes_Container'Class; N, Next : Node_Access)
       is
          pragma Unreferenced (Self);
       begin
@@ -93,15 +91,15 @@ package body Conts.Lists is
       ------------------
       -- Set_Previous --
       ------------------
-   
+
       procedure Set_Previous
-         (Self : in out Nodes_Container; N, Previous : Node_Access)
+         (Self : in out Nodes_Container'Class; N, Previous : Node_Access)
       is
          pragma Unreferenced (Self);
       begin
          N.Previous := Previous;
       end Set_Previous;
-   
+
    end Unbounded_List_Nodes_Traits;
 
    -------------------
@@ -122,7 +120,7 @@ package body Conts.Lists is
          N : Node_Access;
       begin
          Allocate
-            (Self.Nodes,
+            (Self,
              All_Nodes.Elements.Convert_From (Element),
              New_Node => N);
 
@@ -134,8 +132,8 @@ package body Conts.Lists is
             Self.Tail := N;
             Self.Head := Self.Tail;
          else
-            Set_Next (Self.Nodes, Self.Tail, Next => N);
-            Set_Previous (Self.Nodes, N, Previous => Self.Tail);
+            Set_Next (Self, Self.Tail, Next => N);
+            Set_Previous (Self, N, Previous => Self.Tail);
             Self.Tail := N;
          end if;
 
@@ -174,14 +172,15 @@ package body Conts.Lists is
       -- Element --
       -------------
 
-      function Element (Self : List'Class; Position : Cursor) return Element_Type is
+      function Element
+         (Self : List'Class; Position : Cursor) return Element_Type is
       begin
          if Enable_Asserts and then Position.Current = Null_Access then
             raise Program_Error with "Invalid position in list";
          end if;
 
          return All_Nodes.Elements.Convert_To
-            (Get_Element (Self.Nodes, Position.Current));
+            (Get_Element (Self, Position.Current));
       end Element;
 
       --------------------
@@ -195,14 +194,16 @@ package body Conts.Lists is
             raise Program_Error with "Invalid position in list";
          end if;
 
-         return Get_Element (Self.Nodes, Position.Current);
+         return Get_Element (Self, Position.Current);
       end Stored_Element;
 
       -----------------
       -- Has_Element --
       -----------------
 
-      function Has_Element (Self : List'Class; Position : Cursor) return Boolean is
+      function Has_Element
+         (Self : List'Class; Position : Cursor) return Boolean
+      is
          pragma Unreferenced (Self);
       begin
          return Position.Current /= Null_Access;
@@ -217,7 +218,7 @@ package body Conts.Lists is
          if Position.Current = Null_Access then
             return Position;
          else
-            return (Current => Get_Next (Self.Nodes, Position.Current));
+            return (Current => Get_Next (Self, Position.Current));
          end if;
       end Next;
 
@@ -230,7 +231,7 @@ package body Conts.Lists is
          if Position.Current = Null_Access then
             return Position;
          else
-            return (Current => Get_Previous (Self.Nodes, Position.Current));
+            return (Current => Get_Previous (Self, Position.Current));
          end if;
       end Previous;
 

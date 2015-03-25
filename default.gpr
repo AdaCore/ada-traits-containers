@@ -5,6 +5,9 @@ project Default is
    for Exec_Dir use ".";
    for Languages use ("Ada", "C++");
 
+   type Build_Mode is ("Production", "Debug");
+   Mode : Build_Mode := external ("BUILD", "Production");
+
    package Naming is
       for Implementation_Suffix ("C++") use ".cc";
    end Naming;
@@ -14,11 +17,18 @@ project Default is
    end Builder;
 
    package Compiler is
-      for Switches ("Ada") use ("-O2", "-gnat12", "-gnatp", "-gnatn",
-         "-gnatwu"
-         --  ,"-g"
-         );
-      for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
+      Common_Ada_Switches := ("-gnaty", "-gnatwu", "-gnat12", "-g", "-s");
+
+      case Mode is
+         when "Production" =>
+            for Switches ("Ada") use Common_Ada_Switches &
+               ("-O2", "-gnatp", "-gnatn");
+            for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
+
+         when "Debug" =>
+            for Switches ("Ada") use Common_Ada_Switches & ("-g");
+            for Switches ("C++") use ("-std=c++11");
+      end case;
    end Compiler;
 
    package Binder is

@@ -74,10 +74,10 @@ package Perf_Support is
       --      Ret   => Return_Type,
       --      Call  => Binder_Call);
    end Binder2nd;
-   --  ??? Not the same as in C++ STL: since we do not have a class, there is no
-   --  constructor to pass the value of the constant, which is therefore part of the
-   --  generic formals, so we need a different instantiation for every possible value
-   --  we might want for B.
+   --  ??? Not the same as in C++ STL: since we do not have a class, there is
+   --  no constructor to pass the value of the constant, which is therefore
+   --  part of the generic formals, so we need a different instantiation for
+   --  every possible value we might want for B.
 
    -----------
    -- Tests --
@@ -86,7 +86,7 @@ package Perf_Support is
    Items_Count : constant Integer := 600_000;
    pragma Export (C, Items_Count, "items_count");
 
-   Small_Items_Count : constant Integer := 600_000;
+   Small_Items_Count : constant Integer := Items_Count;
    --  In some cases, we can't allocate as many items as Items_Count (when
    --  using Ada arrays). In such cases, we use a smaller number of items.
 

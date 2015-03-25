@@ -4,7 +4,6 @@ pragma Ada_2012;
 
 generic
    type Element_Type is private;
-   Capacity : Count_Type;
 
    Enable_Asserts : Boolean := False;
    --  If True, extra asserts are added to the code. Apart from them, this
@@ -13,18 +12,20 @@ generic
 package Conts.Lists.Bounded_Definite is
 
    package Elements is new Definite_Elements_Traits (Element_Type);
-   package Nodes is new Bounded_List_Nodes_Traits
-      (Elements.Elements, Capacity => Capacity);
+   package Nodes is new Bounded_List_Nodes_Traits (Elements.Elements);
    package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
    use Lists;
 
    subtype List is Lists.List;
+   --  This type has a discriminant (the capacity), as per the type
+   --  definition in Bounded_List_Nodes_Traits
+
    subtype Cursor is Lists.Cursor;
 
-   procedure Append
-      (Self : in out List'Class; Element : Element_Type) renames Lists.Append;
+   procedure Append (Self : in out List'Class; Element : Element_Type)
+      renames Lists.Append;
    function Length (Self : List'Class) return Count_Type renames Lists.Length;
    function First (Self : List'Class) return Cursor renames Lists.First;
    function Element (Self : List'Class; Position : Cursor) return Element_Type

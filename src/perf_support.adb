@@ -170,7 +170,6 @@ package body Perf_Support is
    procedure Test_Lists_Bounded is
       package Lists is new Conts.Lists.Bounded_Definite
          (Element_Type   => Integer,
-          Capacity       => Small_Items_Count + 2,
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
@@ -186,8 +185,8 @@ package body Perf_Support is
          for C in 1 .. Small_Items_Count loop
             V2.Append (2);
          end loop;
-         V2.Append (5);
-         V2.Append (6);
+         V2.Append (5);   --  test with dot-notation
+         Append (V2, 6);  --  test for standard calls
          Print_Time (Clock - Start);
 
          Start := Clock;
@@ -224,7 +223,7 @@ package body Perf_Support is
          end if;
       end Do_Test;
 
-      V : Lists.List;
+      V : Lists.List (Capacity => Small_Items_Count + 2);
    begin
       Do_Test (V);
    end Test_Lists_Bounded;
