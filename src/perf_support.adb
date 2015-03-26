@@ -540,6 +540,76 @@ package body Perf_Support is
       Do_Test (V);
    end Test_Lists_Str_Access;
 
+   ------------------------------
+   -- Test_Lists_Str_Reference --
+   ------------------------------
+
+   procedure Test_Lists_Str_Reference is
+      package Lists is new Conts.Lists.Indefinite_Unbounded
+         (Element_Type   => String,
+          Enable_Asserts => False);
+      use Lists;
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Forward_Cursors_Reference);
+
+      function Ref_Starts_With_Str (S : Lists.Reference_Type) return Boolean is
+         (S (S.E'First) = 's');
+      pragma Inline (Ref_Starts_With_Str);
+
+      procedure Do_Test (V2 : in out Lists.List'Class);
+      procedure Do_Test (V2 : in out Lists.List'Class) is
+         It    : Lists.Cursor;
+         Start : Time;
+         Co    : Natural;
+      begin
+         Stdout.Start_Line ("Lists (u-i-c) (4)");
+
+         Start := Clock;
+         for C in 1 .. Items_Count loop
+            V2.Append ("str1");
+         end loop;
+         Stdout.Print_Time (Clock - Start);
+
+         Start := Clock;
+         Co := 0;
+         It := V2.First;
+         while V2.Has_Element (It) loop
+            if Ref_Starts_With_Str (V2.Reference (It)) then
+               Co := Co + 1;
+            end if;
+            It := V2.Next (It);
+         end loop;
+         Stdout.Print_Time (Clock - Start);
+         if Co /= Items_Count then
+            raise Program_Error;
+         end if;
+
+         --  Start := Clock;
+         --  Co := 0;
+         --  for E of V2 loop  -- GNAT: unconstrained subtype not allowed
+         --     if Starts_With_Str (E) then
+         --        Co := Co + 1;
+         --     end if;
+         --  end loop;
+         --  Print_Time (Clock - Start);
+         --  if Co /= Items_Count then
+         --     raise Program_Error;
+         --  end if;
+         Stdout.Print_Not_Run ("(2)");
+
+         Start := Clock;
+         Co := Count_If (V2, Ref_Starts_With_Str'Access);
+         Stdout.Print_Time (Clock - Start);
+         if Co /= Items_Count then
+            raise Program_Error;
+         end if;
+      end Do_Test;
+
+      V : Lists.List;
+   begin
+      Do_Test (V);
+   end Test_Lists_Str_Reference;
+
    --------------------
    -- Test_Lists_Str --
    --------------------

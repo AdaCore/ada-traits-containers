@@ -158,6 +158,7 @@ package Conts.Lists is
          Element        : Elements.Stored_Element_Type;
          Previous, Next : Node_Access;
       end record;
+
       procedure Allocate
          (Self    : in out Nodes_Container'Class;
           Element : Elements.Stored_Element_Type;
@@ -180,11 +181,11 @@ package Conts.Lists is
       pragma Inline (Get_Element, Get_Next, Get_Previous);
 
       package Nodes is new List_Nodes_Traits
-         (Elements     => Elements,
-          Container    => Nodes_Container,
-          Node_Access  => Node_Access,
-          Null_Access  => null,
-          Allocate     => Allocate);
+         (Elements       => Elements,
+          Container      => Nodes_Container,
+          Node_Access    => Node_Access,
+          Null_Access    => null,
+          Allocate       => Allocate);
    end Unbounded_List_Nodes_Traits;
 
    --------------------------------
@@ -275,6 +276,7 @@ package Conts.Lists is
       --  have to define it in the instantiations of Generic_List.
 
       subtype Element_Type is All_Nodes.Elements.Element_Type;
+      subtype Reference_Type is All_Nodes.Elements.Reference_Type;
       subtype Stored_Element_Type is All_Nodes.Elements.Stored_Element_Type;
       type Cursor is private;
 
@@ -337,6 +339,14 @@ package Conts.Lists is
       --  ??? Can we prevent users from freeing the pointer (when it is a
       --  pointer), or changing the element in place ?
 
+      function Reference
+         (Self : List'Class; Position : Cursor) return Reference_Type
+         is (All_Nodes.Elements.Get_Reference
+                (Stored_Element (Self, Position)))
+         with Inline => True,
+              Global => null,
+              Pre    => Has_Element (Self, Position);
+
       procedure Next (Self : List'Class; Position : in out Cursor)
          with Inline => True,
               Global => null,
@@ -393,6 +403,7 @@ package Conts.Lists is
 
       subtype Cursor is Lists.Cursor;
       subtype Element_Type is Lists.All_Nodes.Elements.Element_Type;
+      subtype Reference_Type is Lists.All_Nodes.Elements.Reference_Type;
       subtype Stored_Element_Type
          is Lists.All_Nodes.Elements.Stored_Element_Type;
 
@@ -404,6 +415,9 @@ package Conts.Lists is
       function Cursors_Stored_Element (Self : List'Class; Position : Cursor)
          return Stored_Element_Type
          is (Lists.Stored_Element (Self, Position));
+      function Cursors_Reference (Self : List'Class; Position : Cursor)
+         return Reference_Type
+         is (Lists.Reference (Self, Position));
       function Cursors_Has_Element
          (Self : List'Class; Position : Cursor) return Boolean
          is (Lists.Has_Element (Self, Position));
@@ -438,6 +452,21 @@ package Conts.Lists is
           Previous     => Cursors_Previous);
       package Forward_Cursors_Access
          renames Bidirectional_Cursors_Access.Forward_Cursors;
+      --  Another version of cursors that manipulates the Element_Access. These
+      --  might be more efficient.
+
+      package Bidirectional_Cursors_Reference
+         is new Bidirectional_Cursors_Traits
+         (Container    => List'Class,
+          Cursor       => Lists.Cursor,
+          Element_Type => Reference_Type,
+          First        => Cursors_First,
+          Next         => Cursors_Next,
+          Has_Element  => Cursors_Has_Element,
+          Element      => Cursors_Reference,
+          Previous     => Cursors_Previous);
+      package Forward_Cursors_Reference
+         renames Bidirectional_Cursors_Reference.Forward_Cursors;
       --  Another version of cursors that manipulates the Element_Access. These
       --  might be more efficient.
 

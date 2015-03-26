@@ -32,6 +32,7 @@ begin
    Test_Cpp_Str;
    Test_Ada2012_Str;
    Test_Lists_Str;
+   Test_Lists_Str_Reference;
    Test_Lists_Str_Access;
    Stdout.Finish_Line;
 
@@ -41,7 +42,8 @@ begin
       & " (c/l/s): controlled/limited/spark");
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
    Put_Line ("(2): Iterable does not support unconstrained elements");
-   Put_Line ("(3): Using Stored_Element instead of Element");
+   Put_Line ("(3): Using Stored_Element (less safe, user can free pointer)");
+   Put_Line ("(4): Using Reference_Type (unconstrained type, slower)");
 
    Test_QGen;
 end Perf;

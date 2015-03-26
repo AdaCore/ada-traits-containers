@@ -97,6 +97,7 @@ package Perf_Support is
    procedure Test_Lists_Int_Indefinite_SPARK;
    procedure Test_Lists_Str;
    procedure Test_Lists_Str_Access;
+   procedure Test_Lists_Str_Reference;
    procedure Test_Lists_Bounded;
    procedure Test_Lists_Bounded_Limited;
    --  Perform the tests for our own Conts containers

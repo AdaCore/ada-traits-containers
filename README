@@ -160,6 +160,21 @@ So a bounded-definite container does not memory allocation;
 a bounded-indefinite container does one memory allocation for each element;
 an unbounded-definite container does one memory allocation for each node;
 an unbounded-indefinte container does two memory allocations per element.
+
+Proposal for performance
+------------------------
+
+The overall goal is to get as good a performance as possible.
+We propose not to use controlled types unless explicitly requested by the
+user. We also propose not to handle bits in the container to invalid
+containers when a container has been modified. These costs a lot (both
+in performance and because this requires write access to the container
+even for read-only operations, hence the user of unchecked_access).
+
+An experiment has been done in using Reference_Type to speed up access
+to data in indefinite containers. In practice, this seems slow because
+a reference_type is an unconstrained type, so it might be better for
+users to keep using an element_access.
      
 Misc Proposals
 --------------
@@ -200,22 +215,25 @@ gprbuild -Pdefault
 Todo
 ----
 
-- Use reference_type similar for Element, with automatic derefence, so that
-  indefinite containers can have a single Element instead of also having
-  Stored_Element for efficiency.
-  A similar solution is also needed to prevent users from freeing the access
-  type returned by Stored_Element, or modifying the pointed element in place
-  (which is incorrect for some containers)
-  Using a reference seems much slower than using an access to element_type,
-  even though the reference is not controlled.
-  Can we store the reference directly in the container ?
-
 - Algorithms
   We should have a version of the algorithms that take two cursors, when
   we only want to work on a subset of the container. The second cursor is,
   as in C++, past the last element in the sequence, to simplify the
   handling of containers like forward-lists. The value Null_Access would
   be used to indicate the end of the container.
+
+- Memory management
+  Provide Clear (and support for it in Nodes packages), including
+  automatically for controlled containers.
+
+- Do not have the cursors traits in lists-* packages, but instead a
+  generic Cursors package in Conts.Lists.Generic_List, with Bidirectional,
+  Forward,... nested packages.
+
+- Ideas:
+  * for lists, could write a type of Nodes_Traits for a database query.
+  * a container that does not memory allocation
+  
 
 Performance results
 -------------------

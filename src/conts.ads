@@ -21,8 +21,17 @@ package Conts is
       type Stored_Element_Type is private;
       --  The type of elements stored internally. This must be unconstrained.
 
+      type Reference_Type (<>) is private;
+      --  A safer way to access Stored_Element_Type. The intent is that for
+      --  indefinite element this will be a record with an access discriminant
+      --  and automatic dereferencing. This is safer (user can't free the
+      --  pointer, but also slower since this is an unconstrained type and
+      --  thus more costly to return from a function)
+
       with function Convert_From (E : Element_Type) return Stored_Element_Type;
       with function Convert_To (E : Stored_Element_Type) return Element_Type;
+      with function Get_Reference
+         (E : Stored_Element_Type) return Reference_Type;
       --  Converting between the two types
 
       with procedure Release (E : in out Stored_Element_Type) is null;
@@ -49,6 +58,8 @@ package Conts is
       package Elements is new Elements_Traits
          (Element_Type        => Element_Type,
           Stored_Element_Type => Element_Type,
+          Reference_Type      => Element_Type,
+          Get_Reference       => Identity,
           Convert_From        => Identity,
           Convert_To          => Identity);
    end Definite_Elements_Traits;
@@ -62,19 +73,29 @@ package Conts is
    package Indefinite_Elements_Traits is
       type Element_Access is access all Element_Type;
 
+      type Reference_Type (E : null access Element_Type) is null record
+         with Implicit_Dereference => E;
+      --  ??? Would be nice if we could make this constrained by
+      --  providing a default value for the discriminant, but this is
+      --  illegal.
+
       procedure Unchecked_Free is new Ada.Unchecked_Deallocation
          (Element_Type, Element_Access);
       function To_Element_Access (E : Element_Type) return Element_Access
          is (new Element_Type'(E));
       function To_Element_Type (E : Element_Access) return Element_Type
          is (E.all);
-      pragma Inline (To_Element_Access, To_Element_Type);
+      function Get_Reference (E : Element_Access) return Reference_Type
+         is (Reference_Type'(E => E));
+      pragma Inline (To_Element_Access, To_Element_Type, Get_Reference);
 
       package Elements is new Elements_Traits
          (Element_Type        => Element_Type,
           Stored_Element_Type => Element_Access,
           Convert_From        => To_Element_Access,
           Convert_To          => To_Element_Type,
+          Reference_Type      => Reference_Type,
+          Get_Reference       => Get_Reference,
           Release             => Unchecked_Free);
    end Indefinite_Elements_Traits;
 
