@@ -2,10 +2,10 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Calendar;       use Ada.Calendar;
 with Ada.Text_IO;        use Ada.Text_IO;
-with Conts.Lists.Unbounded_Definite;
-with Conts.Lists.Unbounded_Indefinite;
-with Conts.Lists.Bounded_Definite;
-with Conts.Lists.Bounded_Definite_Limited;
+with Conts.Lists.Definite_Unbounded;
+with Conts.Lists.Indefinite_Unbounded;
+with Conts.Lists.Definite_Bounded;
+with Conts.Lists.Definite_Bounded_Limited;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
 with Taggeds;
@@ -127,7 +127,7 @@ package body Perf_Support is
    -------------------------------
 
    procedure Test_Lists_Int_Indefinite is
-      package Lists is new Conts.Lists.Unbounded_Indefinite
+      package Lists is new Conts.Lists.Indefinite_Unbounded
          (Element_Type   => Integer,
           Enable_Asserts => False);
       use Lists;
@@ -197,10 +197,10 @@ package body Perf_Support is
    --------------------
 
    procedure Test_Lists_Int is
-      package Lists is new Conts.Lists.Unbounded_Definite
+      package Lists is new Conts.Lists.Definite_Unbounded
          (Element_Type   => Integer,
           Enable_Asserts => False);
-      use Lists;
+      use Lists, Lists.Lists;   --  second is for Ada95 notation
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Forward_Cursors);
 
@@ -216,8 +216,8 @@ package body Perf_Support is
          for C in 1 .. Items_Count loop
             V2.Append (2);
          end loop;
-         V2.Append (5);
-         V2.Append (6);
+         V2.Append (5);    --  testing withe prefix notation
+         Append (V2, 6);   --  testing with Ada95 notation
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
@@ -267,7 +267,7 @@ package body Perf_Support is
    --------------------------------
 
    procedure Test_Lists_Bounded_Limited is
-      package Lists is new Conts.Lists.Bounded_Definite_Limited
+      package Lists is new Conts.Lists.Definite_Bounded_Limited
          (Element_Type   => Integer,
           Enable_Asserts => False);
       use Lists;
@@ -335,7 +335,7 @@ package body Perf_Support is
    ------------------------
 
    procedure Test_Lists_Bounded is
-      package Lists is new Conts.Lists.Bounded_Definite
+      package Lists is new Conts.Lists.Definite_Bounded
          (Element_Type   => Integer,
           Enable_Asserts => False);
       use Lists;
@@ -406,7 +406,7 @@ package body Perf_Support is
    ---------------------------
 
    procedure Test_Lists_Str_Access is
-      package Lists is new Conts.Lists.Unbounded_Indefinite
+      package Lists is new Conts.Lists.Indefinite_Unbounded
          (Element_Type   => String,
           Enable_Asserts => False);
       use Lists;
@@ -476,7 +476,7 @@ package body Perf_Support is
    --------------------
 
    procedure Test_Lists_Str is
-      package Lists is new Conts.Lists.Unbounded_Indefinite
+      package Lists is new Conts.Lists.Indefinite_Unbounded
          (Element_Type   => String,
           Enable_Asserts => False);
       use Lists;

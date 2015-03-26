@@ -214,7 +214,9 @@ Todo
 
   Handling of limited/controlled containers currently requires a number of
   duplication of subprograms in conts-lists-* packages. Can we do this through
-  a mixin inheritance instead ?
+  a mixin inheritance instead ? Apparently no, since we then get an error
+      "representation item is not allowed for generic type"
+  when adding the Iterable aspect.
 
 - Support for the Q-Gen containers (N625-026)
   Basically, we want a container of Root'Class, for which the for..of loop

@@ -1,13 +1,18 @@
---  Unbounded lists of unconstrained elements
+--  Bounded lists of constrained elements
+
+pragma Ada_2012;
 
 generic
-   type Element_Type (<>) is private;
+   type Element_Type is private;
+
    Enable_Asserts : Boolean := False;
+   --  If True, extra asserts are added to the code. Apart from them, this
+   --  code runs with all compiler checks disabled.
 
-package Conts.Lists.Unbounded_Indefinite is
+package Conts.Lists.Definite_Bounded is
 
-   package Elements is new Indefinite_Elements_Traits (Element_Type);
-   package Nodes is new Unbounded_List_Nodes_Traits
+   package Elements is new Definite_Elements_Traits (Element_Type);
+   package Nodes is new Bounded_List_Nodes_Traits
       (Elements              => Elements.Elements,
        Controlled_Or_Limited => Controlled_Base_List);
    package Lists is new Generic_Lists
@@ -15,23 +20,23 @@ package Conts.Lists.Unbounded_Indefinite is
        Enable_Asserts => Enable_Asserts);
    use Lists;
 
-   --  subtype List is Lists.List;
-   subtype Cursor is Lists.Cursor;
-   subtype Element_Access is Elements.Element_Access;
-
-   type List is new Lists.List with null record
+   type List (Capacity : Count_Type) is
+      new Lists.List (Capacity) with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
+   --  subtype List is Lists.List;
+   --  This type has a discriminant (the capacity), as per the type
+   --  definition in Bounded_List_Nodes_Traits
+
+   subtype Cursor is Lists.Cursor;
+
    function First (Self : List'Class) return Cursor
       is (Lists.Class_Wide_First (Self));
    function Element (Self : List'Class; Position : Cursor) return Element_Type
       is (Lists.Class_Wide_Element (Self, Position));
-   function Stored_Element (Self : List'Class; Position : Cursor)
-      return Stored_Element_Type
-      is (Lists.Class_Wide_Stored_Element (Self, Position));
    function Has_Element (Self : List'Class; Position : Cursor) return Boolean
       is (Lists.Class_Wide_Has_Element (Self, Position));
    function Next (Self : List'Class; Position : Cursor) return Cursor
@@ -40,8 +45,8 @@ package Conts.Lists.Unbounded_Indefinite is
       is (Lists.Class_Wide_Previous (Self, Position));
    pragma Inline (First, Element, Has_Element, Next, Previous);
 
-   --  ??? Should we rename all subprograms from Lists for those people
-   --  that do not use Ada2012 dot notation, as done in conts-lists.ads
+   --  Renames for all the subprograms in Lists, for people that do not use
+   --  the Ada2012 notation for primitive operations.
 
    package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
       (Container    => List'Class,
@@ -49,13 +54,4 @@ package Conts.Lists.Unbounded_Indefinite is
        Element_Type => Element_Type);
    package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
 
-   package Bidirectional_Cursors_Access is new Bidirectional_Cursors_Traits
-      (Container    => List'Class,
-       Cursor       => Cursor,
-       Element_Type => Element_Access,
-       Element      => Stored_Element);
-   package Forward_Cursors_Access
-      renames Bidirectional_Cursors_Access.Forward_Cursors;
-   --  Another version of cursors that manipulates the Element_Access. These
-   --  might be more efficient.
-end Conts.Lists.Unbounded_Indefinite;
+end Conts.Lists.Definite_Bounded;

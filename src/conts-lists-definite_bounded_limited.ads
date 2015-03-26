@@ -9,7 +9,7 @@ generic
    --  If True, extra asserts are added to the code. Apart from them, this
    --  code runs with all compiler checks disabled.
 
-package Conts.Lists.Bounded_Definite_Limited is
+package Conts.Lists.Definite_Bounded_Limited is
 
    package Elements is new Definite_Elements_Traits (Element_Type);
    package Nodes is new Bounded_List_Nodes_Traits
@@ -49,4 +49,4 @@ package Conts.Lists.Bounded_Definite_Limited is
        Element_Type => Element_Type);
    package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
 
-end Conts.Lists.Bounded_Definite_Limited;
+end Conts.Lists.Definite_Bounded_Limited;
