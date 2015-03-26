@@ -210,14 +210,6 @@ Todo
   even though the reference is not controlled.
   Can we store the reference directly in the container ?
 
-- Support for the Q-Gen containers (N625-026)
-  Basically, we want a container of Root'Class, for which the for..of loop
-  returns a child type.
-     Given type Child1 is new Root with private;
-     Thn   for E of Child1_List loop    --   E is a Child1'Class
-     And   for E of Child2_List loop    --   E is a Child2'Class
-  without having to re-instantiate the container every time
-
 - Algorithms
   We should have a version of the algorithms that take two cursors, when
   we only want to work on a subset of the container. The second cursor is,

@@ -1,5 +1,6 @@
 with Ada.Text_IO;   use Ada.Text_IO;
 with Perf_Support;  use Perf_Support;
+with QGen;          use QGen;
 
 procedure Perf is
 begin
@@ -41,4 +42,6 @@ begin
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
    Put_Line ("(2): Iterable does not support unconstrained elements");
    Put_Line ("(3): Using Stored_Element instead of Element");
+
+   Test_QGen;
 end Perf;
