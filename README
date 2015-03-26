@@ -207,13 +207,14 @@ Todo
   (perhaps a Arr'Component_Type) ?
 
 - SPARK
-  needs limited, non-controlled containers (could be done in conts-lists.ads,
-  not in conts-lists_impl.ads). Controlled can be done through another Traits
-  package.
   Need an implementation of cursors for unbounded containers where the cursor
   is an index into an array of access types. We do not want to use access
   types directly, since that makes it harder to write post-condition using the
   old and new value of iterators.
+
+  Handling of limited/controlled containers currently requires a number of
+  duplication of subprograms in conts-lists-* packages. Can we do this through
+  a mixin inheritance instead ?
 
 - Support for the Q-Gen containers (N625-026)
   Basically, we want a container of Root'Class, for which the for..of loop
@@ -222,6 +223,13 @@ Todo
      Thn   for E of Child1_List loop    --   E is a Child1'Class
      And   for E of Child2_List loop    --   E is a Child2'Class
   without having to re-instantiate the container every time
+
+- Algorithms
+  We should have a version of the algorithms that take two cursors, when
+  we only want to work on a subset of the container. The second cursor is,
+  as in C++, past the last element in the sequence, to simplify the
+  handling of containers like forward-lists. The value Null_Access would
+  be used to indicate the end of the container.
 
 Performance results
 -------------------
@@ -250,3 +258,11 @@ b-/u-: (un)bounded  (d-/i-): (in)definite  (c/l): controlled/limited
 (2): Iterable does not support unconstrained elements
 (3): Using Stored_Element instead of Element
 
+
+A previous experiment shows the importance of the cache in such tests: using
+a single-linked-list instead of a doubly-linked list takes the following time
+to insert and traverse 10_000_000 integers:
+
+                          forward-list  doubly-linked
+      10_000_000 inserts   0.46454        0.52211
+      traversing list      0.150259       0.25763

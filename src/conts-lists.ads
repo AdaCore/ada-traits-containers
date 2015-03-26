@@ -24,12 +24,6 @@ package Conts.Lists is
    --  whether we have a bounded or unbounded list, for instance. Other
    --  implementations are possible to adapt to existing data structures,
    --  for instance.
-   --
-   --  ??? This concept of setting and getting values is what is called a
-   --  'property map' in Boost Graph, and a is way to abstract whether the
-   --  information is stored in a node, or externally.
-   --  If the getters and setters are marked as inline, the cost of using
-   --  an indirection via a generic package is negligible.
 
    generic
       with package Elements is new Elements_Traits (<>);
@@ -47,7 +41,6 @@ package Conts.Lists is
       --  some other data structure.
 
       Null_Access : Node_Access;
-      --  ??? We could use a Is_Valid function instead, might be more general
 
       with procedure Allocate
          (Nodes : in out Container'Class;
@@ -219,16 +212,14 @@ package Conts.Lists is
       --  code runs with all compiler checks disabled.
 
    package Generic_Lists is
-      --  A doubly-linked list needs both Previous and Next, but adding
-      --  Previous has a significant impact on performance:
-      --                               forward-list  doubly-linked   C++
-      --       10_000_000 inserts       0.46454        0.52211      0.51946
-      --       traversing list          0.150259       0.25763      0.25771
-
       type List is new All_Nodes.Container with private;
+      --  We do not define the Iterable aspect here: this is not allowed,
+      --  since the parent type is a generic formal parameter. Instead, we
+      --  have to define it in the instantiations of Generic_List.
 
       subtype Element_Type is All_Nodes.Elements.Element_Type;
       subtype Stored_Element_Type is All_Nodes.Elements.Stored_Element_Type;
+      type Cursor is private;
 
       procedure Append
          (Self    : in out List'Class;
@@ -252,8 +243,6 @@ package Conts.Lists is
       --  Return the maximal number of elements in the list. This will be
       --  Count_Type'Last for unbounded containers.
       --  Complexity: constant
-
-      type Cursor is private;
 
       function Class_Wide_First (Self : List'Class) return Cursor
          with Inline => True,
@@ -280,6 +269,7 @@ package Conts.Lists is
       --  We pass the container explicitly for the sake of writing the pre
       --  and post conditions.
       --  Complexity: constant for all cursor operations.
+      --
       --  These functions are named with a Class_Wide_ prefix, so that when
       --  they are redefined in the list packages (unbounded_indefinite,...)
       --  users can still use Self.First without creating an ambiguity between

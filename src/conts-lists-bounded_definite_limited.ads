@@ -16,8 +16,8 @@ package Conts.Lists.Bounded_Definite_Limited is
       (Elements              => Elements.Elements,
        Controlled_Or_Limited => Limited_Base_List);
    package Lists is new Generic_Lists
-      (All_Nodes      => Nodes.Nodes,
-       Enable_Asserts => Enable_Asserts);
+      (All_Nodes             => Nodes.Nodes,
+       Enable_Asserts        => Enable_Asserts);
    use Lists;
 
    type List (Capacity : Count_Type) is
@@ -26,10 +26,6 @@ package Conts.Lists.Bounded_Definite_Limited is
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
-
-   --  subtype List is Lists.List;
-   --  This type has a discriminant (the capacity), as per the type
-   --  definition in Bounded_List_Nodes_Traits
 
    subtype Cursor is Lists.Cursor;
 
