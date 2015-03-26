@@ -160,20 +160,20 @@ package body Conts.Lists is
          return Count_Type'Last;
       end Capacity;
 
-      ----------------------
-      -- Class_Wide_First --
-      ----------------------
+      -----------
+      -- First --
+      -----------
 
-      function Class_Wide_First (Self : List'Class) return Cursor is
+      function First (Self : List'Class) return Cursor is
       begin
          return (Current => Self.Head);
-      end Class_Wide_First;
+      end First;
 
-      ------------------------
-      -- Class_Wide_Element --
-      ------------------------
+      -------------
+      -- Element --
+      -------------
 
-      function Class_Wide_Element
+      function Element
          (Self : List'Class; Position : Cursor) return Element_Type is
       begin
          if Enable_Asserts and then Position.Current = Null_Access then
@@ -182,13 +182,13 @@ package body Conts.Lists is
 
          return All_Nodes.Elements.Convert_To
             (Get_Element (Self, Position.Current));
-      end Class_Wide_Element;
+      end Element;
 
-      -------------------------------
-      -- Class_Wide_Stored_Element --
-      -------------------------------
+      --------------------
+      -- Stored_Element --
+      --------------------
 
-      function Class_Wide_Stored_Element
+      function Stored_Element
          (Self : List'Class; Position : Cursor) return Stored_Element_Type is
       begin
          if Enable_Asserts and then Position.Current = Null_Access then
@@ -196,25 +196,25 @@ package body Conts.Lists is
          end if;
 
          return Get_Element (Self, Position.Current);
-      end Class_Wide_Stored_Element;
+      end Stored_Element;
 
-      ----------------------------
-      -- Class_Wide_Has_Element --
-      ----------------------------
+      -----------------
+      -- Has_Element --
+      -----------------
 
-      function Class_Wide_Has_Element
+      function Has_Element
          (Self : List'Class; Position : Cursor) return Boolean
       is
          pragma Unreferenced (Self);
       begin
          return Position.Current /= Null_Access;
-      end Class_Wide_Has_Element;
+      end Has_Element;
 
-      ---------------------
-      -- Class_Wide_Next --
-      ---------------------
+      ----------
+      -- Next --
+      ----------
 
-      function Class_Wide_Next
+      function Next
          (Self : List'Class; Position : Cursor) return Cursor is
       begin
          if Position.Current = Null_Access then
@@ -222,13 +222,13 @@ package body Conts.Lists is
          else
             return (Current => Get_Next (Self, Position.Current));
          end if;
-      end Class_Wide_Next;
+      end Next;
 
-      -------------------------
-      -- Class_Wide_Previous --
-      -------------------------
+      --------------
+      -- Previous --
+      --------------
 
-      function Class_Wide_Previous
+      function Previous
          (Self : List'Class; Position : Cursor) return Cursor is
       begin
          if Position.Current = Null_Access then
@@ -236,7 +236,7 @@ package body Conts.Lists is
          else
             return (Current => Get_Previous (Self, Position.Current));
          end if;
-      end Class_Wide_Previous;
+      end Previous;
 
       ----------
       -- Next --
@@ -244,7 +244,7 @@ package body Conts.Lists is
 
       procedure Next (Self : List'Class; Position : in out Cursor) is
       begin
-         Position := Class_Wide_Next (Self, Position);
+         Position := Next (Self, Position);
       end Next;
 
       --------------

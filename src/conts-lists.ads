@@ -244,42 +244,37 @@ package Conts.Lists is
       --  Count_Type'Last for unbounded containers.
       --  Complexity: constant
 
-      function Class_Wide_First (Self : List'Class) return Cursor
+      function First (Self : List'Class) return Cursor
          with Inline => True,
               Global => null;
-      function Class_Wide_Element
+      function Element
          (Self : List'Class; Position : Cursor) return Element_Type
          with Inline => True,
               Global => null,
-              Pre    => Class_Wide_Has_Element (Self, Position);
-      function Class_Wide_Has_Element
+              Pre    => Has_Element (Self, Position);
+      function Has_Element
          (Self : List'Class; Position : Cursor) return Boolean
          with Inline => True,
               Global => null;
-      function Class_Wide_Next
+      function Next
          (Self : List'Class; Position : Cursor) return Cursor
          with Inline => True,
               Global => null,
-              Pre    => Class_Wide_Has_Element (Self, Position);
-      function Class_Wide_Previous
+              Pre    => Has_Element (Self, Position);
+      function Previous
          (Self : List'Class; Position : Cursor) return Cursor
          with Inline => True,
               Global => null,
-              Pre    => Class_Wide_Has_Element (Self, Position);
+              Pre    => Has_Element (Self, Position);
       --  We pass the container explicitly for the sake of writing the pre
       --  and post conditions.
       --  Complexity: constant for all cursor operations.
-      --
-      --  These functions are named with a Class_Wide_ prefix, so that when
-      --  they are redefined in the list packages (unbounded_indefinite,...)
-      --  users can still use Self.First without creating an ambiguity between
-      --  the renaming and the Class_Wide function.
 
-      function Class_Wide_Stored_Element
+      function Stored_Element
          (Self : List'Class; Position : Cursor) return Stored_Element_Type
          with Inline => True,
               Global => null,
-              Pre    => Class_Wide_Has_Element (Self, Position);
+              Pre    => Has_Element (Self, Position);
       --  Accessing directly the stored element might be more efficient in a
       --  lot of cases.
       --  ??? Can we prevent users from freeing the pointer (when it is a
@@ -288,19 +283,19 @@ package Conts.Lists is
       procedure Next (Self : List'Class; Position : in out Cursor)
          with Inline => True,
               Global => null,
-              Pre    => Class_Wide_Has_Element (Self, Position);
+              Pre    => Has_Element (Self, Position);
 
       function First_Primitive (Self : List) return Cursor
-         is (Class_Wide_First (Self));
+         is (First (Self));
       function Element_Primitive
          (Self : List; Position : Cursor) return Element_Type
-         is (Class_Wide_Element (Self, Position));
+         is (Element (Self, Position));
       function Has_Element_Primitive
          (Self : List; Position : Cursor) return Boolean
-         is (Class_Wide_Has_Element (Self, Position));
+         is (Has_Element (Self, Position));
       function Next_Primitive
          (Self : List; Position : Cursor) return Cursor
-         is (Class_Wide_Next (Self, Position));
+         is (Next (Self, Position));
       pragma Inline (First_Primitive, Element_Primitive);
       pragma Inline (Has_Element_Primitive, Next_Primitive);
       --  These are only needed because the Iterable aspect expects a parameter
@@ -326,6 +321,68 @@ package Conts.Lists is
       type Cursor is record
          Current : All_Nodes.Node_Access;
       end record;
-
    end Generic_Lists;
+
+   generic
+      with package Lists is new Generic_Lists (<>);
+      type List (<>) is new Lists.List with private;
+   package List_Cursors is
+      --  Convenient package for creating the cursors traits for a list.
+      --  These cursor traits cannot be instantiated in Generic_Lists itself,
+      --  since the List type is frozen too late.
+      --  We also assume that List might be a child of Lists.List, not the
+      --  same type directly, so we need to have proxies for the cursor
+      --  subprograms
+
+      subtype Cursor is Lists.Cursor;
+      subtype Element_Type is Lists.All_Nodes.Elements.Element_Type;
+      subtype Stored_Element_Type
+         is Lists.All_Nodes.Elements.Stored_Element_Type;
+
+      function Cursors_First (Self : List'Class) return Cursor
+         is (Lists.First (Self));
+      function Cursors_Element
+         (Self : List'Class; Position : Cursor) return Element_Type
+         is (Lists.Element (Self, Position));
+      function Cursors_Stored_Element (Self : List'Class; Position : Cursor)
+         return Stored_Element_Type
+         is (Lists.Stored_Element (Self, Position));
+      function Cursors_Has_Element
+         (Self : List'Class; Position : Cursor) return Boolean
+         is (Lists.Has_Element (Self, Position));
+      function Cursors_Next
+         (Self : List'Class; Position : Cursor) return Cursor
+         is (Lists.Next (Self, Position));
+      function Cursors_Previous
+         (Self : List'Class; Position : Cursor) return Cursor
+         is (Lists.Previous (Self, Position));
+      pragma Inline (Cursors_First, Cursors_Element, Cursors_Has_Element);
+      pragma Inline (Cursors_Next, Cursors_Previous);
+
+      package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
+         (Container    => List'Class,
+          Cursor       => Cursor,
+          Element_Type => Element_Type,
+          First        => Cursors_First,
+          Next         => Cursors_Next,
+          Has_Element  => Cursors_Has_Element,
+          Element      => Cursors_Element,
+          Previous     => Cursors_Previous);
+      package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
+
+      package Bidirectional_Cursors_Access is new Bidirectional_Cursors_Traits
+         (Container    => List'Class,
+          Cursor       => Lists.Cursor,
+          Element_Type => Stored_Element_Type,
+          First        => Cursors_First,
+          Next         => Cursors_Next,
+          Has_Element  => Cursors_Has_Element,
+          Element      => Cursors_Stored_Element,
+          Previous     => Cursors_Previous);
+      package Forward_Cursors_Access
+         renames Bidirectional_Cursors_Access.Forward_Cursors;
+      --  Another version of cursors that manipulates the Element_Access. These
+      --  might be more efficient.
+
+   end List_Cursors;
 end Conts.Lists;

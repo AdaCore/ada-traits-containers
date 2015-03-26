@@ -20,32 +20,15 @@ package Conts.Lists.Definite_Unbounded is
        Enable_Asserts => Enable_Asserts);
    use Lists;
 
+   subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
-   subtype Cursor is Lists.Cursor;
 
-   function First (Self : List'Class) return Cursor
-      is (Lists.Class_Wide_First (Self));
-   function Element (Self : List'Class; Position : Cursor) return Element_Type
-      is (Lists.Class_Wide_Element (Self, Position));
-   function Has_Element (Self : List'Class; Position : Cursor) return Boolean
-      is (Lists.Class_Wide_Has_Element (Self, Position));
-   function Next (Self : List'Class; Position : Cursor) return Cursor
-      is (Lists.Class_Wide_Next (Self, Position));
-   function Previous (Self : List'Class; Position : Cursor) return Cursor
-      is (Lists.Class_Wide_Previous (Self, Position));
-   pragma Inline (First, Element, Has_Element, Next, Previous);
-   --  Renames for all the subprograms in Lists, for people that do not use
-   --  the Ada2005 notation for primitive operations.
-   --  Alternatively, people should "use" the Lists nested package.
-
-   package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
-      (Container    => List'Class,
-       Cursor       => Cursor,
-       Element_Type => Element_Type);
-   package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
+   package Cursors is new List_Cursors (Lists, List);
+   package Bidirectional_Cursors renames Cursors.Bidirectional_Cursors;
+   package Forward_Cursors renames Cursors.Forward_Cursors;
 
 end Conts.Lists.Definite_Unbounded;
