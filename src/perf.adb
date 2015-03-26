@@ -16,6 +16,7 @@ begin
    Test_Tagged_Int;
    Test_Lists_Int;
    Test_Lists_Int_Indefinite;
+   Test_Lists_Int_Indefinite_SPARK;
    Test_Lists_Bounded;
    Test_Lists_Bounded_Limited;
    Stdout.Reset;  ---  Stdout.Finish_Line to preserve percent
@@ -35,7 +36,8 @@ begin
 
    New_Line;
    Put_Line
-      ("b-/u-: (un)bounded  (d-/i-): (in)definite  (c/l): controlled/limited");
+      ("b-/u-: (un)bounded  (d-/i-): (in)definite"
+      & " (c/l/s): controlled/limited/spark");
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
    Put_Line ("(2): Iterable does not support unconstrained elements");
    Put_Line ("(3): Using Stored_Element instead of Element");

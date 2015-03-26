@@ -94,6 +94,7 @@ package Perf_Support is
 
    procedure Test_Lists_Int;
    procedure Test_Lists_Int_Indefinite;
+   procedure Test_Lists_Int_Indefinite_SPARK;
    procedure Test_Lists_Str;
    procedure Test_Lists_Str_Access;
    procedure Test_Lists_Bounded;

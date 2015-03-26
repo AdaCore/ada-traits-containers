@@ -4,6 +4,7 @@ with Ada.Calendar;       use Ada.Calendar;
 with Ada.Text_IO;        use Ada.Text_IO;
 with Conts.Lists.Definite_Unbounded;
 with Conts.Lists.Indefinite_Unbounded;
+with Conts.Lists.Indefinite_Unbounded_SPARK;
 with Conts.Lists.Definite_Bounded;
 with Conts.Lists.Definite_Bounded_Limited;
 with Conts.Algorithms;
@@ -191,6 +192,74 @@ package body Perf_Support is
    begin
       Do_Test (V);
    end Test_Lists_Int_Indefinite;
+
+   -------------------------------------
+   -- Test_Lists_Int_Indefinite_SPARK --
+   -------------------------------------
+
+   procedure Test_Lists_Int_Indefinite_SPARK is
+      package Lists is new Conts.Lists.Indefinite_Unbounded_SPARK
+         (Element_Type   => Integer,
+          Enable_Asserts => False);
+      use Lists;
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Forward_Cursors);
+
+      procedure Do_Test (V2 : in out Lists.List'Class);
+      procedure Do_Test (V2 : in out Lists.List'Class) is
+         It : Lists.Cursor;
+         Start : Time;
+         Co    : Natural;
+      begin
+         Stdout.Start_Line ("Lists (u-i-s)");
+
+         Start := Clock;
+         for C in 1 .. Items_Count loop
+            V2.Append (2);
+         end loop;
+         V2.Append (5);
+         V2.Append (6);
+         Stdout.Print_Time (Clock - Start);
+
+         Start := Clock;
+         Co := 0;
+         It := V2.First;
+         while V2.Has_Element (It) loop
+            if V2.Element (It) > 3 then
+               Co := Co + 1;
+            end if;
+            It := V2.Next (It);
+         end loop;
+         Stdout.Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := 0;
+         for E of V2 loop
+            if E > 3 then
+               Co := Co + 1;
+            end if;
+         end loop;
+         Stdout.Print_Time (Clock - Start, Extra => "(1)");
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := Count_If (V2, Greater_Than_3'Access);
+         Stdout.Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+      end Do_Test;
+
+      V : Lists.List;
+
+   begin
+      Do_Test (V);
+   end Test_Lists_Int_Indefinite_SPARK;
 
    --------------------
    -- Test_Lists_Int --

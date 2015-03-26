@@ -147,6 +147,15 @@ properties:
      the nodes and element traits package an decide to do not actual free
      at all).
 
+   - whether they are meant for SPARK usage
+     Unbounded containers in SPARK are allowed to allocate memory, but we
+     want the pointers to be indexes into a table, not direct pointers.
+     This is safer, but also eases the writting of post-conditions since
+     the value of the cursor is the same before and after an insert or a
+     copy for instance.
+     This is implemented as a new nodes_traits, similar to bounded and
+     unbounded.
+
 So a bounded-definite container does not memory allocation;
 a bounded-indefinite container does one memory allocation for each element;
 an unbounded-definite container does one memory allocation for each node;
@@ -200,17 +209,6 @@ Todo
   Using a reference seems much slower than using an access to element_type,
   even though the reference is not controlled.
   Can we store the reference directly in the container ?
-
-- Array adaptors
-  Would be nice if there was a way not to pass the index_type and
-  component_type explicitly as part of the formal containers ?
-  (perhaps a Arr'Component_Type) ?
-
-- SPARK
-  Need an implementation of cursors for unbounded containers where the cursor
-  is an index into an array of access types. We do not want to use access
-  types directly, since that makes it harder to write post-condition using the
-  old and new value of iterators.
 
 - Support for the Q-Gen containers (N625-026)
   Basically, we want a container of Root'Class, for which the for..of loop

@@ -150,23 +150,21 @@ package Conts.Lists is
       type Controlled_Or_Limited is abstract tagged limited private;
    package Unbounded_List_Nodes_Traits is
 
-      subtype Stored_Element_Type is Elements.Stored_Element_Type;
-
       subtype Nodes_Container is Controlled_Or_Limited;
       --  type Nodes_Container is null record;
       type Node;
       type Node_Access is access Node;
       type Node is record
-         Element        : Stored_Element_Type;
+         Element        : Elements.Stored_Element_Type;
          Previous, Next : Node_Access;
       end record;
       procedure Allocate
          (Self    : in out Nodes_Container'Class;
-          Element : Stored_Element_Type;
+          Element : Elements.Stored_Element_Type;
           N       : out Node_Access);
       function Get_Element
          (Self : Nodes_Container'Class; N : Node_Access)
-         return Stored_Element_Type
+         return Elements.Stored_Element_Type
          is (N.Element);
       function Get_Next
          (Self : Nodes_Container'Class; N : Node_Access) return Node_Access
@@ -188,6 +186,65 @@ package Conts.Lists is
           Null_Access  => null,
           Allocate     => Allocate);
    end Unbounded_List_Nodes_Traits;
+
+   --------------------------------
+   -- SPARK Unbounded list nodes --
+   --------------------------------
+   --  For unbounded containers, SPARK uses an array of access
+   --  types. Cursors are indexes into this array, so that the same cursor
+   --  can be used both before and after a change (post-conditions), and to
+   --  make them safer.
+
+   generic
+      with package Elements is new Elements_Traits (<>);
+      type Controlled_Or_Limited is abstract tagged limited private;
+   package SPARK_Unbounded_List_Nodes_Traits is
+
+      type Node_Access is new Count_Type;
+      Null_Node_Access : constant Node_Access := 0;
+      type Node is record
+         Element        : Elements.Stored_Element_Type;
+         Previous, Next : Node_Access := Null_Node_Access;
+      end record;
+
+      type Nodes_Array is array (Count_Type range <>) of Node;
+      type Nodes_Array_Access is access Nodes_Array;
+
+      type Nodes_List is abstract new Controlled_Or_Limited with record
+         Nodes : Nodes_Array_Access;
+         Free  : Integer := 0;   --  head of free nodes list
+         --  For a negative value, its absolute value points to the first free
+         --  element
+      end record;
+
+      procedure Allocate
+         (Self    : in out Nodes_List'Class;
+          Element : Elements.Stored_Element_Type;
+          N       : out Node_Access);   --  not inlined
+      function Get_Element
+         (Self : Nodes_List'Class; N : Node_Access)
+         return Elements.Stored_Element_Type
+         is (Self.Nodes (Count_Type (N)).Element);
+      function Get_Next
+         (Self : Nodes_List'Class; N : Node_Access) return Node_Access
+         is (Self.Nodes (Count_Type (N)).Next);
+      function Get_Previous
+         (Self : Nodes_List'Class; N : Node_Access) return Node_Access
+         is (Self.Nodes (Count_Type (N)).Previous);
+      procedure Set_Next
+         (Self : in out Nodes_List'Class; N, Next : Node_Access);
+      procedure Set_Previous
+         (Self : in out Nodes_List'Class; N, Previous : Node_Access);
+      pragma Inline (Set_Next, Set_Previous);
+      pragma Inline (Get_Element, Get_Next, Get_Previous);
+
+      package Nodes is new List_Nodes_Traits
+         (Elements     => Elements,
+          Container    => Nodes_List,
+          Node_Access  => Node_Access,
+          Null_Access  => Null_Node_Access,
+          Allocate     => Allocate);
+   end SPARK_Unbounded_List_Nodes_Traits;
 
    -----------
    -- Lists --

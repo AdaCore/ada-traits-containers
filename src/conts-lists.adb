@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Unchecked_Deallocation;
 
 package body Conts.Lists is
 
@@ -27,10 +28,14 @@ package body Conts.Lists is
             Self.Free := Self.Free - 1;
          end if;
 
-         Self.Nodes (Count_Type (N)) :=
-            (Element  => Element,
-             Previous => Null_Node_Access,
-             Next     => Null_Node_Access);
+         if Count_Type (N) <= Self.Nodes'Last then
+            Self.Nodes (Count_Type (N)) :=
+               (Element  => Element,
+                Previous => Null_Node_Access,
+                Next     => Null_Node_Access);
+         else
+            N := Null_Node_Access;
+         end if;
       end Allocate;
 
       --------------
@@ -66,7 +71,7 @@ package body Conts.Lists is
 
       procedure Allocate
          (Self    : in out Nodes_Container'Class;
-          Element : Stored_Element_Type;
+          Element : Elements.Stored_Element_Type;
           N       : out Node_Access)
       is
          pragma Unreferenced (Self);
@@ -102,6 +107,75 @@ package body Conts.Lists is
       end Set_Previous;
 
    end Unbounded_List_Nodes_Traits;
+
+   ---------------------------------------
+   -- SPARK_Unbounded_List_Nodes_Traits --
+   ---------------------------------------
+
+   package body SPARK_Unbounded_List_Nodes_Traits is
+      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+         (Nodes_Array, Nodes_Array_Access);
+
+      --------------
+      -- Allocate --
+      --------------
+
+      procedure Allocate
+         (Self    : in out Nodes_List'Class;
+          Element : Elements.Stored_Element_Type;
+          N       : out Node_Access)
+      is
+         Tmp : Nodes_Array_Access;
+      begin
+         if Self.Nodes = null then
+            Self.Nodes := new Nodes_Array (1 .. 10);
+         end if;
+
+         --  Reuse empty slots if possible
+         if Self.Free > 0 then
+            N := Node_Access (Self.Free);
+            Self.Free := Integer (Self.Nodes (Count_Type (N)).Next);
+         else
+            N := Node_Access (abs Self.Free + 1);
+            Self.Free := Self.Free - 1;
+         end if;
+
+         --  Grow the table of nodes if needed
+
+         if Count_Type (N) > Self.Nodes'Last then
+            Tmp := Self.Nodes;
+            Self.Nodes := new Nodes_Array (Tmp'First .. Tmp'Last * 2);
+            Self.Nodes (Tmp'Range) := Tmp.all;
+            Unchecked_Free (Tmp);
+         end if;
+
+         Self.Nodes (Count_Type (N)) :=
+            (Element  => Element,
+             Previous => Null_Node_Access,
+             Next     => Null_Node_Access);
+      end Allocate;
+
+      --------------
+      -- Set_Next --
+      --------------
+
+      procedure Set_Next
+         (Self : in out Nodes_List'Class; N, Next : Node_Access) is
+      begin
+         Self.Nodes (Count_Type (N)).Next := Next;
+      end Set_Next;
+
+      ------------------
+      -- Set_Previous --
+      ------------------
+
+      procedure Set_Previous
+         (Self : in out Nodes_List'Class; N, Previous : Node_Access) is
+      begin
+         Self.Nodes (Count_Type (N)).Previous := Previous;
+      end Set_Previous;
+
+   end SPARK_Unbounded_List_Nodes_Traits;
 
    -------------------
    -- Generic_Lists --
