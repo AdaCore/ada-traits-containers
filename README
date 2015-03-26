@@ -226,24 +226,27 @@ Todo
 Performance results
 -------------------
 
-+--- lists of integers ---------------------------------------------------+
-Type              | fill        |explicit loop| for..of     | count_if    |
-+-----------------+-------------+-------------+-------------+-------------+
-Lists (definite)  | 0.03733     | 0.00169     | 0.00310(1)  | 0.00162     |
-Lists (indefinite)| 0.06285     | 0.00237     | 0.00303(1)  | 0.00236     |
-Lists (bounded)   | 0.00224     | 0.00137     | 0.00298(1)  | 0.00139     |
-C++               | 0.03202     | 0.00162     | 0.00325     | 0.00156     |
-Arrays            | 0.00027     | 0.00045     | 0.00044     | 0.00042     |
-Ada2012           | 0.03553     | 0.00189     | 0.03251     | 0.00160     |
-Ada2012 (indef)   | 0.06066     | 0.00252     | 0.03235     | 0.00235     |
-Tagged            | 0.03474     | 0.00349     |
++--------- lists of integers
+                  | fill         || explicit loop| for..of      | count_if     |
+C++               | 100%         || 100%         | 187%         | 86%          |
+Array             | 3%           || 24%          | 24%          | 23%          |
+Ada (definite)    | 105%         || 121%         | 1839%        | 103%         |
+Ada (indefinite)  | 192%         || 174%         | 1859%        | 166%         |
+Tagged types      | 109%         || 171%         |
+Lists (u-d-c)     | 91%          || 116%         | 177%(1)      | 92%          |FinalizeFinalize
+Lists (u-i-c)     | 182%         || 215%         | 227%(1)      | 178%         |FinalizeFinalize
+Lists (b-d-c)     | 8%           || 77%          | 157%(1)      | 72%          |FinalizeFinalize
+Lists (b-d-l)     | 8%           || 72%          | 153%(1)      | 72%          |
 
-+--- lists of strings (test if first char is s) --------------------------+
-Lists             | 0.05723     | 0.01332     |          (2)| 0.00989     |
-Lists (3)         | 0.06163     | 0.00256     |          (2)| 0.00238     |
-C++               | 0.07475     | 0.00334     | 0.01164     | 0.00337     |
-Ada2012           | 0.06561     | 0.01154     | 0.03193     | 0.01121     |
++--------- lists of strings or std::string
+                  | fill         || explicit loop| for..of      | count_if     |
+C++               | 100%         || 100%         | 354%         | 122%         |
+Ada indefinite    | 88%          || 248%         | 739%         | 246%         |
+Lists (u-i-c)     | 79%          || 264%         | (2)          | 218%         |Finalize
+Lists (u-i-c) (3) | 77%          || 67%          | (2)          | 77%          |Finalize
 
+b-/u-: (un)bounded  (d-/i-): (in)definite  (c/l): controlled/limited
 (1): slower because Iterable aspect needs primitive operations
 (2): Iterable does not support unconstrained elements
 (3): Using Stored_Element instead of Element
+

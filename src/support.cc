@@ -8,17 +8,15 @@
 bool IsGreaterThan3 (int i) { return i > 3; }
 bool startsWithStr (const std::string& s) { return s[0] == 's'; }
 
-extern const int items_count;
-
-void print_time(double elapsed) {
-   if (elapsed == 0.0) {
-      std::cout << "             |";
-   } else {
-      std::cout << " " << std::fixed << std::setprecision(5) << elapsed << "     |";
-   }
+extern "C" {
+   extern const int items_count;
+   extern void _ada_print_time(double elapsed);
+   extern void _ada_start_line(const char* title);
 }
 
 void test_cpp() {
+   _ada_start_line("C++");
+
    std::list<int>  v;
 
    std::clock_t begin = clock();
@@ -27,7 +25,7 @@ void test_cpp() {
    }
    v.push_back(5);
    v.push_back(6);
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 
 
    begin = clock();
@@ -39,7 +37,7 @@ void test_cpp() {
       }
       it ++;
    }
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
    if (count != 2) {
       std::cout << "C++ error while counting" << std::endl;
    }
@@ -50,7 +48,7 @@ void test_cpp() {
          count ++;
       }
    }
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
    if (count != 2) {
       std::cout << "C++ error while counting" << std::endl;
    }
@@ -58,7 +56,7 @@ void test_cpp() {
 
    begin = clock();
    count = std::count_if (v.begin(), v.end(), IsGreaterThan3);
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
    if (count != 2) {
       std::cout << "C++ error while counting" << std::endl;
    }
@@ -67,11 +65,13 @@ void test_cpp() {
 void test_cpp_string() {
    std::list<std::string>  v;
 
+   _ada_start_line("C++");
+
    std::clock_t begin = clock();
    for (int c = 1; c <= items_count; c++) {
       v.push_back("str1");
    }
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 
 
    begin = clock();
@@ -83,7 +83,7 @@ void test_cpp_string() {
       }
       it ++;
    }
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
    if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
@@ -95,7 +95,7 @@ void test_cpp_string() {
          count ++;
       }
    }
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
    if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
@@ -103,7 +103,7 @@ void test_cpp_string() {
 
    begin = clock();
    count = std::count_if (v.begin(), v.end(), startsWithStr);
-   print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
    if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }

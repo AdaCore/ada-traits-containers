@@ -2,44 +2,36 @@ with Ada.Text_IO;   use Ada.Text_IO;
 with Perf_Support;  use Perf_Support;
 
 procedure Perf is
-   procedure Fewer_Items;
-   procedure Fewer_Items is
-   begin
-      if Small_Items_Count /= Items_Count then
-         Put_Line (" fewer items");
-      else
-         New_Line;
-      end if;
-   end Fewer_Items;
-
 begin
-   Put_Line
-      ("+--- lists of integers"
-       & " ---------------------------------------------------+");
-   Put_Line
-      ("Type              "
-       & "| fill        |explicit loop| for..of     | count_if    |");
-   Put_Line
-      ("+-----------------+-------------+-------------"
-       & "+-------------+-------------+");
-   Put ("Lists (u-d-c)     |"); Test_Lists_Int;     New_Line;
-   Put ("Lists (u-i-c)     |"); Test_Lists_Int_Indefinite;     New_Line;
-   Put ("Lists (b-d-c)     |"); Test_Lists_Bounded;         Fewer_Items;
-   Put ("Lists (b-d-l)     |"); Test_Lists_Bounded_Limited; Fewer_Items;
-   Put ("C++               |"); Test_Cpp_Int;       New_Line;
-   Put ("Arrays            |"); Test_Arrays_Int;    Fewer_Items;
-   Put ("Ada2012           |"); Test_Ada2012_Int;   New_Line;
-   Put ("Ada2012 (indef)   |"); Test_Ada2012_Int_Indefinite;   New_Line;
-   Put ("Tagged            |"); Test_Tagged_Int;    New_Line;
+   Put_Line ("+--------- lists of integers");
+   Stdout.Start_Line ("");
+   Stdout.Print_Not_Run ("fill");
+   Stdout.Print_Not_Run ("explicit loop");
+   Stdout.Print_Not_Run ("for..of");
+   Stdout.Print_Not_Run ("count_if");
+   Test_Cpp_Int;
+   Test_Arrays_Int;
+   Test_Ada2012_Int;
+   Test_Ada2012_Int_Indefinite;
+   Test_Tagged_Int;
+   Test_Lists_Int;
+   Test_Lists_Int_Indefinite;
+   Test_Lists_Bounded;
+   Test_Lists_Bounded_Limited;
+   Stdout.Reset;  ---  Stdout.Finish_Line to preserve percent
 
    New_Line;
-   Put_Line
-      ("+--- lists of strings (test if first char is s)"
-       & " --------------------------+");
-   Put ("Lists (u-i-c)     |"); Test_Lists_Str;        New_Line;
-   Put ("Lists (u-i-c) (3) |"); Test_Lists_Str_Access; New_Line;
-   Put ("C++               |"); Test_Cpp_Str;          New_Line;
-   Put ("Ada2012           |"); Test_Ada2012_Str;      New_Line;
+   Put_Line ("+--------- lists of strings or std::string");
+   Stdout.Start_Line ("");
+   Stdout.Print_Not_Run ("fill");
+   Stdout.Print_Not_Run ("explicit loop");
+   Stdout.Print_Not_Run ("for..of");
+   Stdout.Print_Not_Run ("count_if");
+   Test_Cpp_Str;
+   Test_Ada2012_Str;
+   Test_Lists_Str;
+   Test_Lists_Str_Access;
+   Stdout.Finish_Line;
 
    New_Line;
    Put_Line

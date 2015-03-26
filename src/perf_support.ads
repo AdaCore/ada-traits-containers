@@ -117,4 +117,28 @@ package Perf_Support is
    procedure Test_Tagged_Int;
    --  Test when the list is implemented as tagged types
 
+   ------------
+   -- Output --
+   ------------
+
+   type Output is tagged record
+      Show_Percent : Boolean := True;
+      Column      : Integer := -1;    --  -1 if not run
+      Fewer_Items : Boolean;
+      Fill_Ref    : Duration := 0.0;  --  reference time for fill
+      Loop_Ref    : Duration := 0.0;  --  reference time for loop
+   end record;
+   procedure Reset (Self : in out Output);
+   procedure Start_Line
+      (Self : in out Output; Title : String; Fewer_Items : Boolean := False);
+   procedure Print_Time
+      (Self : in out Output; D : Duration; Extra : String := "");
+   procedure Print_Not_Run (Self : in out Output; Extra : String := "");
+   procedure Finish_Line (Self : in out Output);
+
+   Stdout : Output;
+
+private
+
+
 end Perf_Support;

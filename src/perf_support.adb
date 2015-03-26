@@ -9,6 +9,7 @@ with Conts.Lists.Bounded_Definite_Limited;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
 with Taggeds;
+with Interfaces.C.Strings;
 
 --  The tests all use a subprogram with a class-wide parameter, to force the
 --  use of dynamic dispatching and simulate real applications.
@@ -22,18 +23,104 @@ package body Perf_Support is
       (S (S'First) = 's');
    pragma Inline (Starts_With_Str);
 
-   procedure Print_Time (D : Duration; Extra : String := "");
-   procedure Print_Time (D : Duration; Extra : String := "") is
-      S   : constant String := D'Img;
-      Sub : constant String :=
-         S (S'First .. Integer'Min (S'Last, S'First + 7));
+   ------------
+   -- Output --
+   ------------
+
+   procedure Reset (Self : in out Output) is
    begin
-      if Items_Count > 1 and then D = 0.0 then
-         Put ((Extra'Length .. 12 => ' ') & Extra & '|');
-      else
-         Put (Sub & Extra & (Sub'Length + Extra'Length .. 12 => ' ') & '|');
+      Self.Finish_Line;
+      Self.Fill_Ref := 0.0;
+      Self.Loop_Ref := 0.0;
+   end Reset;
+
+   procedure Start_Line
+      (Self : in out Output; Title : String; Fewer_Items : Boolean := False) is
+   begin
+      Self.Finish_Line;
+      Put (Title & (Title'Length + 1 .. 18 => ' ') & '|');
+      Self.Fewer_Items := Fewer_Items;
+      Self.Column := 2;
+   end Start_Line;
+
+   procedure Finish_Line (Self : in out Output) is
+   begin
+      if Self.Column /= -1 then
+         Self.Column := -1;
+         if Items_Count /= Small_Items_Count and then Self.Fewer_Items then
+            Put_Line (" fewer items");
+         else
+            New_Line;
+         end if;
       end if;
+   end Finish_Line;
+
+   procedure Print_Time
+      (Self : in out Output; D : Duration; Extra : String := "")
+   is
+      Ref : Duration;
+   begin
+      if Self.Show_Percent then
+         if Self.Column = 2 then
+            if Self.Fill_Ref = 0.0 then
+               Self.Fill_Ref := D;
+            end if;
+            Ref := Self.Fill_Ref;
+         else
+            if Self.Loop_Ref = 0.0 then
+               Self.Loop_Ref := D;
+            end if;
+            Ref := Self.Loop_Ref;
+         end if;
+
+         declare
+            S : constant String := Integer'Image
+               (Integer (Float'Floor (Float (D) / Float (Ref) * 100.0))) & '%';
+         begin
+            Put (S & Extra & (S'Length + Extra'Length + 1 .. 14 => ' ') & '|');
+         end;
+
+      else
+         declare
+            S   : constant String := D'Img;
+            Sub : constant String :=
+               S (S'First .. Integer'Min (S'Last, S'First + 7));
+         begin
+            Put (Sub & Extra
+                 & (Sub'Length + Extra'Length + 1 .. 14 => ' ') & '|');
+         end;
+      end if;
+
+      if Self.Column = 2 then
+         Put ('|');
+      end if;
+
+      Self.Column := Self.Column + 1;
    end Print_Time;
+
+   procedure Print_Not_Run (Self : in out Output; Extra : String := "") is
+   begin
+      Put (' ' & Extra & (Extra'Length + 1 .. 13 => ' ') & '|');
+      if Self.Column = 2 then
+         Put ('|');
+      end if;
+
+      Self.Column := Self.Column + 1;
+   end Print_Not_Run;
+
+   procedure Print_From_C (D : Interfaces.C.double);
+   pragma Export (C, Print_From_C, "_ada_print_time");
+   procedure Print_From_C (D : Interfaces.C.double) is
+   begin
+      Stdout.Print_Time (Duration (D));
+   end Print_From_C;
+
+   procedure Start_Line_C (Title : Interfaces.C.Strings.chars_ptr);
+   pragma Export (C, Start_Line_C, "_ada_start_line");
+   procedure Start_Line_C (Title : Interfaces.C.Strings.chars_ptr) is
+   begin
+      Stdout.Start_Line (Interfaces.C.Strings.Value (Title));
+   end Start_Line_C;
 
    -------------------------------
    -- Test_Lists_Int_Indefinite --
@@ -53,13 +140,15 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Lists (u-i-c)");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V2.Append (2);
          end loop;
          V2.Append (5);
          V2.Append (6);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -70,7 +159,7 @@ package body Perf_Support is
             end if;
             It := V2.Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -82,14 +171,14 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start, Extra => "(1)");
+         Stdout.Print_Time (Clock - Start, Extra => "(1)");
          if Co /= 2 then
             raise Program_Error;
          end if;
 
          Start := Clock;
          Co := Count_If (V2, Greater_Than_3'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -121,13 +210,15 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Lists (u-d-c)");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V2.Append (2);
          end loop;
          V2.Append (5);
          V2.Append (6);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -138,7 +229,7 @@ package body Perf_Support is
             end if;
             It := V2.Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -150,14 +241,14 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start, Extra => "(1)");
+         Stdout.Print_Time (Clock - Start, Extra => "(1)");
          if Co /= 2 then
             raise Program_Error;
          end if;
 
          Start := Clock;
          Co := Count_If (V2, Greater_Than_3'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -189,13 +280,15 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Lists (b-d-l)", Fewer_Items => True);
+
          Start := Clock;
          for C in 1 .. Small_Items_Count loop
             V2.Append (2);
          end loop;
          V2.Append (5);
          V2.Append (6);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -206,7 +299,7 @@ package body Perf_Support is
             end if;
             It := V2.Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -218,14 +311,14 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start, Extra => "(1)");
+         Stdout.Print_Time (Clock - Start, Extra => "(1)");
          if Co /= 2 then
             raise Program_Error;
          end if;
 
          Start := Clock;
          Co := Count_If (V2, Greater_Than_3'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -255,13 +348,15 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Lists (b-d-c)", Fewer_Items => True);
+
          Start := Clock;
          for C in 1 .. Small_Items_Count loop
             V2.Append (2);
          end loop;
          V2.Append (5);
          V2.Append (6);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -272,7 +367,7 @@ package body Perf_Support is
             end if;
             It := V2.Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -284,14 +379,14 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start, Extra => "(1)");
+         Stdout.Print_Time (Clock - Start, Extra => "(1)");
          if Co /= 2 then
             raise Program_Error;
          end if;
 
          Start := Clock;
          Co := Count_If (V2, Greater_Than_3'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -328,11 +423,13 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Lists (u-i-c) (3)");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V2.Append ("str1");
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -343,7 +440,7 @@ package body Perf_Support is
             end if;
             It := V2.Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= Items_Count then
             raise Program_Error;
          end if;
@@ -359,11 +456,11 @@ package body Perf_Support is
          --  if Co /= Items_Count then
          --     raise Program_Error;
          --  end if;
-         Print_Time (0.0, Extra => "(2)");
+         Stdout.Print_Not_Run ("(2)");
 
          Start := Clock;
          Co := Count_If (V2, Starts_With_Str'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= Items_Count then
             raise Program_Error;
          end if;
@@ -392,11 +489,13 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Lists (u-i-c)");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V2.Append ("str1");
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -407,7 +506,7 @@ package body Perf_Support is
             end if;
             It := V2.Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= Items_Count then
             raise Program_Error;
          end if;
@@ -423,11 +522,11 @@ package body Perf_Support is
          --  if Co /= Items_Count then
          --     raise Program_Error;
          --  end if;
-         Print_Time (0.0, Extra => "(2)");
+         Stdout.Print_Not_Run ("(2)");
 
          Start := Clock;
          Co := Count_If (V2, Starts_With_Str'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= Items_Count then
             raise Program_Error;
          end if;
@@ -456,11 +555,13 @@ package body Perf_Support is
          It    : Lists.Cursor;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Ada indefinite");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V.Append ("str1");
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -471,7 +572,7 @@ package body Perf_Support is
             end if;
             Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= Items_Count then
             raise Program_Error;
          end if;
@@ -483,7 +584,7 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= Items_Count then
             raise Program_Error;
          end if;
@@ -491,7 +592,7 @@ package body Perf_Support is
          Start := Clock;
          --  ??? Why do we need a cast here
          Co := Count_If (List (V), Starts_With_Str'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= Items_Count then
             raise Program_Error;
          end if;
@@ -519,13 +620,15 @@ package body Perf_Support is
       Start : Time;
       Co    : Natural;
    begin
+      Stdout.Start_Line ("Array", Fewer_Items => True);
+
       Start := Clock;
       for C in 1 .. Small_Items_Count loop
          V (C) := 2;
       end loop;
       V (V'Last - 1) := 5;
       V (V'Last) := 6;
-      Print_Time (Clock - Start);
+      Stdout.Print_Time (Clock - Start);
 
       Start := Clock;
       Co := 0;
@@ -534,7 +637,7 @@ package body Perf_Support is
             Co := Co + 1;
          end if;
       end loop;
-      Print_Time (Clock - Start);
+      Stdout.Print_Time (Clock - Start);
       if Co /= 2 then
          raise Program_Error;
       end if;
@@ -546,14 +649,14 @@ package body Perf_Support is
             Co := Co + 1;
          end if;
       end loop;
-      Print_Time (Clock - Start);
+      Stdout.Print_Time (Clock - Start);
       if Co /= 2 then
          raise Program_Error;
       end if;
 
       Start := Clock;
       Co := Count_If (V, Greater_Than_3'Access);
-      Print_Time (Clock - Start);
+      Stdout.Print_Time (Clock - Start);
       if Co /= 2 then
          raise Program_Error;
       end if;
@@ -576,13 +679,15 @@ package body Perf_Support is
          It    : Lists.Cursor;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Ada (definite)");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V.Append (2);
          end loop;
          V.Append (5);
          V.Append (6);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -593,7 +698,7 @@ package body Perf_Support is
             end if;
             Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -605,14 +710,14 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
 
          Start := Clock;
          Co := Count_If (List (V), Greater_Than_3'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -641,13 +746,15 @@ package body Perf_Support is
          It    : Lists.Cursor;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Ada (indefinite)");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V.Append (2);
          end loop;
          V.Append (5);
          V.Append (6);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -658,7 +765,7 @@ package body Perf_Support is
             end if;
             Next (It);
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -670,14 +777,14 @@ package body Perf_Support is
                Co := Co + 1;
             end if;
          end loop;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
 
          Start := Clock;
          Co := Count_If (List (V), Greater_Than_3'Access);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
@@ -701,13 +808,15 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
+         Stdout.Start_Line ("Tagged types");
+
          Start := Clock;
          for C in 1 .. Items_Count loop
             V.Append (2);
          end loop;
          V.Append (5);
          V.Append (6);
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
          Co := 0;
@@ -723,7 +832,7 @@ package body Perf_Support is
                It.Next;
             end loop;
          end;
-         Print_Time (Clock - Start);
+         Stdout.Print_Time (Clock - Start);
          if Co /= 2 then
             raise Program_Error;
          end if;
