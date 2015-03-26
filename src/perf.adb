@@ -22,9 +22,10 @@ begin
    Put_Line
       ("+-----------------+-------------+-------------"
        & "+-------------+-------------+");
-   Put ("Lists (definite)  |"); Test_Lists_Int;     New_Line;
-   Put ("Lists (indefinite)|"); Test_Lists_Int_Indefinite;     New_Line;
-   Put ("Lists (bounded)   |"); Test_Lists_Bounded; Fewer_Items;
+   Put ("Lists (u-d-c)     |"); Test_Lists_Int;     New_Line;
+   Put ("Lists (u-i-c)     |"); Test_Lists_Int_Indefinite;     New_Line;
+   Put ("Lists (b-d-c)     |"); Test_Lists_Bounded;         Fewer_Items;
+   Put ("Lists (b-d-l)     |"); Test_Lists_Bounded_Limited; Fewer_Items;
    Put ("C++               |"); Test_Cpp_Int;       New_Line;
    Put ("Arrays            |"); Test_Arrays_Int;    Fewer_Items;
    Put ("Ada2012           |"); Test_Ada2012_Int;   New_Line;
@@ -35,12 +36,14 @@ begin
    Put_Line
       ("+--- lists of strings (test if first char is s)"
        & " --------------------------+");
-   Put ("Lists             |"); Test_Lists_Str;        New_Line;
-   Put ("Lists (3)         |"); Test_Lists_Str_Access; New_Line;
+   Put ("Lists (u-i-c)     |"); Test_Lists_Str;        New_Line;
+   Put ("Lists (u-i-c) (3) |"); Test_Lists_Str_Access; New_Line;
    Put ("C++               |"); Test_Cpp_Str;          New_Line;
    Put ("Ada2012           |"); Test_Ada2012_Str;      New_Line;
 
    New_Line;
+   Put_Line
+      ("b-/u-: (un)bounded  (d-/i-): (in)definite  (c/l): controlled/limited");
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
    Put_Line ("(2): Iterable does not support unconstrained elements");
    Put_Line ("(3): Using Stored_Element instead of Element");

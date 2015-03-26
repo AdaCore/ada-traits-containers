@@ -5,6 +5,7 @@ with Ada.Text_IO;        use Ada.Text_IO;
 with Conts.Lists.Unbounded_Definite;
 with Conts.Lists.Unbounded_Indefinite;
 with Conts.Lists.Bounded_Definite;
+with Conts.Lists.Bounded_Definite_Limited;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
 with Taggeds;
@@ -23,11 +24,12 @@ package body Perf_Support is
 
    procedure Print_Time (D : Duration; Extra : String := "");
    procedure Print_Time (D : Duration; Extra : String := "") is
-      S : constant String := D'Img;
+      S   : constant String := D'Img;
       Sub : constant String :=
          S (S'First .. Integer'Min (S'Last, S'First + 7));
    begin
-      if D = 0.0 then Put ((Extra'Length .. 12 => ' ') & Extra & '|');
+      if Items_Count > 1 and then D = 0.0 then
+         Put ((Extra'Length .. 12 => ' ') & Extra & '|');
       else
          Put (Sub & Extra & (Sub'Length + Extra'Length .. 12 => ' ') & '|');
       end if;
@@ -94,6 +96,9 @@ package body Perf_Support is
       end Do_Test;
 
       V : Lists.List;
+
+      V2 : Lists.List := V;   --  Check this is not limited type
+      pragma Unreferenced (V2);
    begin
       Do_Test (V);
    end Test_Lists_Int_Indefinite;
@@ -159,16 +164,19 @@ package body Perf_Support is
       end Do_Test;
 
       V : Lists.List;
+
+      V2 : Lists.List := V;   --  Check this is not limited type
+      pragma Unreferenced (V2);
    begin
       Do_Test (V);
    end Test_Lists_Int;
 
-   ------------------------
-   -- Test_Lists_Bounded --
-   ------------------------
+   --------------------------------
+   -- Test_Lists_Bounded_Limited --
+   --------------------------------
 
-   procedure Test_Lists_Bounded is
-      package Lists is new Conts.Lists.Bounded_Definite
+   procedure Test_Lists_Bounded_Limited is
+      package Lists is new Conts.Lists.Bounded_Definite_Limited
          (Element_Type   => Integer,
           Enable_Asserts => False);
       use Lists;
@@ -185,8 +193,8 @@ package body Perf_Support is
          for C in 1 .. Small_Items_Count loop
             V2.Append (2);
          end loop;
-         V2.Append (5);   --  test with dot-notation
-         Append (V2, 6);  --  test for standard calls
+         V2.Append (5);
+         V2.Append (6);
          Print_Time (Clock - Start);
 
          Start := Clock;
@@ -224,6 +232,76 @@ package body Perf_Support is
       end Do_Test;
 
       V : Lists.List (Capacity => Small_Items_Count + 2);
+      --  V2 : Lists.List := V;   --  Check this is limited type
+   begin
+      Do_Test (V);
+   end Test_Lists_Bounded_Limited;
+
+   ------------------------
+   -- Test_Lists_Bounded --
+   ------------------------
+
+   procedure Test_Lists_Bounded is
+      package Lists is new Conts.Lists.Bounded_Definite
+         (Element_Type   => Integer,
+          Enable_Asserts => False);
+      use Lists;
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Forward_Cursors);
+
+      procedure Do_Test (V2 : in out Lists.List'Class);
+      procedure Do_Test (V2 : in out Lists.List'Class) is
+         It : Lists.Cursor;
+         Start : Time;
+         Co    : Natural;
+      begin
+         Start := Clock;
+         for C in 1 .. Small_Items_Count loop
+            V2.Append (2);
+         end loop;
+         V2.Append (5);
+         V2.Append (6);
+         Print_Time (Clock - Start);
+
+         Start := Clock;
+         Co := 0;
+         It := V2.First;
+         while V2.Has_Element (It) loop
+            if V2.Element (It) > 3 then
+               Co := Co + 1;
+            end if;
+            It := V2.Next (It);
+         end loop;
+         Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := 0;
+         for E of V2 loop
+            if E > 3 then
+               Co := Co + 1;
+            end if;
+         end loop;
+         Print_Time (Clock - Start, Extra => "(1)");
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+
+         Start := Clock;
+         Co := Count_If (V2, Greater_Than_3'Access);
+         Print_Time (Clock - Start);
+         if Co /= 2 then
+            raise Program_Error;
+         end if;
+      end Do_Test;
+
+      V : Lists.List (Capacity => Small_Items_Count + 2);
+
+      pragma Warnings (Off);
+      V2 : Lists.List := V;   --  Check this is not limited type
+      pragma Warnings (On);
    begin
       Do_Test (V);
    end Test_Lists_Bounded;

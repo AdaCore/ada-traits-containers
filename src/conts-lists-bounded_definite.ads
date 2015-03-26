@@ -12,30 +12,39 @@ generic
 package Conts.Lists.Bounded_Definite is
 
    package Elements is new Definite_Elements_Traits (Element_Type);
-   package Nodes is new Bounded_List_Nodes_Traits (Elements.Elements);
+   package Nodes is new Bounded_List_Nodes_Traits
+      (Elements              => Elements.Elements,
+       Controlled_Or_Limited => Controlled_Base_List);
    package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
    use Lists;
 
-   subtype List is Lists.List;
+   type List (Capacity : Count_Type) is
+      new Lists.List (Capacity) with null record
+      with Iterable => (First       => First_Primitive,
+                        Next        => Next_Primitive,
+                        Has_Element => Has_Element_Primitive,
+                        Element     => Element_Primitive);
+
+   --  subtype List is Lists.List;
    --  This type has a discriminant (the capacity), as per the type
    --  definition in Bounded_List_Nodes_Traits
 
    subtype Cursor is Lists.Cursor;
 
-   procedure Append (Self : in out List'Class; Element : Element_Type)
-      renames Lists.Append;
-   function Length (Self : List'Class) return Count_Type renames Lists.Length;
-   function First (Self : List'Class) return Cursor renames Lists.First;
+   function First (Self : List'Class) return Cursor
+      is (Lists.Class_Wide_First (Self));
    function Element (Self : List'Class; Position : Cursor) return Element_Type
-      renames Lists.Element;
+      is (Lists.Class_Wide_Element (Self, Position));
    function Has_Element (Self : List'Class; Position : Cursor) return Boolean
-      renames Lists.Has_Element;
+      is (Lists.Class_Wide_Has_Element (Self, Position));
    function Next (Self : List'Class; Position : Cursor) return Cursor
-      renames Lists.Next;
+      is (Lists.Class_Wide_Next (Self, Position));
    function Previous (Self : List'Class; Position : Cursor) return Cursor
-      renames Lists.Previous;
+      is (Lists.Class_Wide_Previous (Self, Position));
+   pragma Inline (First, Element, Has_Element, Next, Previous);
+
    --  Renames for all the subprograms in Lists, for people that do not use
    --  the Ada2012 notation for primitive operations.
 

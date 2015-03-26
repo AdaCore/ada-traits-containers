@@ -83,8 +83,10 @@ package Perf_Support is
    -- Tests --
    -----------
 
-   Items_Count : constant Integer := 600_000;
+   Items_Count : constant Integer := 300_000; --  600_000;
    pragma Export (C, Items_Count, "items_count");
+   --  For some reason, using 600_000 results in a storage error when
+   --  allocating the bounded limited containers.
 
    Small_Items_Count : constant Integer := Items_Count;
    --  In some cases, we can't allocate as many items as Items_Count (when
@@ -95,6 +97,7 @@ package Perf_Support is
    procedure Test_Lists_Str;
    procedure Test_Lists_Str_Access;
    procedure Test_Lists_Bounded;
+   procedure Test_Lists_Bounded_Limited;
    --  Perform the tests for our own Conts containers
 
    procedure Test_Cpp_Int;

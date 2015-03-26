@@ -6,10 +6,12 @@
 --  elements.
 
 pragma Ada_2012;
+with Ada.Finalization; use Ada.Finalization;
 
 package Conts.Lists is
 
-   type Base_List is abstract tagged null record;
+   type Controlled_Base_List is abstract new Controlled with null record;
+   type Limited_Base_List is abstract tagged limited null record;
    --  All lists have a common ancestor, although this cannot be used to
    --  reuse code. This base type is only needed so that we can implement
    --  bounded containers and still share the code.
@@ -33,7 +35,7 @@ package Conts.Lists is
       with package Elements is new Elements_Traits (<>);
       --  The type of elements stored in nodes
 
-      type Container (<>) is abstract new Base_List with private;
+      type Container (<>) is abstract tagged limited private;
       --  A container for all nodes.
       --  Such a container is not needed when nodes are allocated on the heap
       --  and accessed via pointers; but it is needed when nodes are stored in
@@ -92,6 +94,7 @@ package Conts.Lists is
 
    generic
       with package Elements is new Elements_Traits (<>);
+      type Controlled_Or_Limited is abstract tagged limited private;
    package Bounded_List_Nodes_Traits is
 
       subtype Stored_Element_Type is Elements.Stored_Element_Type;
@@ -105,7 +108,8 @@ package Conts.Lists is
 
       type Nodes_Array is array (Count_Type range <>) of Node;
 
-      type Nodes_List (Capacity : Count_Type) is abstract new Base_List
+      type Nodes_List (Capacity : Count_Type) is
+         abstract new Controlled_Or_Limited
       with record
          Nodes : Nodes_Array (1 .. Capacity);
 
@@ -150,11 +154,12 @@ package Conts.Lists is
 
    generic
       with package Elements is new Elements_Traits (<>);
+      type Controlled_Or_Limited is abstract tagged limited private;
    package Unbounded_List_Nodes_Traits is
 
       subtype Stored_Element_Type is Elements.Stored_Element_Type;
 
-      subtype Nodes_Container is Base_List;
+      subtype Nodes_Container is Controlled_Or_Limited;
       --  type Nodes_Container is null record;
       type Node;
       type Node_Access is access Node;
@@ -220,11 +225,7 @@ package Conts.Lists is
       --       10_000_000 inserts       0.46454        0.52211      0.51946
       --       traversing list          0.150259       0.25763      0.25771
 
-      type List is new All_Nodes.Container with private
-         with Iterable => (First       => First_Primitive,
-                           Next        => Next_Primitive,
-                           Has_Element => Has_Element_Primitive,
-                           Element     => Element_Primitive);
+      type List is new All_Nodes.Container with private;
 
       subtype Element_Type is All_Nodes.Elements.Element_Type;
       subtype Stored_Element_Type is All_Nodes.Elements.Stored_Element_Type;
@@ -254,35 +255,41 @@ package Conts.Lists is
 
       type Cursor is private;
 
-      function First (Self : List'Class) return Cursor
+      function Class_Wide_First (Self : List'Class) return Cursor
          with Inline => True,
               Global => null;
-      function Element
+      function Class_Wide_Element
          (Self : List'Class; Position : Cursor) return Element_Type
          with Inline => True,
               Global => null,
-              Pre    => Has_Element (Self, Position);
-      function Has_Element
+              Pre    => Class_Wide_Has_Element (Self, Position);
+      function Class_Wide_Has_Element
          (Self : List'Class; Position : Cursor) return Boolean
          with Inline => True,
               Global => null;
-      function Next (Self : List'Class; Position : Cursor) return Cursor
+      function Class_Wide_Next
+         (Self : List'Class; Position : Cursor) return Cursor
          with Inline => True,
               Global => null,
-              Pre    => Has_Element (Self, Position);
-      function Previous (Self : List'Class; Position : Cursor) return Cursor
+              Pre    => Class_Wide_Has_Element (Self, Position);
+      function Class_Wide_Previous
+         (Self : List'Class; Position : Cursor) return Cursor
          with Inline => True,
               Global => null,
-              Pre    => Has_Element (Self, Position);
+              Pre    => Class_Wide_Has_Element (Self, Position);
       --  We pass the container explicitly for the sake of writing the pre
       --  and post conditions.
       --  Complexity: constant for all cursor operations.
+      --  These functions are named with a Class_Wide_ prefix, so that when
+      --  they are redefined in the list packages (unbounded_indefinite,...)
+      --  users can still use Self.First without creating an ambiguity between
+      --  the renaming and the Class_Wide function.
 
-      function Stored_Element
+      function Class_Wide_Stored_Element
          (Self : List'Class; Position : Cursor) return Stored_Element_Type
          with Inline => True,
               Global => null,
-              Pre    => Has_Element (Self, Position);
+              Pre    => Class_Wide_Has_Element (Self, Position);
       --  Accessing directly the stored element might be more efficient in a
       --  lot of cases.
       --  ??? Can we prevent users from freeing the pointer (when it is a
@@ -291,18 +298,19 @@ package Conts.Lists is
       procedure Next (Self : List'Class; Position : in out Cursor)
          with Inline => True,
               Global => null,
-              Pre    => Has_Element (Self, Position);
+              Pre    => Class_Wide_Has_Element (Self, Position);
 
-      function First_Primitive (Self : List) return Cursor is (First (Self));
+      function First_Primitive (Self : List) return Cursor
+         is (Class_Wide_First (Self));
       function Element_Primitive
          (Self : List; Position : Cursor) return Element_Type
-         is (Element (Self, Position));
+         is (Class_Wide_Element (Self, Position));
       function Has_Element_Primitive
          (Self : List; Position : Cursor) return Boolean
-         is (Has_Element (Self, Position));
+         is (Class_Wide_Has_Element (Self, Position));
       function Next_Primitive
          (Self : List; Position : Cursor) return Cursor
-         is (Next (Self, Position));
+         is (Class_Wide_Next (Self, Position));
       pragma Inline (First_Primitive, Element_Primitive);
       pragma Inline (Has_Element_Primitive, Next_Primitive);
       --  These are only needed because the Iterable aspect expects a parameter
@@ -311,6 +319,11 @@ package Conts.Lists is
       --  using an explicit cursor.
 
    private
+      procedure Adjust (Self : in out List) is null;
+      procedure Finalize (Self : in out List);
+      --  In case the list is a controlled type, but irrelevant when the list
+      --  is not controlled.
+
       type List is new All_Nodes.Container with record
          Head, Tail : All_Nodes.Node_Access := All_Nodes.Null_Access;
          Size : Natural := 0;

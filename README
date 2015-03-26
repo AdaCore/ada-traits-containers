@@ -147,11 +147,6 @@ properties:
      the nodes and element traits package an decide to do not actual free
      at all).
 
-     Implementation Note: At this point, we haven't found how to make that
-        configurable through a generic package, so this requires a separate
-        copy of the code at install time (the code is still fully shared
-        apart from one change in the declaration of Base_List)
-
 So a bounded-definite container does not memory allocation;
 a bounded-indefinite container does one memory allocation for each element;
 an unbounded-definite container does one memory allocation for each node;

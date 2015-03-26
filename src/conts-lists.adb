@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Conts.Lists is
 
@@ -159,20 +160,20 @@ package body Conts.Lists is
          return Count_Type'Last;
       end Capacity;
 
-      -----------
-      -- First --
-      -----------
+      ----------------------
+      -- Class_Wide_First --
+      ----------------------
 
-      function First (Self : List'Class) return Cursor is
+      function Class_Wide_First (Self : List'Class) return Cursor is
       begin
          return (Current => Self.Head);
-      end First;
+      end Class_Wide_First;
 
-      -------------
-      -- Element --
-      -------------
+      ------------------------
+      -- Class_Wide_Element --
+      ------------------------
 
-      function Element
+      function Class_Wide_Element
          (Self : List'Class; Position : Cursor) return Element_Type is
       begin
          if Enable_Asserts and then Position.Current = Null_Access then
@@ -181,13 +182,13 @@ package body Conts.Lists is
 
          return All_Nodes.Elements.Convert_To
             (Get_Element (Self, Position.Current));
-      end Element;
+      end Class_Wide_Element;
 
-      --------------------
-      -- Stored_Element --
-      --------------------
+      -------------------------------
+      -- Class_Wide_Stored_Element --
+      -------------------------------
 
-      function Stored_Element
+      function Class_Wide_Stored_Element
          (Self : List'Class; Position : Cursor) return Stored_Element_Type is
       begin
          if Enable_Asserts and then Position.Current = Null_Access then
@@ -195,45 +196,47 @@ package body Conts.Lists is
          end if;
 
          return Get_Element (Self, Position.Current);
-      end Stored_Element;
+      end Class_Wide_Stored_Element;
 
-      -----------------
-      -- Has_Element --
-      -----------------
+      ----------------------------
+      -- Class_Wide_Has_Element --
+      ----------------------------
 
-      function Has_Element
+      function Class_Wide_Has_Element
          (Self : List'Class; Position : Cursor) return Boolean
       is
          pragma Unreferenced (Self);
       begin
          return Position.Current /= Null_Access;
-      end Has_Element;
+      end Class_Wide_Has_Element;
 
-      ----------
-      -- Next --
-      ----------
+      ---------------------
+      -- Class_Wide_Next --
+      ---------------------
 
-      function Next (Self : List'Class; Position : Cursor) return Cursor is
+      function Class_Wide_Next
+         (Self : List'Class; Position : Cursor) return Cursor is
       begin
          if Position.Current = Null_Access then
             return Position;
          else
             return (Current => Get_Next (Self, Position.Current));
          end if;
-      end Next;
+      end Class_Wide_Next;
 
-      --------------
-      -- Previous --
-      --------------
+      -------------------------
+      -- Class_Wide_Previous --
+      -------------------------
 
-      function Previous (Self : List'Class; Position : Cursor) return Cursor is
+      function Class_Wide_Previous
+         (Self : List'Class; Position : Cursor) return Cursor is
       begin
          if Position.Current = Null_Access then
             return Position;
          else
             return (Current => Get_Previous (Self, Position.Current));
          end if;
-      end Previous;
+      end Class_Wide_Previous;
 
       ----------
       -- Next --
@@ -241,8 +244,18 @@ package body Conts.Lists is
 
       procedure Next (Self : List'Class; Position : in out Cursor) is
       begin
-         Position := Next (Self, Position);
+         Position := Class_Wide_Next (Self, Position);
       end Next;
+
+      --------------
+      -- Finalize --
+      --------------
+
+      procedure Finalize (Self : in out List) is
+         pragma Unreferenced (Self);
+      begin
+         Put ("Finalize");
+      end Finalize;
    end Generic_Lists;
 
 end Conts.Lists;

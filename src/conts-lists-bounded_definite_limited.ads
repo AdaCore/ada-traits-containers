@@ -1,4 +1,4 @@
---  Unbounded lists of constrained elements
+--  Bounded lists of constrained elements
 
 pragma Ada_2012;
 
@@ -9,22 +9,28 @@ generic
    --  If True, extra asserts are added to the code. Apart from them, this
    --  code runs with all compiler checks disabled.
 
-package Conts.Lists.Unbounded_Definite is
+package Conts.Lists.Bounded_Definite_Limited is
 
    package Elements is new Definite_Elements_Traits (Element_Type);
-   package Nodes is new Unbounded_List_Nodes_Traits
+   package Nodes is new Bounded_List_Nodes_Traits
       (Elements              => Elements.Elements,
-       Controlled_Or_Limited => Controlled_Base_List);
+       Controlled_Or_Limited => Limited_Base_List);
    package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
    use Lists;
 
-   type List is new Lists.List with null record
+   type List (Capacity : Count_Type) is
+      new Lists.List (Capacity) with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
+
+   --  subtype List is Lists.List;
+   --  This type has a discriminant (the capacity), as per the type
+   --  definition in Bounded_List_Nodes_Traits
+
    subtype Cursor is Lists.Cursor;
 
    function First (Self : List'Class) return Cursor
@@ -39,8 +45,7 @@ package Conts.Lists.Unbounded_Definite is
       is (Lists.Class_Wide_Previous (Self, Position));
    pragma Inline (First, Element, Has_Element, Next, Previous);
    --  Renames for all the subprograms in Lists, for people that do not use
-   --  the Ada2005 notation for primitive operations.
-   --  Alternatively, people should "use" the Lists nested package.
+   --  the Ada2012 notation for primitive operations.
 
    package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
       (Container    => List'Class,
@@ -48,4 +53,4 @@ package Conts.Lists.Unbounded_Definite is
        Element_Type => Element_Type);
    package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
 
-end Conts.Lists.Unbounded_Definite;
+end Conts.Lists.Bounded_Definite_Limited;
