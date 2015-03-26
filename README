@@ -31,6 +31,25 @@ Goals
          ... C references deallocated memory since My_Function's result
          ... has been finalized
 
+Proposal for using tagged types
+-------------------------------
+
+For the convenience of using the dot-notation for calling primitive operations,
+we are making all containers tagged types.
+
+However, they are not meant to be subclassed, and thus most operations are
+class-wide. This provides maximum efficient (no dynamic dispatching), and
+matches what is done in the C++ STL (no virtual methods).
+
+The cursors themselves are not tagged. All cursor operations take both the
+container and the cursor in parameter (to support bounded containers), and
+thus the container is used in the dot-notation call (Self.Has_Element (Pos)).
+
+Implementation Note: currently, the Iterable aspect requires primitive
+  operations, which make it slow. It should be enhanced to accept class-wide
+  operations instead, which would also remove a number of primitive operations
+  on the container types.
+
 Proposal for sharing generic algorithms
 ---------------------------------------
 
@@ -38,27 +57,35 @@ Proposal for sharing generic algorithms
   no relationship with each other. As such, if we want to write an algorithm
   that counts the number of items that match a predicate, we will need several
   packages. Since lists themselves have no relationship with each other, these
-  have to be generic packages:
+  have to be generic packages specialized for each container:
+
      generic
         with package Lists is new Doubly_Linked_Lists (<>);
      procedure Algo;
 
-  One alternative is to pass instead lots of formal generic parameters that
-  describe how to manipulate the list and its cursors:
+  Let's make the algorithm container-independent. One possibility is to pass
+  instead lots of formal generic parameters that describe how to manipulate
+  the list and its cursors:
+
      generic
         type List is tagged private;
         type Cursor is private;
-        with function First (Self : List) return Cursor;
+        with function First (Self : List) return Cursor is <>;
         ...
      procedure Algo;
+
+  This works, but is not very convenient to instantiate, even when using
+  default values for the subprogram parameters.
 
   The approach proposed in our new containers is to group these generic
   parameters into a set of Traits packages. These traits packages are only
   used as a grouping of parameters, and have no body. So our algorithm
   above would be declared as:
+
      generic
         with package Cursors is new Forward_Cursor_Traits (<>);
      procedure Algo;
+
   and all the functions to manipulate the cursor are available by accessing
   actual parameters of the Cursors package.
 
@@ -91,23 +118,50 @@ and Indefinite_Doubly_Linked_Lists, Bounded_Doubly_Linked_Lists and
 Formal_Doubly_Linked_Lists.
 
 The proposal here is to share as much code as possible, through additional
-formal generic parameters. For instance, by providing a traits package for
-Elements, we can handle constrained and unconstrained elements with the
-same code (and an additional conversion operator for an element_type to
-an access to it in the case of unconstrained types).
+formal generic parameters. With these, containers have several orthogonal
+properties:
 
-Likewise, bounded and unbounded implementations are mostly the same once we
-abstract the type of nodes.
+   - whether they accept definite or indefinite elements.
+     This is configured by passing an Elements_Traits package, which is in
+     charge of converting to an access type in the case of indefinite
+     elements (an alternative implementation could be to reserve the maximum
+     space for the element, as done in the current formal containers)
 
+   - whether they are bounded or unbounded
+     This is configured by passing a List_Nodes_Traits package. This is in
+     charge of allocating the nodes, either on the heap, or as part of a
+     statically allocated array of nodes. One other possible implementation
+     for SPARK is to have cursors be an index into an array of access types,
+     which is safer than having cursors be access types themselves and is
+     needed to write some of the post conditions.
+
+   - whether they are controlled or limited types
+     The full semantics of containers a-la Ada containers requires having
+     controlled types, in particular so that assignment create a copy of
+     the container (or possibly a lazy copy) and automatically free
+     memory.
+     Alternatively, SPARK does not support controlled types, so we want to
+     provide another hierarchy of limited non-controlled containers. This
+     implementation provides no automatic free of the memory, the user is
+     responsible for calling Clear explicitly (and the implementation in
+     the nodes and element traits package an decide to do not actual free
+     at all).
+
+     Implementation Note: At this point, we haven't found how to make that
+        configurable through a generic package, so this requires a separate
+        copy of the code at install time (the code is still fully shared
+        apart from one change in the declaration of Base_List)
+
+So a bounded-definite container does not memory allocation;
+a bounded-indefinite container does one memory allocation for each element;
+an unbounded-definite container does one memory allocation for each node;
+an unbounded-indefinte container does two memory allocations per element.
+     
 Misc Proposals
 --------------
 
 - Some example of code is provided that tests the various proposals against
   Ada2012 and C++ STL containers.
-
-- Manu: for ease of use, I propose to make container types tagged
-  This means that we can use the nice Ada2012 dot notation to call the
-  operations.
 
 - Manu: The for..of loop is really nice when writting code.
   In its current implementation, though, it is grossly inefficient (see the
