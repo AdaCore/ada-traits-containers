@@ -18,7 +18,6 @@ package Conts.Lists.Definite_Bounded_Limited is
    package Lists is new Generic_Lists
       (All_Nodes             => Nodes.Nodes,
        Enable_Asserts        => Enable_Asserts);
-   use Lists;
 
    subtype Cursor is Lists.Cursor;
    type List (Capacity : Count_Type) is

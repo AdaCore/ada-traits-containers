@@ -18,7 +18,6 @@ package Conts.Lists.Definite_Unbounded is
    package Lists is new Generic_Lists
       (All_Nodes      => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
-   use Lists;
 
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record
