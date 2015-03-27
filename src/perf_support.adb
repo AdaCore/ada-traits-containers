@@ -133,7 +133,7 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors);
+         (Cursors => Lists.Cursors.Forward);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
       procedure Do_Test (V2 : in out Lists.List'Class) is
@@ -203,7 +203,7 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors);
+         (Cursors => Lists.Cursors.Forward);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
       procedure Do_Test (V2 : in out Lists.List'Class) is
@@ -271,7 +271,7 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists, Lists.Lists;   --  second is for Ada95 notation
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors);
+         (Cursors => Lists.Cursors.Forward);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
       procedure Do_Test (V2 : in out Lists.List'Class) is
@@ -341,7 +341,7 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors);
+         (Cursors => Lists.Cursors.Forward);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
       procedure Do_Test (V2 : in out Lists.List'Class) is
@@ -409,7 +409,7 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors);
+         (Cursors => Lists.Cursors.Forward);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
       procedure Do_Test (V2 : in out Lists.List'Class) is
@@ -480,10 +480,11 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors_Access);
+         (Cursors => Lists.Cursors.Forward_Stored);
 
-      function Starts_With_Str (S : Lists.Element_Access) return Boolean is
-         (S (S'First) = 's');
+      function Starts_With_Str
+         (S : Lists.Cursors.Stored_Element_Type) return Boolean
+         is (S (S'First) = 's');
       pragma Inline (Starts_With_Str);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
@@ -550,10 +551,11 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors_Reference);
+         (Cursors => Lists.Cursors.Forward_Reference);
 
-      function Ref_Starts_With_Str (S : Lists.Reference_Type) return Boolean is
-         (S (S.E'First) = 's');
+      function Ref_Starts_With_Str
+         (S : Lists.Cursors.Reference_Type) return Boolean
+         is (S (S.E'First) = 's');
       pragma Inline (Ref_Starts_With_Str);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
@@ -620,7 +622,7 @@ package body Perf_Support is
           Enable_Asserts => False);
       use Lists;
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Forward_Cursors);
+         (Cursors => Lists.Cursors.Forward);
 
       procedure Do_Test (V2 : in out Lists.List'Class);
       procedure Do_Test (V2 : in out Lists.List'Class) is
@@ -686,7 +688,7 @@ package body Perf_Support is
       use Lists;
       package Adaptors is new Indefinite_List_Adaptors (Lists);
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Adaptors.Forward_Cursors);
+         (Cursors => Adaptors.Cursors.Forward);
 
       procedure Do_Test (V : in out Lists.List'Class);
       procedure Do_Test (V : in out Lists.List'Class) is
@@ -753,7 +755,7 @@ package body Perf_Support is
           Element_Type => Integer,
           Array_Type   => Int_Array);
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Adaptors.Forward_Cursors);
+         (Cursors => Adaptors.Cursors.Forward);
 
       V     : Int_Array (1 .. Small_Items_Count + 2);
       Start : Time;
@@ -810,7 +812,7 @@ package body Perf_Support is
       use Lists;
       package Adaptors is new List_Adaptors (Lists);
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Adaptors.Forward_Cursors);
+         (Cursors => Adaptors.Cursors.Forward);
 
       procedure Do_Test (V : in out Lists.List'Class);
       procedure Do_Test (V : in out Lists.List'Class) is
@@ -877,7 +879,7 @@ package body Perf_Support is
       use Lists;
       package Adaptors is new Indefinite_List_Adaptors (Lists);
       function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Adaptors.Forward_Cursors);
+         (Cursors => Adaptors.Cursors.Forward);
 
       procedure Do_Test (V : in out Lists.List'Class);
       procedure Do_Test (V : in out Lists.List'Class) is

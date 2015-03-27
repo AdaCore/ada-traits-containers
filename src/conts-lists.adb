@@ -1,6 +1,7 @@
 pragma Ada_2012;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
+with System.Unsigned_Types;         use System.Unsigned_Types;
 
 package body Conts.Lists is
 
@@ -126,11 +127,10 @@ package body Conts.Lists is
           N       : out Node_Access)
       is
          Tmp : Nodes_Array_Access;
+         Size : constant Count_Type :=
+            (if Self.Nodes = null then 0 else Self.Nodes'Length);
+         New_Size : System.Unsigned_Types.Unsigned := 4;
       begin
-         if Self.Nodes = null then
-            Self.Nodes := new Nodes_Array (1 .. 10);
-         end if;
-
          --  Reuse empty slots if possible
          if Self.Free > 0 then
             N := Node_Access (Self.Free);
@@ -142,11 +142,36 @@ package body Conts.Lists is
 
          --  Grow the table of nodes if needed
 
-         if Count_Type (N) > Self.Nodes'Last then
-            Tmp := Self.Nodes;
-            Self.Nodes := new Nodes_Array (Tmp'First .. Tmp'Last * 2);
-            Self.Nodes (Tmp'Range) := Tmp.all;
-            Unchecked_Free (Tmp);
+         if Count_Type (N) > Size then
+            --  Use the same allocation scheme as in python, in an effort to
+            --  find a good tradeoff to allocate a lot of memory and be
+            --  efficient. Growth pattern is 0, 4, 8, 16, 25, 35, 46, 58, 72,
+            --  88, 106, 126, 148, 173, 201, 233, 269, 309, 354, 405, 462,...
+            --  The over-allocation is mild, but is enough to give linear-time
+            --  amortized behavior of a long sequence of appends.
+            --
+            --  Performance: adding 300_000 items with this scheme:
+            --       265% of the time needed for C++ STL
+            --  With the scheme were the size is multiplied by 1.5:
+            --       137% of the time needed for C++ STL
+            --  When multiplying by 2: similar to multiplying by 1.5
+
+            --  New_Size := Unsigned (N);   --  minimal needed size
+            --  New_Size := New_Size + Shift_Right (New_Size, 3) +
+            --     (if New_Size < 9 then 3 else 6);
+
+            New_Size := Unsigned'Max (
+               Unsigned (Count_Type'Max (Size, 1) * 3 / 2),
+               Unsigned (N));
+
+            if Self.Nodes = null then
+               Self.Nodes := new Nodes_Array (1 .. Count_Type (New_Size));
+            else
+               Tmp := Self.Nodes;
+               Self.Nodes := new Nodes_Array (1 .. Count_Type (New_Size));
+               Self.Nodes (Tmp'Range) := Tmp.all;
+               Unchecked_Free (Tmp);
+            end if;
          end if;
 
          Self.Nodes (Count_Type (N)) :=

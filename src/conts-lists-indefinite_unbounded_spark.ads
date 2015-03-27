@@ -17,7 +17,6 @@ package Conts.Lists.Indefinite_Unbounded_SPARK is
        Enable_Asserts => Enable_Asserts);
 
    subtype Cursor is Lists.Cursor;
-   subtype Element_Access is Elements.Element_Access;
    type List is new Lists.List with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
@@ -25,9 +24,4 @@ package Conts.Lists.Indefinite_Unbounded_SPARK is
                         Element     => Element_Primitive);
 
    package Cursors is new List_Cursors (Lists, List);
-   package Bidirectional_Cursors renames Cursors.Bidirectional_Cursors;
-   package Forward_Cursors renames Cursors.Forward_Cursors;
-   package Bidirectional_Cursors_Access
-      renames Cursors.Bidirectional_Cursors_Access;
-   package Forward_Cursors_Access renames Cursors.Forward_Cursors_Access;
 end Conts.Lists.Indefinite_Unbounded_SPARK;

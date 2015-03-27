@@ -430,7 +430,7 @@ package Conts.Lists is
       pragma Inline (Cursors_First, Cursors_Element, Cursors_Has_Element);
       pragma Inline (Cursors_Next, Cursors_Previous);
 
-      package Bidirectional_Cursors is new Bidirectional_Cursors_Traits
+      package Bidirectional is new Bidirectional_Cursors_Traits
          (Container    => List'Class,
           Cursor       => Cursor,
           Element_Type => Element_Type,
@@ -439,9 +439,9 @@ package Conts.Lists is
           Has_Element  => Cursors_Has_Element,
           Element      => Cursors_Element,
           Previous     => Cursors_Previous);
-      package Forward_Cursors renames Bidirectional_Cursors.Forward_Cursors;
+      package Forward renames Bidirectional.Forward;
 
-      package Bidirectional_Cursors_Access is new Bidirectional_Cursors_Traits
+      package Bidirectional_Stored is new Bidirectional_Cursors_Traits
          (Container    => List'Class,
           Cursor       => Lists.Cursor,
           Element_Type => Stored_Element_Type,
@@ -450,12 +450,11 @@ package Conts.Lists is
           Has_Element  => Cursors_Has_Element,
           Element      => Cursors_Stored_Element,
           Previous     => Cursors_Previous);
-      package Forward_Cursors_Access
-         renames Bidirectional_Cursors_Access.Forward_Cursors;
+      package Forward_Stored renames Bidirectional_Stored.Forward;
       --  Another version of cursors that manipulates the Element_Access. These
       --  might be more efficient.
 
-      package Bidirectional_Cursors_Reference
+      package Bidirectional_Reference
          is new Bidirectional_Cursors_Traits
          (Container    => List'Class,
           Cursor       => Lists.Cursor,
@@ -465,8 +464,7 @@ package Conts.Lists is
           Has_Element  => Cursors_Has_Element,
           Element      => Cursors_Reference,
           Previous     => Cursors_Previous);
-      package Forward_Cursors_Reference
-         renames Bidirectional_Cursors_Reference.Forward_Cursors;
+      package Forward_Reference renames Bidirectional_Reference.Forward;
       --  Another version of cursors that manipulates the Element_Access. These
       --  might be more efficient.
 

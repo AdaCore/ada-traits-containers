@@ -73,7 +73,7 @@ package Conts is
    package Indefinite_Elements_Traits is
       type Element_Access is access all Element_Type;
 
-      type Reference_Type (E : null access Element_Type) is null record
+      type Reference_Type (E : not null access Element_Type) is null record
          with Implicit_Dereference => E;
       --  ??? Would be nice if we could make this constrained by
       --  providing a default value for the discriminant, but this is
@@ -137,7 +137,7 @@ package Conts is
    package Bidirectional_Cursors_Traits is
 
       --  A bidirectional cursor is also a forward cursor
-      package Forward_Cursors is new Forward_Cursors_Traits
+      package Forward is new Forward_Cursors_Traits
          (Container, Cursor, Element_Type);
    end Bidirectional_Cursors_Traits;
 

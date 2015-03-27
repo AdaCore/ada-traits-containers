@@ -15,8 +15,6 @@ package Conts.Lists.Indefinite_Unbounded is
        Enable_Asserts => Enable_Asserts);
 
    subtype Cursor is Lists.Cursor;
-   subtype Element_Access is Elements.Element_Access;
-   subtype Reference_Type is Elements.Reference_Type;
    type List is new Lists.List with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
@@ -24,12 +22,4 @@ package Conts.Lists.Indefinite_Unbounded is
                         Element     => Element_Primitive);
 
    package Cursors is new List_Cursors (Lists, List);
-   package Bidirectional_Cursors renames Cursors.Bidirectional_Cursors;
-   package Forward_Cursors renames Cursors.Forward_Cursors;
-   package Bidirectional_Cursors_Access
-      renames Cursors.Bidirectional_Cursors_Access;
-   package Forward_Cursors_Access renames Cursors.Forward_Cursors_Access;
-   package Bidirectional_Cursors_Reference
-      renames Cursors.Bidirectional_Cursors_Reference;
-   package Forward_Cursors_Reference renames Cursors.Forward_Cursors_Reference;
 end Conts.Lists.Indefinite_Unbounded;

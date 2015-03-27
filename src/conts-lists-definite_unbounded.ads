@@ -27,7 +27,4 @@ package Conts.Lists.Definite_Unbounded is
                         Element     => Element_Primitive);
 
    package Cursors is new List_Cursors (Lists, List);
-   package Bidirectional_Cursors renames Cursors.Bidirectional_Cursors;
-   package Forward_Cursors renames Cursors.Forward_Cursors;
-
 end Conts.Lists.Definite_Unbounded;

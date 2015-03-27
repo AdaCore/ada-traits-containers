@@ -27,10 +27,12 @@ package Conts.Adaptors is
          is (Lists.Next (Position));
       pragma Inline (Element, Has_Element, Next, First);
 
-      package Forward_Cursors is new Forward_Cursors_Traits
-         (Container    => List,
-          Cursor       => Cursor,
-          Element_Type => Element_Type);
+      package Cursors is
+         package Forward is new Forward_Cursors_Traits
+            (Container    => List,
+             Cursor       => Cursor,
+             Element_Type => Element_Type);
+      end Cursors;
    end List_Adaptors;
 
    ------------------------------------------------
@@ -55,10 +57,12 @@ package Conts.Adaptors is
          is (Lists.Next (Position));
       pragma Inline (Element, Has_Element, Next, First);
 
-      package Forward_Cursors is new Forward_Cursors_Traits
-         (Container    => List,
-          Cursor       => Cursor,
-          Element_Type => Element_Type);
+      package Cursors is
+         package Forward is new Forward_Cursors_Traits
+            (Container    => List,
+             Cursor       => Cursor,
+             Element_Type => Element_Type);
+      end Cursors;
    end Indefinite_List_Adaptors;
 
    ------------------------
@@ -82,10 +86,12 @@ package Conts.Adaptors is
          is (Index_Type'Succ (Position));
       pragma Inline (Element, Has_Element, Next, First);
 
-      package Forward_Cursors is new Forward_Cursors_Traits
-         (Container    => Array_Type,
-          Cursor       => Index_Type,
-          Element_Type => Element_Type);
+      package Cursors is
+         package Forward is new Forward_Cursors_Traits
+            (Container    => Array_Type,
+             Cursor       => Index_Type,
+             Element_Type => Element_Type);
+      end Cursors;
    end Array_Adaptors;
 
 end Conts.Adaptors;
