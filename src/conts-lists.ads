@@ -72,6 +72,10 @@ package Conts.Lists is
           Previous : Node_Access) is <>;
       --  Change the next and previous elements for a node
 
+      with function Capacity
+         (Nodes    : Container'Class) return Count_Type;
+      --  How many nodes can be stored in Nodes
+
    package List_Nodes_Traits is
       --  pragma Unreferenced (Null_Access, Allocate, Get_Element, Get_Next);
       --  pragma Unreferenced (Get_Previous, Set_Next, Set_Previous);
@@ -128,7 +132,10 @@ package Conts.Lists is
          (Self : in out Nodes_List'Class; N, Next : Node_Access);
       procedure Set_Previous
          (Self : in out Nodes_List'Class; N, Previous : Node_Access);
-      pragma Inline (Set_Next, Set_Previous);
+      function Capacity
+         (Self : Nodes_List'Class) return Count_Type
+         is (Self.Capacity);
+      pragma Inline (Set_Next, Set_Previous, Capacity);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
 
       package Nodes is new List_Nodes_Traits
@@ -136,6 +143,7 @@ package Conts.Lists is
           Container    => Nodes_List,
           Node_Access  => Node_Access,
           Null_Access  => Null_Node_Access,
+          Capacity     => Capacity,
           Allocate     => Allocate);
    end Bounded_List_Nodes_Traits;
 
@@ -177,7 +185,9 @@ package Conts.Lists is
          (Self : in out Nodes_Container'Class; N, Next : Node_Access);
       procedure Set_Previous
          (Self : in out Nodes_Container'Class; N, Previous : Node_Access);
-      pragma Inline (Allocate, Set_Next, Set_Previous);
+      function Capacity (Self : Nodes_Container'Class) return Count_Type
+         is (Count_Type'Last);
+      pragma Inline (Allocate, Set_Next, Set_Previous, Capacity);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
 
       package Nodes is new List_Nodes_Traits
@@ -185,6 +195,7 @@ package Conts.Lists is
           Container      => Nodes_Container,
           Node_Access    => Node_Access,
           Null_Access    => null,
+          Capacity       => Capacity,
           Allocate       => Allocate);
    end Unbounded_List_Nodes_Traits;
 
@@ -239,7 +250,9 @@ package Conts.Lists is
          (Self : in out Nodes_List'Class; N, Next : Node_Access);
       procedure Set_Previous
          (Self : in out Nodes_List'Class; N, Previous : Node_Access);
-      pragma Inline (Set_Next, Set_Previous);
+      function Capacity (Self : Nodes_List'Class) return Count_Type
+         is (Count_Type'Last);
+      pragma Inline (Set_Next, Set_Previous, Capacity);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
 
       package Nodes is new List_Nodes_Traits
@@ -247,6 +260,7 @@ package Conts.Lists is
           Container    => Nodes_List,
           Node_Access  => Node_Access,
           Null_Access  => Null_Node_Access,
+          Capacity     => Capacity,
           Allocate     => Allocate);
    end SPARK_Unbounded_List_Nodes_Traits;
 
@@ -300,6 +314,7 @@ package Conts.Lists is
       --  Complexity: linear  (in practice, constant)
 
       function Capacity (Self : List'Class) return Count_Type
+         is (All_Nodes.Capacity (Self))
          with Inline => True,
               Global => null;
       --  Return the maximal number of elements in the list. This will be

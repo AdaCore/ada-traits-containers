@@ -256,16 +256,6 @@ package body Conts.Lists is
          return Self.Size;
       end Length;
 
-      --------------
-      -- Capacity --
-      --------------
-
-      function Capacity (Self : List'Class) return Count_Type is
-         pragma Unreferenced (Self);
-      begin
-         return Count_Type'Last;
-      end Capacity;
-
       -----------
       -- First --
       -----------

@@ -98,7 +98,7 @@ Proposal for sharing generic algorithms
   described above. In fact, it is possible to instantiate those traits
   packages for other types of containers, like the Ada containers, or even
   standard Ada arrays, as show in conts-adaptors.ads.
-   
+
   With this in place, the Count_If algorithm is written only once for all
   containers that we test (definite/indefinite, Ada2012 containers or standard
   Ada arrays).
@@ -184,7 +184,7 @@ This seems like an acceptable limitation given the very significant
 speed improvements.
 Unfortunately, there is no way to test whether the user's type conforms to
 this requirement.
-     
+
 Misc Proposals
 --------------
 
@@ -237,38 +237,40 @@ Todo
 
 - Ideas:
   * for lists, could write a type of Nodes_Traits for a database query.
-  * a container that does not memory allocation
-  
+    Or perhaps just as a cursors_traits, but then we do not get the for..of
+    loop
+
 
 Performance results
 -------------------
 
 +--------- lists of integers
-                  ║ fill    ║ explicit| for..of | count_if║ allocated| allocs  ║
-C++               ║ 100%    ║ 100%    | 191%    | 94%     ║         |         ║
-Array             ║ 3%      ║ 27%     | 26%     | 34%     ║ 9600kb  |  0      ║
-Ada (definite)    ║ 108%    ║ 150%    | 1989%   | 110%    ║ 7200kb  |  300000 ║
-Ada (indefinite)  ║ 195%    ║ 189%    | 1988%   | 186%    ║ 8400kb  |  600000 ║
-Tagged types      ║ 100%    ║ 201%    |         |         ║         |         ║
-Lists (u-d-c)     ║ 92%     ║ 112%    | 186%(1) | 99%     ║ 7200kb  |  300000 ║
-Lists (u-i-c)     ║ 195%    ║ 168%    | 199%(1) | 165%    ║ 8400kb  |  600000 ║
-Lists (u-i-s)     ║ 148%    ║ 177%    | 195%(1) | 105%    ║ 16132kb |  300032 ║
-Lists (b-d-c)     ║ 7%      ║ 84%     | 180%(1) | 93%     ║ 28800kb |  0      ║
-Lists (b-d-l)     ║ 9%      ║ 86%     | 176%(1) | 83%     ║ 28800kb |  0      ║
+                  | fill    | explicit| for..of | count_if| allocate| allocs  | reallocs| free    |
+C++               | 100%    | 100%    | 194%    | 91%     |         |         |         |         |
+Array             | 5%      | 40%     | 38%     | 51%     | 9600kb  |  0      |  0      |  0      |
+Ada (definite)    | 106%    | 117%    | 1987%   | 98%     | 7200kb  |  300000 |  0      |  0      |
+Ada (indefinite)  | 187%    | 167%    | 2065%   | 156%    | 8400kb  |  600000 |  0      |  0      |
+Tagged types      | 102%    | 198%    |         |         |         |         |         |         |
+Lists (u-d-c)     | 93%     | 116%    | 194%(1) | 100%    | 7200kb  |  300000 |  0      |  0      |
+Lists (u-i-c)     | 187%    | 155%    | 193%(1) | 154%    | 8400kb  |  600000 |  0      |  0      |
+Lists (u-i-s)     | 97%     | 111%    | 208%(1) | 90%     | 16132kb |  300001 |  31     |  0      |
+Lists (b-d-c)     | 8%      | 88%     | 181%(1) | 88%     | 28800kb |  0      |  0      |  0      |
+Lists (b-d-l)     | 8%      | 83%     | 182%(1) | 83%     | 28800kb |  0      |  0      |  0      |
 
 +--------- lists of strings or std::string
-                  ║ fill    ║ explicit| for..of | count_if║ allocated| allocs  ║
-C++               ║ 100%    ║ 100%    | 351%    | 120%    ║         |         ║
-Ada indefinite    ║ 87%     ║ 342%    | 954%    | 304%    ║ 13200kb |  600000 ║
-Lists (u-i-c)     ║ 80%     ║ 290%    | (2)     | 276%    ║ 13200kb |  600000 ║
-Lists (u-i-c) (4) ║ 77%     ║ 162%    | (2)     | 166%    ║ 13200kb |  600000 ║
-Lists (u-i-c) (3) ║ 78%     ║ 71%     | (2)     | 65%     ║ 13200kb |  600000 ║
+                  | fill    | explicit| for..of | count_if| allocate| allocs  | reallocs| free    |
+C++               | 100%    | 100%    | 326%    | 100%    |         |         |         |         |
+Ada indefinite    | 82%     | 312%    | 854%    | 296%    | 13200kb |  600000 |  0      |  0      |
+Lists (u-i-c)     | 76%     | 264%    | (2)     | 264%    | 13200kb |  600000 |  0      |  0      |
+Lists (u-i-c) (4) | 72%     | 172%    | (2)     | 161%    | 13200kb |  600000 |  0      |  0      |
+Lists (u-i-c) (3) | 80%     | 72%     | (2)     | 66%     | 13200kb |  600000 |  0      |  0      |
 
 b-/u-: (un)bounded  (d-/i-): (in)definite (c/l/s): controlled/limited/spark
 (1): slower because Iterable aspect needs primitive operations
 (2): Iterable does not support unconstrained elements
 (3): Using Stored_Element (less safe, user can free pointer)
 (4): Using Reference_Type (unconstrained type, slower)
+
 
 
 
