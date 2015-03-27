@@ -51,6 +51,19 @@ package Conts.Lists is
       --  This procedure can return Null_Access is the new node could not be
       --  allocated.
 
+      with procedure Release_Node
+         (Self : in out Container'Class; N : in out Node_Access) is <>;
+      --  Free the memroy for a specific node.
+      --  This function should not free the element itself, this has already
+      --  been handled by the container (this is so that a null procedure can
+      --  be passed in the common case).
+
+      with procedure Release (Nodes : in out Container'Class) is <>;
+      --  Free all the memory used by the container.
+      --  This should not free the nodes themselves, this has already been
+      --  taken care of by the container. This is so that a null procedure
+      --  can be passed in the common case.
+
       with function Get_Element
          (Nodes    : Container'Class;
           Position : Node_Access) return Elements.Stored_Element_Type is <>;
@@ -119,6 +132,9 @@ package Conts.Lists is
          (Self    : in out Nodes_List'Class;
           Element : Stored_Element_Type;
           N       : out Node_Access);   --  not inlined
+      procedure Release (Self : in out Nodes_List'Class) is null;
+      procedure Release_Node
+         (Self : in out Nodes_List'Class; N : in out Node_Access) is null;
       function Get_Element
          (Self : Nodes_List'Class; N : Node_Access) return Stored_Element_Type
          is (Self.Nodes (Count_Type (N)).Element);
@@ -171,6 +187,9 @@ package Conts.Lists is
          (Self    : in out Nodes_Container'Class;
           Element : Elements.Stored_Element_Type;
           N       : out Node_Access);
+      procedure Release (Self : in out Nodes_Container'Class) is null;
+      procedure Release_Node
+         (Self : in out Nodes_Container'Class; N : in out Node_Access);
       function Get_Element
          (Self : Nodes_Container'Class; N : Node_Access)
          return Elements.Stored_Element_Type
@@ -236,6 +255,9 @@ package Conts.Lists is
          (Self    : in out Nodes_List'Class;
           Element : Elements.Stored_Element_Type;
           N       : out Node_Access);   --  not inlined
+      procedure Release (Self : in out Nodes_List'Class);
+      procedure Release_Node
+         (Self : in out Nodes_List'Class; N : in out Node_Access) is null;
       function Get_Element
          (Self : Nodes_List'Class; N : Node_Access)
          return Elements.Stored_Element_Type
@@ -303,7 +325,7 @@ package Conts.Lists is
          with Global => null,
               Pre    => Length (Self) + 1 <= Capacity (Self);
       --  Append a new element to the list.
-      --  Complexity: constant
+      --  Complexity: O(1)
       --  Raises: Storage_Error if Enable_Asserts is True and the node can't
       --     be allocated.
 
@@ -311,7 +333,7 @@ package Conts.Lists is
          with Inline => True,
               Global => null;
       --  Return the number of elements in the list.
-      --  Complexity: linear  (in practice, constant)
+      --  Complexity: O(n)  (in practice, constant)
 
       function Capacity (Self : List'Class) return Count_Type
          is (All_Nodes.Capacity (Self))
@@ -320,6 +342,10 @@ package Conts.Lists is
       --  Return the maximal number of elements in the list. This will be
       --  Count_Type'Last for unbounded containers.
       --  Complexity: constant
+
+      procedure Clear (Self : in out List'Class);
+      --  Free the contents of the list
+      --  Complexity:  O(n)
 
       function First (Self : List'Class) return Cursor
          with Inline => True,

@@ -110,6 +110,8 @@ package body System.Memory is
 
    procedure Free (Ptr : System.Address) is
    begin
+      Standard.Memory.Frees := Standard.Memory.Frees + 1;
+
       if Parameters.No_Abort then
          c_free (Ptr);
       else
@@ -117,8 +119,6 @@ package body System.Memory is
          c_free (Ptr);
          Abort_Undefer.all;
       end if;
-
-      Standard.Memory.Frees := Standard.Memory.Frees + 1;
    end Free;
 
    -------------

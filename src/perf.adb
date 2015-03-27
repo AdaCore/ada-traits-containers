@@ -30,8 +30,8 @@ begin
 
    New_Line;
    Put_Line
-      ("b-/u-: (un)bounded  (d-/i-): (in)definite"
-      & " (c/l/s): controlled/limited/spark");
+      ("d/i: (in)definite b/u/s: (un)bounded/spark"
+      & " (c/l): controlled/limited");
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
    Put_Line ("(2): Iterable does not support unconstrained elements");
    Put_Line ("(3): Using Stored_Element (less safe, user can free pointer)");

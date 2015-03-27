@@ -48,7 +48,9 @@ package body Perf_Support is
       Self.Print_Not_Run ("allocate");
       Self.Print_Not_Run ("allocs");
       Self.Print_Not_Run ("reallocs");
-      Self.Print_Not_Run ("free");
+      Self.Print_Not_Run ("frees");
+      New_Line;
+      Self.Column := -1;
    end Print_Header;
 
    procedure Start_Line
@@ -57,7 +59,7 @@ package body Perf_Support is
       Self.Finish_Line;
       Memory.Reset;
       Self.Column := 1;
-      Put (Title & (Title'Length + 1 .. 18 => ' '));
+      Put (Title & (Title'Length + 1 .. 10 => ' '));
       Print_Separator (Self);
       Self.Fewer_Items := Fewer_Items;
    end Start_Line;
@@ -65,9 +67,10 @@ package body Perf_Support is
    procedure Finish_Line (Self : in out Output) is
    begin
       if Self.Column /= -1 then
-         while Self.Column < 10 loop
+         while Self.Column < 9 loop
             Self.Print_Not_Run;
          end loop;
+         Print_Not_Run (Self, Memory.Frees'Img);
          Self.Column := -1;
          if Items_Count /= Small_Items_Count and then Self.Fewer_Items then
             Put_Line (" fewer items");
@@ -115,7 +118,7 @@ package body Perf_Support is
             S : constant String := Integer'Image
                (Integer (Float'Floor (Float (D) / Float (Ref) * 100.0))) & '%';
          begin
-            Put (S & Extra & (S'Length + Extra'Length + 1 .. 9 => ' '));
+            Put (S & Extra & (S'Length + Extra'Length + 1 .. 8 => ' '));
          end;
 
       else
@@ -124,7 +127,7 @@ package body Perf_Support is
             Sub : constant String :=
                S (S'First .. Integer'Min (S'Last, S'First + 7));
          begin
-            Put (Sub & Extra & (Sub'Length + Extra'Length + 1 .. 9 => ' '));
+            Put (Sub & Extra & (Sub'Length + Extra'Length + 1 .. 8 => ' '));
          end;
       end if;
 
@@ -133,7 +136,7 @@ package body Perf_Support is
 
    procedure Print_Not_Run (Self : in out Output; Extra : String := "") is
    begin
-      Put (' ' & Extra & (Extra'Length + 1 .. 8 => ' '));
+      Put (Extra & (Extra'Length + 1 .. 8 => ' '));
       Print_Separator (Self);
    end Print_Not_Run;
 
@@ -141,7 +144,7 @@ package body Perf_Support is
       procedure Local_Print (S : String);
       procedure Local_Print (S : String) is
       begin
-         Put (' ' & S (S'First + 1 .. S'Last) & (S'Length .. 8 => ' '));
+         Put (S (S'First + 1 .. S'Last) & (S'Length .. 8 => ' '));
          Print_Separator (Self);
       end Local_Print;
 
@@ -156,7 +159,6 @@ package body Perf_Support is
 
       Print_Not_Run (Self, Memory.Allocs'Img);
       Print_Not_Run (Self, Memory.Reallocs'Img);
-      Print_Not_Run (Self, Memory.Frees'Img);
    end Print_Size;
 
    procedure Print_From_C (D : Interfaces.C.double);
@@ -191,7 +193,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (u-i-c)");
+         Stdout.Start_Line ("List iuc");
 
          Start := Clock;
          for C in 1 .. Items_Count - 2 loop
@@ -241,6 +243,7 @@ package body Perf_Support is
 
       V2 : Lists.List := V;   --  Check this is not limited type
       pragma Unreferenced (V2);
+
    begin
       Do_Test (V);
    end Test_Lists_Int_Indefinite;
@@ -263,7 +266,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (u-i-s)");
+         Stdout.Start_Line ("List isl");
 
          Start := Clock;
          for C in 1 .. Items_Count - 2 loop
@@ -307,6 +310,8 @@ package body Perf_Support is
          end if;
 
          Stdout.Print_Size (V2'Size);
+
+         V2.Clear;   --  explicit deallocation is needed
       end Do_Test;
 
       V : Lists.List;
@@ -333,7 +338,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (u-d-c)");
+         Stdout.Start_Line ("List duc");
 
          Start := Clock;
          for C in 1 .. Items_Count - 2 loop
@@ -405,7 +410,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (b-d-l)", Fewer_Items => True);
+         Stdout.Start_Line ("List dbl", Fewer_Items => True);
 
          Start := Clock;
          for C in 1 .. Small_Items_Count - 2 loop
@@ -449,6 +454,8 @@ package body Perf_Support is
          end if;
 
          Stdout.Print_Size (V2'Size);
+
+         V2.Clear;   --  Need explicit deallocation, this is limited
       end Do_Test;
 
       V : Lists.List (Capacity => Small_Items_Count);
@@ -475,7 +482,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (b-d-c)", Fewer_Items => True);
+         Stdout.Start_Line ("List dbc", Fewer_Items => True);
 
          Start := Clock;
          for C in 1 .. Small_Items_Count - 2 loop
@@ -519,6 +526,8 @@ package body Perf_Support is
          end if;
 
          Stdout.Print_Size (V2'Size);
+
+         V2.Clear;   --  Need explicit deallocation, this is limited
       end Do_Test;
 
       V : Lists.List (Capacity => Small_Items_Count);
@@ -553,7 +562,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (u-i-c) (3)");
+         Stdout.Start_Line ("List iuc 3");
 
          Start := Clock;
          for C in 1 .. Items_Count loop
@@ -626,7 +635,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (u-i-c) (4)");
+         Stdout.Start_Line ("List iuc 4");
 
          Start := Clock;
          for C in 1 .. Items_Count loop
@@ -694,7 +703,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Lists (u-i-c)");
+         Stdout.Start_Line ("List iuc");
 
          Start := Clock;
          for C in 1 .. Items_Count loop
@@ -762,7 +771,7 @@ package body Perf_Support is
          It    : Lists.Cursor;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Ada indefinite");
+         Stdout.Start_Line ("Ada iu");
 
          Start := Clock;
          for C in 1 .. Items_Count loop
@@ -890,7 +899,7 @@ package body Perf_Support is
          It    : Lists.Cursor;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Ada (definite)");
+         Stdout.Start_Line ("Ada du");
 
          Start := Clock;
          for C in 1 .. Items_Count - 2 loop
@@ -959,7 +968,7 @@ package body Perf_Support is
          It    : Lists.Cursor;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Ada (indefinite)");
+         Stdout.Start_Line ("Ada iu");
 
          Start := Clock;
          for C in 1 .. Items_Count - 2 loop
@@ -1023,7 +1032,7 @@ package body Perf_Support is
          Start : Time;
          Co    : Natural;
       begin
-         Stdout.Start_Line ("Tagged types");
+         Stdout.Start_Line ("Tagged");
 
          Start := Clock;
          for C in 1 .. Items_Count - 2 loop
@@ -1051,6 +1060,10 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Not_Run;
+         Stdout.Print_Not_Run;
+         Stdout.Print_Size (V'Size);
       end Do_Test;
 
       V : Lists.List;

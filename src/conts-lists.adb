@@ -1,6 +1,6 @@
 pragma Ada_2012;
 with Ada.Unchecked_Conversion;
---  with Ada.Unchecked_Deallocation;
+with Ada.Unchecked_Deallocation;
 with System.Memory;                 use System.Memory;
 with System.Unsigned_Types;         use System.Unsigned_Types;
 
@@ -67,6 +67,9 @@ package body Conts.Lists is
 
    package body Unbounded_List_Nodes_Traits is
 
+      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+         (Node, Node_Access);
+
       --------------
       -- Allocate --
       --------------
@@ -83,6 +86,18 @@ package body Conts.Lists is
             N.Element := Element;
          end if;
       end Allocate;
+
+      ------------------
+      -- Release_Node --
+      ------------------
+
+      procedure Release_Node
+         (Self : in out Nodes_Container'Class; N : in out Node_Access)
+      is
+         pragma Unreferenced (Self);
+      begin
+         Unchecked_Free (N);
+      end Release_Node;
 
       --------------
       -- Set_Next --
@@ -115,8 +130,13 @@ package body Conts.Lists is
    ---------------------------------------
 
    package body SPARK_Unbounded_List_Nodes_Traits is
-      --  procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-      --     (Nodes_Array, Nodes_Array_Access);
+
+      pragma Warnings (Off);  --  no aliasing issue
+      function Convert is new Ada.Unchecked_Conversion
+         (Nodes_Array_Access, System.Address);
+      function Convert is new Ada.Unchecked_Conversion
+         (System.Address, Nodes_Array_Access);
+      pragma Warnings (On);
 
       --------------
       -- Allocate --
@@ -127,13 +147,6 @@ package body Conts.Lists is
           Element : Elements.Stored_Element_Type;
           N       : out Node_Access)
       is
-         pragma Warnings (Off);  --  no aliasing issue
-         function Convert is new Ada.Unchecked_Conversion
-            (Nodes_Array_Access, System.Address);
-         function Convert is new Ada.Unchecked_Conversion
-            (System.Address, Nodes_Array_Access);
-         pragma Warnings (On);
-
          New_Size : System.Unsigned_Types.Unsigned := 4;
          S : size_t;
       begin
@@ -186,6 +199,18 @@ package body Conts.Lists is
              Previous => Null_Node_Access,
              Next     => Null_Node_Access);
       end Allocate;
+
+      -------------
+      -- Release --
+      -------------
+
+      procedure Release (Self : in out Nodes_List'Class) is
+      begin
+         System.Memory.Free (Convert (Self.Nodes));
+         Self.Nodes := null;
+         Self.Last := 0;
+         Self.Free := 0;
+      end Release;
 
       --------------
       -- Set_Next --
@@ -246,6 +271,29 @@ package body Conts.Lists is
 
          Self.Size := Self.Size + 1;
       end Append;
+
+      -----------
+      -- Clear --
+      -----------
+
+      procedure Clear (Self : in out List'Class) is
+         C : Cursor := Self.First;
+         N : Cursor;
+         E : Stored_Element_Type;
+      begin
+         while Self.Has_Element (C) loop
+            N := Self.Next (C);
+            E := Self.Stored_Element (C);
+            Elements.Release (E);
+            All_Nodes.Release_Node (Self, C.Current);
+            C := N;
+         end loop;
+         All_Nodes.Release (Self);
+
+         Self.Head := All_Nodes.Null_Access;
+         Self.Tail := All_Nodes.Null_Access;
+         Self.Size := 0;
+      end Clear;
 
       ------------
       -- Length --
@@ -348,9 +396,8 @@ package body Conts.Lists is
       --------------
 
       procedure Finalize (Self : in out List) is
-         pragma Unreferenced (Self);
       begin
-         null;
+         Clear (Self);
       end Finalize;
    end Generic_Lists;
 
