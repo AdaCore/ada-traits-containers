@@ -20,7 +20,7 @@ void test_cpp() {
    std::list<int>  v;
 
    std::clock_t begin = clock();
-   for (int c = 1; c <= items_count; c++) {
+   for (int c = 1; c <= items_count - 2; c++) {
       v.push_back(2);
    }
    v.push_back(5);

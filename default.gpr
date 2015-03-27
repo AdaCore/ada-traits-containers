@@ -29,6 +29,8 @@ project Default is
             for Switches ("Ada") use Common_Ada_Switches & ("-g");
             for Switches ("C++") use ("-std=c++11");
       end case;
+
+      for Switches ("s-memory.adb") use ("-gnatg", "-O2");
    end Compiler;
 
    package Binder is

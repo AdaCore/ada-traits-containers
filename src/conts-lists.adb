@@ -1,6 +1,7 @@
 pragma Ada_2012;
-with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Unchecked_Deallocation;
+with Ada.Unchecked_Conversion;
+--  with Ada.Unchecked_Deallocation;
+with System.Memory;                 use System.Memory;
 with System.Unsigned_Types;         use System.Unsigned_Types;
 
 package body Conts.Lists is
@@ -114,8 +115,8 @@ package body Conts.Lists is
    ---------------------------------------
 
    package body SPARK_Unbounded_List_Nodes_Traits is
-      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-         (Nodes_Array, Nodes_Array_Access);
+      --  procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+      --     (Nodes_Array, Nodes_Array_Access);
 
       --------------
       -- Allocate --
@@ -126,10 +127,15 @@ package body Conts.Lists is
           Element : Elements.Stored_Element_Type;
           N       : out Node_Access)
       is
-         Tmp : Nodes_Array_Access;
-         Size : constant Count_Type :=
-            (if Self.Nodes = null then 0 else Self.Nodes'Length);
+         pragma Warnings (Off);  --  no aliasing issue
+         function Convert is new Ada.Unchecked_Conversion
+            (Nodes_Array_Access, System.Address);
+         function Convert is new Ada.Unchecked_Conversion
+            (System.Address, Nodes_Array_Access);
+         pragma Warnings (On);
+
          New_Size : System.Unsigned_Types.Unsigned := 4;
+         S : size_t;
       begin
          --  Reuse empty slots if possible
          if Self.Free > 0 then
@@ -142,7 +148,7 @@ package body Conts.Lists is
 
          --  Grow the table of nodes if needed
 
-         if Count_Type (N) > Size then
+         if Count_Type (N) > Self.Last then
             --  Use the same allocation scheme as in python, in an effort to
             --  find a good tradeoff to allocate a lot of memory and be
             --  efficient. Growth pattern is 0, 4, 8, 16, 25, 35, 46, 58, 72,
@@ -161,16 +167,17 @@ package body Conts.Lists is
             --     (if New_Size < 9 then 3 else 6);
 
             New_Size := Unsigned'Max (
-               Unsigned (Count_Type'Max (Size, 1) * 3 / 2),
+               Unsigned (Count_Type'Max (Self.Last, 1) * 3 / 2),
                Unsigned (N));
+            Self.Last := Count_Type (New_Size);
+
+            S := size_t
+               (Self.Last * Self.Nodes'Component_Size / System.Storage_Unit);
 
             if Self.Nodes = null then
-               Self.Nodes := new Nodes_Array (1 .. Count_Type (New_Size));
+               Self.Nodes := Convert (Alloc (S));
             else
-               Tmp := Self.Nodes;
-               Self.Nodes := new Nodes_Array (1 .. Count_Type (New_Size));
-               Self.Nodes (Tmp'Range) := Tmp.all;
-               Unchecked_Free (Tmp);
+               Self.Nodes := Convert (Realloc (Convert (Self.Nodes), S));
             end if;
          end if;
 
@@ -353,7 +360,7 @@ package body Conts.Lists is
       procedure Finalize (Self : in out List) is
          pragma Unreferenced (Self);
       begin
-         Put ("Finalize");
+         null;
       end Finalize;
    end Generic_Lists;
 

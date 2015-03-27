@@ -5,11 +5,7 @@ with QGen;          use QGen;
 procedure Perf is
 begin
    Put_Line ("+--------- lists of integers");
-   Stdout.Start_Line ("");
-   Stdout.Print_Not_Run ("fill");
-   Stdout.Print_Not_Run ("explicit loop");
-   Stdout.Print_Not_Run ("for..of");
-   Stdout.Print_Not_Run ("count_if");
+   Stdout.Print_Header;
    Test_Cpp_Int;
    Test_Arrays_Int;
    Test_Ada2012_Int;
@@ -24,11 +20,7 @@ begin
 
    New_Line;
    Put_Line ("+--------- lists of strings or std::string");
-   Stdout.Start_Line ("");
-   Stdout.Print_Not_Run ("fill");
-   Stdout.Print_Not_Run ("explicit loop");
-   Stdout.Print_Not_Run ("for..of");
-   Stdout.Print_Not_Run ("count_if");
+   Stdout.Print_Header;
    Test_Cpp_Str;
    Test_Ada2012_Str;
    Test_Lists_Str;

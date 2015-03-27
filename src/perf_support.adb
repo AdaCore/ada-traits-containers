@@ -11,6 +11,7 @@ with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
 with Taggeds;
 with Interfaces.C.Strings;
+with Memory;
 
 --  The tests all use a subprogram with a class-wide parameter, to force the
 --  use of dynamic dispatching and simulate real applications.
@@ -24,6 +25,8 @@ package body Perf_Support is
       (S (S'First) = 's');
    pragma Inline (Starts_With_Str);
 
+   procedure Print_Separator (Self : in out Output);
+
    ------------
    -- Output --
    ------------
@@ -35,18 +38,36 @@ package body Perf_Support is
       Self.Loop_Ref := 0.0;
    end Reset;
 
+   procedure Print_Header (Self : in out Output) is
+   begin
+      Self.Start_Line ("");
+      Self.Print_Not_Run ("fill");
+      Self.Print_Not_Run ("explicit");
+      Self.Print_Not_Run ("for..of");
+      Self.Print_Not_Run ("count_if");
+      Self.Print_Not_Run ("allocate");
+      Self.Print_Not_Run ("allocs");
+      Self.Print_Not_Run ("reallocs");
+      Self.Print_Not_Run ("free");
+   end Print_Header;
+
    procedure Start_Line
       (Self : in out Output; Title : String; Fewer_Items : Boolean := False) is
    begin
       Self.Finish_Line;
-      Put (Title & (Title'Length + 1 .. 18 => ' ') & '|');
+      Memory.Reset;
+      Self.Column := 1;
+      Put (Title & (Title'Length + 1 .. 18 => ' '));
+      Print_Separator (Self);
       Self.Fewer_Items := Fewer_Items;
-      Self.Column := 2;
    end Start_Line;
 
    procedure Finish_Line (Self : in out Output) is
    begin
       if Self.Column /= -1 then
+         while Self.Column < 10 loop
+            Self.Print_Not_Run;
+         end loop;
          Self.Column := -1;
          if Items_Count /= Small_Items_Count and then Self.Fewer_Items then
             Put_Line (" fewer items");
@@ -55,6 +76,22 @@ package body Perf_Support is
          end if;
       end if;
    end Finish_Line;
+
+   procedure Print_Separator (Self : in out Output) is
+   begin
+      if Self.Column = 1
+         or else Self.Column = 2
+         or else Self.Column = 5
+         or else Self.Column = 9
+      then
+         Put (Character'Val (16#E2#)
+              & Character'Val (16#95#)
+              & Character'Val (16#91#));
+      else
+         Put ('|');
+      end if;
+      Self.Column := Self.Column + 1;
+   end Print_Separator;
 
    procedure Print_Time
       (Self : in out Output; D : Duration; Extra : String := "")
@@ -78,7 +115,7 @@ package body Perf_Support is
             S : constant String := Integer'Image
                (Integer (Float'Floor (Float (D) / Float (Ref) * 100.0))) & '%';
          begin
-            Put (S & Extra & (S'Length + Extra'Length + 1 .. 14 => ' ') & '|');
+            Put (S & Extra & (S'Length + Extra'Length + 1 .. 9 => ' '));
          end;
 
       else
@@ -87,27 +124,40 @@ package body Perf_Support is
             Sub : constant String :=
                S (S'First .. Integer'Min (S'Last, S'First + 7));
          begin
-            Put (Sub & Extra
-                 & (Sub'Length + Extra'Length + 1 .. 14 => ' ') & '|');
+            Put (Sub & Extra & (Sub'Length + Extra'Length + 1 .. 9 => ' '));
          end;
       end if;
 
-      if Self.Column = 2 then
-         Put ('|');
-      end if;
-
-      Self.Column := Self.Column + 1;
+      Print_Separator (Self);
    end Print_Time;
 
    procedure Print_Not_Run (Self : in out Output; Extra : String := "") is
    begin
-      Put (' ' & Extra & (Extra'Length + 1 .. 13 => ' ') & '|');
-      if Self.Column = 2 then
-         Put ('|');
+      Put (' ' & Extra & (Extra'Length + 1 .. 8 => ' '));
+      Print_Separator (Self);
+   end Print_Not_Run;
+
+   procedure Print_Size (Self : in out Output; Size : Natural) is
+      procedure Local_Print (S : String);
+      procedure Local_Print (S : String) is
+      begin
+         Put (' ' & S (S'First + 1 .. S'Last) & (S'Length .. 8 => ' '));
+         Print_Separator (Self);
+      end Local_Print;
+
+      Actual_Size : constant Natural := Size + Natural (Memory.Live);
+   begin
+      if Actual_Size >= 1_000_000 then
+         --  Approximate a kb as 1000 bytes, easier to compare
+         Local_Print (Integer'Image (Actual_Size / 1000) & "kb");
+      else
+         Local_Print (Integer'Image (Actual_Size) & "b");
       end if;
 
-      Self.Column := Self.Column + 1;
-   end Print_Not_Run;
+      Print_Not_Run (Self, Memory.Allocs'Img);
+      Print_Not_Run (Self, Memory.Reallocs'Img);
+      Print_Not_Run (Self, Memory.Frees'Img);
+   end Print_Size;
 
    procedure Print_From_C (D : Interfaces.C.double);
    pragma Export (C, Print_From_C, "_ada_print_time");
@@ -144,7 +194,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Lists (u-i-c)");
 
          Start := Clock;
-         for C in 1 .. Items_Count loop
+         for C in 1 .. Items_Count - 2 loop
             V2.Append (2);
          end loop;
          V2.Append (5);
@@ -183,6 +233,8 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
@@ -214,7 +266,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Lists (u-i-s)");
 
          Start := Clock;
-         for C in 1 .. Items_Count loop
+         for C in 1 .. Items_Count - 2 loop
             V2.Append (2);
          end loop;
          V2.Append (5);
@@ -253,6 +305,8 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
@@ -282,7 +336,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Lists (u-d-c)");
 
          Start := Clock;
-         for C in 1 .. Items_Count loop
+         for C in 1 .. Items_Count - 2 loop
             V2.Append (2);
          end loop;
          V2.Append (5);    --  testing withe prefix notation
@@ -321,6 +375,8 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
@@ -352,7 +408,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Lists (b-d-l)", Fewer_Items => True);
 
          Start := Clock;
-         for C in 1 .. Small_Items_Count loop
+         for C in 1 .. Small_Items_Count - 2 loop
             V2.Append (2);
          end loop;
          V2.Append (5);
@@ -391,9 +447,11 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
-      V : Lists.List (Capacity => Small_Items_Count + 2);
+      V : Lists.List (Capacity => Small_Items_Count);
       --  V2 : Lists.List := V;   --  Check this is limited type
    begin
       Do_Test (V);
@@ -420,7 +478,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Lists (b-d-c)", Fewer_Items => True);
 
          Start := Clock;
-         for C in 1 .. Small_Items_Count loop
+         for C in 1 .. Small_Items_Count - 2 loop
             V2.Append (2);
          end loop;
          V2.Append (5);
@@ -459,9 +517,11 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
-      V : Lists.List (Capacity => Small_Items_Count + 2);
+      V : Lists.List (Capacity => Small_Items_Count);
 
       pragma Warnings (Off);
       V2 : Lists.List := V;   --  Check this is not limited type
@@ -534,6 +594,8 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
@@ -605,6 +667,8 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
@@ -671,6 +735,8 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
@@ -737,6 +803,8 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V'Size);
       end Do_Test;
 
       V  : Lists.List;
@@ -757,14 +825,14 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Cursors.Forward);
 
-      V     : Int_Array (1 .. Small_Items_Count + 2);
+      V     : Int_Array (1 .. Small_Items_Count);
       Start : Time;
       Co    : Natural;
    begin
       Stdout.Start_Line ("Array", Fewer_Items => True);
 
       Start := Clock;
-      for C in 1 .. Small_Items_Count loop
+      for C in 1 .. Small_Items_Count - 2 loop
          V (C) := 2;
       end loop;
       V (V'Last - 1) := 5;
@@ -801,6 +869,8 @@ package body Perf_Support is
       if Co /= 2 then
          raise Program_Error;
       end if;
+
+      Stdout.Print_Size (V'Size);
    end Test_Arrays_Int;
 
    ----------------------
@@ -823,7 +893,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Ada (definite)");
 
          Start := Clock;
-         for C in 1 .. Items_Count loop
+         for C in 1 .. Items_Count - 2 loop
             V.Append (2);
          end loop;
          V.Append (5);
@@ -862,6 +932,8 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V'Size);
       end Do_Test;
 
       V  : Lists.List;
@@ -890,7 +962,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Ada (indefinite)");
 
          Start := Clock;
-         for C in 1 .. Items_Count loop
+         for C in 1 .. Items_Count - 2 loop
             V.Append (2);
          end loop;
          V.Append (5);
@@ -929,6 +1001,8 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Stdout.Print_Size (V'Size);
       end Do_Test;
 
       V  : Lists.List;
@@ -952,7 +1026,7 @@ package body Perf_Support is
          Stdout.Start_Line ("Tagged types");
 
          Start := Clock;
-         for C in 1 .. Items_Count loop
+         for C in 1 .. Items_Count - 2 loop
             V.Append (2);
          end loop;
          V.Append (5);

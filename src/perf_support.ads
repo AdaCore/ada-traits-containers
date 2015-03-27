@@ -130,12 +130,14 @@ package Perf_Support is
       Fill_Ref    : Duration := 0.0;  --  reference time for fill
       Loop_Ref    : Duration := 0.0;  --  reference time for loop
    end record;
+   procedure Print_Header (Self : in out Output);
    procedure Reset (Self : in out Output);
    procedure Start_Line
       (Self : in out Output; Title : String; Fewer_Items : Boolean := False);
    procedure Print_Time
       (Self : in out Output; D : Duration; Extra : String := "");
    procedure Print_Not_Run (Self : in out Output; Extra : String := "");
+   procedure Print_Size (Self : in out Output; Size : Natural);
    procedure Finish_Line (Self : in out Output);
 
    Stdout : Output;

@@ -175,6 +175,15 @@ An experiment has been done in using Reference_Type to speed up access
 to data in indefinite containers. In practice, this seems slow because
 a reference_type is an unconstrained type, so it might be better for
 users to keep using an element_access.
+
+Using the realloc() system call leads to large improvements over
+systematically allocating a new array, copying the old, and freeing the
+old. One of the drawbacks is that users should not put controlled types
+that need to access their address into such a table.
+This seems like an acceptable limitation given the very significant
+speed improvements.
+Unfortunately, there is no way to test whether the user's type conforms to
+this requirement.
      
 Misc Proposals
 --------------
@@ -226,10 +235,6 @@ Todo
   Provide Clear (and support for it in Nodes packages), including
   automatically for controlled containers.
 
-- Do not have the cursors traits in lists-* packages, but instead a
-  generic Cursors package in Conts.Lists.Generic_List, with Bidirectional,
-  Forward,... nested packages.
-
 - Ideas:
   * for lists, could write a type of Nodes_Traits for a database query.
   * a container that does not memory allocation
@@ -239,28 +244,32 @@ Performance results
 -------------------
 
 +--------- lists of integers
-                  | fill         || explicit loop| for..of      | count_if     |
-C++               | 100%         || 100%         | 187%         | 86%          |
-Array             | 3%           || 24%          | 24%          | 23%          |
-Ada (definite)    | 105%         || 121%         | 1839%        | 103%         |
-Ada (indefinite)  | 192%         || 174%         | 1859%        | 166%         |
-Tagged types      | 109%         || 171%         |
-Lists (u-d-c)     | 91%          || 116%         | 177%(1)      | 92%          |FinalizeFinalize
-Lists (u-i-c)     | 182%         || 215%         | 227%(1)      | 178%         |FinalizeFinalize
-Lists (b-d-c)     | 8%           || 77%          | 157%(1)      | 72%          |FinalizeFinalize
-Lists (b-d-l)     | 8%           || 72%          | 153%(1)      | 72%          |
+                  ║ fill    ║ explicit| for..of | count_if║ allocated| allocs  ║
+C++               ║ 100%    ║ 100%    | 191%    | 94%     ║         |         ║
+Array             ║ 3%      ║ 27%     | 26%     | 34%     ║ 9600kb  |  0      ║
+Ada (definite)    ║ 108%    ║ 150%    | 1989%   | 110%    ║ 7200kb  |  300000 ║
+Ada (indefinite)  ║ 195%    ║ 189%    | 1988%   | 186%    ║ 8400kb  |  600000 ║
+Tagged types      ║ 100%    ║ 201%    |         |         ║         |         ║
+Lists (u-d-c)     ║ 92%     ║ 112%    | 186%(1) | 99%     ║ 7200kb  |  300000 ║
+Lists (u-i-c)     ║ 195%    ║ 168%    | 199%(1) | 165%    ║ 8400kb  |  600000 ║
+Lists (u-i-s)     ║ 148%    ║ 177%    | 195%(1) | 105%    ║ 16132kb |  300032 ║
+Lists (b-d-c)     ║ 7%      ║ 84%     | 180%(1) | 93%     ║ 28800kb |  0      ║
+Lists (b-d-l)     ║ 9%      ║ 86%     | 176%(1) | 83%     ║ 28800kb |  0      ║
 
 +--------- lists of strings or std::string
-                  | fill         || explicit loop| for..of      | count_if     |
-C++               | 100%         || 100%         | 354%         | 122%         |
-Ada indefinite    | 88%          || 248%         | 739%         | 246%         |
-Lists (u-i-c)     | 79%          || 264%         | (2)          | 218%         |Finalize
-Lists (u-i-c) (3) | 77%          || 67%          | (2)          | 77%          |Finalize
+                  ║ fill    ║ explicit| for..of | count_if║ allocated| allocs  ║
+C++               ║ 100%    ║ 100%    | 351%    | 120%    ║         |         ║
+Ada indefinite    ║ 87%     ║ 342%    | 954%    | 304%    ║ 13200kb |  600000 ║
+Lists (u-i-c)     ║ 80%     ║ 290%    | (2)     | 276%    ║ 13200kb |  600000 ║
+Lists (u-i-c) (4) ║ 77%     ║ 162%    | (2)     | 166%    ║ 13200kb |  600000 ║
+Lists (u-i-c) (3) ║ 78%     ║ 71%     | (2)     | 65%     ║ 13200kb |  600000 ║
 
-b-/u-: (un)bounded  (d-/i-): (in)definite  (c/l): controlled/limited
+b-/u-: (un)bounded  (d-/i-): (in)definite (c/l/s): controlled/limited/spark
 (1): slower because Iterable aspect needs primitive operations
 (2): Iterable does not support unconstrained elements
-(3): Using Stored_Element instead of Element
+(3): Using Stored_Element (less safe, user can free pointer)
+(4): Using Reference_Type (unconstrained type, slower)
+
 
 
 A previous experiment shows the importance of the cache in such tests: using

@@ -4,6 +4,10 @@
 
 generic
    type Element_Type (<>) is private;
+   --  Element_Type must not be a controlled type that needs to be
+   --  Adjusted when it is moved in memory, since the list will use the
+   --  realloc() system call.
+
    Enable_Asserts : Boolean := False;
 
 package Conts.Lists.Indefinite_Unbounded_SPARK is

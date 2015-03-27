@@ -208,12 +208,15 @@ package Conts.Lists is
          Previous, Next : Node_Access := Null_Node_Access;
       end record;
 
-      type Nodes_Array is array (Count_Type range <>) of Node;
-      type Nodes_Array_Access is access Nodes_Array;
+      type Big_Nodes_Array is array (1 .. Count_Type'Last) of Node;
+      type Nodes_Array_Access is access Big_Nodes_Array;
+      for Nodes_Array_Access'Storage_Size use 0;
+      --  The nodes is a pointer so that we can use realloc
 
       type Nodes_List is abstract new Controlled_Or_Limited with record
-         Nodes : Nodes_Array_Access;
-         Free  : Integer := 0;   --  head of free nodes list
+         Nodes : Nodes_Array_Access := null;
+         Last  : Count_Type := 0;  --  Last valid index in Nodes
+         Free  : Integer := 0;     --  head of free nodes list
          --  For a negative value, its absolute value points to the first free
          --  element
       end record;
