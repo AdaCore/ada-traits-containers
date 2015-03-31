@@ -22,7 +22,7 @@ project Default is
       case Mode is
          when "Production" =>
             for Switches ("Ada") use Common_Ada_Switches &
-               ("-O2", "-gnatp", "-gnatn");
+               ("-O2", "-gnatp", "-gnatn", "-gnato3");
             for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
 
          when "Debug" =>

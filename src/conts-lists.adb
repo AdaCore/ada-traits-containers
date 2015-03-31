@@ -82,18 +82,21 @@ package body Conts.Lists is
 
          --  We need to copy each of the elements.
 
-         N := Old_Head;
-         while N /= Null_Node_Access loop
-            declare
-               Value : Node renames Source.Nodes (Count_Type (N));
-            begin
-               Nodes.Nodes (Count_Type (N)) :=
-                  (Element  => Elements.Copy (Value.Element),
-                   Next     => Value.Next,
-                   Previous => Value.Previous);
-               N := Value.Next;
-            end;
-         end loop;
+         if Elements.Need_Copy then
+            N := Old_Head;
+            while N /= Null_Node_Access loop
+               declare
+                  Value : Node renames Source.Nodes (Count_Type (N));
+               begin
+                  Nodes.Nodes (Count_Type (N)) :=
+                     (Element  => Elements.Convert_From
+                        (Elements.Convert_To (Value.Element)),
+                      Next     => Value.Next,
+                      Previous => Value.Previous);
+                  N := Value.Next;
+               end;
+            end loop;
+         end if;
       end Assign;
 
    end Bounded_List_Nodes_Traits;
@@ -182,14 +185,18 @@ package body Conts.Lists is
          end if;
 
          Tmp2 := Old_Head;
-         Allocate (Nodes, Elements.Copy (Tmp2.Element), Tmp);
+         Allocate
+            (Nodes,
+            Elements.Convert_From (Elements.Convert_To (Tmp2.Element)),
+            Tmp);
          New_Head := Tmp;
 
          loop
             Tmp2 := Tmp2.Next;
             exit when Tmp2 = null;
 
-            Allocate (Nodes, Elements.Copy (Tmp2.Element), N);
+            Allocate (Nodes, Elements.Convert_From
+               (Elements.Convert_To (Tmp2.Element)), N);
             Set_Next (Nodes, Tmp, N);
             Set_Previous (Nodes, N, Tmp);
             Tmp := N;
@@ -300,18 +307,23 @@ package body Conts.Lists is
          Nodes.Last := Source.Last;
          Nodes.Free := Source.Free;
 
-         N := Old_Head;
-         while N /= Null_Node_Access loop
-            declare
-               Value : Node renames Source.Nodes (Count_Type (N));
-            begin
-               Nodes.Nodes (Count_Type (N)) :=
-                  (Element  => Elements.Copy (Value.Element),
-                   Next     => Value.Next,
-                   Previous => Value.Previous);
-               N := Value.Next;
-            end;
-         end loop;
+         if Elements.Need_Copy then
+            N := Old_Head;
+            while N /= Null_Node_Access loop
+               declare
+                  Value : Node renames Source.Nodes (Count_Type (N));
+               begin
+                  Nodes.Nodes (Count_Type (N)) :=
+                     (Element  => Elements.Convert_From
+                        (Elements.Convert_To (Value.Element)),
+                      Next     => Value.Next,
+                      Previous => Value.Previous);
+                  N := Value.Next;
+               end;
+            end loop;
+         else
+            Nodes.Nodes (1 .. Nodes.Last) := Source.Nodes (1 .. Source.Last);
+         end if;
       end Assign;
 
       -------------
@@ -521,7 +533,6 @@ package body Conts.Lists is
       procedure Adjust (Self : in out List) is
       begin
          null;
-         --  Clear (Self);
       end Adjust;
 
       ----------
@@ -553,19 +564,6 @@ package body Conts.Lists is
          Nodes.Assign (Self, Source,
                        Self.Head, Source.Head,
                        Self.Tail, Source.Tail);
-
-         --  Self.Clear;
-
-         --  --  Should not copy the items one by one, since we would like the
-         --  --  SPARK cursors indexes to point to the same object before and
-         --  --  after.
-
-         --  Node := Source.First;
-         --  while Node /= null loop
-         --     Self.Append (Node.Element);
-         --     Node := Node.Next;
-         --  end loop;
-
       end Assign;
 
    end Generic_Lists;
