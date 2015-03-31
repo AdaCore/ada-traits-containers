@@ -26,8 +26,8 @@ project Default is
             for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
 
          when "Debug" =>
-            for Switches ("Ada") use Common_Ada_Switches & ("-g");
-            for Switches ("C++") use ("-std=c++11");
+            for Switches ("Ada") use Common_Ada_Switches & ("-g", "-O0");
+            for Switches ("C++") use ("-std=c++11", "-O0");
       end case;
 
       for Switches ("s-memory.adb") use ("-gnatg", "-O2");

@@ -86,8 +86,18 @@ package Conts.Lists is
       --  Change the next and previous elements for a node
 
       with function Capacity
-         (Nodes    : Container'Class) return Count_Type;
+         (Nodes    : Container'Class) return Count_Type is <>;
       --  How many nodes can be stored in Nodes
+
+      with procedure Assign
+         (Nodes    : in out Container'Class;
+          Source   : Container'Class;
+          New_Head : out Node_Access;
+          Old_Head : Node_Access;
+          New_Tail : out Node_Access;
+          Old_Tail : Node_Access) is <>;
+      --  Replace all nodes in Nodes with a copy of the nodes in Source.
+      --  The elements themselves need to be copied (via Elements.Copy).
 
    package List_Nodes_Traits is
       --  pragma Unreferenced (Null_Access, Allocate, Get_Element, Get_Next);
@@ -151,6 +161,13 @@ package Conts.Lists is
       function Capacity
          (Self : Nodes_List'Class) return Count_Type
          is (Self.Capacity);
+      procedure Assign
+         (Nodes    : in out Nodes_List'Class;
+          Source   : Nodes_List'Class;
+          New_Head : out Node_Access;
+          Old_Head : Node_Access;
+          New_Tail : out Node_Access;
+          Old_Tail : Node_Access);
       pragma Inline (Set_Next, Set_Previous, Capacity);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
 
@@ -159,7 +176,6 @@ package Conts.Lists is
           Container    => Nodes_List,
           Node_Access  => Node_Access,
           Null_Access  => Null_Node_Access,
-          Capacity     => Capacity,
           Allocate     => Allocate);
    end Bounded_List_Nodes_Traits;
 
@@ -206,6 +222,13 @@ package Conts.Lists is
          (Self : in out Nodes_Container'Class; N, Previous : Node_Access);
       function Capacity (Self : Nodes_Container'Class) return Count_Type
          is (Count_Type'Last);
+      procedure Assign
+         (Nodes    : in out Nodes_Container'Class;
+          Source   : Nodes_Container'Class;
+          New_Head : out Node_Access;
+          Old_Head : Node_Access;
+          New_Tail : out Node_Access;
+          Old_Tail : Node_Access);
       pragma Inline (Allocate, Set_Next, Set_Previous, Capacity);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
 
@@ -214,7 +237,6 @@ package Conts.Lists is
           Container      => Nodes_Container,
           Node_Access    => Node_Access,
           Null_Access    => null,
-          Capacity       => Capacity,
           Allocate       => Allocate);
    end Unbounded_List_Nodes_Traits;
 
@@ -274,6 +296,13 @@ package Conts.Lists is
          (Self : in out Nodes_List'Class; N, Previous : Node_Access);
       function Capacity (Self : Nodes_List'Class) return Count_Type
          is (Count_Type'Last);
+      procedure Assign
+         (Nodes    : in out Nodes_List'Class;
+          Source   : Nodes_List'Class;
+          New_Head : out Node_Access;
+          Old_Head : Node_Access;
+          New_Tail : out Node_Access;
+          Old_Tail : Node_Access);
       pragma Inline (Set_Next, Set_Previous, Capacity);
       pragma Inline (Get_Element, Get_Next, Get_Previous);
 
@@ -282,7 +311,6 @@ package Conts.Lists is
           Container    => Nodes_List,
           Node_Access  => Node_Access,
           Null_Access  => Null_Node_Access,
-          Capacity     => Capacity,
           Allocate     => Allocate);
    end SPARK_Unbounded_List_Nodes_Traits;
 
@@ -302,21 +330,21 @@ package Conts.Lists is
    --  to 0.51s when we do not use 'Class parameters).
 
    generic
-      with package All_Nodes is new List_Nodes_Traits (<>);
+      with package Nodes is new List_Nodes_Traits (<>);
 
       Enable_Asserts : Boolean := False;
       --  If True, extra asserts are added to the code. Apart from them, this
       --  code runs with all compiler checks disabled.
 
    package Generic_Lists is
-      type List is new All_Nodes.Container with private;
+      type List is new Nodes.Container with private;
       --  We do not define the Iterable aspect here: this is not allowed,
       --  since the parent type is a generic formal parameter. Instead, we
       --  have to define it in the instantiations of Generic_List.
 
-      subtype Element_Type is All_Nodes.Elements.Element_Type;
-      subtype Reference_Type is All_Nodes.Elements.Reference_Type;
-      subtype Stored_Element_Type is All_Nodes.Elements.Stored_Element_Type;
+      subtype Element_Type is Nodes.Elements.Element_Type;
+      subtype Reference_Type is Nodes.Elements.Reference_Type;
+      subtype Stored_Element_Type is Nodes.Elements.Stored_Element_Type;
       type Cursor is private;
 
       procedure Append
@@ -336,7 +364,7 @@ package Conts.Lists is
       --  Complexity: O(n)  (in practice, constant)
 
       function Capacity (Self : List'Class) return Count_Type
-         is (All_Nodes.Capacity (Self))
+         is (Nodes.Capacity (Self))
          with Inline => True,
               Global => null;
       --  Return the maximal number of elements in the list. This will be
@@ -345,6 +373,16 @@ package Conts.Lists is
 
       procedure Clear (Self : in out List'Class);
       --  Free the contents of the list
+      --  Complexity:  O(n)
+
+      procedure Assign (Self : in out List'Class; Source : List'Class);
+      --  Replace all elements of Self with a copy of the elements of Source.
+      --  When the list is controlled, this has the same behavior as calling
+      --  Self := Source.
+      --  Complexity: O(n)
+
+--      function Copy (Self : List'Class) return List'Class;
+      --  Return a deep copy of Self.
       --  Complexity:  O(n)
 
       function First (Self : List'Class) return Cursor
@@ -385,7 +423,7 @@ package Conts.Lists is
 
       function Reference
          (Self : List'Class; Position : Cursor) return Reference_Type
-         is (All_Nodes.Elements.Get_Reference
+         is (Nodes.Elements.Get_Reference
                 (Stored_Element (Self, Position)))
          with Inline => True,
               Global => null,
@@ -415,13 +453,13 @@ package Conts.Lists is
       --  using an explicit cursor.
 
    private
-      procedure Adjust (Self : in out List) is null;
+      procedure Adjust (Self : in out List);
       procedure Finalize (Self : in out List);
       --  In case the list is a controlled type, but irrelevant when the list
       --  is not controlled.
 
-      type List is new All_Nodes.Container with record
-         Head, Tail : All_Nodes.Node_Access := All_Nodes.Null_Access;
+      type List is new Nodes.Container with record
+         Head, Tail : Nodes.Node_Access := Nodes.Null_Access;
          Size : Natural := 0;
       end record;
       --  controlled just to check for performance for now.
@@ -430,7 +468,7 @@ package Conts.Lists is
       --  or copy-on-assign for instance.
 
       type Cursor is record
-         Current : All_Nodes.Node_Access;
+         Current : Nodes.Node_Access;
       end record;
    end Generic_Lists;
 
@@ -446,10 +484,9 @@ package Conts.Lists is
       --  subprograms
 
       subtype Cursor is Lists.Cursor;
-      subtype Element_Type is Lists.All_Nodes.Elements.Element_Type;
-      subtype Reference_Type is Lists.All_Nodes.Elements.Reference_Type;
-      subtype Stored_Element_Type
-         is Lists.All_Nodes.Elements.Stored_Element_Type;
+      subtype Element_Type is Lists.Nodes.Elements.Element_Type;
+      subtype Reference_Type is Lists.Nodes.Elements.Reference_Type;
+      subtype Stored_Element_Type is Lists.Nodes.Elements.Stored_Element_Type;
 
       function Cursors_First (Self : List'Class) return Cursor
          is (Lists.First (Self));

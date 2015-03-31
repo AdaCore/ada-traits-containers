@@ -80,7 +80,7 @@ package Conts.Adaptors is
          is (Self (Position));
       function Has_Element
          (Self : Array_Type; Position : Index_Type) return Boolean
-         is (Position in Self'Range);
+         is (Position <= Self'Last);
       function Next
          (Self : Array_Type; Position : Index_Type) return Index_Type
          is (Index_Type'Succ (Position));

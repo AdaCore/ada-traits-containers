@@ -11,7 +11,7 @@ package Conts.Lists.Indefinite_Unbounded is
       (Elements              => Elements.Elements,
        Controlled_Or_Limited => Controlled_Base_List);
    package Lists is new Generic_Lists
-      (All_Nodes      => Nodes.Nodes,
+      (Nodes          => Nodes.Nodes,
        Enable_Asserts => Enable_Asserts);
 
    subtype Cursor is Lists.Cursor;

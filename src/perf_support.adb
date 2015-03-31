@@ -45,6 +45,7 @@ package body Perf_Support is
       Self.Print_Not_Run ("explicit");
       Self.Print_Not_Run ("for..of");
       Self.Print_Not_Run ("count_if");
+      Self.Print_Not_Run ("copy");
       Self.Print_Not_Run ("allocate");
       Self.Print_Not_Run ("allocs");
       Self.Print_Not_Run ("reallocs");
@@ -67,7 +68,7 @@ package body Perf_Support is
    procedure Finish_Line (Self : in out Output) is
    begin
       if Self.Column /= -1 then
-         while Self.Column < 9 loop
+         while Self.Column < 10 loop
             Self.Print_Not_Run;
          end loop;
          Print_Not_Run (Self, Memory.Frees'Img);
@@ -85,7 +86,8 @@ package body Perf_Support is
       if Self.Column = 1
          or else Self.Column = 2
          or else Self.Column = 5
-         or else Self.Column = 9
+         or else Self.Column = 6
+         or else Self.Column = 10
       then
          Put (Character'Val (16#E2#)
               & Character'Val (16#95#)
@@ -236,13 +238,18 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
          Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
-
-      V2 : Lists.List := V;   --  Check this is not limited type
-      pragma Unreferenced (V2);
 
    begin
       Do_Test (V);
@@ -308,6 +315,15 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+            V_Copy.Clear;   --  explicit deallocation is needed
+         end;
 
          Stdout.Print_Size (V2'Size);
 
@@ -381,13 +397,18 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
          Stdout.Print_Size (V2'Size);
       end Do_Test;
 
       V : Lists.List;
-
-      V2 : Lists.List := V;   --  Check this is not limited type
-      pragma Unreferenced (V2);
    begin
       Do_Test (V);
    end Test_Lists_Int;
@@ -453,13 +474,20 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
+         Start := Clock;
+         declare
+            V_Copy : Lists.List (Capacity => Small_Items_Count);
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
          Stdout.Print_Size (V2'Size);
 
          V2.Clear;   --  Need explicit deallocation, this is limited
       end Do_Test;
 
       V : Lists.List (Capacity => Small_Items_Count);
-      --  V2 : Lists.List := V;   --  Check this is limited type
    begin
       Do_Test (V);
    end Test_Lists_Bounded_Limited;
@@ -525,16 +553,20 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
+         Start := Clock;
+         declare
+            V_Copy : Lists.List (Capacity => Small_Items_Count);
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
          Stdout.Print_Size (V2'Size);
 
          V2.Clear;   --  Need explicit deallocation, this is limited
       end Do_Test;
 
       V : Lists.List (Capacity => Small_Items_Count);
-
-      pragma Warnings (Off);
-      V2 : Lists.List := V;   --  Check this is not limited type
-      pragma Warnings (On);
    begin
       Do_Test (V);
    end Test_Lists_Bounded;
@@ -603,6 +635,14 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
+
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
 
          Stdout.Print_Size (V2'Size);
       end Do_Test;
@@ -677,6 +717,14 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
          Stdout.Print_Size (V2'Size);
       end Do_Test;
 
@@ -744,6 +792,14 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
+
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
 
          Stdout.Print_Size (V2'Size);
       end Do_Test;
@@ -813,6 +869,14 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (Lists.List (V));
+            Stdout.Print_Time (Clock - Start);
+         end;
+
          Stdout.Print_Size (V'Size);
       end Do_Test;
 
@@ -879,6 +943,14 @@ package body Perf_Support is
          raise Program_Error;
       end if;
 
+      Start := Clock;
+      declare
+         V_Copy : Int_Array := V;
+         pragma Unreferenced (V_Copy);
+      begin
+         Stdout.Print_Time (Clock - Start);
+      end;
+
       Stdout.Print_Size (V'Size);
    end Test_Arrays_Int;
 
@@ -941,6 +1013,14 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
+
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (Lists.List (V));
+            Stdout.Print_Time (Clock - Start);
+         end;
 
          Stdout.Print_Size (V'Size);
       end Do_Test;
@@ -1011,6 +1091,14 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (Lists.List (V));
+            Stdout.Print_Time (Clock - Start);
+         end;
+
          Stdout.Print_Size (V'Size);
       end Do_Test;
 
@@ -1061,8 +1149,9 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
-         Stdout.Print_Not_Run;
-         Stdout.Print_Not_Run;
+         Stdout.Print_Not_Run;  --  for..of
+         Stdout.Print_Not_Run;  --  count_if
+         Stdout.Print_Not_Run;  --  copy
          Stdout.Print_Size (V'Size);
       end Do_Test;
 

@@ -34,6 +34,9 @@ package Conts is
          (E : Stored_Element_Type) return Reference_Type;
       --  Converting between the two types
 
+      with function Copy (E : Stored_Element_Type) return Stored_Element_Type;
+      --  Return a new copy of the element
+
       with procedure Release (E : in out Stored_Element_Type) is null;
       --  Called whenever a value of Element_Type is removed from the table.
       --  This can be used to add unconstrained types to the list: Element_Type
@@ -60,6 +63,7 @@ package Conts is
           Stored_Element_Type => Element_Type,
           Reference_Type      => Element_Type,
           Get_Reference       => Identity,
+          Copy                => Identity,
           Convert_From        => Identity,
           Convert_To          => Identity);
    end Definite_Elements_Traits;
@@ -87,7 +91,9 @@ package Conts is
          is (E.all);
       function Get_Reference (E : Element_Access) return Reference_Type
          is (Reference_Type'(E => E));
-      pragma Inline (To_Element_Access, To_Element_Type, Get_Reference);
+      function Copy (E : Element_Access) return Element_Access
+         is (new Element_Type'(E.all));
+      pragma Inline (To_Element_Access, To_Element_Type, Get_Reference, Copy);
 
       package Elements is new Elements_Traits
          (Element_Type        => Element_Type,
@@ -96,6 +102,7 @@ package Conts is
           Convert_To          => To_Element_Type,
           Reference_Type      => Reference_Type,
           Get_Reference       => Get_Reference,
+          Copy                => Copy,
           Release             => Unchecked_Free);
    end Indefinite_Elements_Traits;
 

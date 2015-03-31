@@ -1,7 +1,7 @@
 pragma Ada_2012;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
-with System.Memory;                 use System.Memory;
+with System.Memory;                 use System, System.Memory;
 with System.Unsigned_Types;         use System.Unsigned_Types;
 
 package body Conts.Lists is
@@ -59,6 +59,43 @@ package body Conts.Lists is
       begin
          Self.Nodes (Count_Type (N)).Previous := Previous;
       end Set_Previous;
+
+      ------------
+      -- Assign --
+      ------------
+
+      procedure Assign
+         (Nodes    : in out Nodes_List'Class;
+          Source   : Nodes_List'Class;
+          New_Head : out Node_Access;
+          Old_Head : Node_Access;
+          New_Tail : out Node_Access;
+          Old_Tail : Node_Access)
+      is
+         N : Node_Access;
+      begin
+         --  Indices will remain the same
+         New_Head := Old_Head;
+         New_Tail := Old_Tail;
+
+         Nodes.Free  := Source.Free;
+
+         --  We need to copy each of the elements.
+
+         N := Old_Head;
+         while N /= Null_Node_Access loop
+            declare
+               Value : Node renames Source.Nodes (Count_Type (N));
+            begin
+               Nodes.Nodes (Count_Type (N)) :=
+                  (Element  => Elements.Copy (Value.Element),
+                   Next     => Value.Next,
+                   Previous => Value.Previous);
+               N := Value.Next;
+            end;
+         end loop;
+      end Assign;
+
    end Bounded_List_Nodes_Traits;
 
    ---------------------------------
@@ -123,6 +160,44 @@ package body Conts.Lists is
          N.Previous := Previous;
       end Set_Previous;
 
+      ------------
+      -- Assign --
+      ------------
+
+      procedure Assign
+         (Nodes    : in out Nodes_Container'Class;
+          Source   : Nodes_Container'Class;
+          New_Head : out Node_Access;
+          Old_Head : Node_Access;
+          New_Tail : out Node_Access;
+          Old_Tail : Node_Access)
+      is
+         pragma Unreferenced (Source, Old_Tail);
+         N, Tmp, Tmp2 : Node_Access;
+      begin
+         if Old_Head = null then
+            New_Head := null;
+            New_Tail := null;
+            return;
+         end if;
+
+         Tmp2 := Old_Head;
+         Allocate (Nodes, Elements.Copy (Tmp2.Element), Tmp);
+         New_Head := Tmp;
+
+         loop
+            Tmp2 := Tmp2.Next;
+            exit when Tmp2 = null;
+
+            Allocate (Nodes, Elements.Copy (Tmp2.Element), N);
+            Set_Next (Nodes, Tmp, N);
+            Set_Previous (Nodes, N, Tmp);
+            Tmp := N;
+         end loop;
+
+         New_Tail := N;
+      end Assign;
+
    end Unbounded_List_Nodes_Traits;
 
    ---------------------------------------
@@ -184,8 +259,7 @@ package body Conts.Lists is
                Unsigned (N));
             Self.Last := Count_Type (New_Size);
 
-            S := size_t
-               (Self.Last * Self.Nodes'Component_Size / System.Storage_Unit);
+            S := size_t (Self.Last * Node'Size / System.Storage_Unit);
 
             if Self.Nodes = null then
                Self.Nodes := Convert (Alloc (S));
@@ -199,6 +273,46 @@ package body Conts.Lists is
              Previous => Null_Node_Access,
              Next     => Null_Node_Access);
       end Allocate;
+
+      ------------
+      -- Assign --
+      ------------
+
+      procedure Assign
+         (Nodes    : in out Nodes_List'Class;
+          Source   : Nodes_List'Class;
+          New_Head : out Node_Access;
+          Old_Head : Node_Access;
+          New_Tail : out Node_Access;
+          Old_Tail : Node_Access)
+      is
+         S : size_t;
+         N : Node_Access;
+      begin
+         --  We *must* preserve the indices
+         New_Head := Old_Head;
+         New_Tail := Old_Tail;
+
+         S := size_t
+            (Source.Last * Source.Nodes'Component_Size / System.Storage_Unit);
+         Nodes.Nodes := Convert (Alloc (S));
+
+         Nodes.Last := Source.Last;
+         Nodes.Free := Source.Free;
+
+         N := Old_Head;
+         while N /= Null_Node_Access loop
+            declare
+               Value : Node renames Source.Nodes (Count_Type (N));
+            begin
+               Nodes.Nodes (Count_Type (N)) :=
+                  (Element  => Elements.Copy (Value.Element),
+                   Next     => Value.Next,
+                   Previous => Value.Previous);
+               N := Value.Next;
+            end;
+         end loop;
+      end Assign;
 
       -------------
       -- Release --
@@ -239,7 +353,7 @@ package body Conts.Lists is
    -------------------
 
    package body Generic_Lists is
-      use All_Nodes;
+      use Nodes;
 
       ------------
       -- Append --
@@ -253,7 +367,7 @@ package body Conts.Lists is
       begin
          Allocate
             (Self,
-             All_Nodes.Elements.Convert_From (Element),
+             Nodes.Elements.Convert_From (Element),
              New_Node => N);
 
          if Enable_Asserts and then N = Null_Access then
@@ -285,13 +399,13 @@ package body Conts.Lists is
             N := Self.Next (C);
             E := Self.Stored_Element (C);
             Elements.Release (E);
-            All_Nodes.Release_Node (Self, C.Current);
+            Nodes.Release_Node (Self, C.Current);
             C := N;
          end loop;
-         All_Nodes.Release (Self);
+         Nodes.Release (Self);
 
-         Self.Head := All_Nodes.Null_Access;
-         Self.Tail := All_Nodes.Null_Access;
+         Self.Head := Nodes.Null_Access;
+         Self.Tail := Nodes.Null_Access;
          Self.Size := 0;
       end Clear;
 
@@ -324,7 +438,7 @@ package body Conts.Lists is
             raise Program_Error with "Invalid position in list";
          end if;
 
-         return All_Nodes.Elements.Convert_To
+         return Nodes.Elements.Convert_To
             (Get_Element (Self, Position.Current));
       end Element;
 
@@ -399,6 +513,61 @@ package body Conts.Lists is
       begin
          Clear (Self);
       end Finalize;
+
+      ------------
+      -- Adjust --
+      ------------
+
+      procedure Adjust (Self : in out List) is
+      begin
+         null;
+         --  Clear (Self);
+      end Adjust;
+
+      ----------
+      -- Copy --
+      ----------
+
+--      function Copy (Self : List'Class) return List'Class is
+--      begin
+--         return Target : List'Class := Self do
+--            Nodes.Adjust
+--               (Target,
+--                New_Head => Target.Head,   Old_Head => Self.Head,
+--                New_Tail => Target.Source, Old_Tail => Self.Source);
+--         end return;
+--      end Copy;
+
+      ------------
+      -- Assign --
+      ------------
+
+      procedure Assign (Self : in out List'Class; Source : List'Class) is
+      begin
+         if Self'Address = Source'Address then
+            --  Tagged types are always passed by reference, so we know they
+            --  are the same, and do nothing.
+            return;
+         end if;
+
+         Nodes.Assign (Self, Source,
+                       Self.Head, Source.Head,
+                       Self.Tail, Source.Tail);
+
+         --  Self.Clear;
+
+         --  --  Should not copy the items one by one, since we would like the
+         --  --  SPARK cursors indexes to point to the same object before and
+         --  --  after.
+
+         --  Node := Source.First;
+         --  while Node /= null loop
+         --     Self.Append (Node.Element);
+         --     Node := Node.Next;
+         --  end loop;
+
+      end Assign;
+
    end Generic_Lists;
 
 end Conts.Lists;

@@ -60,6 +60,10 @@ void test_cpp() {
    if (count != 2) {
       std::cout << "C++ error while counting" << std::endl;
    }
+
+   begin = clock();
+   std::list<int> v_copy (v);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 }
 
 void test_cpp_string() {
@@ -107,6 +111,10 @@ void test_cpp_string() {
    if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
+
+   begin = clock();
+   std::list<std::string> v_copy (v);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 }
 
 extern "C" {

@@ -142,7 +142,4 @@ package Perf_Support is
 
    Stdout : Output;
 
-private
-
-
 end Perf_Support;

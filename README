@@ -231,14 +231,37 @@ Todo
   handling of containers like forward-lists. The value Null_Access would
   be used to indicate the end of the container.
 
-- Memory management
-  Provide Clear (and support for it in Nodes packages), including
-  automatically for controlled containers.
+- Copy function
+  It can't be written in Generic_Lists, since the type could be unconstrained
+  (and we do not know its constraints), and limited (so we can't use := to set
+  the constraints either.
+  It will be written in the appropriate high-level instances instead.
 
 - Ideas:
   * for lists, could write a type of Nodes_Traits for a database query.
     Or perhaps just as a cursors_traits, but then we do not get the for..of
     loop
+
+  * Boolean formal parameter to configure whether we should add locking every
+    time we do operations. Can we do this through a hidden protected object
+    with barriers, or do we need to make the barriers visible in the API,
+    which would not be possible
+
+  * Support for reference counted containers (a la QGen), as a further
+    derivation of the Lists.Indefinite_Unbounded.List type
+
+  * Document how to use a 'with' clause to get access to the operations
+    when one doesn't want to use the prefix notation for calls
+
+  * A boolean formal parameter to enable tampering checks ?
+
+  * A version of some algorithms that are multi-threaded
+
+- Extensions
+  * Have the Iterable aspect take a Constant_Forward_Cursors_Traits instead
+    of all the subprograms.
+
+  * How can we use a "for..of" loop when writting an algorithm ?
 
 
 Performance results
