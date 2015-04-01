@@ -381,10 +381,6 @@ package Conts.Lists is
       --  Self := Source.
       --  Complexity: O(n)
 
---      function Copy (Self : List'Class) return List'Class;
-      --  Return a deep copy of Self.
-      --  Complexity:  O(n)
-
       function First (Self : List'Class) return Cursor
          with Inline => True,
               Global => null;

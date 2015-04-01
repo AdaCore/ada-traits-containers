@@ -21,5 +21,11 @@ package Conts.Lists.Indefinite_Unbounded is
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
+   --  ??? Should we provide a Copy function ?
+   --  This cannot be provided in the generic package, since the type could
+   --  be constrained and/or limited, so it has to be provided in all child
+   --  packages. However, when the type is controlled it is much easier to
+   --  just use the standard assignment operator.
+
    package Cursors is new List_Cursors (Lists, List);
 end Conts.Lists.Indefinite_Unbounded;

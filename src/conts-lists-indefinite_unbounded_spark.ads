@@ -27,5 +27,9 @@ package Conts.Lists.Indefinite_Unbounded_SPARK is
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
+   function Copy (Self : List'Class) return List'Class;
+   --  Return a deep copy of Self
+   --  Complexity: O(n)
+
    package Cursors is new List_Cursors (Lists, List);
 end Conts.Lists.Indefinite_Unbounded_SPARK;

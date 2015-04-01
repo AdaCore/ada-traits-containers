@@ -231,12 +231,6 @@ Todo
   handling of containers like forward-lists. The value Null_Access would
   be used to indicate the end of the container.
 
-- Copy function
-  It can't be written in Generic_Lists, since the type could be unconstrained
-  (and we do not know its constraints), and limited (so we can't use := to set
-  the constraints either.
-  It will be written in the appropriate high-level instances instead.
-
 - Ideas:
   * for lists, could write a type of Nodes_Traits for a database query.
     Or perhaps just as a cursors_traits, but then we do not get the for..of

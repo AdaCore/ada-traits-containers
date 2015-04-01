@@ -537,20 +537,6 @@ package body Conts.Lists is
                        Self.Tail, Self.Tail);
       end Adjust;
 
-      ----------
-      -- Copy --
-      ----------
-
---      function Copy (Self : List'Class) return List'Class is
---      begin
---         return Target : List'Class := Self do
---            Nodes.Adjust
---               (Target,
---                New_Head => Target.Head,   Old_Head => Self.Head,
---                New_Tail => Target.Source, Old_Tail => Self.Source);
---         end return;
---      end Copy;
-
       ------------
       -- Assign --
       ------------

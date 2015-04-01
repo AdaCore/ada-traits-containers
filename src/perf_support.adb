@@ -166,9 +166,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  --  Cannot use ":=" since the type is limited
+                  V_Copy : Lists.List'Class := V2.Copy;
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                   V_Copy.Clear;   --  explicit deallocation is needed
                end;
@@ -308,9 +308,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List (Capacity => Small_Items_Count);
+                  --  Cannot use ":=", the container is limited
+                  V_Copy : Lists.List'Class := V2.Copy;
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                   V_Copy.Clear;  --  Type is not controlled
                end;
