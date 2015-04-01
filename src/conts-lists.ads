@@ -511,7 +511,7 @@ package Conts.Lists is
       pragma Inline (Cursors_First, Cursors_Element, Cursors_Has_Element);
       pragma Inline (Cursors_Next, Cursors_Previous);
 
-      package Bidirectional is new Bidirectional_Cursors_Traits
+      package Bidirectional is new Bidirectional_Constant_Cursors_Traits
          (Container    => List'Class,
           Cursor       => Cursor,
           Element_Type => Element_Type,
@@ -522,7 +522,7 @@ package Conts.Lists is
           Previous     => Cursors_Previous);
       package Forward renames Bidirectional.Forward;
 
-      package Bidirectional_Stored is new Bidirectional_Cursors_Traits
+      package Bidirectional_Stored is new Bidirectional_Constant_Cursors_Traits
          (Container    => List'Class,
           Cursor       => Lists.Cursor,
           Element_Type => Stored_Element_Type,
@@ -536,7 +536,7 @@ package Conts.Lists is
       --  might be more efficient.
 
       package Bidirectional_Reference
-         is new Bidirectional_Cursors_Traits
+         is new Bidirectional_Constant_Cursors_Traits
          (Container    => List'Class,
           Cursor       => Lists.Cursor,
           Element_Type => Reference_Type,

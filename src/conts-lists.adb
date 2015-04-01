@@ -532,7 +532,9 @@ package body Conts.Lists is
 
       procedure Adjust (Self : in out List) is
       begin
-         null;
+         Nodes.Assign (Self, Self,
+                       Self.Head, Self.Head,
+                       Self.Tail, Self.Tail);
       end Adjust;
 
       ----------

@@ -96,9 +96,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : Lists.List'Class := V2;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -238,9 +238,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : Lists.List'Class := V2;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -312,6 +312,7 @@ package body Perf_Support is
                begin
                   V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
+                  V_Copy.Clear;  --  Type is not controlled
                end;
 
             when Column_Loop =>
@@ -379,9 +380,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List (Capacity => Small_Items_Count);
+                  V_Copy : Lists.List'Class := V2;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -453,9 +454,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : constant Lists.List'Class := V2;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -520,9 +521,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : Lists.List'Class := V2;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -582,9 +583,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : constant Lists.List'Class := V2;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (V2);
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -644,9 +645,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : constant Lists.List'Class  := V;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (Lists.List (V));
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -778,9 +779,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : constant Lists.List'Class := V;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (Lists.List (V));
                   Stdout.Print_Time (Clock - Start);
                end;
 
@@ -848,9 +849,9 @@ package body Perf_Support is
 
             when Column_Copy =>
                declare
-                  V_Copy : Lists.List;
+                  V_Copy : constant Lists.List'Class := V;
+                  pragma Unreferenced (V_Copy);
                begin
-                  V_Copy.Assign (Lists.List (V));
                   Stdout.Print_Time (Clock - Start);
                end;
 

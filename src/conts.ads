@@ -125,8 +125,8 @@ package Conts is
          return Boolean is <>;
       with function Next (Self : Container; Position : Cursor)
          return Cursor is <>;
-   package Forward_Cursors_Traits is
-   end Forward_Cursors_Traits;
+   package Forward_Constant_Cursors_Traits is
+   end Forward_Constant_Cursors_Traits;
    --  A package that describes how to use forward cursors.
    --  Each contain for which this is applicable provides an instance of
    --  this package, and algorithms should take this package as a
@@ -145,11 +145,11 @@ package Conts is
          return Cursor is <>;
       with function Previous (Self : Container; Position : Cursor)
          return Cursor is <>;
-   package Bidirectional_Cursors_Traits is
+   package Bidirectional_Constant_Cursors_Traits is
 
       --  A bidirectional cursor is also a forward cursor
-      package Forward is new Forward_Cursors_Traits
+      package Forward is new Forward_Constant_Cursors_Traits
          (Container, Cursor, Element_Type);
-   end Bidirectional_Cursors_Traits;
+   end Bidirectional_Constant_Cursors_Traits;
 
 end Conts;
