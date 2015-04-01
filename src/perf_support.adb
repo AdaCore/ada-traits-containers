@@ -9,6 +9,7 @@ with Conts.Lists.Definite_Bounded;
 with Conts.Lists.Definite_Bounded_Limited;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
+with GNAT.Strings;
 with Taggeds;
 with Interfaces.C.Strings;
 with Memory;
@@ -25,34 +26,60 @@ package body Perf_Support is
       (S (S'First) = 's');
    pragma Inline (Starts_With_Str);
 
-   procedure Print_Separator (Self : in out Output);
+   procedure Put (Self : in out Output; Str : String);
+   --  Display text in the current column
 
    ------------
    -- Output --
    ------------
 
+   type Column_Descriptor is record
+      Title          : GNAT.Strings.String_Access;
+      Width          : Natural;
+      Wide_Separator : Boolean;
+      Ref            : Time_Ref;
+   end record;
+   Columns : array (Natural range <>) of Column_Descriptor :=
+      (1  => (new String'(""),         10, True,  Ref_None),
+       2  => (new String'("fill"),     8,  False, Ref_Fill),
+       3  => (new String'("copy"),     8,  True,  Ref_Fill),
+       4  => (new String'("explicit"), 8,  False, Ref_Loop),
+       5  => (new String'("for..of"),  8,  False, Ref_Loop),
+       6  => (new String'("count_if"), 8,  True,  Ref_Loop),
+       7  => (new String'("allocate"), 8,  False, Ref_None),
+       8  => (new String'("allocs"),   8,  False, Ref_None),
+       9  => (new String'("reallocs"), 8,  False, Ref_None),
+       10 => (new String'("frees"),    8,  True,  Ref_None));
+
    procedure Reset (Self : in out Output) is
    begin
       Self.Finish_Line;
-      Self.Fill_Ref := 0.0;
-      Self.Loop_Ref := 0.0;
+      Self.Ref := (others => 0.0);
    end Reset;
 
    procedure Print_Header (Self : in out Output) is
    begin
-      Self.Start_Line ("");
-      Self.Print_Not_Run ("fill");
-      Self.Print_Not_Run ("explicit");
-      Self.Print_Not_Run ("for..of");
-      Self.Print_Not_Run ("count_if");
-      Self.Print_Not_Run ("copy");
-      Self.Print_Not_Run ("allocate");
-      Self.Print_Not_Run ("allocs");
-      Self.Print_Not_Run ("reallocs");
-      Self.Print_Not_Run ("frees");
+      Self.Finish_Line;
+      Self.Column := 1;
+      for C in Columns'Range loop
+         Put (Self, Columns (C).Title.all);
+      end loop;
       New_Line;
       Self.Column := -1;
    end Print_Header;
+
+   procedure Put (Self : in out Output; Str : String) is
+   begin
+      Put (Str & (Str'Length + 1 .. Columns (Self.Column).Width => ' '));
+      if Columns (Self.Column).Wide_Separator then
+         Put (Character'Val (16#E2#)
+              & Character'Val (16#95#)
+              & Character'Val (16#91#));
+      else
+         Put ('|');
+      end if;
+      Self.Column := Self.Column + 1;
+   end Put;
 
    procedure Start_Line
       (Self : in out Output; Title : String; Fewer_Items : Boolean := False) is
@@ -60,18 +87,17 @@ package body Perf_Support is
       Self.Finish_Line;
       Memory.Reset;
       Self.Column := 1;
-      Put (Title & (Title'Length + 1 .. 10 => ' '));
-      Print_Separator (Self);
+      Put (Self, Title);
       Self.Fewer_Items := Fewer_Items;
    end Start_Line;
 
    procedure Finish_Line (Self : in out Output) is
    begin
       if Self.Column /= -1 then
-         while Self.Column < 10 loop
-            Self.Print_Not_Run;
+         while Self.Column < Columns'Last loop
+            Put (Self, "");
          end loop;
-         Print_Not_Run (Self, Memory.Frees'Img);
+         Put (Self, Memory.Frees'Img);
          Self.Column := -1;
          if Items_Count /= Small_Items_Count and then Self.Fewer_Items then
             Put_Line (" fewer items");
@@ -81,46 +107,23 @@ package body Perf_Support is
       end if;
    end Finish_Line;
 
-   procedure Print_Separator (Self : in out Output) is
-   begin
-      if Self.Column = 1
-         or else Self.Column = 2
-         or else Self.Column = 5
-         or else Self.Column = 6
-         or else Self.Column = 10
-      then
-         Put (Character'Val (16#E2#)
-              & Character'Val (16#95#)
-              & Character'Val (16#91#));
-      else
-         Put ('|');
-      end if;
-      Self.Column := Self.Column + 1;
-   end Print_Separator;
-
    procedure Print_Time
       (Self : in out Output; D : Duration; Extra : String := "")
    is
       Ref : Duration;
    begin
       if Self.Show_Percent then
-         if Self.Column = 2 then
-            if Self.Fill_Ref = 0.0 then
-               Self.Fill_Ref := D;
-            end if;
-            Ref := Self.Fill_Ref;
-         else
-            if Self.Loop_Ref = 0.0 then
-               Self.Loop_Ref := D;
-            end if;
-            Ref := Self.Loop_Ref;
+         Ref := Self.Ref (Columns (Self.Column).Ref);
+         if Ref = 0.0 then
+            Self.Ref (Columns (Self.Column).Ref) := D;
+            Ref := D;
          end if;
 
          declare
             S : constant String := Integer'Image
                (Integer (Float'Floor (Float (D) / Float (Ref) * 100.0))) & '%';
          begin
-            Put (S & Extra & (S'Length + Extra'Length + 1 .. 8 => ' '));
+            Put (Self, S & Extra);
          end;
 
       else
@@ -129,25 +132,21 @@ package body Perf_Support is
             Sub : constant String :=
                S (S'First .. Integer'Min (S'Last, S'First + 7));
          begin
-            Put (Sub & Extra & (Sub'Length + Extra'Length + 1 .. 8 => ' '));
+            Put (Self, Sub & Extra);
          end;
       end if;
-
-      Print_Separator (Self);
    end Print_Time;
 
    procedure Print_Not_Run (Self : in out Output; Extra : String := "") is
    begin
-      Put (Extra & (Extra'Length + 1 .. 8 => ' '));
-      Print_Separator (Self);
+      Put (Self, Extra);
    end Print_Not_Run;
 
    procedure Print_Size (Self : in out Output; Size : Natural) is
       procedure Local_Print (S : String);
       procedure Local_Print (S : String) is
       begin
-         Put (S (S'First + 1 .. S'Last) & (S'Length .. 8 => ' '));
-         Print_Separator (Self);
+         Put (Self, S (S'First + 1 .. S'Last));
       end Local_Print;
 
       Actual_Size : constant Natural := Size + Natural (Memory.Live);
@@ -159,8 +158,8 @@ package body Perf_Support is
          Local_Print (Integer'Image (Actual_Size) & "b");
       end if;
 
-      Print_Not_Run (Self, Memory.Allocs'Img);
-      Print_Not_Run (Self, Memory.Reallocs'Img);
+      Put (Self, Memory.Allocs'Img);
+      Put (Self, Memory.Reallocs'Img);
    end Print_Size;
 
    procedure Print_From_C (D : Interfaces.C.double);
@@ -206,6 +205,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);  --  fill
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -237,14 +244,6 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V2'Size);
       end Do_Test;
@@ -284,6 +283,15 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+            V_Copy.Clear;   --  explicit deallocation is needed
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -315,15 +323,6 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-            V_Copy.Clear;   --  explicit deallocation is needed
-         end;
 
          Stdout.Print_Size (V2'Size);
 
@@ -365,6 +364,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -396,14 +403,6 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V2'Size);
       end Do_Test;
@@ -442,6 +441,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List (Capacity => Small_Items_Count);
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -473,14 +480,6 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List (Capacity => Small_Items_Count);
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V2'Size);
 
@@ -521,6 +520,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List (Capacity => Small_Items_Count);
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -552,14 +559,6 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List (Capacity => Small_Items_Count);
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V2'Size);
 
@@ -603,6 +602,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -635,14 +642,6 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V2'Size);
       end Do_Test;
@@ -684,6 +683,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -716,14 +723,6 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V2'Size);
       end Do_Test;
@@ -760,6 +759,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (V2);
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V2.First;
          while V2.Has_Element (It) loop
@@ -792,14 +799,6 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V2'Size);
       end Do_Test;
@@ -836,6 +835,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (Lists.List (V));
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V.First;
          while Has_Element (It) loop
@@ -868,14 +875,6 @@ package body Perf_Support is
          if Co /= Items_Count then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (Lists.List (V));
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V'Size);
       end Do_Test;
@@ -913,6 +912,14 @@ package body Perf_Support is
       Stdout.Print_Time (Clock - Start);
 
       Start := Clock;
+      declare
+         V_Copy : Int_Array := V;
+         pragma Unreferenced (V_Copy);
+      begin
+         Stdout.Print_Time (Clock - Start);
+      end;
+
+      Start := Clock;
       Co := 0;
       for It in V'Range loop
          if V (It) > 3 then
@@ -943,14 +950,6 @@ package body Perf_Support is
          raise Program_Error;
       end if;
 
-      Start := Clock;
-      declare
-         V_Copy : Int_Array := V;
-         pragma Unreferenced (V_Copy);
-      begin
-         Stdout.Print_Time (Clock - Start);
-      end;
-
       Stdout.Print_Size (V'Size);
    end Test_Arrays_Int;
 
@@ -980,6 +979,14 @@ package body Perf_Support is
          V.Append (5);
          V.Append (6);
          Stdout.Print_Time (Clock - Start);
+
+         Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (Lists.List (V));
+            Stdout.Print_Time (Clock - Start);
+         end;
 
          Start := Clock;
          Co := 0;
@@ -1013,14 +1020,6 @@ package body Perf_Support is
          if Co /= 2 then
             raise Program_Error;
          end if;
-
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (Lists.List (V));
-            Stdout.Print_Time (Clock - Start);
-         end;
 
          Stdout.Print_Size (V'Size);
       end Do_Test;
@@ -1059,6 +1058,14 @@ package body Perf_Support is
          Stdout.Print_Time (Clock - Start);
 
          Start := Clock;
+         declare
+            V_Copy : Lists.List;
+         begin
+            V_Copy.Assign (Lists.List (V));
+            Stdout.Print_Time (Clock - Start);
+         end;
+
+         Start := Clock;
          Co := 0;
          It := V.First;
          while Has_Element (It) loop
@@ -1091,14 +1098,6 @@ package body Perf_Support is
             raise Program_Error;
          end if;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (Lists.List (V));
-            Stdout.Print_Time (Clock - Start);
-         end;
-
          Stdout.Print_Size (V'Size);
       end Do_Test;
 
@@ -1130,6 +1129,8 @@ package body Perf_Support is
          V.Append (6);
          Stdout.Print_Time (Clock - Start);
 
+         Stdout.Print_Not_Run;  --  copy
+
          Start := Clock;
          Co := 0;
          declare
@@ -1151,7 +1152,6 @@ package body Perf_Support is
 
          Stdout.Print_Not_Run;  --  for..of
          Stdout.Print_Not_Run;  --  count_if
-         Stdout.Print_Not_Run;  --  copy
          Stdout.Print_Size (V'Size);
       end Do_Test;
 

@@ -82,7 +82,7 @@ package body Conts.Lists is
 
          --  We need to copy each of the elements.
 
-         if Elements.Need_Copy then
+         if not Elements.Use_Implicit_Copy then
             N := Old_Head;
             while N /= Null_Node_Access loop
                declare
@@ -307,7 +307,9 @@ package body Conts.Lists is
          Nodes.Last := Source.Last;
          Nodes.Free := Source.Free;
 
-         if Elements.Need_Copy then
+         if Elements.Use_Implicit_Copy then
+            Nodes.Nodes (1 .. Nodes.Last) := Source.Nodes (1 .. Source.Last);
+         else
             N := Old_Head;
             while N /= Null_Node_Access loop
                declare
@@ -321,8 +323,6 @@ package body Conts.Lists is
                   N := Value.Next;
                end;
             end loop;
-         else
-            Nodes.Nodes (1 .. Nodes.Last) := Source.Nodes (1 .. Source.Last);
          end if;
       end Assign;
 

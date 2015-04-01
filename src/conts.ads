@@ -40,9 +40,14 @@ package Conts is
       --  would then be a pointer to that type, and Release is a call to
       --  Unchecked_Deallocation.
 
-      Need_Copy : Boolean;
-      --  Whether an element needs calls to Convert_From (Convert_To (E))
-      --  when it is duplicated in a second container.
+      Use_Implicit_Copy : Boolean;
+      --  If true, an element can be copied to another container with the
+      --  usual ":=" assignment (and, for controlled types, calling the
+      --  Adjust primitive). This speeds things up significantly when using
+      --  containers based on arrays, since there is no need to copy the
+      --  elements one by one.
+      --  If False, the element needs to be copied via a call to
+      --  Convert_From (Convert_To (E)).
 
    package Elements_Traits is
       --  pragma Unreferenced (Convert_From, Convert_To, Release);
@@ -63,7 +68,7 @@ package Conts is
          (Element_Type        => Element_Type,
           Stored_Element_Type => Element_Type,
           Reference_Type      => Element_Type,
-          Need_Copy           => False,
+          Use_Implicit_Copy   => True,
           Get_Reference       => Identity,
           Convert_From        => Identity,
           Convert_To          => Identity);
@@ -99,7 +104,7 @@ package Conts is
           Stored_Element_Type => Element_Access,
           Convert_From        => To_Element_Access,
           Convert_To          => To_Element_Type,
-          Need_Copy           => True,
+          Use_Implicit_Copy   => False,
           Reference_Type      => Reference_Type,
           Get_Reference       => Get_Reference,
           Release             => Unchecked_Free);

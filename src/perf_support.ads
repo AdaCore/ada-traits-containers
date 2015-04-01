@@ -123,12 +123,14 @@ package Perf_Support is
    -- Output --
    ------------
 
+   type Time_Ref is (Ref_None, Ref_Fill, Ref_Loop);
+   type Time_Ref_Array is array (Time_Ref) of Duration;
+
    type Output is tagged record
       Show_Percent : Boolean := True;
       Column      : Integer := -1;    --  -1 if not run
       Fewer_Items : Boolean;
-      Fill_Ref    : Duration := 0.0;  --  reference time for fill
-      Loop_Ref    : Duration := 0.0;  --  reference time for loop
+      Ref         : Time_Ref_Array := (others => 0.0);
    end record;
    procedure Print_Header (Self : in out Output);
    procedure Reset (Self : in out Output);

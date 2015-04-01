@@ -4,6 +4,8 @@ with QGen;          use QGen;
 
 procedure Perf is
 begin
+   Stdout.Show_Percent := True;
+
    Put_Line ("+--------- lists of integers");
    Stdout.Print_Header;
    Test_Cpp_Int;

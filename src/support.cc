@@ -27,6 +27,9 @@ void test_cpp() {
    v.push_back(6);
    _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 
+   begin = clock();
+   std::list<int> v_copy (v);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 
    begin = clock();
    int count = 0;
@@ -61,9 +64,6 @@ void test_cpp() {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-   begin = clock();
-   std::list<int> v_copy (v);
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 }
 
 void test_cpp_string() {
@@ -77,6 +77,9 @@ void test_cpp_string() {
    }
    _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 
+   begin = clock();
+   std::list<std::string> v_copy (v);
+   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 
    begin = clock();
    int count = 0;
@@ -112,9 +115,6 @@ void test_cpp_string() {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-   begin = clock();
-   std::list<std::string> v_copy (v);
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
 }
 
 extern "C" {
