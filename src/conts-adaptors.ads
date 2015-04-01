@@ -29,7 +29,7 @@ package Conts.Adaptors is
 
       package Cursors is
          package Forward is new Forward_Cursors_Traits
-            (Container    => List,
+            (Container    => List'Class,
              Cursor       => Cursor,
              Element_Type => Element_Type);
       end Cursors;
@@ -59,7 +59,7 @@ package Conts.Adaptors is
 
       package Cursors is
          package Forward is new Forward_Cursors_Traits
-            (Container    => List,
+            (Container    => List'Class,
              Cursor       => Cursor,
              Element_Type => Element_Type);
       end Cursors;

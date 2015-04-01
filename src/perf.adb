@@ -1,6 +1,7 @@
 with Ada.Text_IO;   use Ada.Text_IO;
 with Perf_Support;  use Perf_Support;
 with QGen;          use QGen;
+with Output;        use Output;
 
 procedure Perf is
 begin

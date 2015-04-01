@@ -1,7 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Calendar;       use Ada.Calendar;
-with Ada.Text_IO;        use Ada.Text_IO;
 with Conts.Lists.Definite_Unbounded;
 with Conts.Lists.Indefinite_Unbounded;
 with Conts.Lists.Indefinite_Unbounded_SPARK;
@@ -9,172 +8,60 @@ with Conts.Lists.Definite_Bounded;
 with Conts.Lists.Definite_Bounded_Limited;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
-with GNAT.Strings;
 with Taggeds;
-with Interfaces.C.Strings;
-with Memory;
+with Output;             use Output;
 
 --  The tests all use a subprogram with a class-wide parameter, to force the
 --  use of dynamic dispatching and simulate real applications.
 
 package body Perf_Support is
 
-   function Greater_Than_3 (P : Integer) return Boolean is (P > 3)
+   function Predicate (P : Integer) return Boolean is (P > 3)
       with Inline => True;
 
    function Starts_With_Str (S : String) return Boolean is
       (S (S'First) = 's');
    pragma Inline (Starts_With_Str);
 
-   procedure Put (Self : in out Output; Str : String);
-   --  Display text in the current column
+   generic
+      type Container (<>) is limited private;
+      with procedure Run
+         (Self : in out Container; Col : Test_Cols; Start : Time) is <>;
+   procedure Run_Tests
+      (Title : String;
+       Self : in out Container;
+       Fewer_Items : Boolean := False);
+
+   procedure Assert (Count, Expected : Natural) with Inline => True;
 
    ------------
-   -- Output --
+   -- Assert --
    ------------
 
-   type Column_Descriptor is record
-      Title          : GNAT.Strings.String_Access;
-      Width          : Natural;
-      Wide_Separator : Boolean;
-      Ref            : Time_Ref;
-   end record;
-   Columns : array (Natural range <>) of Column_Descriptor :=
-      (1  => (new String'(""),         10, True,  Ref_None),
-       2  => (new String'("fill"),     8,  False, Ref_Fill),
-       3  => (new String'("copy"),     8,  True,  Ref_Fill),
-       4  => (new String'("explicit"), 8,  False, Ref_Loop),
-       5  => (new String'("for..of"),  8,  False, Ref_Loop),
-       6  => (new String'("count_if"), 8,  True,  Ref_Loop),
-       7  => (new String'("allocate"), 8,  False, Ref_None),
-       8  => (new String'("allocs"),   8,  False, Ref_None),
-       9  => (new String'("reallocs"), 8,  False, Ref_None),
-       10 => (new String'("frees"),    8,  True,  Ref_None));
-
-   procedure Reset (Self : in out Output) is
+   procedure Assert (Count, Expected : Natural) is
    begin
-      Self.Finish_Line;
-      Self.Ref := (others => 0.0);
-   end Reset;
-
-   procedure Print_Header (Self : in out Output) is
-   begin
-      Self.Finish_Line;
-      Self.Column := 1;
-      for C in Columns'Range loop
-         Put (Self, Columns (C).Title.all);
-      end loop;
-      New_Line;
-      Self.Column := -1;
-   end Print_Header;
-
-   procedure Put (Self : in out Output; Str : String) is
-   begin
-      Put (Str & (Str'Length + 1 .. Columns (Self.Column).Width => ' '));
-      if Columns (Self.Column).Wide_Separator then
-         Put (Character'Val (16#E2#)
-              & Character'Val (16#95#)
-              & Character'Val (16#91#));
-      else
-         Put ('|');
+      if Count /= Expected then
+         raise Program_Error with "Wrong count: got"
+            & Count'Img & " expected" & Expected'Img;
       end if;
-      Self.Column := Self.Column + 1;
-   end Put;
+   end Assert;
 
-   procedure Start_Line
-      (Self : in out Output; Title : String; Fewer_Items : Boolean := False) is
-   begin
-      Self.Finish_Line;
-      Memory.Reset;
-      Self.Column := 1;
-      Put (Self, Title);
-      Self.Fewer_Items := Fewer_Items;
-   end Start_Line;
+   ---------------
+   -- Run_Tests --
+   ---------------
 
-   procedure Finish_Line (Self : in out Output) is
-   begin
-      if Self.Column /= -1 then
-         while Self.Column < Columns'Last loop
-            Put (Self, "");
-         end loop;
-         Put (Self, Memory.Frees'Img);
-         Self.Column := -1;
-         if Items_Count /= Small_Items_Count and then Self.Fewer_Items then
-            Put_Line (" fewer items");
-         else
-            New_Line;
-         end if;
-      end if;
-   end Finish_Line;
-
-   procedure Print_Time
-      (Self : in out Output; D : Duration; Extra : String := "")
+   procedure Run_Tests
+      (Title       : String;
+       Self        : in out Container;
+       Fewer_Items : Boolean := False)
    is
-      Ref : Duration;
    begin
-      if Self.Show_Percent then
-         Ref := Self.Ref (Columns (Self.Column).Ref);
-         if Ref = 0.0 then
-            Self.Ref (Columns (Self.Column).Ref) := D;
-            Ref := D;
-         end if;
-
-         declare
-            S : constant String := Integer'Image
-               (Integer (Float'Floor (Float (D) / Float (Ref) * 100.0))) & '%';
-         begin
-            Put (Self, S & Extra);
-         end;
-
-      else
-         declare
-            S   : constant String := D'Img;
-            Sub : constant String :=
-               S (S'First .. Integer'Min (S'Last, S'First + 7));
-         begin
-            Put (Self, Sub & Extra);
-         end;
-      end if;
-   end Print_Time;
-
-   procedure Print_Not_Run (Self : in out Output; Extra : String := "") is
-   begin
-      Put (Self, Extra);
-   end Print_Not_Run;
-
-   procedure Print_Size (Self : in out Output; Size : Natural) is
-      procedure Local_Print (S : String);
-      procedure Local_Print (S : String) is
-      begin
-         Put (Self, S (S'First + 1 .. S'Last));
-      end Local_Print;
-
-      Actual_Size : constant Natural := Size + Natural (Memory.Live);
-   begin
-      if Actual_Size >= 1_000_000 then
-         --  Approximate a kb as 1000 bytes, easier to compare
-         Local_Print (Integer'Image (Actual_Size / 1000) & "kb");
-      else
-         Local_Print (Integer'Image (Actual_Size) & "b");
-      end if;
-
-      Put (Self, Memory.Allocs'Img);
-      Put (Self, Memory.Reallocs'Img);
-   end Print_Size;
-
-   procedure Print_From_C (D : Interfaces.C.double);
-   pragma Export (C, Print_From_C, "_ada_print_time");
-   procedure Print_From_C (D : Interfaces.C.double) is
-   begin
-      Stdout.Print_Time (Duration (D));
-   end Print_From_C;
-
-   procedure Start_Line_C (Title : Interfaces.C.Strings.chars_ptr);
-   pragma Export (C, Start_Line_C, "_ada_start_line");
-   procedure Start_Line_C (Title : Interfaces.C.Strings.chars_ptr) is
-   begin
-      Stdout.Start_Line (Interfaces.C.Strings.Value (Title));
-   end Start_Line_C;
+      Stdout.Start_Line (Title, Fewer_Items => Fewer_Items);
+      for Col in Test_Cols loop
+         Run (Self, Col, Start => Clock);
+      end loop;
+      Stdout.Print_Size (Self'Size);
+   end Run_Tests;
 
    -------------------------------
    -- Test_Lists_Int_Indefinite --
@@ -188,70 +75,62 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Lists.Cursors.Forward);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+         Co : Natural := 0;
       begin
-         Stdout.Start_Line ("List iuc");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count - 2 loop
+                  V2.Append (2);
+               end loop;
+               V2.Append (5);
+               V2.Append (6);
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count - 2 loop
-            V2.Append (2);
-         end loop;
-         V2.Append (5);
-         V2.Append (6);
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);  --  fill
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Predicate (V2.Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if V2.Element (It) > 3 then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V2 loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         for E of V2 loop
-            if E > 3 then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start, Extra => "(1)");
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         Co := Count_If (V2, Greater_Than_3'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List;
-
    begin
-      Do_Test (V);
+      All_Tests ("List iuc", V);
    end Test_Lists_Int_Indefinite;
 
    -------------------------------------
@@ -266,73 +145,64 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Lists.Cursors.Forward);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+         Co : Natural := 0;
       begin
-         Stdout.Start_Line ("List isl");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count - 2 loop
+                  V2.Append (2);
+               end loop;
+               V2.Append (5);
+               V2.Append (6);
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count - 2 loop
-            V2.Append (2);
-         end loop;
-         V2.Append (5);
-         V2.Append (6);
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+                  V_Copy.Clear;   --  explicit deallocation is needed
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-            V_Copy.Clear;   --  explicit deallocation is needed
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Predicate (V2.Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if V2.Element (It) > 3 then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V2 loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         for E of V2 loop
-            if E > 3 then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start, Extra => "(1)");
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         Co := Count_If (V2, Greater_Than_3'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-
-         V2.Clear;   --  explicit deallocation is needed
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List;
-
    begin
-      Do_Test (V);
+      All_Tests ("List isl", V);
+      V.Clear;   --  explicit deallocation is needed
    end Test_Lists_Int_Indefinite_SPARK;
 
    --------------------
@@ -347,69 +217,62 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Lists.Cursors.Forward);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+         Co : Natural := 0;
       begin
-         Stdout.Start_Line ("List duc");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count - 2 loop
+                  V2.Append (2);
+               end loop;
+               V2.Append (5);    --  testing withe prefix notation
+               Append (V2, 6);   --  testing with Ada95 notation
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count - 2 loop
-            V2.Append (2);
-         end loop;
-         V2.Append (5);    --  testing withe prefix notation
-         Append (V2, 6);   --  testing with Ada95 notation
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Predicate (V2.Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if V2.Element (It) > 3 then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V2 loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         for E of V2 loop
-            if E > 3 then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start, Extra => "(1)");
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         Co := Count_If (V2, Greater_Than_3'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("List duc", V);
    end Test_Lists_Int;
 
    --------------------------------
@@ -424,71 +287,63 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Lists.Cursors.Forward);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+         Co : Natural := 0;
       begin
-         Stdout.Start_Line ("List dbl", Fewer_Items => True);
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Small_Items_Count - 2 loop
+                  V2.Append (2);
+               end loop;
+               V2.Append (5);
+               V2.Append (6);
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Small_Items_Count - 2 loop
-            V2.Append (2);
-         end loop;
-         V2.Append (5);
-         V2.Append (6);
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List (Capacity => Small_Items_Count);
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List (Capacity => Small_Items_Count);
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Predicate (V2.Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if V2.Element (It) > 3 then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V2 loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start, "(1)");
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         for E of V2 loop
-            if E > 3 then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start, Extra => "(1)");
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         Co := Count_If (V2, Greater_Than_3'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-
-         V2.Clear;   --  Need explicit deallocation, this is limited
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List (Capacity => Small_Items_Count);
    begin
-      Do_Test (V);
+      All_Tests ("List dbl", V, Fewer_Items => True);
+      V.Clear;   --  Need explicit deallocation, this is limited
    end Test_Lists_Bounded_Limited;
 
    ------------------------
@@ -503,71 +358,63 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Lists.Cursors.Forward);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+         Co : Natural := 0;
       begin
-         Stdout.Start_Line ("List dbc", Fewer_Items => True);
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Small_Items_Count - 2 loop
+                  V2.Append (2);
+               end loop;
+               V2.Append (5);
+               V2.Append (6);
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Small_Items_Count - 2 loop
-            V2.Append (2);
-         end loop;
-         V2.Append (5);
-         V2.Append (6);
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List (Capacity => Small_Items_Count);
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List (Capacity => Small_Items_Count);
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Predicate (V2.Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if V2.Element (It) > 3 then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V2 loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start, "(1)");
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         for E of V2 loop
-            if E > 3 then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start, Extra => "(1)");
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         Co := Count_If (V2, Greater_Than_3'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-
-         V2.Clear;   --  Need explicit deallocation, this is limited
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List (Capacity => Small_Items_Count);
    begin
-      Do_Test (V);
+      All_Tests ("List dbc", V, Fewer_Items => True);
+      V.Clear;   --  Need explicit deallocation, this is limited
    end Test_Lists_Bounded;
 
    ---------------------------
@@ -587,68 +434,54 @@ package body Perf_Support is
          is (S (S'First) = 's');
       pragma Inline (Starts_With_Str);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
-         It    : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
+         It : Lists.Cursor;
+         Co : Natural := 0;
       begin
-         Stdout.Start_Line ("List iuc 3");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count loop
+                  V2.Append ("str1");
+               end loop;
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count loop
-            V2.Append ("str1");
-         end loop;
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Starts_With_Str (V2.Stored_Element (It).all) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if Starts_With_Str (V2.Stored_Element (It).all) then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               Stdout.Print_Not_Run ("(2)");
 
-         --  Start := Clock;
-         --  Co := 0;
-         --  for E of V2 loop  -- GNAT: unconstrained subtype not allowed
-         --     if Starts_With_Str (E) then
-         --        Co := Co + 1;
-         --     end if;
-         --  end loop;
-         --  Print_Time (Clock - Start);
-         --  if Co /= Items_Count then
-         --     raise Program_Error;
-         --  end if;
-         Stdout.Print_Not_Run ("(2)");
-
-         Start := Clock;
-         Co := Count_If (V2, Starts_With_Str'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Starts_With_Str'Access), Items_Count);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("List iuc 3", V);
    end Test_Lists_Str_Access;
 
    ------------------------------
@@ -668,68 +501,54 @@ package body Perf_Support is
          is (S (S.E'First) = 's');
       pragma Inline (Ref_Starts_With_Str);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It    : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+         Co    : Natural := 0;
       begin
-         Stdout.Start_Line ("List iuc 4");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count loop
+                  V2.Append ("str1");
+               end loop;
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count loop
-            V2.Append ("str1");
-         end loop;
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Ref_Starts_With_Str (V2.Reference (It)) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if Ref_Starts_With_Str (V2.Reference (It)) then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               Stdout.Print_Not_Run ("(2)");
 
-         --  Start := Clock;
-         --  Co := 0;
-         --  for E of V2 loop  -- GNAT: unconstrained subtype not allowed
-         --     if Starts_With_Str (E) then
-         --        Co := Co + 1;
-         --     end if;
-         --  end loop;
-         --  Print_Time (Clock - Start);
-         --  if Co /= Items_Count then
-         --     raise Program_Error;
-         --  end if;
-         Stdout.Print_Not_Run ("(2)");
-
-         Start := Clock;
-         Co := Count_If (V2, Ref_Starts_With_Str'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Ref_Starts_With_Str'Access), Items_Count);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("List iuc 4", V);
    end Test_Lists_Str_Reference;
 
    --------------------
@@ -744,68 +563,54 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Lists.Cursors.Forward);
 
-      procedure Do_Test (V2 : in out Lists.List'Class);
-      procedure Do_Test (V2 : in out Lists.List'Class) is
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It    : Lists.Cursor;
-         Start : Time;
-         Co    : Natural;
+         Co    : Natural := 0;
       begin
-         Stdout.Start_Line ("List iuc");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count loop
+                  V2.Append ("str1");
+               end loop;
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count loop
-            V2.Append ("str1");
-         end loop;
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (V2);
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (V2);
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V2.First;
+               while V2.Has_Element (It) loop
+                  if Starts_With_Str (V2.Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  It := V2.Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
-         Start := Clock;
-         Co := 0;
-         It := V2.First;
-         while V2.Has_Element (It) loop
-            if Starts_With_Str (V2.Element (It)) then
-               Co := Co + 1;
-            end if;
-            It := V2.Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               Stdout.Print_Not_Run ("(2)");
 
-         --  Start := Clock;
-         --  Co := 0;
-         --  for E of V2 loop  -- GNAT: unconstrained subtype not allowed
-         --     if Starts_With_Str (E) then
-         --        Co := Co + 1;
-         --     end if;
-         --  end loop;
-         --  Print_Time (Clock - Start);
-         --  if Co /= Items_Count then
-         --     raise Program_Error;
-         --  end if;
-         Stdout.Print_Not_Run ("(2)");
-
-         Start := Clock;
-         Co := Count_If (V2, Starts_With_Str'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V2'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V2, Starts_With_Str'Access), Items_Count);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("List iuc", V);
    end Test_Lists_Str;
 
    ----------------------
@@ -820,68 +625,60 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Cursors.Forward);
 
-      procedure Do_Test (V : in out Lists.List'Class);
-      procedure Do_Test (V : in out Lists.List'Class) is
-         Start : Time;
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It    : Lists.Cursor;
-         Co    : Natural;
+         Co    : Natural := 0;
       begin
-         Stdout.Start_Line ("Ada iu");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count loop
+                  V.Append ("str1");
+               end loop;
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count loop
-            V.Append ("str1");
-         end loop;
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (Lists.List (V));
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (Lists.List (V));
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V.First;
+               while Has_Element (It) loop
+                  if Starts_With_Str (Element (It)) then  --  secondary stack
+                     Co := Co + 1;
+                  end if;
+                  Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
-         Start := Clock;
-         Co := 0;
-         It := V.First;
-         while Has_Element (It) loop
-            if Starts_With_Str (Element (It)) then  --  secondary stack
-               Co := Co + 1;
-            end if;
-            Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V loop
+                  if Starts_With_Str (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
-         Start := Clock;
-         Co := 0;
-         for E of V loop
-            if Starts_With_Str (E) then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         --  ??? Why do we need a cast here
-         Co := Count_If (List (V), Starts_With_Str'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= Items_Count then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V, Starts_With_Str'Access), Items_Count);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V  : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("Ada iu", V);
    end Test_Ada2012_Str;
 
    ---------------------
@@ -897,60 +694,56 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Cursors.Forward);
 
-      V     : Int_Array (1 .. Small_Items_Count);
-      Start : Time;
-      Co    : Natural;
-   begin
-      Stdout.Start_Line ("Array", Fewer_Items => True);
+      procedure Run (V : in out Int_Array; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Int_Array);
 
-      Start := Clock;
-      for C in 1 .. Small_Items_Count - 2 loop
-         V (C) := 2;
-      end loop;
-      V (V'Last - 1) := 5;
-      V (V'Last) := 6;
-      Stdout.Print_Time (Clock - Start);
-
-      Start := Clock;
-      declare
-         V_Copy : Int_Array := V;
-         pragma Unreferenced (V_Copy);
+      procedure Run (V : in out Int_Array; Col : Test_Cols; Start : Time) is
+         Co : Natural := 0;
       begin
-         Stdout.Print_Time (Clock - Start);
-      end;
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Small_Items_Count - 2 loop
+                  V (C) := 2;
+               end loop;
+               V (V'Last - 1) := 5;
+               V (V'Last) := 6;
+               Stdout.Print_Time (Clock - Start);
 
-      Start := Clock;
-      Co := 0;
-      for It in V'Range loop
-         if V (It) > 3 then
-            Co := Co + 1;
-         end if;
-      end loop;
-      Stdout.Print_Time (Clock - Start);
-      if Co /= 2 then
-         raise Program_Error;
-      end if;
+            when Column_Copy =>
+               declare
+                  V_Copy : Int_Array := V;
+                  pragma Unreferenced (V_Copy);
+               begin
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-      Start := Clock;
-      Co := 0;
-      for E of V loop
-         if E > 3 then
-            Co := Co + 1;
-         end if;
-      end loop;
-      Stdout.Print_Time (Clock - Start);
-      if Co /= 2 then
-         raise Program_Error;
-      end if;
+            when Column_Loop =>
+               for It in V'Range loop
+                  if Predicate (V (It)) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-      Start := Clock;
-      Co := Count_If (V, Greater_Than_3'Access);
-      Stdout.Print_Time (Clock - Start);
-      if Co /= 2 then
-         raise Program_Error;
-      end if;
+            when Column_For_Of =>
+               for E of V loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-      Stdout.Print_Size (V'Size);
+            when Column_Count_If =>
+               Assert (Count_If (V, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
+
+      V     : Int_Array (1 .. Small_Items_Count);
+   begin
+      All_Tests ("Array", V, Fewer_Items => True);
    end Test_Arrays_Int;
 
    ----------------------
@@ -964,69 +757,62 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Cursors.Forward);
 
-      procedure Do_Test (V : in out Lists.List'Class);
-      procedure Do_Test (V : in out Lists.List'Class) is
-         Start : Time;
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It    : Lists.Cursor;
-         Co    : Natural;
+         Co    : Natural := 0;
       begin
-         Stdout.Start_Line ("Ada du");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count - 2 loop
+                  V.Append (2);
+               end loop;
+               V.Append (5);
+               V.Append (6);
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count - 2 loop
-            V.Append (2);
-         end loop;
-         V.Append (5);
-         V.Append (6);
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (Lists.List (V));
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (Lists.List (V));
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V.First;
+               while Has_Element (It) loop
+                  if Predicate (Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         It := V.First;
-         while Has_Element (It) loop
-            if Element (It) > 3 then
-               Co := Co + 1;
-            end if;
-            Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         for E of V loop
-            if E > 3 then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         Co := Count_If (List (V), Greater_Than_3'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V  : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("Ada du", V);
    end Test_Ada2012_Int;
 
    ---------------------------------
@@ -1041,69 +827,62 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Cursors.Forward);
 
-      procedure Do_Test (V : in out Lists.List'Class);
-      procedure Do_Test (V : in out Lists.List'Class) is
-         Start : Time;
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
          It    : Lists.Cursor;
-         Co    : Natural;
+         Co    : Natural := 0;
       begin
-         Stdout.Start_Line ("Ada iu");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count - 2 loop
+                  V.Append (2);
+               end loop;
+               V.Append (5);
+               V.Append (6);
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count - 2 loop
-            V.Append (2);
-         end loop;
-         V.Append (5);
-         V.Append (6);
-         Stdout.Print_Time (Clock - Start);
+            when Column_Copy =>
+               declare
+                  V_Copy : Lists.List;
+               begin
+                  V_Copy.Assign (Lists.List (V));
+                  Stdout.Print_Time (Clock - Start);
+               end;
 
-         Start := Clock;
-         declare
-            V_Copy : Lists.List;
-         begin
-            V_Copy.Assign (Lists.List (V));
-            Stdout.Print_Time (Clock - Start);
-         end;
+            when Column_Loop =>
+               It := V.First;
+               while Has_Element (It) loop
+                  if Predicate (Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         It := V.First;
-         while Has_Element (It) loop
-            if Element (It) > 3 then
-               Co := Co + 1;
-            end if;
-            Next (It);
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
+            when Column_For_Of =>
+               for E of V loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Start := Clock;
-         Co := 0;
-         for E of V loop
-            if E > 3 then
-               Co := Co + 1;
-            end if;
-         end loop;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Start := Clock;
-         Co := Count_If (List (V), Greater_Than_3'Access);
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Size (V'Size);
-      end Do_Test;
+            when Column_Count_If =>
+               Assert (Count_If (V, Predicate'Access), 2);
+               Stdout.Print_Time (Clock - Start);
+         end case;
+      end Run;
 
       V  : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("Ada iu", V);
    end Test_Ada2012_Int_Indefinite;
 
    ---------------------
@@ -1114,50 +893,48 @@ package body Perf_Support is
       package Lists is new Taggeds (Integer);
       use Lists;
 
-      procedure Do_Test (V : in out Lists.List'Class);
-      procedure Do_Test (V : in out Lists.List'Class) is
-         Start : Time;
-         Co    : Natural;
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+      is
+         Co    : Natural := 0;
       begin
-         Stdout.Start_Line ("Tagged");
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count - 2 loop
+                  V.Append (2);
+               end loop;
+               V.Append (5);
+               V.Append (6);
+               Stdout.Print_Time (Clock - Start);
 
-         Start := Clock;
-         for C in 1 .. Items_Count - 2 loop
-            V.Append (2);
-         end loop;
-         V.Append (5);
-         V.Append (6);
-         Stdout.Print_Time (Clock - Start);
+            when Column_Loop =>
+               declare
+                  It  : Lists.List_Cursor'Class := List_Cursor (V.First);
+                  --  Casting to List_Cursor here halves the time to run the
+                  --  loop by avoiding dynamic dispatching.
+               begin
+                  while It.Has_Element loop
+                     if Predicate (It.Element) then
+                        Co := Co + 1;
+                     end if;
+                     It.Next;
+                  end loop;
+               end;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
 
-         Stdout.Print_Not_Run;  --  copy
-
-         Start := Clock;
-         Co := 0;
-         declare
-            It  : Lists.List_Cursor'Class := List_Cursor (V.First);
-            --  Casting to List_Cursor here halves the time to run the
-            --  loop by avoiding dynamic dispatching.
-         begin
-            while It.Has_Element loop
-               if It.Element > 3 then
-                  Co := Co + 1;
-               end if;
-               It.Next;
-            end loop;
-         end;
-         Stdout.Print_Time (Clock - Start);
-         if Co /= 2 then
-            raise Program_Error;
-         end if;
-
-         Stdout.Print_Not_Run;  --  for..of
-         Stdout.Print_Not_Run;  --  count_if
-         Stdout.Print_Size (V'Size);
-      end Do_Test;
+            when others =>
+               Stdout.Print_Not_Run;  --  copy
+         end case;
+      end Run;
 
       V : Lists.List;
    begin
-      Do_Test (V);
+      All_Tests ("Tagged", V);
    end Test_Tagged_Int;
 
 end Perf_Support;
