@@ -1,0 +1,23 @@
+with "gnatcoll";
+
+project Default is
+   type Build_Mode is ("Debug", "Production");
+   Build : Build_Mode := external ("BUILD", "Production");
+
+   for Source_Dirs use (".", "../src");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+
+   for Main use ("main.adb");
+   package Builder is
+      for Switches ("Ada") use ("-j0");
+   end Builder;
+   package Compiler is
+      case Build is
+         when "Debug" =>
+            for Switches ("Ada") use ("-O0", "-g", "-gnatwu", "-gnaty");
+         when "Production" =>
+            for Switches ("Ada") use ("-O2", "-gnatp", "-gnatn", "-gnatwu", "-gnaty");
+      end case;
+   end Compiler;
+end Default;

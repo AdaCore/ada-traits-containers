@@ -45,6 +45,11 @@ The cursors themselves are not tagged. All cursor operations take both the
 container and the cursor in parameter (to support bounded containers), and
 thus the container is used in the dot-notation call (Self.Has_Element (Pos)).
 
+One other advantage to tagged types is that this forces the instances to
+be passed by reference, and thus limits the number of implicit copies
+done when passing a container as a parameter to a subprogram.
+They do not avoid copies when a function returns a container though.
+
 Implementation Note: currently, the Iterable aspect requires primitive
   operations, which make it slow. It should be enhanced to accept class-wide
   operations instead, which would also remove a number of primitive operations
@@ -185,6 +190,15 @@ speed improvements.
 Unfortunately, there is no way to test whether the user's type conforms to
 this requirement.
 
+Proposal for tasking
+--------------------
+
+It seems that in some cases (refcounting and copy-on-write for instance), we
+could use standard integer operations when no task exists in the system,
+instead of the slower atomic operations. This is currently configured by
+a formal boolean parameter, but this could be computed automatically using
+some info from System.Soft_Links for instance.
+
 Misc Proposals
 --------------
 
@@ -231,6 +245,8 @@ Todo
   handling of containers like forward-lists. The value Null_Access would
   be used to indicate the end of the container.
 
+- Reverse and non-constant cursors
+
 - Ideas:
   * for lists, could write a type of Nodes_Traits for a database query.
     Or perhaps just as a cursors_traits, but then we do not get the for..of
@@ -243,6 +259,8 @@ Todo
 
   * Support for reference counted containers (a la QGen), as a further
     derivation of the Lists.Indefinite_Unbounded.List type
+    Support for copy-on-write, perhaps through a formal generic callback
+    every time the container is about to be modified.
 
   * Document how to use a 'with' clause to get access to the operations
     when one doesn't want to use the prefix notation for calls
@@ -250,6 +268,14 @@ Todo
   * A boolean formal parameter to enable tampering checks ?
 
   * A version of some algorithms that are multi-threaded
+
+  * QT containers provide copy-on-write. When a type is "movable", they use
+    realloc, by increments of page size (4096 bytes), since modern operating
+    systems will not copy the memory in such case but simply reorder the
+    pages and only the first and last pages are copied.
+    For non-movable types , grow by 50%.
+    QT ordered map uses skip-list instead of red-black-tree since the former
+    results in less code and uses less memory per node.
 
 - Extensions
   * Have the Iterable aspect take a Constant_Forward_Cursors_Traits instead

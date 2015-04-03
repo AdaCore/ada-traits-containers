@@ -4,7 +4,7 @@ with Interfaces.C.Strings;
 with Memory;
 with Perf_Support;       use Perf_Support;
 
-package body Output is
+package body Report is
 
    procedure Put (Self : in out Output; Str : String);
    --  Display text in the current column
@@ -82,6 +82,7 @@ package body Output is
          else
             New_Line;
          end if;
+         Self.Current := Column_Title;
       end if;
    end Finish_Line;
 
@@ -147,4 +148,4 @@ package body Output is
    begin
       Stdout.Start_Line (Interfaces.C.Strings.Value (Title));
    end Start_Line_C;
-end Output;
+end Report;

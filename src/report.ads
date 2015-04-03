@@ -1,6 +1,6 @@
 --  Support for output of the tests
 
-package Output is
+package Report is
 
    type Time_Ref is (Ref_None, Ref_Fill, Ref_Loop);
    type Time_Ref_Array is array (Time_Ref) of Duration;
@@ -43,4 +43,4 @@ package Output is
 
    Stdout : Output;
 
-end Output;
+end Report;

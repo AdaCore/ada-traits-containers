@@ -9,7 +9,7 @@ with Conts.Lists.Definite_Bounded_Limited;
 with Conts.Algorithms;
 with Conts.Adaptors;     use Conts.Adaptors;
 with Taggeds;
-with Output;             use Output;
+with Report;             use Report;
 
 --  The tests all use a subprogram with a class-wide parameter, to force the
 --  use of dynamic dispatching and simulate real applications.

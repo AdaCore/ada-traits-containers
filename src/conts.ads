@@ -61,6 +61,7 @@ package Conts is
 
    generic
       type Element_Type is private;
+      with procedure Free (E : in out Element_Type) is null;
    package Definite_Elements_Traits is
       function Identity (E : Element_Type) return Element_Type is (E);
       pragma Inline (Identity);
@@ -69,6 +70,7 @@ package Conts is
           Stored_Element_Type => Element_Type,
           Reference_Type      => Element_Type,
           Use_Implicit_Copy   => True,
+          Release             => Free,
           Get_Reference       => Identity,
           Convert_From        => Identity,
           Convert_To          => Identity);
@@ -80,6 +82,7 @@ package Conts is
 
    generic
       type Element_Type (<>) is private;
+      with procedure Free (E : in out Element_Type) is null;
    package Indefinite_Elements_Traits is
       type Element_Access is access all Element_Type;
 
@@ -97,7 +100,9 @@ package Conts is
          is (E.all);
       function Get_Reference (E : Element_Access) return Reference_Type
          is (Reference_Type'(E => E));
-      pragma Inline (To_Element_Access, To_Element_Type, Get_Reference);
+      procedure Release (E : in out Element_Access);
+      pragma Inline
+         (To_Element_Access, To_Element_Type, Get_Reference, Release);
 
       package Elements is new Elements_Traits
          (Element_Type        => Element_Type,
