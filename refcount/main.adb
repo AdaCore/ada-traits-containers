@@ -487,6 +487,10 @@ begin
    Put_Line
       ("Reftype is similar to Traits, except Get returns a Reference_Type");
    Put_Line
+      ("'as reftype' is when the smart pointer itself is a reference type");
+   Put_Line
+      ("   current this doesn't work well since this is unconstrained type");
+   Put_Line
       ("Getting value for int is much slower than GNATCOLL -- not clear why"
        & " (cache ?)");
 
