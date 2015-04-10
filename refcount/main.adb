@@ -10,17 +10,23 @@ procedure Main is
    Count : constant := 1_000_000;
    Start : Time;
 
+   type Time_Ref is (Ref_None, Ref_Set, Ref_Assign, Ref_Get);
+   type Time_Ref_Array is array (Time_Ref) of Duration;
+   All_Refs : Time_Ref_Array := (others => 0.0);
+
    type Column_Descr is record
       Title : String_Access;
       Width : Natural;
-      Ref   : Duration;
+      Ref   : Time_Ref;
    end record;
    type Columns_Array is array (Natural range <>) of Column_Descr;
    Columns : Columns_Array :=
-      (1 => (Width => 17,  Ref => 0.0,  Title => new String'("")),
-       2 => (Width => 10,  Ref => 0.0,  Title => new String'("Set")),
-       3 => (Width => 10,  Ref => 0.0,  Title => new String'("Assign")),
-       4 => (Width => 10,  Ref => 0.0,  Title => new String'("Ref")));
+      (1 => (Width => 13,  Ref => Ref_None,   Title => new String'("")),
+       2 => (Width => 7,   Ref => Ref_Set,    Title => new String'("Set")),
+       3 => (Width => 7,   Ref => Ref_Assign, Title => new String'("Assign")),
+       4 => (Width => 7,   Ref => Ref_Get,    Title => new String'("Get")),
+       5 => (Width => 7,   Ref => Ref_Get,    Title => new String'("Element")),
+       6 => (Width => 9,   Ref => Ref_Get, Title => new String'("Reference")));
    Current : Natural := Columns'First;
 
    procedure Print_Header;
@@ -40,9 +46,7 @@ procedure Main is
    procedure Reset is
    begin
       New_Line;
-      for C of Columns loop
-         C.Ref := 0.0;
-      end loop;
+      All_Refs := (others => 0.0);
    end Reset;
 
    procedure Print (Str : String) is
@@ -54,14 +58,15 @@ procedure Main is
    procedure Print_Time is
       D : constant Duration := Clock - Start;
    begin
-      if Columns (Current).Ref = 0.0 then
-         Columns (Current).Ref := D;
+      if All_Refs (Columns (Current).Ref) = 0.0 then
+         All_Refs (Columns (Current).Ref) := D;
       end if;
 
       declare
          S : constant String := Integer'Image
             (Integer
-               (Float'Floor (Float (D) / Float (Columns (Current).Ref)
+               (Float'Floor (Float (D)
+                   / Float (All_Refs (Columns (Current).Ref))
                 * 100.0)))
                & '%';
       begin
@@ -93,19 +98,31 @@ procedure Main is
       for C in 1 .. Count loop
          R.Set (C);
       end loop;
-      Print_Time;
+      Print_Time;  --  Set
 
       Start := Clock;
       for C in 1 .. Count loop
          R2 := R;
       end loop;
-      Print_Time;
+      Print_Time;  --  Assign
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         Int := R.Get.all;
+      end loop;
+      Print_Time;  --  Get
 
       Start := Clock;
       for C in 1 .. Count loop
          Int := R.Element;
       end loop;
-      Print_Time;
+      Print_Time;  --  Element
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         Int := R.Reference;
+      end loop;
+      Print_Time;  --  Reference
 
       Finish_Line;
    end Test_Int_Pointers_Unsafe;
@@ -129,7 +146,19 @@ procedure Main is
 
       Start := Clock;
       for C in 1 .. Count loop
+         Int := R.Get.all;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
          Int := R.Element;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         Int := R.Reference;
       end loop;
       Print_Time;
 
@@ -149,29 +178,34 @@ procedure Main is
             null;
          end;
       end loop;
-      Print_Time;
+      Print_Time;  --  Set
 
-      Start := Clock;
-      --  Can't test, we don't have a R
-      --  for C in 1 .. Count loop
-      --     declare
-      --        R2 : Int_Pointers_Ref.Ref := R;
-      --        pragma Unreferenced (R2);
-      --     begin
-      --        null;
-      --     end;
-      --  end loop;
-      Print_Time;
-
-      Start := Clock;
       declare
          R : Int_Pointers_Ref.Ref := Int_Pointers_Ref.Set (2);
       begin
+         Start := Clock;
+         for C in 1 .. Count loop
+            declare
+               R2 : Int_Pointers_Ref.Ref := R;
+               pragma Unreferenced (R2);
+            begin
+               null;
+            end;
+         end loop;
+         Print_Time;  --  Assign
+
+         Start := Clock;
+         Print_Time;  --  Get
+
+         Start := Clock;
+         Print_Time;  --  Element
+
+         Start := Clock;
          for C in 1 .. Count loop
             Int := R;
          end loop;
+         Print_Time;  -- Reference
       end;
-      Print_Time;
 
       Finish_Line;
    end Test_Int_Reference;
@@ -199,6 +233,12 @@ procedure Main is
       end loop;
       Print_Time;
 
+      Start := Clock;
+      Print_Time;
+
+      Start := Clock;
+      Print_Time;
+
       Finish_Line;
    end Test_Gnatcoll_Int;
 
@@ -222,6 +262,28 @@ procedure Main is
       for C in 1 .. Count loop
          declare
             C : Object'Class := R.Get.all;
+            pragma Unreferenced (C);
+         begin
+            null;
+         end;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         declare
+            C : Object'Class := R.Element;
+            pragma Unreferenced (C);
+         begin
+            null;
+         end;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         declare
+            C : Object'Class := R.Reference;
             pragma Unreferenced (C);
          begin
             null;
@@ -259,6 +321,28 @@ procedure Main is
       end loop;
       Print_Time;
 
+      Start := Clock;
+      for C in 1 .. Count loop
+         declare
+            C : Object'Class := R.Element;
+            pragma Unreferenced (C);
+         begin
+            null;
+         end;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         declare
+            C : Object'Class := R.Reference;
+            pragma Unreferenced (C);
+         begin
+            null;
+         end;
+      end loop;
+      Print_Time;
+
       Finish_Line;
    end Test_Obj_Free;
 
@@ -281,9 +365,23 @@ procedure Main is
       Print_Time;
 
       Start := Clock;
+      Print_Time;  --  Get
+
+      Start := Clock;
       for C in 1 .. Count loop
          declare
             C : Object'Class := R.Element;
+            pragma Unreferenced (C);
+         begin
+            null;
+         end;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         declare
+            C : Object'Class := R.Reference;
             pragma Unreferenced (C);
          begin
             null;
@@ -319,6 +417,12 @@ procedure Main is
             null;
          end;
       end loop;
+      Print_Time;
+
+      Start := Clock;
+      Print_Time;
+
+      Start := Clock;
       Print_Time;
 
       Finish_Line;

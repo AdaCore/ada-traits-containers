@@ -46,8 +46,18 @@ package Refcount is
          is (Get (Self).all)
          with Inline => True;
 
+      type Reference_Type (E : access Element_Type) is null record
+         with Implicit_Dereference => E;
+      function Reference (Self : Ref'Class) return Reference_Type
+         is (Reference_Type'(E => Self.Get))
+         with Inline => True;
+      --  As a speed experiment, for now
+
       overriding function "=" (P1, P2 : Ref) return Boolean
          with Inline => True;
+      --  This operator checks whether P1 and P2 share the same pointer.
+      --  When the pointers differ, this operator returns False even if the
+      --  two pointed elements are equal.
 
    private
       type Ref is new Controlled with record
