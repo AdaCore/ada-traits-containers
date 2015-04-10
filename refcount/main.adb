@@ -77,17 +77,11 @@ procedure Main is
 
    procedure Test_Int_Pointers_Unsafe;
    procedure Test_Int_Pointers;
-   procedure Test_Int_Pointers_Traits_Unsafe;
-   procedure Test_Int_Pointers_Traits;
-   procedure Test_Int_Ref;
    procedure Test_Int_Reference;
    procedure Test_Gnatcoll_Int;
    procedure Test_Obj;
    procedure Test_Obj_Free;
-   procedure Test_Obj_Traits;
-   procedure Test_Obj_Traits_Free;
    procedure Test_Gnatcoll_Obj;
-   procedure Test_Obj_Ref_Free;
    procedure Test_Obj_Holders;
 
    procedure Test_Int_Pointers_Unsafe is
@@ -141,84 +135,6 @@ procedure Main is
 
       Finish_Line;
    end Test_Int_Pointers;
-
-   procedure Test_Int_Pointers_Traits_Unsafe is
-      R, R2 : Int_Pointers_Traits_Unsafe.Ref;
-      Int   : Integer;
-   begin
-      Print ("Traits Unsafe");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (C);
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Get;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
-   end Test_Int_Pointers_Traits_Unsafe;
-
-   procedure Test_Int_Pointers_Traits is
-      R, R2 : Int_Pointers_Traits.Ref;
-      Int   : Integer;
-   begin
-      Print ("Traits");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (C);
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Get;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
-   end Test_Int_Pointers_Traits;
-
-   procedure Test_Int_Ref is
-      R, R2 : Int_Pointers_Traits.Ref;
-      Int   : Integer;
-   begin
-      Print ("Reftype");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (C);
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Reference;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
-   end Test_Int_Ref;
 
    procedure Test_Int_Reference is
       Int   : Integer;
@@ -346,96 +262,6 @@ procedure Main is
       Finish_Line;
    end Test_Obj_Free;
 
-   procedure Test_Obj_Traits is
-      R, R2 : Obj_Pointers_Traits.Ref;
-   begin
-      Print ("Traits");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (Child'(Object with null record));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Get.all;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
-   end Test_Obj_Traits;
-
-   procedure Test_Obj_Ref_Free is
-      R, R2 : Obj_Pointers_Free_Traits.Ref;
-   begin
-      Print ("Reftype Free");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (Child'(Object with null record));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Reference;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
-   end Test_Obj_Ref_Free;
-
-   procedure Test_Obj_Traits_Free is
-      R, R2 : Obj_Pointers_Free_Traits.Ref;
-   begin
-      Print ("Traits Free");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (Child'(Object with null record));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Get.all;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
-   end Test_Obj_Traits_Free;
-
    procedure Test_Obj_Holders is
       package Holders is new Ada.Containers.Indefinite_Holders (Object'Class);
       use Holders;
@@ -504,9 +330,6 @@ begin
    Test_Gnatcoll_Int;
    Test_Int_Pointers_Unsafe;
    Test_Int_Pointers;
-   Test_Int_Pointers_Traits_Unsafe;
-   Test_Int_Pointers_Traits;
-   Test_Int_Ref;
    Test_Int_Reference;
 
    Reset;
@@ -515,18 +338,10 @@ begin
    Test_Obj_Holders;
    Test_Obj;
    Test_Obj_Free;
-   Test_Obj_Traits;
-   Test_Obj_Traits_Free;
-   Test_Obj_Ref_Free;
 
    New_Line;
    Put_Line ("'Unsafe': use standard int operations, not atomic");
    Put_Line ("'Free': a non-null operation to free the object");
-   Put_Line
-      ("Traits possibly avoids one malloc compared to Std, using"
-       & " Elements_Traits");
-   Put_Line
-      ("Reftype is similar to Traits, except Get returns a Reference_Type");
    Put_Line
       ("'as reftype' is when the smart pointer itself is a reference type");
    Put_Line

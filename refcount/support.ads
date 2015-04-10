@@ -1,8 +1,6 @@
 with Refcount;            use Refcount;
 with Refcount_Ref;        use Refcount_Ref;
-with Refcount_Traits;     use Refcount_Traits;
 with GNATCOLL.Refcount;   use GNATCOLL.Refcount;
-with Conts;               use Conts;
 
 package Support is
 
@@ -25,25 +23,6 @@ package Support is
    package Obj_Pointers is new Refcount.Smart_Pointers (Object'Class);
    package Obj_Pointers_Free is new Refcount.Smart_Pointers
       (Object'Class, Free => Class_Wide_Free);
-
-   --------------------------
-   -- Refcount with traits --
-   --------------------------
-
-   package Int_Elements is new Definite_Elements_Traits (Integer);
-   package Obj_Elements_No_Free is new Indefinite_Elements_Traits
-      (Object'Class);
-   package Obj_Elements is new Indefinite_Elements_Traits
-      (Object'Class, Class_Wide_Free);
-
-   package Int_Pointers_Traits_Unsafe is new Refcount_Traits.Smart_Pointers
-      (Int_Elements.Elements, Thread_Safe => False);
-   package Int_Pointers_Traits is new Refcount_Traits.Smart_Pointers
-      (Int_Elements.Elements);
-   package Obj_Pointers_Traits is new Refcount_Traits.Smart_Pointers
-      (Obj_Elements_No_Free.Elements);
-   package Obj_Pointers_Free_Traits is new Refcount_Traits.Smart_Pointers
-      (Obj_Elements.Elements);
 
    --------------------------------
    -- Refcount as reference_type --

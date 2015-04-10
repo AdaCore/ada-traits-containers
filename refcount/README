@@ -1,47 +1,45 @@
-Low-level tricks for memory allocations:
+Various implementations for reference counted types
+===================================================
 
-from 
+- Using Elements_Traits to describe how to store an element
+  This was used so that in simple cases (definite element type) we can save
+  one memory allocation. This has been obsoleted by using a storage_pool
+  for the Element_Access which stores the refcount next to the element, and
+  thus always do a single malloc, for both definite and indefinite elements
 
-Storing integers
-                 |Set       |Assign    |Ref       |
-GNATCOLL         | 100%     | 100%     | 100%     |
-Std Unsafe       | 115%     | 47%      | 538%     |
-Std              | 114%     | 74%      | 532%     |
-Traits Unsafe    | 43%      | 51%      | 542%     | <<< one malloc because of traits
-Traits           | 46%      | 79%      | 538%     | <<< one malloc because of traits
-Reftype          | 44%      | 76%      | 560%     |
-As Reftype       | 155%     | 0%       | 102%     |
+Memory management
+=================
 
-Storing strings
-GNATCOLL         | 100%     | 100%     | 100%     |
-Std              | 142%     | 79%      | 89%      |
-Std Free         | 147%     | 78%      | 86%      |
-Traits           | 134%     | 79%      | 88%      |
-Traits Free      | 140%     | 81%      | 89%      |
-Reftype Free     | 135%     | 79%      | 140%     |
+- The performance of refcounted types is strongly dependent on the number of
+  mallocs we need to perform. We always need at least one
+  (for the shared data). Without special tricks, we need a second one for the
+  refcount itself (since it can't be stored in the Element itself, unless that
+  element derives from a known root tagged type as done in the current
+  GNATCOLL.Refcount implementation).
+  So we implemented a special storage pool, that allocates enough memory for
+  the element + its refcount. That way, a single malloc is needed.
 
-----------------------------------------------------------------------------------------------
-to
+                      |Set       |Assign    |Ref       |
+   Storing integers
+     GNATCOLL         | 100%     | 100%     | 100%     |
+     Std Unsafe       | 115%     | 47%      | 538%     |
+     Std              | 114%     | 74%      | 532%     |
+   Storing strings
+     GNATCOLL         | 100%     | 100%     | 100%     |
+     Std              | 142%     | 79%      | 89%      |
+     Std Free         | 147%     | 78%      | 86%      |
+ To
+   Storing integers
+     GNATCOLL         | 100%     | 100%     | 100%     |
+     Std Unsafe       | 39%      | 57%      | 92%      | <<< one malloc, not two
+     Std              | 42%      | 96%      | 102%     | <<< one malloc, not two
+   Storing strings
+     GNATCOLL         | 100%     | 100%     | 100%     |
+     Std              | 68%      | 88%      | 95%      |
+     Std Free         | 67%      | 85%      | 113%     |
 
-Storing integers
-                 |Set       |Assign    |Ref       |
-GNATCOLL         | 100%     | 100%     | 100%     |
-Std Unsafe       | 39%      | 57%      | 92%      | <<< one malloc, not two
-Std              | 42%      | 96%      | 102%     | <<< one malloc, not two
-Traits Unsafe    | 39%      | 45%      | 113%     | <<< one malloc, because of traits
-Traits           | 43%      | 71%      | 99%      | <<< one malloc, because of traits
-Reftype          | 45%      | 71%      | 102%     | <<< smart pointer returns reftype
-As Reftype       | 152%     | 0%       | 96%      | <<< smart pointer is reftype
-
-Storing strings
-GNATCOLL         | 100%     | 100%     | 100%     |
-Holders          | 183%     | 89%      | 235%     |
-Std              | 68%      | 88%      | 95%      |
-Std Free         | 67%      | 85%      | 113%     |
-Traits           | 133%     | 100%     | 100%     |
-Traits Free      | 142%     | 83%      | 99%      |
-Reftype Free     | 146%     | 94%      | 148%     |
-
+TODO
+====
 
 - Missing weak references
 - Can we remove Get completely (need a reference_type to be constraints, for
