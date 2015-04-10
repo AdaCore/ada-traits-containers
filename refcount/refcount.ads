@@ -1,10 +1,30 @@
 with Ada.Finalization;   use Ada.Finalization;
-with Interfaces;         use Interfaces;
+with System.Storage_Pools;
+with System.Storage_Elements;
 
 package Refcount is
    --  A smart pointer implementation that does not force the type to be
    --  derived from a common ancestor, at the cost of extra allocations and
    --  indirections in some cases.
+
+   type My_Pool is new System.Storage_Pools.Root_Storage_Pool with null record;
+   overriding procedure Allocate
+      (Self      : in out My_Pool;
+       Addr      : out System.Address;
+       Size      : System.Storage_Elements.Storage_Count;
+       Alignment : System.Storage_Elements.Storage_Count);
+   overriding procedure Deallocate
+      (Self      : in out My_Pool;
+       Addr      : System.Address;
+       Size      : System.Storage_Elements.Storage_Count;
+       Alignment : System.Storage_Elements.Storage_Count);
+   overriding function Storage_Size
+      (Self      : My_Pool) return System.Storage_Elements.Storage_Count
+      is (System.Storage_Elements.Storage_Count'Last);
+
+   Refcount_Storage_Pool : My_Pool;
+   --  A storage pool that allocates extra memory to store a refcount.
+   --  This is used to save calls to malloc
 
    generic
       type Element_Type (<>) is private;
@@ -15,31 +35,23 @@ package Refcount is
       Null_Ref : constant Ref;
 
       type Element_Access is access all Element_Type;
+      for Element_Access'Storage_Pool use Refcount_Storage_Pool;
 
       procedure Set (Self : in out Ref'Class; Data : Element_Type)
          with Inline => True;
-      procedure Adopt (Self : in out Ref; Data : access Element_Type);
-      --  ??? Adopt is dangereous if Data comes from a call to Get.
-      --  It is only meant to avoid possibly expensive copies of Data
-      --  in the call to Set.
 
       function Get (Self : Ref'Class) return Element_Access
+         with Inline => True;
+      function Element (Self : Ref'Class) return Element_Type
+         is (Get (Self).all)
          with Inline => True;
 
       overriding function "=" (P1, P2 : Ref) return Boolean
          with Inline => True;
 
    private
-      type Object_Refcount is record
-         Refcount : aliased Interfaces.Integer_32 := 0;
-         Object   : Element_Access;
-         --  Object is "not null", but if we put that in the declaration we
-         --  can't free the pointer later on
-      end record;
-      type Object_Refcount_Access is access Object_Refcount;
-
       type Ref is new Controlled with record
-         Data : Object_Refcount_Access;
+         Data : Element_Access;
       end record;
       overriding procedure Adjust (Self : in out Ref)
          with Inline => True;

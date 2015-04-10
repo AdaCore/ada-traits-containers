@@ -16,7 +16,7 @@ package Refcount_Ref is
       --  ??? Would be nice to set this automatically based on whether there
       --  are tasks in the application or not (even if those tasks do not use
       --  that type).
-      
+
    package Smart_Pointers is
 
       type Ref (E : access Element_Type) is private
@@ -38,6 +38,9 @@ package Refcount_Ref is
          with Inline => True;
       --  ??? Would be nicer and more efficient as a procedure, if Ref was
       --  constrained.
+      --  ??? Should the name be "Allocate"
+      --  ??? Can we somehow map it to the "new" operator for the type ?
+      --     A storage pool returns the System.Address, not the pointer type
 
       overriding function "=" (P1, P2 : Ref) return Boolean
          with Inline => True;

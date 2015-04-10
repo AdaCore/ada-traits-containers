@@ -1,6 +1,7 @@
 with Ada.Calendar;  use Ada.Calendar;
 with Support;       use Support;
 with Ada.Text_IO;   use Ada.Text_IO;
+with Ada.Containers.Indefinite_Holders;
 with GNATCOLL.Refcount; use GNATCOLL.Refcount;
 with GNATCOLL.Traces;
 with GNAT.Strings;  use GNAT.Strings;
@@ -87,6 +88,7 @@ procedure Main is
    procedure Test_Obj_Traits_Free;
    procedure Test_Gnatcoll_Obj;
    procedure Test_Obj_Ref_Free;
+   procedure Test_Obj_Holders;
 
    procedure Test_Int_Pointers_Unsafe is
       R, R2 : Int_Pointers_Unsafe.Ref;
@@ -107,7 +109,7 @@ procedure Main is
 
       Start := Clock;
       for C in 1 .. Count loop
-         Int := R.Get.all;
+         Int := R.Element;
       end loop;
       Print_Time;
 
@@ -133,7 +135,7 @@ procedure Main is
 
       Start := Clock;
       for C in 1 .. Count loop
-         Int := R.Get.all;
+         Int := R.Element;
       end loop;
       Print_Time;
 
@@ -234,8 +236,14 @@ procedure Main is
       Print_Time;
 
       Start := Clock;
+      --  Can't test, we don't have a R
       --  for C in 1 .. Count loop
-      --     R2 := R;
+      --     declare
+      --        R2 : Int_Pointers_Ref.Ref := R;
+      --        pragma Unreferenced (R2);
+      --     begin
+      --        null;
+      --     end;
       --  end loop;
       Print_Time;
 
@@ -428,6 +436,38 @@ procedure Main is
       Finish_Line;
    end Test_Obj_Traits_Free;
 
+   procedure Test_Obj_Holders is
+      package Holders is new Ada.Containers.Indefinite_Holders (Object'Class);
+      use Holders;
+      R, R2 : Holder;
+   begin
+      Print ("Holders");
+      Start := Clock;
+      for C in 1 .. Count loop
+         R := To_Holder (Child'(Object with null record));
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         R2 := R;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         declare
+            C : Object'Class := R.Element;
+            pragma Unreferenced (C);
+         begin
+            null;
+         end;
+      end loop;
+      Print_Time;
+
+      Finish_Line;
+   end Test_Obj_Holders;
+
    procedure Test_Gnatcoll_Obj is
       R, R2 : Obj_Pointers_Gnatcoll.Ref;
    begin
@@ -472,6 +512,7 @@ begin
    Reset;
    Put_Line ("Storing strings");
    Test_Gnatcoll_Obj;
+   Test_Obj_Holders;
    Test_Obj;
    Test_Obj_Free;
    Test_Obj_Traits;

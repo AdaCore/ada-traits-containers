@@ -23,6 +23,9 @@ package Refcount_Traits is
          with Inline => True;
       function Reference (Self : Ref'Class) return Elements.Reference_Type
          with Inline => True;
+      function Element (Self : Ref'Class) return Elements.Element_Type
+         is (Elements.Convert_To (Get (Self)))
+         with Inline => True;
 
       overriding function "=" (P1, P2 : Ref) return Boolean
          with Inline => True;

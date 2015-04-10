@@ -19,5 +19,6 @@ project Default is
          when "Production" =>
             for Switches ("Ada") use ("-O2", "-gnatp", "-gnatn", "-gnatwu", "-gnaty");
       end case;
+      for Switches ("s-memory.adb") use ("-gnatg", "-O2");
    end Compiler;
 end Default;
