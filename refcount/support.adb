@@ -15,4 +15,9 @@ package body Support is
       null;
    end Free;
 
+   overriding procedure Free (Str : in out String_Object) is
+   begin
+      GNAT.Strings.Free (Str.Str);
+   end Free;
+
 end Support;

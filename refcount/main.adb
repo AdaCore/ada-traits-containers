@@ -25,8 +25,7 @@ procedure Main is
        2 => (Width => 7,   Ref => Ref_Set,    Title => new String'("Set")),
        3 => (Width => 7,   Ref => Ref_Assign, Title => new String'("Assign")),
        4 => (Width => 7,   Ref => Ref_Get,    Title => new String'("Get")),
-       5 => (Width => 7,   Ref => Ref_Get,    Title => new String'("Element")),
-       6 => (Width => 9,   Ref => Ref_Get, Title => new String'("Reference")));
+       5 => (Width => 9,   Ref => Ref_Get, Title => new String'("Reference")));
    Current : Natural := Columns'First;
 
    procedure Print_Header;
@@ -62,16 +61,20 @@ procedure Main is
          All_Refs (Columns (Current).Ref) := D;
       end if;
 
-      declare
-         S : constant String := Integer'Image
-            (Integer
-               (Float'Floor (Float (D)
-                   / Float (All_Refs (Columns (Current).Ref))
-                * 100.0)))
-               & '%';
-      begin
-         Print (S);
-      end;
+      if All_Refs (Columns (Current).Ref) = 0.0 then
+         Print ("");
+      else
+         declare
+            S : constant String := Integer'Image
+               (Integer
+                  (Float'Floor (Float (D)
+                      / Float (All_Refs (Columns (Current).Ref))
+                   * 100.0)))
+                  & '%';
+         begin
+            Print (S);
+         end;
+      end if;
    end Print_Time;
 
    procedure Finish_Line is
@@ -88,6 +91,8 @@ procedure Main is
    procedure Test_Obj_Free;
    procedure Test_Gnatcoll_Obj;
    procedure Test_Obj_Holders;
+   procedure Test_Strings;
+   procedure Test_Gnatcoll_Strings;
 
    procedure Test_Int_Pointers_Unsafe is
       R, R2 : Int_Pointers_Unsafe.Ref;
@@ -111,12 +116,6 @@ procedure Main is
          Int := R.Get.all;
       end loop;
       Print_Time;  --  Get
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Element;
-      end loop;
-      Print_Time;  --  Element
 
       Start := Clock;
       for C in 1 .. Count loop
@@ -152,18 +151,45 @@ procedure Main is
 
       Start := Clock;
       for C in 1 .. Count loop
-         Int := R.Element;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
          Int := R.Reference;
       end loop;
       Print_Time;
 
       Finish_Line;
    end Test_Int_Pointers;
+
+   procedure Test_Strings is
+      R, R2 : String_Pointers.Ref;
+      Str   : access String;
+   begin
+      Print ("Std");
+      Start := Clock;
+      for C in 1 .. Count loop
+         R.Set ("Foo");
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         R2 := R;
+      end loop;
+      Print_Time;
+
+      if R.Get.all /= "Foo" then
+         raise Program_Error with "Got '" & R.Get.all & "'";
+      end if;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         Str := R.Get;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      Print_Time;
+
+      Finish_Line;
+   end Test_Strings;
 
    procedure Test_Int_Reference is
       Int   : Integer;
@@ -198,9 +224,6 @@ procedure Main is
          Print_Time;  --  Get
 
          Start := Clock;
-         Print_Time;  --  Element
-
-         Start := Clock;
          for C in 1 .. Count loop
             Int := R;
          end loop;
@@ -209,6 +232,35 @@ procedure Main is
 
       Finish_Line;
    end Test_Int_Reference;
+
+   procedure Test_Gnatcoll_Strings is
+      R, R2 : String_Pointers_Gnatcoll.Ref;
+      Str   : access String;
+   begin
+      Print ("GNATCOLL");
+      Start := Clock;
+      for C in 1 .. Count loop
+         R.Set (String_Object'(Refcounted with Str => new String'("foo")));
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         R2 := R;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      for C in 1 .. Count loop
+         Str := R.Get.Str;
+      end loop;
+      Print_Time;
+
+      Start := Clock;
+      Print_Time;
+
+      Finish_Line;
+   end Test_Gnatcoll_Strings;
 
    procedure Test_Gnatcoll_Int is
       R, R2 : Int_Pointers_Gnatcoll.Ref;
@@ -231,9 +283,6 @@ procedure Main is
       for C in 1 .. Count loop
          Int := R.Get.Value;
       end loop;
-      Print_Time;
-
-      Start := Clock;
       Print_Time;
 
       Start := Clock;
@@ -262,17 +311,6 @@ procedure Main is
       for C in 1 .. Count loop
          declare
             C : Object'Class := R.Get.all;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Element;
             pragma Unreferenced (C);
          begin
             null;
@@ -324,17 +362,6 @@ procedure Main is
       Start := Clock;
       for C in 1 .. Count loop
          declare
-            C : Object'Class := R.Element;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
             C : Object'Class := R.Reference;
             pragma Unreferenced (C);
          begin
@@ -366,17 +393,6 @@ procedure Main is
 
       Start := Clock;
       Print_Time;  --  Get
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Element;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
 
       Start := Clock;
       for C in 1 .. Count loop
@@ -422,9 +438,6 @@ procedure Main is
       Start := Clock;
       Print_Time;
 
-      Start := Clock;
-      Print_Time;
-
       Finish_Line;
    end Test_Gnatcoll_Obj;
 
@@ -437,11 +450,16 @@ begin
    Test_Int_Reference;
 
    Reset;
-   Put_Line ("Storing strings");
+   Put_Line ("Storing class wide");
    Test_Gnatcoll_Obj;
    Test_Obj_Holders;
    Test_Obj;
    Test_Obj_Free;
+
+   Reset;
+   Put_Line ("Storing unconstrained array");
+   Test_Gnatcoll_Strings;
+   Test_Strings;
 
    New_Line;
    Put_Line ("'Unsafe': use standard int operations, not atomic");

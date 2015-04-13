@@ -1,50 +1,36 @@
 with Ada.Finalization;   use Ada.Finalization;
-with System.Storage_Pools;
-with System.Storage_Elements;
+with Interfaces;         use Interfaces;
+with Conts.Pools;
 
 package Refcount is
    --  A smart pointer implementation that does not force the type to be
    --  derived from a common ancestor, at the cost of extra allocations and
    --  indirections in some cases.
 
-   type My_Pool is new System.Storage_Pools.Root_Storage_Pool with null record;
-   overriding procedure Allocate
-      (Self      : in out My_Pool;
-       Addr      : out System.Address;
-       Size      : System.Storage_Elements.Storage_Count;
-       Alignment : System.Storage_Elements.Storage_Count);
-   overriding procedure Deallocate
-      (Self      : in out My_Pool;
-       Addr      : System.Address;
-       Size      : System.Storage_Elements.Storage_Count;
-       Alignment : System.Storage_Elements.Storage_Count);
-   overriding function Storage_Size
-      (Self      : My_Pool) return System.Storage_Elements.Storage_Count
-      is (System.Storage_Elements.Storage_Count'Last);
-
-   Refcount_Storage_Pool : My_Pool;
-   --  A storage pool that allocates extra memory to store a refcount.
-   --  This is used to save calls to malloc
-
    generic
       type Element_Type (<>) is private;
-      with procedure Free (Self : in out Element_Type) is null;
-      Thread_Safe : Boolean := True;
+
+      with procedure Release (Self : in out Element_Type) is null;
+      --  This procedure should be used if you need to perform actions when
+      --  the last reference to an element is removed. Typically, this is
+      --  used to free element_type and its contents, when it is not a
+      --  controlled type.
+
+      Atomic_Counters : Boolean := True;
+      --  Whether to use atomic (and thus thread-safe) counters.
+
    package Smart_Pointers is
       type Ref is tagged private;
       Null_Ref : constant Ref;
 
-      type Element_Access is access all Element_Type;
-      for Element_Access'Storage_Pool use Refcount_Storage_Pool;
-
       procedure Set (Self : in out Ref'Class; Data : Element_Type)
          with Inline => True;
 
-      function Get (Self : Ref'Class) return Element_Access
+      function Get (Self : Ref'Class) return access Element_Type
          with Inline => True;
-      function Element (Self : Ref'Class) return Element_Type
-         is (Get (Self).all)
-         with Inline => True;
+      --  The resulting access must not be deallocated. Passing it to
+      --  Set might also be dangerous if the Element_Type contains data
+      --  that might be freed when other smart pointers are freed.
 
       type Reference_Type (E : access Element_Type) is null record
          with Implicit_Dereference => E;
@@ -60,8 +46,11 @@ package Refcount is
       --  two pointed elements are equal.
 
    private
+      package Pools is new Conts.Pools.Header_Pools
+         (Element_Type, Interfaces.Integer_32);
+
       type Ref is new Controlled with record
-         Data : Element_Access;
+         Data : Pools.Element_Access;
       end record;
       overriding procedure Adjust (Self : in out Ref)
          with Inline => True;

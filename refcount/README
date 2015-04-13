@@ -45,4 +45,4 @@ TODO
 - Can we remove Get completely (need a reference_type to be constraints, for
   instance a default null value for the discriminant)
 - Can we remove Set (a storage pool to instrument "new")
-
+- use integer_64 on 64 bits targets, and corresponding builtins in gnatcoll.atomic

@@ -20,5 +20,8 @@ project Default is
             for Switches ("Ada") use ("-O2", "-gnatp", "-gnatn", "-gnatwu", "-gnaty");
       end case;
       for Switches ("s-memory.adb") use ("-gnatg", "-O2");
+
+      for Switches ("main.adb") use ("-O0", "-gnatn");
+      --  Never optimize for main.adb, so that loops are indeed executed
    end Compiler;
 end Default;

@@ -1,6 +1,7 @@
 with Refcount;            use Refcount;
 with Refcount_Ref;        use Refcount_Ref;
 with GNATCOLL.Refcount;   use GNATCOLL.Refcount;
+with GNAT.Strings;        use GNAT.Strings;
 
 package Support is
 
@@ -18,11 +19,12 @@ package Support is
    type Child is new Object with null record;
 
    package Int_Pointers_Unsafe is new Refcount.Smart_Pointers
-      (Integer, Thread_Safe => False);
+      (Integer, Atomic_Counters => False);
    package Int_Pointers is new Refcount.Smart_Pointers (Integer);
    package Obj_Pointers is new Refcount.Smart_Pointers (Object'Class);
    package Obj_Pointers_Free is new Refcount.Smart_Pointers
-      (Object'Class, Free => Class_Wide_Free);
+      (Object'Class, Release => Class_Wide_Free);
+   package String_Pointers is new Refcount.Smart_Pointers (String);
 
    --------------------------------
    -- Refcount as reference_type --
@@ -43,6 +45,11 @@ package Support is
       Value : Integer;
    end record;
 
+   type String_Object is new Refcounted with record
+      Str : GNAT.Strings.String_Access;
+   end record;
+   procedure Free (Str : in out String_Object);
+
    type Object2 is new Refcounted with record
       null;
    end record;
@@ -54,5 +61,7 @@ package Support is
       (Integer_Object);
    package Obj_Pointers_Gnatcoll is new GNATCOLL.Refcount.Smart_Pointers
       (Object2);
+   package String_Pointers_Gnatcoll is new GNATCOLL.Refcount.Smart_Pointers
+      (String_Object);
 
 end Support;
