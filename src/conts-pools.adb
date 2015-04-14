@@ -20,8 +20,7 @@ package body Conts.Pools is
       Pointer_Size : constant Storage_Count :=
          System.Address'Size / System.Storage_Unit;
       Extra_Allocation : constant Storage_Count :=
-         (Header_Size / Pointer_Size + 1) * Pointer_Size
-         + Element_Type'Descriptor_Size;
+         (Header_Size / Pointer_Size + 1) * Pointer_Size;
       --   Allocate a multiple of Pointer_Size bytes, so that the
       --   alignment of the Element_Type is suitable.
       --   ??? Should we use Standard'Maximum_Alignment instead, although
@@ -36,9 +35,10 @@ package body Conts.Pools is
       -- Header_Of --
       ---------------
 
-      function Header_Of (Addr : System.Address) return access Extra_Header is
+      function Header_Of
+         (Self : Pool; Addr : System.Address) return access Extra_Header is
       begin
-         return Convert (Addr - Extra_Allocation);
+         return Convert (Addr - Extra_Allocation - Self.Descriptor_Size);
       end Header_Of;
 
       --------------
@@ -51,8 +51,9 @@ package body Conts.Pools is
           Size      : System.Storage_Elements.Storage_Count;
           Alignment : System.Storage_Elements.Storage_Count)
       is
-         pragma Unreferenced (Self, Alignment);
-         Aligned_Size : constant Storage_Count := Size + Extra_Allocation;
+         pragma Unreferenced (Alignment);
+         Aligned_Size : constant Storage_Count :=
+            Size + Extra_Allocation + Self.Descriptor_Size;
          Allocated    : System.Address;
       begin
          --  Unfortunately, we do not have access to the element type, and
@@ -80,9 +81,9 @@ package body Conts.Pools is
           Size      : System.Storage_Elements.Storage_Count;
           Alignment : System.Storage_Elements.Storage_Count)
       is
-         pragma Unreferenced (Self, Size, Alignment);
+         pragma Unreferenced (Size, Alignment);
          Header : constant Extra_Header_Access :=
-            Extra_Header_Access (Header_Of (Addr));
+            Extra_Header_Access (Header_Of (Self, Addr));
       begin
          --  ??? Should take into account the alignment offset used in Allocate
          --  ??? Can we use the Alignment parameter for this, so that we do not
@@ -91,4 +92,5 @@ package body Conts.Pools is
       end Deallocate;
 
    end Header_Pools;
+
 end Conts.Pools;

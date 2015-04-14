@@ -46,3 +46,9 @@ TODO
   instance a default null value for the discriminant)
 - Can we remove Set (a storage pool to instrument "new")
 - use integer_64 on 64 bits targets, and corresponding builtins in gnatcoll.atomic
+- Pool are instantiated for each instance of smart pointer:
+    +87048 bytes if we add 5 instances of Header_Pools to the generic Smart_Pointers
+    package (instantiated 5 times) => roughly +3kb per instance of header_pools
+  By using a discriminant on the pool, we end up with:
+    before       => 1626180
+    +25 instants =>  +11048 bytes => +441 bytes per instance

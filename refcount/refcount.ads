@@ -7,6 +7,8 @@ package Refcount is
    --  derived from a common ancestor, at the cost of extra allocations and
    --  indirections in some cases.
 
+   package Headers is new Conts.Pools.Header_Pools (Interfaces.Integer_32);
+
    generic
       type Element_Type (<>) is private;
 
@@ -46,8 +48,10 @@ package Refcount is
       --  two pointed elements are equal.
 
    private
-      package Pools is new Conts.Pools.Header_Pools
-         (Element_Type, Interfaces.Integer_32);
+      package Pools is
+         new Conts.Pools.Typed_Header_Pools (Headers, Element_Type);
+      --  ??? Could we share a pool for all types that are not an
+      --  unconstrained array.
 
       type Ref is new Controlled with record
          Data : Pools.Element_Access;

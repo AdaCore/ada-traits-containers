@@ -24,7 +24,7 @@ package body Refcount is
       begin
          Finalize (Self);
          Self.Data := new Element_Type'(Data);  --  uses storage pool
-         Pools.Header_Of (Self.Data.all'Address).all := 1;
+         Pools.Element_Pool.Header_Of (Self.Data.all'Address).all := 1;
       end Set;
 
       ---------
@@ -53,7 +53,7 @@ package body Refcount is
          R : access Interfaces.Integer_32;
       begin
          if Self.Data /= null then
-            R := Pools.Header_Of (Self.Data.all'Address);
+            R := Pools.Element_Pool.Header_Of (Self.Data.all'Address);
             --  R is the 4 bytes before Self.Data. But in the case of an
             --  unconstrained array, the bounds are stored just before
             --  Self.Data already (provided the access type has a 'Size
@@ -79,7 +79,7 @@ package body Refcount is
          if Data /= null then
             Self.Data := null;   --  make idempotent
 
-            R := Pools.Header_Of (Data.all'Address);
+            R := Pools.Element_Pool.Header_Of (Data.all'Address);
             if Atomic_Counters then
                Tmp := Sync_Add_And_Fetch (R, -1);
             else
