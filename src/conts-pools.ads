@@ -14,8 +14,9 @@ package Conts.Pools is
       --  A pool that allocates enough space for an element, plus some extra
       --  space before. This extra space can be used to store extra
       --  information associated with the memory chunk.
-      --  The descriptor size is given by the element_type 'Descriptor_Size
-      --  attribute (see also Header_Pools package below)
+      --  The descriptor size is based on the element_type 'Descriptor_Size
+      --  attribute (see also Header_Pools package below). This is a size in
+      --  bytes.
 
       function Header_Of
          (Self : Pool; Addr : System.Address) return access Extra_Header
@@ -47,7 +48,8 @@ package Conts.Pools is
       --  representation clause and we need to take into account the bounds
       --  of the array, which are stored next to the array).
    package Typed_Header_Pools is
-      Element_Pool : Pools.Pool (Element_Type'Descriptor_Size);
+      Element_Pool : Pools.Pool
+         (Element_Type'Descriptor_Size / System.Storage_Unit);
 
       type Element_Access is access all Element_Type;
       for Element_Access'Size use Standard'Address_Size;

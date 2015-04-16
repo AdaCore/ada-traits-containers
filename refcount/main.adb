@@ -93,6 +93,7 @@ procedure Main is
    procedure Test_Obj_Holders;
    procedure Test_Strings;
    procedure Test_Gnatcoll_Strings;
+   procedure Test_Weak_Ref;
 
    procedure Test_Int_Pointers_Unsafe is
       R, R2 : Int_Pointers_Unsafe.Ref;
@@ -441,6 +442,35 @@ procedure Main is
       Finish_Line;
    end Test_Gnatcoll_Obj;
 
+   procedure Test_Weak_Ref is
+      use Int_Pointers;
+      W : Int_Pointers.Weak_Ref;
+   begin
+      declare
+         R, R2 : Int_Pointers.Ref;
+      begin
+         R.Set (999);
+         W := R.Weak;
+
+         R2 := W.Get;
+         if R2.Get.all /= 999 then
+            Put_Line ("Expected 999 from a weak ref");
+         end if;
+      end;
+
+      if not W.Was_Freed then
+         Put_Line ("Weak ref should have been freed");
+      end if;
+
+      declare
+         R2 : Int_Pointers.Ref := W.Get;
+      begin
+         if R2 /= Null_Ref then
+            Put_Line ("Expected a null ref from a weak ref");
+         end if;
+      end;
+   end Test_Weak_Ref;
+
 begin
    Put_Line ("Storing integers");
    Print_Header;
@@ -468,9 +498,8 @@ begin
       ("'as reftype' is when the smart pointer itself is a reference type");
    Put_Line
       ("   current this doesn't work well since this is unconstrained type");
-   Put_Line
-      ("Getting value for int is much slower than GNATCOLL -- not clear why"
-       & " (cache ?)");
+
+   Test_Weak_Ref;
 
    --  for the sake of valgrind
    for C of Columns loop

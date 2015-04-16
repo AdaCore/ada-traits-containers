@@ -15,12 +15,13 @@ package body Conts.Pools is
       end record;
       type Extra_Header_Access is access all Extra_Header;
 
-      Header_Size : constant Storage_Count :=
-         Header'Object_Size / System.Storage_Unit;
-      Pointer_Size : constant Storage_Count :=
-         System.Address'Size / System.Storage_Unit;
-      Extra_Allocation : constant Storage_Count :=
-         (Header_Size / Pointer_Size + 1) * Pointer_Size;
+      Header_Size_Bytes : constant Storage_Count :=
+         Header'Size / Storage_Unit;
+      Pointer_Size_Bytes : constant Storage_Count :=
+         System.Address'Size / Storage_Unit;
+      Extra_Allocation_Bytes : constant Storage_Count :=
+         (Header_Size_Bytes / Pointer_Size_Bytes + 1)
+         * Pointer_Size_Bytes;
       --   Allocate a multiple of Pointer_Size bytes, so that the
       --   alignment of the Element_Type is suitable.
       --   ??? Should we use Standard'Maximum_Alignment instead, although
@@ -38,7 +39,7 @@ package body Conts.Pools is
       function Header_Of
          (Self : Pool; Addr : System.Address) return access Extra_Header is
       begin
-         return Convert (Addr - Extra_Allocation - Self.Descriptor_Size);
+         return Convert (Addr - Extra_Allocation_Bytes - Self.Descriptor_Size);
       end Header_Of;
 
       --------------
@@ -52,23 +53,14 @@ package body Conts.Pools is
           Alignment : System.Storage_Elements.Storage_Count)
       is
          pragma Unreferenced (Alignment);
-         Aligned_Size : constant Storage_Count :=
-            Size + Extra_Allocation + Self.Descriptor_Size;
+         Aligned_Size : constant Storage_Count :=   --  bytes
+            Size + Extra_Allocation_Bytes + Self.Descriptor_Size;
          Allocated    : System.Address;
       begin
-         --  Unfortunately, we do not have access to the element type, and
-         --  in particular Element_Type'Descriptor_Size, which would give use
-         --  the size of the dope vector stored before the element.
-         --  ??? Or we need to pass the element_type to the pool, and let it
-         --  declare the element_access, so that it also sets the 'Size on it.
-         --  ??? We would need to share as much of the implementation as
-         --  possible.
          Allocated := Alloc (size_t (Aligned_Size));
          Addr := To_Address
-            (To_Integer (Allocated) + Integer_Address (Extra_Allocation));
-         --  Put_Line ("MANU allocate.size=" & Size'Img & " returned Addr="
-         --     & System.Address_Image (Addr) & " allocated="
-         --     & System.Address_Image (Allocated));
+            (To_Integer (Allocated) +
+            Integer_Address (Extra_Allocation_Bytes + Self.Descriptor_Size));
       end Allocate;
 
       ----------------
@@ -82,12 +74,9 @@ package body Conts.Pools is
           Alignment : System.Storage_Elements.Storage_Count)
       is
          pragma Unreferenced (Size, Alignment);
-         Header : constant Extra_Header_Access :=
-            Extra_Header_Access (Header_Of (Self, Addr));
+         Header : Extra_Header_Access;
       begin
-         --  ??? Should take into account the alignment offset used in Allocate
-         --  ??? Can we use the Alignment parameter for this, so that we do not
-         --  have to store this info in the header ?
+         Header := Extra_Header_Access (Header_Of (Self, Addr));
          System.Memory.Free (Convert (Header));
       end Deallocate;
 
