@@ -1,3 +1,17 @@
+--  Notes on the implementation of weak pointers:
+--  There are several ways in which a weak pointer can be implemented:
+--    - Using two counters (one for full references, one for weak). When both
+--      reach 0, the memory blocks is freed; when only the first reaches 0,
+--      the element is released, and the block can be resized.
+--      This is hard to make task safe without using critical section though.
+--    - store a doubly-linked list of weak pointers along with the counter.
+--      When the counter reaches 0, change each of the weak pointers to null.
+--      This requires more memory.
+--    - (our choice) make the weak pointer a smart pointer pointing to the
+--      same data:
+--           smart_ptr ---> chunk1: counter + element + pointer to chunk2
+--           weak_ptr  ---> chunk2: weak_counter + pointer to chunk1
+
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with GNATCOLL.Atomic;  use GNATCOLL.Atomic;
@@ -8,85 +22,62 @@ package body Refcount is
 
    procedure Inc_Ref (R : access Counters; Atomic : Boolean)
       with Inline => True;
-   function Inc_Ref (R : access Counters; Atomic : Boolean) return Integer_32
-      with Inline => True;
-   function Dec_Ref (R : access Counters; Atomic : Boolean) return Integer_32
-      with Inline => True;
-   procedure Inc_Weak_Ref (R : access Counters; Atomic : Boolean)
-      with Inline => True;
-   function Dec_Weak_Ref
-      (R : access Counters; Atomic : Boolean) return Integer_32
+   procedure Inc_Ref (R : access Weak_Data; Atomic : Boolean)
       with Inline => True;
    --  Increase/Decrease the refcount, and return the new value
 
-   -------------
-   -- Inc_Ref --
-   -------------
+   procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+      (Weak_Data, Weak_Data_Access);
 
-   function Inc_Ref
-      (R : access Counters; Atomic : Boolean) return Integer_32 is
-   begin
-      if Atomic then
-         return Sync_Add_And_Fetch (R.Refcount'Access, 1);
-      else
-         R.Refcount := R.Refcount + 1;
-         return R.Refcount;
-      end if;
-   end Inc_Ref;
+   procedure Finalize (Data : in out Weak_Data_Access; Atomic : Boolean);
+   --  Decrease refcount, and free memory if needed
+
+   function Sync_Bool_Compare_And_Swap
+      (Ptr    : in out Weak_Data_Access;
+       Oldval : Weak_Data_Access;
+       Newval : Weak_Data_Access) return Integer_8;
+   pragma Import
+      (C, Sync_Bool_Compare_And_Swap, "ada_sync_bool_compare_and_swap");
 
    -------------
    -- Inc_Ref --
    -------------
 
    procedure Inc_Ref (R : access Counters; Atomic : Boolean) is
-      Tmp : Integer_32;
-      pragma Unreferenced (Tmp);
    begin
-      Tmp := Inc_Ref (R, Atomic);
+      if Atomic then
+         Sync_Add_And_Fetch (R.Refcount'Access, 1);
+      else
+         R.Refcount := R.Refcount + 1;
+      end if;
    end Inc_Ref;
 
-   -------------
-   -- Dec_Ref --
-   -------------
-
-   function Dec_Ref
-      (R : access Counters; Atomic : Boolean) return Integer_32 is
+   procedure Inc_Ref (R : access Weak_Data; Atomic : Boolean) is
    begin
       if Atomic then
-         return Sync_Add_And_Fetch (R.Refcount'Access, -1);
+         Sync_Add_And_Fetch (R.Refcount'Access, 1);
       else
-         R.Refcount := R.Refcount - 1;
-         return R.Refcount;
+         R.Refcount := R.Refcount + 1;
       end if;
-   end Dec_Ref;
+   end Inc_Ref;
 
-   ------------------
-   -- Inc_Weak_Ref --
-   ------------------
+   --------------
+   -- Finalize --
+   --------------
 
-   procedure Inc_Weak_Ref (R : access Counters; Atomic : Boolean) is
+   procedure Finalize (Data : in out Weak_Data_Access; Atomic : Boolean) is
+      Tmp  : Integer_32;
    begin
       if Atomic then
-         Sync_Add_And_Fetch (R.Weak_Refcount'Access, 1);
+         Tmp := Sync_Add_And_Fetch (Data.Refcount'Access, -1);
       else
-         R.Weak_Refcount := R.Weak_Refcount + 1;
+         Data.Refcount := Data.Refcount - 1;
       end if;
-   end Inc_Weak_Ref;
 
-   ------------------
-   -- Dec_Weak_Ref --
-   ------------------
-
-   function Dec_Weak_Ref
-      (R : access Counters; Atomic : Boolean) return Integer_32 is
-   begin
-      if Atomic then
-         return Sync_Add_And_Fetch (R.Weak_Refcount'Access, -1);
-      else
-         R.Weak_Refcount := R.Weak_Refcount - 1;
-         return R.Weak_Refcount;
+      if Tmp = 0 then
+         Unchecked_Free (Data);
       end if;
-   end Dec_Weak_Ref;
+   end Finalize;
 
    --------------------
    -- Smart_Pointers --
@@ -97,6 +88,13 @@ package body Refcount is
 
       procedure Unchecked_Free is new Ada.Unchecked_Deallocation
          (Element_Type, Pools.Element_Access);
+
+      pragma Warnings (Off, "*possible aliasing problem*");
+      function Convert is new Ada.Unchecked_Conversion
+         (Pools.Element_Access, System.Address);
+      function Convert is new Ada.Unchecked_Conversion
+         (System.Address, Pools.Element_Access);
+      pragma Warnings (On, "*possible aliasing problem*");
 
       ---------
       -- Set --
@@ -109,7 +107,7 @@ package body Refcount is
          Self.Data := new Element_Type'(Data);  --  uses storage pool
          R := Pools.Element_Pool.Header_Of (Self.Data.all'Address);
          R.Refcount := 1;
-         R.Weak_Refcount := 0;
+         R.Weak_Data := null;
       end Set;
 
       ---------
@@ -127,14 +125,30 @@ package body Refcount is
 
       function Weak (Self : Ref'Class) return Weak_Ref is
          R : access Counters;
+         V : Weak_Data_Access;
       begin
          if Self.Data = null then
-            return (Controlled with Data => null);
+            return Null_Weak_Ref;
          end if;
 
          R := Pools.Element_Pool.Header_Of (Self.Data.all'Address);
-         Inc_Weak_Ref (R, Atomic_Counters);
-         return (Controlled with Data => Self.Data);
+
+         if R.Weak_Data = null then
+            V := new Weak_Data'
+               (Refcount => 2,   --  hold by Self and the result
+                Element  => Convert (Self.Data));
+            if Sync_Bool_Compare_And_Swap
+               (R.Weak_Data, Oldval => null, Newval => V) = 0
+            then
+               --  Was set by another thread concurrently
+               Unchecked_Free (V);
+
+               --  Need to increase refcount for the new weak ref
+               Inc_Ref (R.Weak_Data, Atomic_Counters);
+            end if;
+         end if;
+
+         return (Controlled with Data => R.Weak_Data);
       end Weak;
 
       ---------------
@@ -144,8 +158,7 @@ package body Refcount is
       function Was_Freed (Self : Weak_Ref'Class) return Boolean is
       begin
          return Self.Data = null
-            or else Pools.Element_Pool.Header_Of
-               (Self.Data.all'Address).Refcount = 0;
+            or else Self.Data.Element = System.Null_Address;
       end Was_Freed;
 
       ---------
@@ -153,29 +166,15 @@ package body Refcount is
       ---------
 
       function Get (Self : Weak_Ref'Class) return Ref is
-         R : access Counters;
-         Tmp : Integer_32;
       begin
-         --  Thread safety: while in this function, the data still has
-         --  a weak_refcount of at least 1, so will not be freed
-         --  completely (although it is possible that another thread is
-         --  decreasing the refcount to 0, and thus the element itself
-         --  would be destroyed).
-
-         if Self.Data = null then
+         if Self.Was_Freed then
             return Null_Ref;
          end if;
 
-         R :=  Pools.Element_Pool.Header_Of (Self.Data.all'Address);
-         if Inc_Ref (R, Atomic_Counters) = 1 then
-            --  If the refcount is now 1, the element has in fact been freed
-            --  already. So we need to reset the refcount to 0.
-
-            Tmp := Dec_Ref (R, Atomic_Counters);
-            return Null_Ref;
-         else
-            return (Controlled with Data => Self.Data);
-         end if;
+         Inc_Ref
+            (Pools.Element_Pool.Header_Of (Self.Data.Element),
+             Atomic_Counters);
+         return (Controlled with Data => Convert (Self.Data.Element));
       end Get;
 
       ---------
@@ -206,9 +205,7 @@ package body Refcount is
       overriding procedure Adjust (Self : in out Weak_Ref) is
       begin
          if Self.Data /= null then
-            Inc_Weak_Ref
-               (Pools.Element_Pool.Header_Of (Self.Data.all'Address),
-                Atomic_Counters);
+            Inc_Ref (Self.Data, Atomic_Counters);
          end if;
       end Adjust;
 
@@ -219,22 +216,27 @@ package body Refcount is
       overriding procedure Finalize (Self : in out Ref) is
          R    : access Counters;
          Data : Pools.Element_Access := Self.Data;
+         Tmp  : Integer_32;
       begin
          if Data /= null then
-            Self.Data := null;   --  make idempotent
+            Self.Data := null;
 
             R := Pools.Element_Pool.Header_Of (Data.all'Address);
-            if Dec_Ref (R, Atomic_Counters) = 0 then
-               Release (Data.all);
+            if Atomic_Counters then
+               Tmp := Sync_Add_And_Fetch (R.Refcount'Access, -1);
+            else
+               R.Refcount := R.Refcount - 1;
+               Tmp := R.Refcount;
+            end if;
 
-               --  ??? Not thread safe, if the last weak_ref also in Finalize
-               if R.Weak_Refcount = 0 then
-                  Unchecked_Free (Data);
-               else
-                  --  Resize the pointed area to just the size of the header
-                  --  to save memory
-                  null;
+            if Tmp = 0 then
+               if R.Weak_Data /= null then
+                  R.Weak_Data.Element := System.Null_Address;
+                  Finalize (R.Weak_Data, Atomic_Counters);
                end if;
+
+               Release (Data.all);
+               Unchecked_Free (Data);
             end if;
          end if;
       end Finalize;
@@ -244,19 +246,11 @@ package body Refcount is
       --------------
 
       overriding procedure Finalize (Self : in out Weak_Ref) is
-         R    : access Counters;
-         Data : Pools.Element_Access := Self.Data;
+         Data : Weak_Data_Access := Self.Data;
       begin
          if Data /= null then
-            Self.Data := null;   --  make idempotent
-
-            R := Pools.Element_Pool.Header_Of (Data.all'Address);
-            if Dec_Weak_Ref (R, Atomic_Counters) = 0 then
-               --  ??? Not thread safe, when a Ref is also in Finalize
-               if R.Refcount = 0 then
-                  Unchecked_Free (Data);
-               end if;
-            end if;
+            Self.Data := null;
+            Finalize (Data, Atomic_Counters);
          end if;
       end Finalize;
    end Smart_Pointers;

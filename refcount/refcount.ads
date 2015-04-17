@@ -1,15 +1,27 @@
 with Ada.Finalization;   use Ada.Finalization;
 with Interfaces;         use Interfaces;
 with Conts.Pools;
+with System;
 
 package Refcount is
    --  A smart pointer implementation that does not force the type to be
    --  derived from a common ancestor, at the cost of extra allocations and
    --  indirections in some cases.
 
+   type Weak_Data is record
+      Refcount : aliased Integer_32;
+      Element  : System.Address := System.Null_Address;
+   end record;
+   type Weak_Data_Access is access all Weak_Data;
+
    type Counters is record
       Refcount      : aliased Interfaces.Integer_32 := 1;
-      Weak_Refcount : aliased Interfaces.Integer_32 := 0;
+
+      Weak_Data     : Weak_Data_Access := null;
+      --  A pointer to the weak pointers'data. This data is created the
+      --  first time we create a weak pointer. We hold a reference to that
+      --  data, so that it can never be freed while at least one reference
+      --  exists.
    end record;
    package Headers is new Conts.Pools.Header_Pools (Counters);
 
@@ -57,6 +69,7 @@ package Refcount is
       --  ??? Could provide a "<" for use in sorted containers
 
       type Weak_Ref is tagged private;
+      Null_Weak_Ref : constant Weak_Ref;
       --  A weak reference to an object. The value returned by Get will be
       --  reset to null when the object is freed (because its last reference
       --  expired). Holding a weak reference does not prevent the deallocation
@@ -87,13 +100,15 @@ package Refcount is
       overriding procedure Finalize (Self : in out Ref);
 
       type Weak_Ref is new Controlled with record
-         Data : Pools.Element_Access;
+         Data : Weak_Data_Access;
       end record;
       overriding procedure Adjust (Self : in out Weak_Ref)
          with Inline => True;
       overriding procedure Finalize (Self : in out Weak_Ref);
 
       Null_Ref : constant Ref :=
+         (Ada.Finalization.Controlled with Data => null);
+      Null_Weak_Ref : constant Weak_Ref :=
          (Ada.Finalization.Controlled with Data => null);
 
    end Smart_Pointers;

@@ -7,7 +7,7 @@ with GNATCOLL.Traces;
 with GNAT.Strings;  use GNAT.Strings;
 
 procedure Main is
-   Count : constant := 1_000_000;
+   Count : constant := 10; --  1_000_000;
    Start : Time;
 
    type Time_Ref is (Ref_None, Ref_Set, Ref_Assign, Ref_Get);
@@ -444,31 +444,53 @@ procedure Main is
 
    procedure Test_Weak_Ref is
       use Int_Pointers;
-      W : Int_Pointers.Weak_Ref;
    begin
+      --  First scenario: weak ref outlives the ref
+
       declare
-         R, R2 : Int_Pointers.Ref;
+         W : Int_Pointers.Weak_Ref;
+      begin
+         declare
+            R, R2 : Int_Pointers.Ref;
+         begin
+            R.Set (999);
+            W := R.Weak;
+
+            R2 := W.Get;
+            if R2.Get.all /= 999 then
+               Put_Line ("Expected 999 from a weak ref");
+            end if;
+         end;
+
+         if not W.Was_Freed then
+            Put_Line ("Weak ref should have been freed");
+         end if;
+
+         declare
+            R2 : Int_Pointers.Ref := W.Get;
+         begin
+            if R2 /= Null_Ref then
+               Put_Line ("Expected a null ref from a weak ref");
+            end if;
+         end;
+      end;
+
+      --  Second scenario: ref outlives the weak ref
+
+      declare
+         R : Ref;
       begin
          R.Set (999);
-         W := R.Weak;
 
-         R2 := W.Get;
-         if R2.Get.all /= 999 then
-            Put_Line ("Expected 999 from a weak ref");
-         end if;
+         declare
+            W : Weak_Ref := R.Weak;
+         begin
+            if W.Get.Get.all /= 999 then
+               Put_Line ("Scenario2: expected 999");
+            end if;
+         end;
       end;
 
-      if not W.Was_Freed then
-         Put_Line ("Weak ref should have been freed");
-      end if;
-
-      declare
-         R2 : Int_Pointers.Ref := W.Get;
-      begin
-         if R2 /= Null_Ref then
-            Put_Line ("Expected a null ref from a weak ref");
-         end if;
-      end;
    end Test_Weak_Ref;
 
 begin
