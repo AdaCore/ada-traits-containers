@@ -4,7 +4,6 @@ with Ada.Text_IO;   use Ada.Text_IO;
 with Ada.Containers.Indefinite_Holders;
 with GNATCOLL.Refcount; use GNATCOLL.Refcount;
 with GNATCOLL.Traces;
-with GNAT.Strings;  use GNAT.Strings;
 with Report;        use Report;
 with Ref_Support;   use Ref_Support;
 
@@ -45,8 +44,11 @@ procedure Main is
       procedure All_Tests is new Run_Tests (NR);
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         pragma Unreferenced (Start, V);
          R2 : Int_Pointers_Unsafe.Ref;
          Int   : Integer;
+         pragma Volatile (Int);  --  Can't be optimized away
+         pragma Unreferenced (Int);
       begin
          case Col is
             when Column_Set =>
@@ -69,7 +71,8 @@ procedure Main is
                   Int := R.Reference;
                end loop;
 
-            when others => null;
+            when others =>
+               Stdout.Print_Not_Run;
          end case;
       end Run;
    begin
@@ -85,6 +88,8 @@ procedure Main is
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          R2 : Int_Pointers.Ref;
          Int   : Integer;
+         pragma Volatile (Int);  --  Can't be optimized away
+         pragma Unreferenced (Start, V, Int);
       begin
          case Col is
             when Column_Set =>
@@ -106,8 +111,9 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   Int := R.Reference;
                end loop;
-               
-            when others => null;
+
+            when others =>
+               Stdout.Print_Not_Run;
          end case;
       end Run;
    begin
@@ -123,6 +129,8 @@ procedure Main is
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          R2 : String_Pointers.Ref;
          Str   : access String;
+         pragma Volatile (Str);
+         pragma Unreferenced (Start, V, Str);
       begin
          case Col is
             when Column_Set =>
@@ -144,7 +152,8 @@ procedure Main is
                   Str := R.Get;
                end loop;
 
-            when others => null;
+            when others =>
+               Stdout.Print_Not_Run;
          end case;
       end Run;
    begin
@@ -158,6 +167,8 @@ procedure Main is
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          Int   : Integer;
+         pragma Volatile (Int);  --  Can't be optimized away
+         pragma Unreferenced (Start, V, Int);
       begin
          case Col is
             when Column_Set =>
@@ -193,7 +204,8 @@ procedure Main is
                   end loop;
                end;
 
-            when others => null;
+            when others =>
+               Stdout.Print_Not_Run;
          end case;
       end Run;
    begin
@@ -209,12 +221,14 @@ procedure Main is
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          R2 : String_Pointers_Gnatcoll.Ref;
          Str   : access String;
+         pragma Volatile (Str);  --  Can't be optimized away
+         pragma Unreferenced (Start, V, Str);
       begin
          case Col is
             when Column_Set =>
                for C in 1 .. Count_Smart loop
                   R.Set (String_Object'
-                          (RefCounted with Str => new String'("foo")));
+                          (Refcounted with Str => new String'("foo")));
                end loop;
 
             when Column_Assign =>
@@ -243,11 +257,13 @@ procedure Main is
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          R2 : Int_Pointers_Gnatcoll.Ref;
          Int   : Integer;
+         pragma Volatile (Int);  --  Can't be optimized away
+         pragma Unreferenced (Start, V, Int);
       begin
          case Col is
             when Column_Set =>
                for C in 1 .. Count_Smart loop
-                  R.Set (Integer_Object'(RefCounted with Value => C));
+                  R.Set (Integer_Object'(Refcounted with Value => C));
                end loop;
 
             when Column_Assign =>
@@ -274,6 +290,7 @@ procedure Main is
       procedure All_Tests is new Run_Tests (NR);
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         pragma Unreferenced (Start, V);
          R2 : Obj_Pointers.Ref;
       begin
          case Col is
@@ -291,6 +308,7 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   declare
                      C : Object'Class := R.Get.all;
+                     pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
                      null;
@@ -301,6 +319,7 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   declare
                      C : Object'Class := R.Reference;
+                     pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
                      null;
@@ -321,6 +340,7 @@ procedure Main is
       procedure All_Tests is new Run_Tests (NR);
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         pragma Unreferenced (Start, V);
          R2 : Obj_Pointers_Free.Ref;
       begin
          case Col is
@@ -338,6 +358,7 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   declare
                      C : Object'Class := R.Get.all;
+                     pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
                      null;
@@ -348,13 +369,15 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   declare
                      C : Object'Class := R.Reference;
+                     pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
                      null;
                   end;
                end loop;
-               
-            when others => null;
+
+            when others =>
+               Stdout.Print_Not_Run;
          end case;
       end Run;
    begin
@@ -371,6 +394,7 @@ procedure Main is
       procedure All_Tests is new Run_Tests (NR);
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         pragma Unreferenced (Start, V);
          R2 : Holder;
       begin
          case Col is
@@ -388,13 +412,15 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   declare
                      C : Object'Class := R.Reference;
+                     pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
                      null;
                   end;
                end loop;
 
-            when others => null;
+            when others =>
+               Stdout.Print_Not_Run;
          end case;
       end Run;
    begin
@@ -408,6 +434,7 @@ procedure Main is
       procedure All_Tests is new Run_Tests (NR);
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         pragma Unreferenced (Start, V);
          R2 : Obj_Pointers_Gnatcoll.Ref;
       begin
          case Col is
@@ -425,6 +452,7 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   declare
                      C : Object2'Class := R.Get.all;
+                     pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
                      null;
@@ -531,6 +559,7 @@ begin
    Test_Gnatcoll_Strings;
    Test_Shared_Str;
    Test_Strings;
+   Stdout.Finish_Line;
 
    New_Line;
    Put_Line ("'Unsafe': use standard int operations, not atomic");
