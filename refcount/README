@@ -46,4 +46,3 @@ TODO
 - Can we remove Set (a storage pool to instrument "new")
 - use integer_64 on 64 bits targets, and corresponding builtins in gnatcoll.atomic
 - Can we use pragma Atomic ? Does not seem so
-- Compare speed with C++11 shared_ptr

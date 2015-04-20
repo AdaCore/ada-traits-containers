@@ -1,4 +1,17 @@
+with Report;        use Report;
+
 package Perf_Support is
+
+   Column_Title    : constant Column_Number := 1;
+   Column_Fill     : constant Column_Number := 2;
+   Column_Copy     : constant Column_Number := 3;
+   Column_Loop     : constant Column_Number := 4;
+   Column_For_Of   : constant Column_Number := 5;
+   Column_Count_If : constant Column_Number := 6;
+   Column_Allocate : constant Column_Number := 7;
+   Column_Allocs   : constant Column_Number := 8;
+   Column_Reallocs : constant Column_Number := 9;
+   Column_Frees    : constant Column_Number := 10;
 
    --  Performance testing when using generics, virtual methods and
    --  access to subprograms.

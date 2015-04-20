@@ -1,87 +1,23 @@
 with Ada.Calendar;  use Ada.Calendar;
-with Support;       use Support;
+with Ref_Support;   use Ref_Support;
 with Ada.Text_IO;   use Ada.Text_IO;
 with Ada.Containers.Indefinite_Holders;
 with GNATCOLL.Refcount; use GNATCOLL.Refcount;
 with GNATCOLL.Traces;
 with GNAT.Strings;  use GNAT.Strings;
+with Report;        use Report;
+with Ref_Support;   use Ref_Support;
 
 procedure Main is
-   Count : constant := 10; --  1_000_000;
-   Start : Time;
-
-   type Time_Ref is (Ref_None, Ref_Set, Ref_Assign, Ref_Get);
-   type Time_Ref_Array is array (Time_Ref) of Duration;
-   All_Refs : Time_Ref_Array := (others => 0.0);
-
-   type Column_Descr is record
-      Title : String_Access;
-      Width : Natural;
-      Ref   : Time_Ref;
-   end record;
-   type Columns_Array is array (Natural range <>) of Column_Descr;
-   Columns : Columns_Array :=
-      (1 => (Width => 13,  Ref => Ref_None,   Title => new String'("")),
-       2 => (Width => 7,   Ref => Ref_Set,    Title => new String'("Set")),
-       3 => (Width => 7,   Ref => Ref_Assign, Title => new String'("Assign")),
-       4 => (Width => 7,   Ref => Ref_Get,    Title => new String'("Get")),
-       5 => (Width => 9,   Ref => Ref_Get, Title => new String'("Reference")));
-   Current : Natural := Columns'First;
-
-   procedure Print_Header;
-   procedure Reset;
-   procedure Print (Str : String);
-   procedure Print_Time;
-   procedure Finish_Line;
-
-   procedure Print_Header is
-   begin
-      for C of Columns loop
-         Print (C.Title.all);
-      end loop;
-      Finish_Line;
-   end Print_Header;
-
-   procedure Reset is
-   begin
-      New_Line;
-      All_Refs := (others => 0.0);
-   end Reset;
-
-   procedure Print (Str : String) is
-   begin
-      Put (Str & (Str'Length + 1 .. Columns (Current).Width => ' ') & '|');
-      Current := Current + 1;
-   end Print;
-
-   procedure Print_Time is
-      D : constant Duration := Clock - Start;
-   begin
-      if All_Refs (Columns (Current).Ref) = 0.0 then
-         All_Refs (Columns (Current).Ref) := D;
-      end if;
-
-      if All_Refs (Columns (Current).Ref) = 0.0 then
-         Print ("");
-      else
-         declare
-            S : constant String := Integer'Image
-               (Integer
-                  (Float'Floor (Float (D)
-                      / Float (All_Refs (Columns (Current).Ref))
-                   * 100.0)))
-                  & '%';
-         begin
-            Print (S);
-         end;
-      end if;
-   end Print_Time;
-
-   procedure Finish_Line is
-   begin
-      New_Line;
-      Current := Columns'First;
-   end Finish_Line;
+   Column_Title  : constant Column_Number := 1;
+   Column_Set    : constant Column_Number := 2;
+   Column_Assign : constant Column_Number := 3;
+   Column_Get    : constant Column_Number := 4;
+   Column_Ref    : constant Column_Number := 5;
+   Column_Allocate : constant Column_Number := 6;
+   Column_Allocs   : constant Column_Number := 7;
+   Column_Reallocs : constant Column_Number := 8;
+   Column_Frees    : constant Column_Number := 9;
 
    procedure Test_Int_Pointers_Unsafe;
    procedure Test_Int_Pointers;
@@ -95,351 +31,411 @@ procedure Main is
    procedure Test_Gnatcoll_Strings;
    procedure Test_Weak_Ref;
 
+   procedure Test_Shared_Int;
+   pragma Import (C, Test_Shared_Int, "test_shared_int");
+   procedure Test_Shared_Str;
+   pragma Import (C, Test_Shared_Str, "test_shared_str");
+
+   type NR is null record;
+
    procedure Test_Int_Pointers_Unsafe is
-      R, R2 : Int_Pointers_Unsafe.Ref;
-      Int   : Integer;
+      N : NR;
+      R : Int_Pointers_Unsafe.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : Int_Pointers_Unsafe.Ref;
+         Int   : Integer;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set (C);
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  Int := R.Get.all;
+               end loop;
+
+            when Column_Ref =>
+               for C in 1 .. Count_Smart loop
+                  Int := R.Reference;
+               end loop;
+
+            when others => null;
+         end case;
+      end Run;
    begin
-      Print ("Std Unsafe");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (C);
-      end loop;
-      Print_Time;  --  Set
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;  --  Assign
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Get.all;
-      end loop;
-      Print_Time;  --  Get
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Reference;
-      end loop;
-      Print_Time;  --  Reference
-
-      Finish_Line;
+      All_Tests ("Std unsafe", N);
    end Test_Int_Pointers_Unsafe;
 
    procedure Test_Int_Pointers is
-      R, R2 : Int_Pointers.Ref;
-      Int   : Integer;
+      N : NR;
+      R : Int_Pointers.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : Int_Pointers.Ref;
+         Int   : Integer;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set (C);
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  Int := R.Get.all;
+               end loop;
+
+            when Column_Ref =>
+               for C in 1 .. Count_Smart loop
+                  Int := R.Reference;
+               end loop;
+               
+            when others => null;
+         end case;
+      end Run;
    begin
-      Print ("Std");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (C);
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Get.all;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Reference;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("Std", N);
    end Test_Int_Pointers;
 
    procedure Test_Strings is
-      R, R2 : String_Pointers.Ref;
-      Str   : access String;
+      N : NR;
+      R : String_Pointers.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : String_Pointers.Ref;
+         Str   : access String;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set ("Foo");
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+               if R.Get.all /= "Foo" then
+                  raise Program_Error with "Got '" & R.Get.all & "'";
+               end if;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  Str := R.Get;
+               end loop;
+
+            when others => null;
+         end case;
+      end Run;
    begin
-      Print ("Std");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set ("Foo");
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      if R.Get.all /= "Foo" then
-         raise Program_Error with "Got '" & R.Get.all & "'";
-      end if;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Str := R.Get;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("Std", N);
    end Test_Strings;
 
    procedure Test_Int_Reference is
-      Int   : Integer;
-   begin
-      Print ("As Reftype");
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            R : Int_Pointers_Ref.Ref := Int_Pointers_Ref.Set (C);
-            pragma Unreferenced (R);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;  --  Set
+      N : NR;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
 
-      declare
-         R : Int_Pointers_Ref.Ref := Int_Pointers_Ref.Set (2);
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         Int   : Integer;
       begin
-         Start := Clock;
-         for C in 1 .. Count loop
-            declare
-               R2 : Int_Pointers_Ref.Ref := R;
-               pragma Unreferenced (R2);
-            begin
-               null;
-            end;
-         end loop;
-         Print_Time;  --  Assign
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  declare
+                     R : Int_Pointers_Ref.Ref := Int_Pointers_Ref.Set (C);
+                     pragma Unreferenced (R);
+                  begin
+                     null;
+                  end;
+               end loop;
 
-         Start := Clock;
-         Print_Time;  --  Get
+            when Column_Assign =>
+               declare
+                  R : Int_Pointers_Ref.Ref := Int_Pointers_Ref.Set (2);
+               begin
+                  for C in 1 .. Count_Smart loop
+                     declare
+                        R2 : Int_Pointers_Ref.Ref := R;
+                        pragma Unreferenced (R2);
+                     begin
+                        null;
+                     end;
+                  end loop;
+               end;
 
-         Start := Clock;
-         for C in 1 .. Count loop
-            Int := R;
-         end loop;
-         Print_Time;  -- Reference
-      end;
+            when Column_Ref =>
+               declare
+                  R : Int_Pointers_Ref.Ref := Int_Pointers_Ref.Set (2);
+               begin
+                  for C in 1 .. Count_Smart loop
+                     Int := R;
+                  end loop;
+               end;
 
-      Finish_Line;
+            when others => null;
+         end case;
+      end Run;
+   begin
+      All_Tests ("As Reftype", N);
    end Test_Int_Reference;
 
    procedure Test_Gnatcoll_Strings is
-      R, R2 : String_Pointers_Gnatcoll.Ref;
-      Str   : access String;
+      N : NR;
+      R : String_Pointers_Gnatcoll.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : String_Pointers_Gnatcoll.Ref;
+         Str   : access String;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set (String_Object'
+                          (RefCounted with Str => new String'("foo")));
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  Str := R.Get.Str;
+               end loop;
+
+            when others => Stdout.Print_Not_Run;
+         end case;
+      end Run;
    begin
-      Print ("GNATCOLL");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (String_Object'(Refcounted with Str => new String'("foo")));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Str := R.Get.Str;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("GNATCOLL str", N);
    end Test_Gnatcoll_Strings;
 
    procedure Test_Gnatcoll_Int is
-      R, R2 : Int_Pointers_Gnatcoll.Ref;
-      Int   : Integer;
+      N : NR;
+      R : Int_Pointers_Gnatcoll.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : Int_Pointers_Gnatcoll.Ref;
+         Int   : Integer;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set (Integer_Object'(RefCounted with Value => C));
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  Int := R.Get.Value;
+               end loop;
+
+            when others => Stdout.Print_Not_Run;
+         end case;
+      end Run;
    begin
-      Print ("GNATCOLL");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (Integer_Object'(Refcounted with Value => C));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         Int := R.Get.Value;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("GNATCOLL int", N);
    end Test_Gnatcoll_Int;
 
    procedure Test_Obj is
-      R, R2 : Obj_Pointers.Ref;
+      N : NR;
+      R : Obj_Pointers.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : Obj_Pointers.Ref;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set (Child'(Object with null record));
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  declare
+                     C : Object'Class := R.Get.all;
+                     pragma Unreferenced (C);
+                  begin
+                     null;
+                  end;
+               end loop;
+
+            when Column_Ref =>
+               for C in 1 .. Count_Smart loop
+                  declare
+                     C : Object'Class := R.Reference;
+                     pragma Unreferenced (C);
+                  begin
+                     null;
+                  end;
+               end loop;
+
+            when others => null;
+         end case;
+      end Run;
    begin
-      Print ("Std");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (Child'(Object with null record));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Get.all;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Reference;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("Std", N);
    end Test_Obj;
 
    procedure Test_Obj_Free is
-      R, R2 : Obj_Pointers_Free.Ref;
+      N : NR;
+      R : Obj_Pointers_Free.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : Obj_Pointers_Free.Ref;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set (Child'(Object with null record));
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  declare
+                     C : Object'Class := R.Get.all;
+                     pragma Unreferenced (C);
+                  begin
+                     null;
+                  end;
+               end loop;
+
+            when Column_Ref =>
+               for C in 1 .. Count_Smart loop
+                  declare
+                     C : Object'Class := R.Reference;
+                     pragma Unreferenced (C);
+                  begin
+                     null;
+                  end;
+               end loop;
+               
+            when others => null;
+         end case;
+      end Run;
    begin
-      Print ("Std Free");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (Child'(Object with null record));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Get.all;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Reference;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("Std Free", N);
    end Test_Obj_Free;
 
    procedure Test_Obj_Holders is
       package Holders is new Ada.Containers.Indefinite_Holders (Object'Class);
       use Holders;
-      R, R2 : Holder;
+
+      N : NR;
+      R : Holder;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : Holder;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R := To_Holder (Child'(Object with null record));
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Ref =>
+               for C in 1 .. Count_Smart loop
+                  declare
+                     C : Object'Class := R.Reference;
+                     pragma Unreferenced (C);
+                  begin
+                     null;
+                  end;
+               end loop;
+
+            when others => null;
+         end case;
+      end Run;
    begin
-      Print ("Holders");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R := To_Holder (Child'(Object with null record));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      Print_Time;  --  Get
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object'Class := R.Reference;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("Holders", N);
    end Test_Obj_Holders;
 
    procedure Test_Gnatcoll_Obj is
-      R, R2 : Obj_Pointers_Gnatcoll.Ref;
+      N : NR;
+      R : Obj_Pointers_Gnatcoll.Ref;
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (NR);
+
+      procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
+         R2 : Obj_Pointers_Gnatcoll.Ref;
+      begin
+         case Col is
+            when Column_Set =>
+               for C in 1 .. Count_Smart loop
+                  R.Set (Child2'(Object2 with null record));
+               end loop;
+
+            when Column_Assign =>
+               for C in 1 .. Count_Smart loop
+                  R2 := R;
+               end loop;
+
+            when Column_Get =>
+               for C in 1 .. Count_Smart loop
+                  declare
+                     C : Object2'Class := R.Get.all;
+                     pragma Unreferenced (C);
+                  begin
+                     null;
+                  end;
+               end loop;
+
+            when others => Stdout.Print_Not_Run;
+         end case;
+      end Run;
    begin
-      Print ("GNATCOLL");
-      Start := Clock;
-      for C in 1 .. Count loop
-         R.Set (Child2'(Object2 with null record));
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         R2 := R;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      for C in 1 .. Count loop
-         declare
-            C : Object2'Class := R.Get.all;
-            pragma Unreferenced (C);
-         begin
-            null;
-         end;
-      end loop;
-      Print_Time;
-
-      Start := Clock;
-      Print_Time;
-
-      Finish_Line;
+      All_Tests ("GNATCOLL obj", N);
    end Test_Gnatcoll_Obj;
 
    procedure Test_Weak_Ref is
@@ -490,27 +486,50 @@ procedure Main is
             end if;
          end;
       end;
-
    end Test_Weak_Ref;
 
+   Ref_None      : constant Performance_Counter := 1;
+   Ref_Set       : constant Performance_Counter := 2;
+   Ref_Assign    : constant Performance_Counter := 3;
+   Ref_Get       : constant Performance_Counter := 4;
+
 begin
+   Stdout.Setup
+      (Counters_Count => 4,
+       Columns  =>
+          (Column_Title  => (new String'(""),          13, True, Ref_None),
+           Column_Set    => (new String'("Set"),       7,  True, Ref_Set),
+           Column_Assign => (new String'("Assign"),    7,  True, Ref_Assign),
+           Column_Get    => (new String'("Get"),       7,  False, Ref_Get),
+           Column_Ref    => (new String'("Reference"), 9,  True, Ref_Get),
+           Column_Allocate => (new String'("Allocate"), 8, False,
+                             Last_Column_With_Test),
+           Column_Allocs   => (new String'("Allocs"), 8, False, Ref_None),
+           Column_Reallocs => (new String'("reall"),  5, False, Ref_None),
+           Column_Frees    => (new String'("frees"),  8, True, Ref_None)));
+   --  Stdout.Show_Percent := False;
+
    Put_Line ("Storing integers");
-   Print_Header;
+   Stdout.Print_Header;
    Test_Gnatcoll_Int;
+   Test_Shared_Int;
    Test_Int_Pointers_Unsafe;
    Test_Int_Pointers;
    Test_Int_Reference;
 
-   Reset;
+   Stdout.Reset;
+   New_Line;
    Put_Line ("Storing class wide");
    Test_Gnatcoll_Obj;
    Test_Obj_Holders;
    Test_Obj;
    Test_Obj_Free;
 
-   Reset;
+   Stdout.Reset;
+   New_Line;
    Put_Line ("Storing unconstrained array");
    Test_Gnatcoll_Strings;
+   Test_Shared_Str;
    Test_Strings;
 
    New_Line;
@@ -524,9 +543,7 @@ begin
    Test_Weak_Ref;
 
    --  for the sake of valgrind
-   for C of Columns loop
-      Free (C.Title);
-   end loop;
+   Stdout.Finalize;
    GNATCOLL.Traces.Finalize;
 
 end Main;

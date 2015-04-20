@@ -23,15 +23,6 @@ package body Perf_Support is
       (S (S'First) = 's');
    pragma Inline (Starts_With_Str);
 
-   generic
-      type Container (<>) is limited private;
-      with procedure Run
-         (Self : in out Container; Col : Test_Cols; Start : Time) is <>;
-   procedure Run_Tests
-      (Title : String;
-       Self : in out Container;
-       Fewer_Items : Boolean := False);
-
    procedure Assert (Count, Expected : Natural) with Inline => True;
 
    ------------
@@ -46,23 +37,6 @@ package body Perf_Support is
       end if;
    end Assert;
 
-   ---------------
-   -- Run_Tests --
-   ---------------
-
-   procedure Run_Tests
-      (Title       : String;
-       Self        : in out Container;
-       Fewer_Items : Boolean := False)
-   is
-   begin
-      Stdout.Start_Line (Title, Fewer_Items => Fewer_Items);
-      for Col in Test_Cols loop
-         Run (Self, Col, Start => Clock);
-      end loop;
-      Stdout.Print_Size (Self'Size);
-   end Run_Tests;
-
    -------------------------------
    -- Test_Lists_Int_Indefinite --
    -------------------------------
@@ -76,11 +50,11 @@ package body Perf_Support is
          (Cursors => Lists.Cursors.Forward);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It : Lists.Cursor;
          Co : Natural := 0;
@@ -92,7 +66,6 @@ package body Perf_Support is
                end loop;
                V2.Append (5);
                V2.Append (6);
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -124,7 +97,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -146,11 +120,11 @@ package body Perf_Support is
          (Cursors => Lists.Cursors.Forward);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It : Lists.Cursor;
          Co : Natural := 0;
@@ -162,7 +136,6 @@ package body Perf_Support is
                end loop;
                V2.Append (5);
                V2.Append (6);
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -195,7 +168,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -218,11 +192,11 @@ package body Perf_Support is
          (Cursors => Lists.Cursors.Forward);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It : Lists.Cursor;
          Co : Natural := 0;
@@ -234,7 +208,6 @@ package body Perf_Support is
                end loop;
                V2.Append (5);    --  testing withe prefix notation
                Append (V2, 6);   --  testing with Ada95 notation
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -266,7 +239,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -288,11 +262,11 @@ package body Perf_Support is
          (Cursors => Lists.Cursors.Forward);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It : Lists.Cursor;
          Co : Natural := 0;
@@ -304,7 +278,6 @@ package body Perf_Support is
                end loop;
                V2.Append (5);
                V2.Append (6);
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -337,7 +310,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -360,11 +334,11 @@ package body Perf_Support is
          (Cursors => Lists.Cursors.Forward);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It : Lists.Cursor;
          Co : Natural := 0;
@@ -376,7 +350,6 @@ package body Perf_Support is
                end loop;
                V2.Append (5);
                V2.Append (6);
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -408,7 +381,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -436,11 +410,11 @@ package body Perf_Support is
       pragma Inline (Starts_With_Str);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It : Lists.Cursor;
          Co : Natural := 0;
@@ -450,7 +424,6 @@ package body Perf_Support is
                for C in 1 .. Items_Count loop
                   V2.Append ("str1");
                end loop;
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -476,7 +449,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Starts_With_Str'Access), Items_Count);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -503,11 +477,11 @@ package body Perf_Support is
       pragma Inline (Ref_Starts_With_Str);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It    : Lists.Cursor;
          Co    : Natural := 0;
@@ -517,7 +491,6 @@ package body Perf_Support is
                for C in 1 .. Items_Count loop
                   V2.Append ("str1");
                end loop;
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -543,7 +516,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Ref_Starts_With_Str'Access), Items_Count);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -565,11 +539,11 @@ package body Perf_Support is
          (Cursors => Lists.Cursors.Forward);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V2 : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It    : Lists.Cursor;
          Co    : Natural := 0;
@@ -579,7 +553,6 @@ package body Perf_Support is
                for C in 1 .. Items_Count loop
                   V2.Append ("str1");
                end loop;
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -605,7 +578,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V2, Starts_With_Str'Access), Items_Count);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -627,11 +601,11 @@ package body Perf_Support is
          (Cursors => Adaptors.Cursors.Forward);
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It    : Lists.Cursor;
          Co    : Natural := 0;
@@ -641,7 +615,6 @@ package body Perf_Support is
                for C in 1 .. Items_Count loop
                   V.Append ("str1");
                end loop;
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -673,7 +646,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V, Starts_With_Str'Access), Items_Count);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -695,10 +669,12 @@ package body Perf_Support is
       function Count_If is new Conts.Algorithms.Count_If
          (Cursors => Adaptors.Cursors.Forward);
 
-      procedure Run (V : in out Int_Array; Col : Test_Cols; Start : Time);
+      procedure Run (V : in out Int_Array; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Int_Array);
 
-      procedure Run (V : in out Int_Array; Col : Test_Cols; Start : Time) is
+      procedure Run
+         (V : in out Int_Array; Col : Column_Number; Start : Time)
+      is
          Co : Natural := 0;
       begin
          case Col is
@@ -708,7 +684,6 @@ package body Perf_Support is
                end loop;
                V (V'Last - 1) := 5;
                V (V'Last) := 6;
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -738,7 +713,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -759,11 +735,11 @@ package body Perf_Support is
          (Cursors => Adaptors.Cursors.Forward);
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It    : Lists.Cursor;
          Co    : Natural := 0;
@@ -775,7 +751,6 @@ package body Perf_Support is
                end loop;
                V.Append (5);
                V.Append (6);
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -807,7 +782,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -829,11 +805,11 @@ package body Perf_Support is
          (Cursors => Adaptors.Cursors.Forward);
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          It    : Lists.Cursor;
          Co    : Natural := 0;
@@ -845,7 +821,6 @@ package body Perf_Support is
                end loop;
                V.Append (5);
                V.Append (6);
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Copy =>
                declare
@@ -877,7 +852,8 @@ package body Perf_Support is
 
             when Column_Count_If =>
                Assert (Count_If (V, Predicate'Access), 2);
-               Stdout.Print_Time (Clock - Start);
+
+            when others => null;
          end case;
       end Run;
 
@@ -895,11 +871,11 @@ package body Perf_Support is
       use Lists;
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time);
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time);
       procedure All_Tests is new Run_Tests (Lists.List'Class);
 
       procedure Run
-         (V : in out Lists.List'Class; Col : Test_Cols; Start : Time)
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time)
       is
          Co    : Natural := 0;
       begin
@@ -910,7 +886,6 @@ package body Perf_Support is
                end loop;
                V.Append (5);
                V.Append (6);
-               Stdout.Print_Time (Clock - Start);
 
             when Column_Loop =>
                declare

@@ -4,8 +4,24 @@ with QGen;          use QGen;
 with Report;        use Report;
 
 procedure Perf is
+   Ref_None : constant Performance_Counter := 1;
+   Ref_Fill : constant Performance_Counter := 2;
+   Ref_Loop : constant Performance_Counter := 3;
 begin
-   Stdout.Show_Percent := True;
+   Stdout.Setup
+      (Counters_Count => 3,
+       Columns        =>
+          (Column_Title    => (new String'(""),         10, True,  Ref_None),
+           Column_Fill     => (new String'("fill"),     6,  False, Ref_Fill),
+           Column_Copy     => (new String'("copy"),     6,  True,  Ref_Fill),
+           Column_Loop     => (new String'("loop"),     5,  False, Ref_Loop),
+           Column_For_Of   => (new String'("for..of"),  8,  False, Ref_Loop),
+           Column_Count_If => (new String'("count"),    5,  True,  Ref_Loop),
+           Column_Allocate => (new String'("allocate"), 8,  False,
+                               Last_Column_With_Test),
+           Column_Allocs   => (new String'("allocs"),   8,  False, Ref_None),
+           Column_Reallocs => (new String'("real"),     4,  False, Ref_None),
+           Column_Frees    => (new String'("frees"),    8,  True,  Ref_None)));
 
    Put_Line ("+--------- lists of integers");
    Stdout.Print_Header;
@@ -41,4 +57,6 @@ begin
    Put_Line ("(4): Using Reference_Type (unconstrained type, slower)");
 
    Test_QGen;
+
+   Stdout.Finalize;
 end Perf;

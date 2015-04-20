@@ -3,7 +3,10 @@ with Refcount_Ref;        use Refcount_Ref;
 with GNATCOLL.Refcount;   use GNATCOLL.Refcount;
 with GNAT.Strings;        use GNAT.Strings;
 
-package Support is
+package Ref_Support is
+
+   Count_Smart : constant Integer := 1_000_000;
+   pragma Export (C, Count_Smart, "items_count_for_smart_pointers");
 
    --------------
    -- Refcount --
@@ -64,4 +67,4 @@ package Support is
    package String_Pointers_Gnatcoll is new GNATCOLL.Refcount.Smart_Pointers
       (String_Object);
 
-end Support;
+end Ref_Support;

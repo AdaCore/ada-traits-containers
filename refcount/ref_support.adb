@@ -1,4 +1,4 @@
-package body Support is
+package body Ref_Support is
 
    procedure Free (Self : in out Object) is
    begin
@@ -20,4 +20,4 @@ package body Support is
       GNAT.Strings.Free (Str.Str);
    end Free;
 
-end Support;
+end Ref_Support;
