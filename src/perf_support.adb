@@ -656,6 +656,75 @@ package body Perf_Support is
       All_Tests ("Ada iu", V);
    end Test_Ada2012_Str;
 
+   --------------------------------
+   -- Test_Ada2012_Str_No_Checks --
+   --------------------------------
+
+   procedure Test_Ada2012_Str_No_Checks is
+      pragma Suppress (Container_Checks);
+      package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
+         (String);
+      use Lists;
+      package Adaptors is new Indefinite_List_Adaptors (Lists);
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Adaptors.Cursors.Forward);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time)
+      is
+         It    : Lists.Cursor;
+         Co    : Natural := 0;
+      begin
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count loop
+                  V.Append ("str1");
+               end loop;
+
+            when Column_Copy =>
+               declare
+                  V_Copy : constant Lists.List'Class  := V;
+                  pragma Unreferenced (V_Copy);
+               begin
+                  Stdout.Print_Time (Clock - Start);
+               end;
+
+            when Column_Loop =>
+               It := V.First;
+               while Has_Element (It) loop
+                  if Starts_With_Str (Element (It)) then  --  secondary stack
+                     Co := Co + 1;
+                  end if;
+                  Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
+
+            when Column_For_Of =>
+               for E of V loop
+                  if Starts_With_Str (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
+
+            when Column_Count_If =>
+               Assert (Count_If (V, Starts_With_Str'Access), Items_Count);
+
+            when others => null;
+         end case;
+      end Run;
+
+      V  : Lists.List;
+   begin
+      All_Tests ("Ada iu no", V);
+   end Test_Ada2012_Str_No_Checks;
+
    ---------------------
    -- Test_Arrays_Int --
    ---------------------
@@ -791,6 +860,76 @@ package body Perf_Support is
    begin
       All_Tests ("Ada du", V);
    end Test_Ada2012_Int;
+
+   --------------------------------
+   -- Test_Ada2012_Int_No_Checks --
+   --------------------------------
+
+   procedure Test_Ada2012_Int_No_Checks is
+      pragma Suppress (Container_Checks);
+      package Lists is new Ada.Containers.Doubly_Linked_Lists (Integer);
+      use Lists;
+      package Adaptors is new List_Adaptors (Lists);
+      function Count_If is new Conts.Algorithms.Count_If
+         (Cursors => Adaptors.Cursors.Forward);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time);
+      procedure All_Tests is new Run_Tests (Lists.List'Class);
+
+      procedure Run
+         (V : in out Lists.List'Class; Col : Column_Number; Start : Time)
+      is
+         It    : Lists.Cursor;
+         Co    : Natural := 0;
+      begin
+         case Col is
+            when Column_Fill =>
+               for C in 1 .. Items_Count - 2 loop
+                  V.Append (2);
+               end loop;
+               V.Append (5);
+               V.Append (6);
+
+            when Column_Copy =>
+               declare
+                  V_Copy : constant Lists.List'Class := V;
+                  pragma Unreferenced (V_Copy);
+               begin
+                  Stdout.Print_Time (Clock - Start);
+               end;
+
+            when Column_Loop =>
+               It := V.First;
+               while Has_Element (It) loop
+                  if Predicate (Element (It)) then
+                     Co := Co + 1;
+                  end if;
+                  Next (It);
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
+
+            when Column_For_Of =>
+               for E of V loop
+                  if Predicate (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, 2);
+
+            when Column_Count_If =>
+               Assert (Count_If (V, Predicate'Access), 2);
+
+            when others => null;
+         end case;
+      end Run;
+
+      V  : Lists.List;
+   begin
+      All_Tests ("Ada du no", V);
+   end Test_Ada2012_Int_No_Checks;
 
    ---------------------------------
    -- Test_Ada2012_Int_Indefinite --

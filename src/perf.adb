@@ -28,6 +28,7 @@ begin
    Test_Cpp_Int;
    Test_Arrays_Int;
    Test_Ada2012_Int;
+   Test_Ada2012_Int_No_Checks;
    Test_Ada2012_Int_Indefinite;
    Test_Tagged_Int;
    Test_Lists_Int;
@@ -42,6 +43,7 @@ begin
    Stdout.Print_Header;
    Test_Cpp_Str;
    Test_Ada2012_Str;
+   Test_Ada2012_Str_No_Checks;
    Test_Lists_Str;
    Test_Lists_Str_Reference;
    Test_Lists_Str_Access;
@@ -51,6 +53,7 @@ begin
    Put_Line
       ("d/i: (in)definite b/u/s: (un)bounded/spark"
       & " (c/l): controlled/limited");
+   Put_Line ("no: using pragma suppress(container_checks)");
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
    Put_Line ("(2): Iterable does not support unconstrained elements");
    Put_Line ("(3): Using Stored_Element (less safe, user can free pointer)");

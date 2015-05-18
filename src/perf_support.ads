@@ -122,8 +122,10 @@ package Perf_Support is
    --  Perform C++ testing
 
    procedure Test_Ada2012_Int;
+   procedure Test_Ada2012_Int_No_Checks;
    procedure Test_Ada2012_Int_Indefinite;
    procedure Test_Ada2012_Str;
+   procedure Test_Ada2012_Str_No_Checks;
    --  Test Ada2012 containers
 
    procedure Test_Arrays_Int;
