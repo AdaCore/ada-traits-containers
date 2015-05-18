@@ -55,7 +55,6 @@ begin
       & " (c/l): controlled/limited");
    Put_Line ("no: using pragma suppress(container_checks)");
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
-   Put_Line ("(2): Iterable does not support unconstrained elements");
    Put_Line ("(3): Using Stored_Element (less safe, user can free pointer)");
    Put_Line ("(4): Using Reference_Type (unconstrained type, slower)");
 

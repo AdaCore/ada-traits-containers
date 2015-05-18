@@ -445,7 +445,13 @@ package body Perf_Support is
                Assert (Co, Items_Count);
 
             when Column_For_Of =>
-               Stdout.Print_Not_Run ("(2)");
+               for E of V2 loop
+                  if Starts_With_Str (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
             when Column_Count_If =>
                Assert (Count_If (V2, Starts_With_Str'Access), Items_Count);
@@ -512,7 +518,13 @@ package body Perf_Support is
                Assert (Co, Items_Count);
 
             when Column_For_Of =>
-               Stdout.Print_Not_Run ("(2)");
+               for E of V2 loop
+                  if Starts_With_Str (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
             when Column_Count_If =>
                Assert (Count_If (V2, Ref_Starts_With_Str'Access), Items_Count);
@@ -574,7 +586,13 @@ package body Perf_Support is
                Assert (Co, Items_Count);
 
             when Column_For_Of =>
-               Stdout.Print_Not_Run ("(2)");
+               for E of V2 loop
+                  if Starts_With_Str (E) then
+                     Co := Co + 1;
+                  end if;
+               end loop;
+               Stdout.Print_Time (Clock - Start);
+               Assert (Co, Items_Count);
 
             when Column_Count_If =>
                Assert (Count_If (V2, Starts_With_Str'Access), Items_Count);
