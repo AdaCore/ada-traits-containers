@@ -269,6 +269,23 @@ Todo
 
   * A version of some algorithms that are multi-threaded
 
+  * Indefinite_Element_Traits: move Element_Access to private part of nested
+    package (for SPARK)
+    For SPARK, the reference_type will be a null record, since SPARK cannot
+    use access types anyway.
+
+  * Remove Stored_Element from conts-lists.ads (not needed now that reference
+    types are as fast as pointers)
+
+  * Rename the formal parameter Reference_Type to a more general name, since
+    it need now be implemented as a reference_type. For instance, in the case
+    of definite elements, it is directly the element_type (which in fact does
+    not allow modifying the element, so might not be appropriate).
+    Can we implement the reference types outside of the element_traits
+    package, to simplify them ?
+
+  * Use the Variable_Indexing aspect on containers
+
   * QT containers provide copy-on-write. When a type is "movable", they use
     realloc, by increments of page size (4096 bytes), since modern operating
     systems will not copy the memory in such case but simply reorder the
