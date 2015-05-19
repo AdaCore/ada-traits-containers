@@ -17,7 +17,7 @@ project Default is
    end Builder;
 
    package Compiler is
-      Common_Ada_Switches := ("-gnaty", "-gnatwu", "-gnat12", "-g", "-s");
+      Common_Ada_Switches := ("-gnaty", "-gnatwu", "-gnat12", "-g");
 
       case Mode is
          when "Production" =>

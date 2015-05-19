@@ -1,4 +1,4 @@
-package body Conts.Lists.Indefinite_Unbounded_SPARK is
+package body Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode => Off is
 
    ----------
    -- Copy --

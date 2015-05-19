@@ -8,7 +8,7 @@
 pragma Ada_2012;
 with Ada.Finalization; use Ada.Finalization;
 
-package Conts.Lists is
+package Conts.Lists with SPARK_Mode is
 
    type Controlled_Base_List is abstract new Controlled with null record;
    type Limited_Base_List is abstract tagged limited null record;
@@ -99,7 +99,7 @@ package Conts.Lists is
       --  Replace all nodes in Nodes with a copy of the nodes in Source.
       --  The elements themselves need to be copied (via Elements.Copy).
 
-   package List_Nodes_Traits is
+   package List_Nodes_Traits with SPARK_Mode is
       --  pragma Unreferenced (Null_Access, Allocate, Get_Element, Get_Next);
       --  pragma Unreferenced (Get_Previous, Set_Next, Set_Previous);
       --  ??? Other packages need those, but the compiler is complaining that
@@ -115,7 +115,7 @@ package Conts.Lists is
    generic
       with package Elements is new Elements_Traits (<>);
       type Controlled_Or_Limited is abstract tagged limited private;
-   package Bounded_List_Nodes_Traits is
+   package Bounded_List_Nodes_Traits with SPARK_Mode is
 
       subtype Stored_Element_Type is Elements.Stored_Element_Type;
 
@@ -188,7 +188,7 @@ package Conts.Lists is
    generic
       with package Elements is new Elements_Traits (<>);
       type Controlled_Or_Limited is abstract tagged limited private;
-   package Unbounded_List_Nodes_Traits is
+   package Unbounded_List_Nodes_Traits with SPARK_Mode => Off is
 
       subtype Nodes_Container is Controlled_Or_Limited;
       --  type Nodes_Container is null record;
@@ -251,7 +251,7 @@ package Conts.Lists is
    generic
       with package Elements is new Elements_Traits (<>);
       type Controlled_Or_Limited is abstract tagged limited private;
-   package SPARK_Unbounded_List_Nodes_Traits is
+   package SPARK_Unbounded_List_Nodes_Traits with SPARK_Mode is
 
       type Node_Access is new Count_Type;
       Null_Node_Access : constant Node_Access := 0;
@@ -261,57 +261,72 @@ package Conts.Lists is
       end record;
 
       type Big_Nodes_Array is array (1 .. Count_Type'Last) of Node;
-      type Nodes_Array_Access is access Big_Nodes_Array;
-      for Nodes_Array_Access'Storage_Size use 0;
-      --  The nodes is a pointer so that we can use realloc
+      package Private_Nodes_List with SPARK_Mode is
+         type Nodes_List is abstract new Controlled_Or_Limited with private;
 
-      type Nodes_List is abstract new Controlled_Or_Limited with record
-         Nodes : Nodes_Array_Access := null;
-         Last  : Count_Type := 0;  --  Last valid index in Nodes
-         Free  : Integer := 0;     --  head of free nodes list
-         --  For a negative value, its absolute value points to the first free
-         --  element
-      end record;
-
-      procedure Allocate
-         (Self    : in out Nodes_List'Class;
-          Element : Elements.Stored_Element_Type;
-          N       : out Node_Access);   --  not inlined
-      procedure Release (Self : in out Nodes_List'Class);
-      procedure Release_Node
-         (Self : in out Nodes_List'Class; N : in out Node_Access) is null;
-      function Get_Element
-         (Self : Nodes_List'Class; N : Node_Access)
-         return Elements.Stored_Element_Type
-         is (Self.Nodes (Count_Type (N)).Element);
-      function Get_Next
-         (Self : Nodes_List'Class; N : Node_Access) return Node_Access
-         is (Self.Nodes (Count_Type (N)).Next);
-      function Get_Previous
-         (Self : Nodes_List'Class; N : Node_Access) return Node_Access
-         is (Self.Nodes (Count_Type (N)).Previous);
-      procedure Set_Next
-         (Self : in out Nodes_List'Class; N, Next : Node_Access);
-      procedure Set_Previous
-         (Self : in out Nodes_List'Class; N, Previous : Node_Access);
-      function Capacity (Self : Nodes_List'Class) return Count_Type
+         procedure Allocate
+           (Self    : in out Nodes_List'Class;
+            Element : Elements.Stored_Element_Type;
+            N       : out Node_Access);   --  not inlined
+         procedure Release (Self : in out Nodes_List'Class);
+         procedure Release_Node
+           (Self : in out Nodes_List'Class; N : in out Node_Access) is null;
+         function Get_Element
+           (Self : Nodes_List'Class; N : Node_Access)
+          return Elements.Stored_Element_Type;
+         function Get_Next
+           (Self : Nodes_List'Class; N : Node_Access) return Node_Access;
+         function Get_Previous
+           (Self : Nodes_List'Class; N : Node_Access) return Node_Access;
+         procedure Set_Next
+           (Self : in out Nodes_List'Class; N, Next : Node_Access);
+         procedure Set_Previous
+           (Self : in out Nodes_List'Class; N, Previous : Node_Access);
+         function Capacity (Self : Nodes_List'Class) return Count_Type
          is (Count_Type'Last);
-      procedure Assign
-         (Nodes    : in out Nodes_List'Class;
-          Source   : Nodes_List'Class;
-          New_Head : out Node_Access;
-          Old_Head : Node_Access;
-          New_Tail : out Node_Access;
-          Old_Tail : Node_Access);
-      pragma Inline (Set_Next, Set_Previous, Capacity);
-      pragma Inline (Get_Element, Get_Next, Get_Previous);
+         procedure Assign
+           (Nodes    : in out Nodes_List'Class;
+            Source   : Nodes_List'Class;
+            New_Head : out Node_Access;
+            Old_Head : Node_Access;
+            New_Tail : out Node_Access;
+            Old_Tail : Node_Access);
+         pragma Inline (Set_Next, Set_Previous, Capacity);
+         pragma Inline (Get_Element, Get_Next, Get_Previous);
+      private
+         pragma SPARK_Mode (Off);
+         type Nodes_Array_Access is access Big_Nodes_Array;
+         for Nodes_Array_Access'Storage_Size use 0;
+         --  The nodes is a pointer so that we can use realloc
+
+         type Nodes_List is abstract new Controlled_Or_Limited with record
+            Nodes : Nodes_Array_Access := null;
+            Last  : Count_Type := 0;  --  Last valid index in Nodes
+            Free  : Integer := 0;     --  head of free nodes list
+            --  For a negative value, its absolute value points to the first
+            --  free element
+         end record;
+
+         function Get_Element
+           (Self : Nodes_List'Class; N : Node_Access)
+          return Elements.Stored_Element_Type
+         is (Self.Nodes (Count_Type (N)).Element);
+         function Get_Next
+           (Self : Nodes_List'Class; N : Node_Access) return Node_Access
+         is (Self.Nodes (Count_Type (N)).Next);
+         function Get_Previous
+           (Self : Nodes_List'Class; N : Node_Access) return Node_Access
+         is (Self.Nodes (Count_Type (N)).Previous);
+      end Private_Nodes_List;
+
+      use Private_Nodes_List;
 
       package Nodes is new List_Nodes_Traits
-         (Elements     => Elements,
-          Container    => Nodes_List,
-          Node_Access  => Node_Access,
-          Null_Access  => Null_Node_Access,
-          Allocate     => Allocate);
+        (Elements     => Elements,
+         Container    => Nodes_List,
+         Node_Access  => Node_Access,
+         Null_Access  => Null_Node_Access,
+         Allocate     => Allocate);
    end SPARK_Unbounded_List_Nodes_Traits;
 
    -----------
@@ -336,7 +351,7 @@ package Conts.Lists is
       --  If True, extra asserts are added to the code. Apart from them, this
       --  code runs with all compiler checks disabled.
 
-   package Generic_Lists is
+   package Generic_Lists  with SPARK_Mode is
       type List is new Nodes.Container with private;
       --  We do not define the Iterable aspect here: this is not allowed,
       --  since the parent type is a generic formal parameter. Instead, we
@@ -351,7 +366,7 @@ package Conts.Lists is
          (Self    : in out List'Class;
           Element : Element_Type)
          with Global => null,
-              Pre    => Length (Self) + 1 <= Capacity (Self);
+              Pre    => Length (Self) <= Capacity (Self) - 1;
       --  Append a new element to the list.
       --  Complexity: O(1)
       --  Raises: Storage_Error if Enable_Asserts is True and the node can't
@@ -449,6 +464,7 @@ package Conts.Lists is
       --  using an explicit cursor.
 
    private
+      pragma SPARK_Mode (Off);
       procedure Adjust (Self : in out List);
       procedure Finalize (Self : in out List);
       --  In case the list is a controlled type, but irrelevant when the list
@@ -471,7 +487,7 @@ package Conts.Lists is
    generic
       with package Lists is new Generic_Lists (<>);
       type List (<>) is new Lists.List with private;
-   package List_Cursors is
+   package List_Cursors with SPARK_Mode is
       --  Convenient package for creating the cursors traits for a list.
       --  These cursor traits cannot be instantiated in Generic_Lists itself,
       --  since the List type is frozen too late.
@@ -488,22 +504,27 @@ package Conts.Lists is
          is (Lists.First (Self));
       function Cursors_Element
          (Self : List'Class; Position : Cursor) return Element_Type
-         is (Lists.Element (Self, Position));
+         is (Lists.Element (Self, Position))
+      with Pre => Lists.Has_Element (Self, Position);
       function Cursors_Stored_Element (Self : List'Class; Position : Cursor)
          return Stored_Element_Type
-         is (Lists.Stored_Element (Self, Position));
+         is (Lists.Stored_Element (Self, Position))
+      with Pre => Lists.Has_Element (Self, Position);
       function Cursors_Reference (Self : List'Class; Position : Cursor)
          return Reference_Type
-         is (Lists.Reference (Self, Position));
+         is (Lists.Reference (Self, Position))
+      with Pre => Lists.Has_Element (Self, Position);
       function Cursors_Has_Element
          (Self : List'Class; Position : Cursor) return Boolean
          is (Lists.Has_Element (Self, Position));
       function Cursors_Next
          (Self : List'Class; Position : Cursor) return Cursor
-         is (Lists.Next (Self, Position));
+         is (Lists.Next (Self, Position))
+      with Pre => Lists.Has_Element (Self, Position);
       function Cursors_Previous
          (Self : List'Class; Position : Cursor) return Cursor
-         is (Lists.Previous (Self, Position));
+         is (Lists.Previous (Self, Position))
+      with Pre => Lists.Has_Element (Self, Position);
       pragma Inline (Cursors_First, Cursors_Element, Cursors_Has_Element);
       pragma Inline (Cursors_Next, Cursors_Previous);
 

@@ -1,7 +1,7 @@
 pragma Ada_2012;
 with Ada.Unchecked_Deallocation;
 
-package Conts is
+package Conts with SPARK_Mode is
 
    subtype Count_Type is Natural;
 
@@ -114,6 +114,48 @@ package Conts is
           Get_Reference       => Get_Reference,
           Release             => Unchecked_Free);
    end Indefinite_Elements_Traits;
+
+   -----------------------------------------------
+   -- Indefinite (unconstrained) SPARK elements --
+   -----------------------------------------------
+
+   generic
+      type Element_Type (<>) is private;
+   package Indefinite_Elements_Traits_SPARK with SPARK_Mode => On is
+      package Private_Element_Access with SPARK_Mode => On is
+         type Element_Access is private;
+         function To_Element_Access (E : Element_Type) return Element_Access;
+         function To_Element_Type (E : Element_Access) return Element_Type;
+         procedure Unchecked_Free (X : in out Element_Access);
+      private
+         pragma SPARK_Mode (Off);
+         type Element_Access is access all Element_Type;
+         function To_Element_Access (E : Element_Type) return Element_Access
+         is (new Element_Type'(E));
+         function To_Element_Type (E : Element_Access) return Element_Type
+         is (E.all);
+         pragma Inline (To_Element_Access, To_Element_Type);
+      end Private_Element_Access;
+
+      use Private_Element_Access;
+
+      type Reference_Type is null record;
+      --  No reference type in SPARK.
+
+      function Get_Reference (E : Element_Access) return Reference_Type
+         is (Reference_Type'(null record));
+      pragma Inline (Get_Reference);
+
+      package Elements is new Elements_Traits
+         (Element_Type        => Element_Type,
+          Stored_Element_Type => Element_Access,
+          Convert_From        => To_Element_Access,
+          Convert_To          => To_Element_Type,
+          Use_Implicit_Copy   => False,
+          Reference_Type      => Reference_Type,
+          Get_Reference       => Get_Reference,
+          Release             => Unchecked_Free);
+   end Indefinite_Elements_Traits_SPARK;
 
    -------------
    -- Cursors --

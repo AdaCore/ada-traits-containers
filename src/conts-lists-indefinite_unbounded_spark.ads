@@ -10,9 +10,9 @@ generic
 
    Enable_Asserts : Boolean := False;
 
-package Conts.Lists.Indefinite_Unbounded_SPARK is
+package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
 
-   package Elements is new Indefinite_Elements_Traits (Element_Type);
+   package Elements is new Indefinite_Elements_Traits_SPARK (Element_Type);
    package Nodes is new SPARK_Unbounded_List_Nodes_Traits
       (Elements              => Elements.Elements,
        Controlled_Or_Limited => Limited_Base_List);
