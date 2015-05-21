@@ -1,3 +1,24 @@
+------------------------------------------------------------------------------
+--                     Copyright (C) 2015, AdaCore                          --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- As a special exception under Section 7 of GPL version 3, you are granted --
+-- additional permissions described in the GCC Runtime Library Exception,   --
+-- version 3.1, as published by the Free Software Foundation.               --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
 pragma Ada_2012;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
@@ -415,7 +436,7 @@ package body Conts.Lists with SPARK_Mode => Off is
       begin
          while Self.Has_Element (C) loop
             N := Self.Next (C);
-            E := Self.Stored_Element (C);
+            E := Get_Element (Self, C.Current);
             Elements.Release (E);
             Nodes.Release_Node (Self, C.Current);
             C := N;
@@ -452,27 +473,21 @@ package body Conts.Lists with SPARK_Mode => Off is
       function Element
          (Self : List'Class; Position : Cursor) return Element_Type is
       begin
-         if Enable_Asserts and then Position.Current = Null_Access then
-            raise Program_Error with "Invalid position in list";
-         end if;
-
+         --  Precondition ensures there is an element at that position
          return Nodes.Elements.Convert_To
             (Get_Element (Self, Position.Current));
       end Element;
 
-      --------------------
-      -- Stored_Element --
-      --------------------
+      ---------------
+      -- Reference --
+      ---------------
 
-      function Stored_Element
-         (Self : List'Class; Position : Cursor) return Stored_Element_Type is
+      function Reference
+         (Self : List'Class; Position : Cursor) return Reference_Type is
       begin
-         if Enable_Asserts and then Position.Current = Null_Access then
-            raise Program_Error with "Invalid position in list";
-         end if;
-
-         return Get_Element (Self, Position.Current);
-      end Stored_Element;
+         return Nodes.Elements.Get_Reference
+            (Get_Element (Self, Position.Current));
+      end Reference;
 
       -----------------
       -- Has_Element --

@@ -1,3 +1,24 @@
+------------------------------------------------------------------------------
+--                     Copyright (C) 2015, AdaCore                          --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- As a special exception under Section 7 of GPL version 3, you are granted --
+-- additional permissions described in the GCC Runtime Library Exception,   --
+-- version 3.1, as published by the Free Software Foundation.               --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
 with Ada.Text_IO;   use Ada.Text_IO;
 with Perf_Support;  use Perf_Support;
 with QGen;          use QGen;
@@ -48,7 +69,6 @@ begin
    Test_Ada2012_Str_No_Checks (Stdout);
    Test_Lists_Str (Stdout);
    Test_Lists_Str_Reference (Stdout);
-   Test_Lists_Str_Access (Stdout);
    Stdout.Finish_Line;
 
    New_Line;
@@ -57,7 +77,6 @@ begin
       & " (c/l): controlled/limited");
    Put_Line ("no: using pragma suppress(container_checks)");
    Put_Line ("(1): slower because Iterable aspect needs primitive operations");
-   Put_Line ("(3): Using Stored_Element (less safe, user can free pointer)");
    Put_Line ("(4): Using Reference_Type (unconstrained type, slower)");
 
    Test_QGen;

@@ -274,9 +274,6 @@ Todo
     For SPARK, the reference_type will be a null record, since SPARK cannot
     use access types anyway.
 
-  * Remove Stored_Element from conts-lists.ads (not needed now that reference
-    types are as fast as pointers)
-
   * Rename the formal parameter Reference_Type to a more general name, since
     it need now be implemented as a reference_type. For instance, in the case
     of definite elements, it is directly the element_type (which in fact does
@@ -303,35 +300,6 @@ Todo
 
 Performance results
 -------------------
-
-+--------- lists of integers
-          |fill  |copy  |loop |for..of |count|allocate|allocs  |real|frees   |
-C++       | 100% | 85%  | 100%| 220%   | 115%|        |        |    | 0      |
-Array     | 2%   | 0%   | 26% | 23%    | 24% | 9600kb | 0      | 0  | 0      |
-Ada du    | 90%  | 88%  | 105%| 1931%  | 93% | 14400kb| 600000 | 0  | 600000 |
-Ada iu    | 172% | 159% | 141%| 1925%  | 136%| 16800kb| 1200000| 0  | 1200000|
-Tagged    | 88%  |      | 218%|        |     | 7200kb | 300000 | 0  | 300000 |
-List duc  | 80%  | 78%  | 108%| 210%(1)| 91% | 14400kb| 600000 | 0  | 600000 |
-List iuc  | 149% | 167% | 138%| 198%(1)| 141%| 16800kb| 1200000| 0  | 1200000|
-List isl  | 84%  | 81%  | 87% | 212%(1)| 97% | 22309kb| 600002 | 31 | 600002 |
-List dbc  | 8%   | 7%   | 83% | 214%(1)| 68% | 28800kb| 0      | 0  | 0      |
-List dbl  | 8%   | 1%   | 73% | 193%(1)| 65% | 28800kb| 0      | 0  | 0      |
-
-+--------- lists of strings or std::string
-          |fill  |copy  |loop |for..of |count|allocate|allocs  |real|frees   |
-C++       | 100% | 54%  | 100%| 317%   | 126%|        |        |    | 0      |
-Ada iu    | 96%  | 90%  | 304%| 883%   | 388%| 26400kb| 1200000| 0  | 1200000|
-List iuc  | 79%  | 106% | 250%|(2)     | 251%| 26400kb| 1200000| 0  | 1200000|
-List iuc 4| 82%  | 99%  | 170%|(2)     | 161%| 26400kb| 1200000| 0  | 1200000|
-List iuc 3| 74%  | 103% | 60% |(2)     | 61% | 26400kb| 1200000| 0  | 1200000|
-
-d/i: (in)definite b/u/s: (un)bounded/spark (c/l): controlled/limited
-(1): slower because Iterable aspect needs primitive operations
-(2): Iterable does not support unconstrained elements
-(3): Using Stored_Element (less safe, user can free pointer)
-(4): Using Reference_Type (unconstrained type, slower)
-
-
 
 A previous experiment shows the importance of the cache in such tests: using
 a single-linked-list instead of a doubly-linked list takes the following time

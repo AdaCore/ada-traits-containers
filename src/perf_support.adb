@@ -1,3 +1,25 @@
+------------------------------------------------------------------------------
+--                     Copyright (C) 2015, AdaCore                          --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- As a special exception under Section 7 of GPL version 3, you are granted --
+-- additional permissions described in the GCC Runtime Library Exception,   --
+-- version 3.1, as published by the Free Software Foundation.               --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
+pragma Ada_2012;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Calendar;       use Ada.Calendar;
@@ -391,79 +413,6 @@ package body Perf_Support is
       All_Tests (Stdout, "List dbc", V, Fewer_Items => True);
       V.Clear;   --  Need explicit deallocation, this is limited
    end Test_Lists_Bounded;
-
-   ---------------------------
-   -- Test_Lists_Str_Access --
-   ---------------------------
-
-   procedure Test_Lists_Str_Access (Stdout : in out Output'Class) is
-      package Lists is new Conts.Lists.Indefinite_Unbounded
-         (Element_Type   => String,
-          Enable_Asserts => False);
-      use Lists;
-      function Count_If is new Conts.Algorithms.Count_If
-         (Cursors => Lists.Cursors.Forward_Stored);
-
-      function Starts_With_Str
-         (S : Lists.Cursors.Stored_Element_Type) return Boolean
-         is (S (S'First) = 's');
-      pragma Inline (Starts_With_Str);
-
-      procedure Run
-         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time);
-      procedure All_Tests is new Run_Tests (Lists.List'Class);
-
-      procedure Run
-         (V2 : in out Lists.List'Class; Col : Column_Number; Start : Time)
-      is
-         It : Lists.Cursor;
-         Co : Natural := 0;
-      begin
-         case Col is
-            when Column_Fill =>
-               for C in 1 .. Items_Count loop
-                  V2.Append ("str1");
-               end loop;
-
-            when Column_Copy =>
-               declare
-                  V_Copy : constant Lists.List'Class := V2;
-                  pragma Unreferenced (V_Copy);
-               begin
-                  Stdout.Print_Time (Clock - Start);
-               end;
-
-            when Column_Loop =>
-               It := V2.First;
-               while V2.Has_Element (It) loop
-                  if Starts_With_Str (V2.Stored_Element (It).all) then
-                     Co := Co + 1;
-                  end if;
-                  It := V2.Next (It);
-               end loop;
-               Stdout.Print_Time (Clock - Start);
-               Assert (Co, Items_Count);
-
-            when Column_For_Of =>
-               for E of V2 loop
-                  if Starts_With_Str (E) then
-                     Co := Co + 1;
-                  end if;
-               end loop;
-               Stdout.Print_Time (Clock - Start);
-               Assert (Co, Items_Count);
-
-            when Column_Count_If =>
-               Assert (Count_If (V2, Starts_With_Str'Access), Items_Count);
-
-            when others => null;
-         end case;
-      end Run;
-
-      V : Lists.List;
-   begin
-      All_Tests (Stdout, "List iuc 3", V);
-   end Test_Lists_Str_Access;
 
    ------------------------------
    -- Test_Lists_Str_Reference --

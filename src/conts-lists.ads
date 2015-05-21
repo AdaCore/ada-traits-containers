@@ -1,3 +1,24 @@
+------------------------------------------------------------------------------
+--                     Copyright (C) 2015, AdaCore                          --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- As a special exception under Section 7 of GPL version 3, you are granted --
+-- additional permissions described in the GCC Runtime Library Exception,   --
+-- version 3.1, as published by the Free Software Foundation.               --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
 --  This package provides various generic packages used for the implementation
 --  of the various list containers.
 --  It is in fact possible to customize the containers to change the way the
@@ -424,20 +445,8 @@ package Conts.Lists with SPARK_Mode is
       --  and post conditions.
       --  Complexity: constant for all cursor operations.
 
-      function Stored_Element
-         (Self : List'Class; Position : Cursor) return Stored_Element_Type
-         with Inline => True,
-              Global => null,
-              Pre    => Has_Element (Self, Position);
-      --  Accessing directly the stored element might be more efficient in a
-      --  lot of cases.
-      --  ??? Can we prevent users from freeing the pointer (when it is a
-      --  pointer), or changing the element in place ?
-
       function Reference
          (Self : List'Class; Position : Cursor) return Reference_Type
-         is (Nodes.Elements.Get_Reference
-                (Stored_Element (Self, Position)))
          with Inline => True,
               Global => null,
               Pre    => Has_Element (Self, Position);
@@ -509,28 +518,28 @@ package Conts.Lists with SPARK_Mode is
       function Cursors_Element
          (Self : List'Class; Position : Cursor) return Element_Type
          is (Lists.Element (Self, Position))
-      with Pre => Lists.Has_Element (Self, Position);
-      function Cursors_Stored_Element (Self : List'Class; Position : Cursor)
-         return Stored_Element_Type
-         is (Lists.Stored_Element (Self, Position))
-      with Pre => Lists.Has_Element (Self, Position);
+         with Pre => Lists.Has_Element (Self, Position),
+              Inline => True;
       function Cursors_Reference (Self : List'Class; Position : Cursor)
          return Reference_Type
          is (Lists.Reference (Self, Position))
-      with Pre => Lists.Has_Element (Self, Position);
+         with Pre => Lists.Has_Element (Self, Position),
+              Inline => True;
       function Cursors_Has_Element
          (Self : List'Class; Position : Cursor) return Boolean
-         is (Lists.Has_Element (Self, Position));
+         is (Lists.Has_Element (Self, Position))
+         with Inline => True;
       function Cursors_Next
          (Self : List'Class; Position : Cursor) return Cursor
          is (Lists.Next (Self, Position))
-      with Pre => Lists.Has_Element (Self, Position);
+         with Pre => Lists.Has_Element (Self, Position),
+              Inline => True;
       function Cursors_Previous
          (Self : List'Class; Position : Cursor) return Cursor
          is (Lists.Previous (Self, Position))
-      with Pre => Lists.Has_Element (Self, Position);
-      pragma Inline (Cursors_First, Cursors_Element, Cursors_Has_Element);
-      pragma Inline (Cursors_Next, Cursors_Previous);
+         with Pre => Lists.Has_Element (Self, Position),
+              Inline => True;
+      pragma Inline (Cursors_First);
 
       package Bidirectional is new Bidirectional_Constant_Cursors_Traits
          (Container    => List'Class,
@@ -542,19 +551,6 @@ package Conts.Lists with SPARK_Mode is
           Element      => Cursors_Element,
           Previous     => Cursors_Previous);
       package Forward renames Bidirectional.Forward;
-
-      package Bidirectional_Stored is new Bidirectional_Constant_Cursors_Traits
-         (Container    => List'Class,
-          Cursor       => Lists.Cursor,
-          Element_Type => Stored_Element_Type,
-          First        => Cursors_First,
-          Next         => Cursors_Next,
-          Has_Element  => Cursors_Has_Element,
-          Element      => Cursors_Stored_Element,
-          Previous     => Cursors_Previous);
-      package Forward_Stored renames Bidirectional_Stored.Forward;
-      --  Another version of cursors that manipulates the Element_Access. These
-      --  might be more efficient.
 
       package Bidirectional_Reference
          is new Bidirectional_Constant_Cursors_Traits
