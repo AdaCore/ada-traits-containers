@@ -1,3 +1,20 @@
+------------------------------------------------------------------------------
+--                     Copyright (C) 2015, AdaCore                          --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
 with Ada.Calendar;  use Ada.Calendar;
 with Ref_Support;   use Ref_Support;
 with Ada.Text_IO;   use Ada.Text_IO;
@@ -52,7 +69,7 @@ procedure Main is
       procedure All_Tests is new Run_Tests (NR);
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
-         pragma Unreferenced (Start, V);
+         pragma Unreferenced (V);
          R2 : Int_Pointers_Unsafe.Ref;
          Int   : Integer;
          pragma Volatile (Int);  --  Can't be optimized away
@@ -78,6 +95,7 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   Int := R.Get;
                end loop;
+               Stdout.Print_Time (Clock - Start, "(1)");
 
             when others =>
                Stdout.Print_Not_Run;
@@ -97,7 +115,7 @@ procedure Main is
          R2 : Int_Pointers.Ref;
          Int   : Integer;
          pragma Volatile (Int);  --  Can't be optimized away
-         pragma Unreferenced (Start, V, Int);
+         pragma Unreferenced (V, Int);
       begin
          case Col is
             when Column_Set =>
@@ -119,6 +137,7 @@ procedure Main is
                for C in 1 .. Count_Smart loop
                   Int := R.Get;
                end loop;
+               Stdout.Print_Time (Clock - Start, "(1)");
 
             when others =>
                Stdout.Print_Not_Run;
@@ -136,7 +155,7 @@ procedure Main is
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          R2 : String_Pointers.Ref;
-         pragma Unreferenced (Start, V);
+         pragma Unreferenced (V);
       begin
          case Col is
             when Column_Set =>
@@ -167,6 +186,7 @@ procedure Main is
                      raise Program_Error with "Got '" & R.Get & "'";
                   end if;
                end loop;
+               Stdout.Print_Time (Clock - Start, "(1)");
 
             when others =>
                Stdout.Print_Not_Run;
@@ -306,7 +326,7 @@ procedure Main is
       procedure All_Tests is new Run_Tests (NR);
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
-         pragma Unreferenced (Start, V);
+         pragma Unreferenced (V);
          R2 : Obj_Pointers.Ref;
       begin
          case Col is
@@ -341,6 +361,7 @@ procedure Main is
                      null;
                   end;
                end loop;
+               Stdout.Print_Time (Clock - Start, "(1)");
 
             when others => null;
          end case;
@@ -582,14 +603,8 @@ begin
       ("'as reftype' is when the smart pointer itself is a reference type");
    Put_Line
       ("   current this doesn't work well since this is unconstrained type");
-
-   Put_Line
-      ("MANU Integer_Object'Size=" & Integer_Object'Size'Img
-       & " address'size=" & Standard'Address_Size'Img);
-   Put_Line
-      ("MANU Integer'Size=" & Integer'Size'Img & " +"
-       & Int_Pointers.Pools.Pool.Descriptor_Size'Img & " +"
-       & Counters'Size'Img);
+   Put_Line ("(1): limited reference_type are slow, see O521-013");
+   Put_Line ("     Seems to be doing 1562 malloc calls");
 
    Test_Weak_Ref;
 
