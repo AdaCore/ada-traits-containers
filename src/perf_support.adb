@@ -41,7 +41,7 @@ package body Perf_Support is
    -- Test_Lists_Int_Indefinite --
    -------------------------------
 
-   procedure Test_Lists_Int_Indefinite is
+   procedure Test_Lists_Int_Indefinite (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Indefinite_Unbounded
          (Element_Type   => Integer,
           Enable_Asserts => False);
@@ -104,14 +104,14 @@ package body Perf_Support is
 
       V : Lists.List;
    begin
-      All_Tests ("List iuc", V);
+      All_Tests (Stdout, "List iuc", V);
    end Test_Lists_Int_Indefinite;
 
    -------------------------------------
    -- Test_Lists_Int_Indefinite_SPARK --
    -------------------------------------
 
-   procedure Test_Lists_Int_Indefinite_SPARK is
+   procedure Test_Lists_Int_Indefinite_SPARK (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Indefinite_Unbounded_SPARK
          (Element_Type   => Integer,
           Enable_Asserts => False);
@@ -175,7 +175,7 @@ package body Perf_Support is
 
       V : Lists.List;
    begin
-      All_Tests ("List isl", V);
+      All_Tests (Stdout, "List isl", V);
       V.Clear;   --  explicit deallocation is needed
    end Test_Lists_Int_Indefinite_SPARK;
 
@@ -183,7 +183,7 @@ package body Perf_Support is
    -- Test_Lists_Int --
    --------------------
 
-   procedure Test_Lists_Int is
+   procedure Test_Lists_Int (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Definite_Unbounded
          (Element_Type   => Integer,
           Enable_Asserts => False);
@@ -246,14 +246,14 @@ package body Perf_Support is
 
       V : Lists.List;
    begin
-      All_Tests ("List duc", V);
+      All_Tests (Stdout, "List duc", V);
    end Test_Lists_Int;
 
    --------------------------------
    -- Test_Lists_Bounded_Limited --
    --------------------------------
 
-   procedure Test_Lists_Bounded_Limited is
+   procedure Test_Lists_Bounded_Limited (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Definite_Bounded_Limited
          (Element_Type   => Integer,
           Enable_Asserts => False);
@@ -317,7 +317,7 @@ package body Perf_Support is
 
       V : Lists.List (Capacity => Small_Items_Count);
    begin
-      All_Tests ("List dbl", V, Fewer_Items => True);
+      All_Tests (Stdout, "List dbl", V, Fewer_Items => True);
       V.Clear;   --  Need explicit deallocation, this is limited
    end Test_Lists_Bounded_Limited;
 
@@ -325,7 +325,7 @@ package body Perf_Support is
    -- Test_Lists_Bounded --
    ------------------------
 
-   procedure Test_Lists_Bounded is
+   procedure Test_Lists_Bounded (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Definite_Bounded
          (Element_Type   => Integer,
           Enable_Asserts => False);
@@ -388,7 +388,7 @@ package body Perf_Support is
 
       V : Lists.List (Capacity => Small_Items_Count);
    begin
-      All_Tests ("List dbc", V, Fewer_Items => True);
+      All_Tests (Stdout, "List dbc", V, Fewer_Items => True);
       V.Clear;   --  Need explicit deallocation, this is limited
    end Test_Lists_Bounded;
 
@@ -396,7 +396,7 @@ package body Perf_Support is
    -- Test_Lists_Str_Access --
    ---------------------------
 
-   procedure Test_Lists_Str_Access is
+   procedure Test_Lists_Str_Access (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Indefinite_Unbounded
          (Element_Type   => String,
           Enable_Asserts => False);
@@ -462,14 +462,14 @@ package body Perf_Support is
 
       V : Lists.List;
    begin
-      All_Tests ("List iuc 3", V);
+      All_Tests (Stdout, "List iuc 3", V);
    end Test_Lists_Str_Access;
 
    ------------------------------
    -- Test_Lists_Str_Reference --
    ------------------------------
 
-   procedure Test_Lists_Str_Reference is
+   procedure Test_Lists_Str_Reference (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Indefinite_Unbounded
          (Element_Type   => String,
           Enable_Asserts => False);
@@ -535,14 +535,14 @@ package body Perf_Support is
 
       V : Lists.List;
    begin
-      All_Tests ("List iuc 4", V);
+      All_Tests (Stdout, "List iuc 4", V);
    end Test_Lists_Str_Reference;
 
    --------------------
    -- Test_Lists_Str --
    --------------------
 
-   procedure Test_Lists_Str is
+   procedure Test_Lists_Str (Stdout : in out Output'Class) is
       package Lists is new Conts.Lists.Indefinite_Unbounded
          (Element_Type   => String,
           Enable_Asserts => False);
@@ -603,14 +603,14 @@ package body Perf_Support is
 
       V : Lists.List;
    begin
-      All_Tests ("List iuc", V);
+      All_Tests (Stdout, "List iuc", V);
    end Test_Lists_Str;
 
    ----------------------
    -- Test_Ada2012_Str --
    ----------------------
 
-   procedure Test_Ada2012_Str is
+   procedure Test_Ada2012_Str (Stdout : in out Output'Class) is
       package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
          (String);
       use Lists;
@@ -671,14 +671,14 @@ package body Perf_Support is
 
       V  : Lists.List;
    begin
-      All_Tests ("Ada iu", V);
+      All_Tests (Stdout, "Ada iu", V);
    end Test_Ada2012_Str;
 
    --------------------------------
    -- Test_Ada2012_Str_No_Checks --
    --------------------------------
 
-   procedure Test_Ada2012_Str_No_Checks is
+   procedure Test_Ada2012_Str_No_Checks (Stdout : in out Output'Class) is
       pragma Suppress (Container_Checks);
       package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
          (String);
@@ -740,14 +740,14 @@ package body Perf_Support is
 
       V  : Lists.List;
    begin
-      All_Tests ("Ada iu no", V);
+      All_Tests (Stdout, "Ada iu no", V);
    end Test_Ada2012_Str_No_Checks;
 
    ---------------------
    -- Test_Arrays_Int --
    ---------------------
 
-   procedure Test_Arrays_Int is
+   procedure Test_Arrays_Int (Stdout : in out Output'Class) is
       type Int_Array is array (Integer range <>) of Integer;
       package Adaptors is new Array_Adaptors
          (Index_Type   => Integer,
@@ -807,14 +807,14 @@ package body Perf_Support is
 
       V     : Int_Array (1 .. Small_Items_Count);
    begin
-      All_Tests ("Array", V, Fewer_Items => True);
+      All_Tests (Stdout, "Array", V, Fewer_Items => True);
    end Test_Arrays_Int;
 
    ----------------------
    -- Test_Ada2012_Int --
    ----------------------
 
-   procedure Test_Ada2012_Int is
+   procedure Test_Ada2012_Int (Stdout : in out Output'Class) is
       package Lists is new Ada.Containers.Doubly_Linked_Lists (Integer);
       use Lists;
       package Adaptors is new List_Adaptors (Lists);
@@ -876,14 +876,14 @@ package body Perf_Support is
 
       V  : Lists.List;
    begin
-      All_Tests ("Ada du", V);
+      All_Tests (Stdout, "Ada du", V);
    end Test_Ada2012_Int;
 
    --------------------------------
    -- Test_Ada2012_Int_No_Checks --
    --------------------------------
 
-   procedure Test_Ada2012_Int_No_Checks is
+   procedure Test_Ada2012_Int_No_Checks (Stdout : in out Output'Class) is
       pragma Suppress (Container_Checks);
       package Lists is new Ada.Containers.Doubly_Linked_Lists (Integer);
       use Lists;
@@ -946,14 +946,14 @@ package body Perf_Support is
 
       V  : Lists.List;
    begin
-      All_Tests ("Ada du no", V);
+      All_Tests (Stdout, "Ada du no", V);
    end Test_Ada2012_Int_No_Checks;
 
    ---------------------------------
    -- Test_Ada2012_Int_Indefinite --
    ---------------------------------
 
-   procedure Test_Ada2012_Int_Indefinite is
+   procedure Test_Ada2012_Int_Indefinite (Stdout : in out Output'Class) is
       package Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
          (Integer);
       use Lists;
@@ -1016,14 +1016,14 @@ package body Perf_Support is
 
       V  : Lists.List;
    begin
-      All_Tests ("Ada iu", V);
+      All_Tests (Stdout, "Ada iu", V);
    end Test_Ada2012_Int_Indefinite;
 
    ---------------------
    -- Test_Tagged_Int --
    ---------------------
 
-   procedure Test_Tagged_Int is
+   procedure Test_Tagged_Int (Stdout : in out Output'Class) is
       package Lists is new Taggeds (Integer);
       use Lists;
 
@@ -1067,7 +1067,7 @@ package body Perf_Support is
 
       V : Lists.List;
    begin
-      All_Tests ("Tagged", V);
+      All_Tests (Stdout, "Tagged", V);
    end Test_Tagged_Int;
 
 end Perf_Support;

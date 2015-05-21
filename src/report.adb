@@ -4,8 +4,12 @@ with GNAT.Strings;
 with Interfaces.C.Strings;
 with Memory;
 with Perf_Support;       use Perf_Support;
+with System;
 
 package body Report is
+
+   function To_Output is new Ada.Unchecked_Conversion
+      (System.Address, Output_Access);
 
    procedure Put (Self : in out Output; Str : String);
    --  Display text in the current column
@@ -13,12 +17,14 @@ package body Report is
    procedure Setup
       (Self           : in out Output;
        Counters_Count : Performance_Counter;
-       Columns        : Columns_Array)
+       Columns        : Columns_Array;
+       Show_Percent   : Boolean := True)
    is
    begin
       Self.Ref     := new Reference_Times (1 .. Counters_Count);
       Self.Ref.all := (others => 0.0);
       Self.Columns := new Columns_Array'(Columns);
+      Self.Show_Percent := Show_Percent;
    end Setup;
 
    procedure Reset (Self : in out Output) is
@@ -39,8 +45,11 @@ package body Report is
    end Print_Header;
 
    procedure Put (Self : in out Output; Str : String) is
+      W : constant Natural :=
+         Self.Columns (Self.Current).Width;
    begin
-      Put (Str & (Str'Length + 1 .. Self.Columns (Self.Current).Width => ' '));
+      Put (Str (Str'First .. Natural'Min (Str'Last, Str'First + W - 1))
+           & (Str'Length + 1 .. W => ' '));
       if not Self.Basic
          and then Self.Columns (Self.Current).Wide_Separator
       then
@@ -144,7 +153,8 @@ package body Report is
    ---------------
 
    procedure Run_Tests
-      (Title       : String;
+      (Stdout      : in out Output'Class;
+       Title       : String;
        Self        : in out Container;
        Fewer_Items : Boolean := False)
    is
@@ -179,17 +189,25 @@ package body Report is
       Unchecked_Free (Self.Ref);
    end Finalize;
 
-   procedure Print_From_C (D : Interfaces.C.double);
-   pragma Export (C, Print_From_C, "_ada_print_time");
-   procedure Print_From_C (D : Interfaces.C.double) is
+   ------------------
+   -- Print_From_C --
+   ------------------
+
+   procedure Print_From_C
+      (Stdout : System.Address; D : Interfaces.C.double);
+   pragma Export (C, Print_From_C, "ada_print_time");
+   procedure Print_From_C
+      (Stdout : System.Address; D : Interfaces.C.double) is
    begin
-      Stdout.Print_Time (Duration (D));
+      To_Output (Stdout).Print_Time (Duration (D));
    end Print_From_C;
 
-   procedure Start_Line_C (Title : Interfaces.C.Strings.chars_ptr);
-   pragma Export (C, Start_Line_C, "_ada_start_line");
-   procedure Start_Line_C (Title : Interfaces.C.Strings.chars_ptr) is
+   procedure Start_Line_C
+      (Stdout : System.Address; Title : Interfaces.C.Strings.chars_ptr);
+   pragma Export (C, Start_Line_C, "ada_start_line");
+   procedure Start_Line_C
+      (Stdout : System.Address; Title : Interfaces.C.Strings.chars_ptr) is
    begin
-      Stdout.Start_Line (Interfaces.C.Strings.Value (Title));
+      To_Output (Stdout).Start_Line (Interfaces.C.Strings.Value (Title));
    end Start_Line_C;
 end Report;

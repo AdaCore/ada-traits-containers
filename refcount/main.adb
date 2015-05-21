@@ -6,6 +6,7 @@ with GNATCOLL.Refcount; use GNATCOLL.Refcount;
 with GNATCOLL.Traces;
 with Report;        use Report;
 with Ref_Support;   use Ref_Support;
+with System;
 
 procedure Main is
    Column_Title  : constant Column_Number := 1;
@@ -13,10 +14,17 @@ procedure Main is
    Column_Assign : constant Column_Number := 3;
    Column_Get    : constant Column_Number := 4;
    Column_Ref    : constant Column_Number := 5;
-   Column_Allocate : constant Column_Number := 6;
-   Column_Allocs   : constant Column_Number := 7;
-   Column_Reallocs : constant Column_Number := 8;
-   Column_Frees    : constant Column_Number := 9;
+   Column_Allocate : constant Column_Number := Column_Ref + 1;
+   Column_Allocs   : constant Column_Number := Column_Allocate + 1;
+   Column_Reallocs : constant Column_Number := Column_Allocs + 1;
+   Column_Frees    : constant Column_Number := Column_Reallocs + 1;
+
+   Ref_None      : constant Performance_Counter := 1;
+   Ref_Set       : constant Performance_Counter := 2;
+   Ref_Assign    : constant Performance_Counter := 3;
+   Ref_Get       : constant Performance_Counter := 4;
+
+   Stdout        : aliased Output;
 
    procedure Test_Int_Pointers_Unsafe;
    procedure Test_Int_Pointers;
@@ -30,10 +38,10 @@ procedure Main is
    procedure Test_Gnatcoll_Strings;
    procedure Test_Weak_Ref;
 
-   procedure Test_Shared_Int;
-   pragma Import (C, Test_Shared_Int, "test_shared_int");
-   procedure Test_Shared_Str;
-   pragma Import (C, Test_Shared_Str, "test_shared_str");
+   procedure Test_Cpp_Int (Stdout : System.Address);
+   pragma Import (C, Test_Cpp_Int, "test_shared_int");
+   procedure Test_Cpp_Str (Stdout : System.Address);
+   pragma Import (C, Test_Cpp_Str, "test_shared_str");
 
    type NR is null record;
 
@@ -63,12 +71,12 @@ procedure Main is
 
             when Column_Get =>
                for C in 1 .. Count_Smart loop
-                  Int := R.Get.all;
+                  Int := R.Unchecked_Get.all;
                end loop;
 
             when Column_Ref =>
                for C in 1 .. Count_Smart loop
-                  Int := R.Reference;
+                  Int := R.Get;
                end loop;
 
             when others =>
@@ -76,7 +84,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("Std unsafe", N);
+      All_Tests (Stdout, "sharedptr unsafe", N);
    end Test_Int_Pointers_Unsafe;
 
    procedure Test_Int_Pointers is
@@ -104,12 +112,12 @@ procedure Main is
 
             when Column_Get =>
                for C in 1 .. Count_Smart loop
-                  Int := R.Get.all;
+                  Int := R.Unchecked_Get.all;
                end loop;
 
             when Column_Ref =>
                for C in 1 .. Count_Smart loop
-                  Int := R.Reference;
+                  Int := R.Get;
                end loop;
 
             when others =>
@@ -117,7 +125,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("Std", N);
+      All_Tests (Stdout, "sharedptr", N);
    end Test_Int_Pointers;
 
    procedure Test_Strings is
@@ -128,9 +136,7 @@ procedure Main is
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          R2 : String_Pointers.Ref;
-         Str   : access String;
-         pragma Volatile (Str);
-         pragma Unreferenced (Start, V, Str);
+         pragma Unreferenced (Start, V);
       begin
          case Col is
             when Column_Set =>
@@ -143,13 +149,23 @@ procedure Main is
                   R2 := R;
                end loop;
 
-               if R.Get.all /= "Foo" then
-                  raise Program_Error with "Got '" & R.Get.all & "'";
+               if R.Unchecked_Get.all /= "Foo" then
+                  raise Program_Error with "Got '" & R.Unchecked_Get.all & "'";
                end if;
 
             when Column_Get =>
                for C in 1 .. Count_Smart loop
-                  Str := R.Get;
+                  if R.Unchecked_Get.all /= "Foo" then
+                     raise Program_Error
+                        with "Got '" & R.Unchecked_Get.all & "'";
+                  end if;
+               end loop;
+
+            when Column_Ref =>
+               for C in 1 .. Count_Smart loop
+                  if R.Get /= "Foo" then
+                     raise Program_Error with "Got '" & R.Get & "'";
+                  end if;
                end loop;
 
             when others =>
@@ -157,7 +173,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("Std", N);
+      All_Tests (Stdout, "sharedptr", N);
    end Test_Strings;
 
    procedure Test_Int_Reference is
@@ -209,7 +225,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("As Reftype", N);
+      All_Tests (Stdout, "As Reftype", N);
    end Test_Int_Reference;
 
    procedure Test_Gnatcoll_Strings is
@@ -220,15 +236,13 @@ procedure Main is
 
       procedure Run (V : in out NR; Col : Column_Number; Start : Time) is
          R2 : String_Pointers_Gnatcoll.Ref;
-         Str   : access String;
-         pragma Volatile (Str);  --  Can't be optimized away
-         pragma Unreferenced (Start, V, Str);
+         pragma Unreferenced (Start, V);
       begin
          case Col is
             when Column_Set =>
                for C in 1 .. Count_Smart loop
                   R.Set (String_Object'
-                          (Refcounted with Str => new String'("foo")));
+                          (Refcounted with Str => new String'("Foo")));
                end loop;
 
             when Column_Assign =>
@@ -238,14 +252,16 @@ procedure Main is
 
             when Column_Get =>
                for C in 1 .. Count_Smart loop
-                  Str := R.Get.Str;
+                  if R.Get.Str.all /= "Foo" then
+                     raise Program_Error with "Got " & R.Get.Str.all;
+                  end if;
                end loop;
 
             when others => Stdout.Print_Not_Run;
          end case;
       end Run;
    begin
-      All_Tests ("GNATCOLL str", N);
+      All_Tests (Stdout, "smartptr", N);
    end Test_Gnatcoll_Strings;
 
    procedure Test_Gnatcoll_Int is
@@ -280,7 +296,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("GNATCOLL int", N);
+      All_Tests (Stdout, "smartptr", N);
    end Test_Gnatcoll_Int;
 
    procedure Test_Obj is
@@ -307,7 +323,7 @@ procedure Main is
             when Column_Get =>
                for C in 1 .. Count_Smart loop
                   declare
-                     C : Object'Class := R.Get.all;
+                     C : Object'Class := R.Unchecked_Get.all;
                      pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
@@ -318,7 +334,7 @@ procedure Main is
             when Column_Ref =>
                for C in 1 .. Count_Smart loop
                   declare
-                     C : Object'Class := R.Reference;
+                     C : Object'Class := R.Get;
                      pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
@@ -330,7 +346,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("Std", N);
+      All_Tests (Stdout, "sharedptr", N);
    end Test_Obj;
 
    procedure Test_Obj_Free is
@@ -357,7 +373,7 @@ procedure Main is
             when Column_Get =>
                for C in 1 .. Count_Smart loop
                   declare
-                     C : Object'Class := R.Get.all;
+                     C : Object'Class := R.Unchecked_Get.all;
                      pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
@@ -368,7 +384,7 @@ procedure Main is
             when Column_Ref =>
                for C in 1 .. Count_Smart loop
                   declare
-                     C : Object'Class := R.Reference;
+                     C : Object'Class := R.Get;
                      pragma Volatile (C); --  Don't optimize away
                      pragma Unreferenced (C);
                   begin
@@ -381,7 +397,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("Std Free", N);
+      All_Tests (Stdout, "sharedptr Free", N);
    end Test_Obj_Free;
 
    procedure Test_Obj_Holders is
@@ -424,7 +440,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("Holders", N);
+      All_Tests (Stdout, "Holders", N);
    end Test_Obj_Holders;
 
    procedure Test_Gnatcoll_Obj is
@@ -463,7 +479,7 @@ procedure Main is
          end case;
       end Run;
    begin
-      All_Tests ("GNATCOLL obj", N);
+      All_Tests (Stdout, "smartptr", N);
    end Test_Gnatcoll_Obj;
 
    procedure Test_Weak_Ref is
@@ -480,8 +496,8 @@ procedure Main is
             R.Set (999);
             W := R.Weak;
 
-            R2 := W.Get;
-            if R2.Get.all /= 999 then
+            R2.Set (W);
+            if R2.Get /= 999 then
                Put_Line ("Expected 999 from a weak ref");
             end if;
          end;
@@ -491,8 +507,9 @@ procedure Main is
          end if;
 
          declare
-            R2 : Int_Pointers.Ref := W.Get;
+            R2 : Int_Pointers.Ref;
          begin
+            R2.Set (W);
             if R2 /= Null_Ref then
                Put_Line ("Expected a null ref from a weak ref");
             end if;
@@ -508,24 +525,22 @@ procedure Main is
 
          declare
             W : Weak_Ref := R.Weak;
+            R2 : Ref;
          begin
-            if W.Get.Get.all /= 999 then
+            R2.Set (W);
+            if R2.Get /= 999 then
                Put_Line ("Scenario2: expected 999");
             end if;
          end;
       end;
    end Test_Weak_Ref;
 
-   Ref_None      : constant Performance_Counter := 1;
-   Ref_Set       : constant Performance_Counter := 2;
-   Ref_Assign    : constant Performance_Counter := 3;
-   Ref_Get       : constant Performance_Counter := 4;
-
 begin
    Stdout.Setup
       (Counters_Count => 4,
+       Show_Percent   => True,
        Columns  =>
-          (Column_Title  => (new String'(""),          13, True, Ref_None),
+          (Column_Title  => (new String'(""),          16, True, Ref_None),
            Column_Set    => (new String'("Set"),       7,  True, Ref_Set),
            Column_Assign => (new String'("Assign"),    7,  True, Ref_Assign),
            Column_Get    => (new String'("Get"),       7,  False, Ref_Get),
@@ -535,12 +550,11 @@ begin
            Column_Allocs   => (new String'("Allocs"), 8, False, Ref_None),
            Column_Reallocs => (new String'("reall"),  5, False, Ref_None),
            Column_Frees    => (new String'("frees"),  8, True, Ref_None)));
-   --  Stdout.Show_Percent := False;
 
    Put_Line ("Storing integers");
    Stdout.Print_Header;
    Test_Gnatcoll_Int;
-   Test_Shared_Int;
+   Test_Cpp_Int (To_Address (Stdout'Unchecked_Access));
    Test_Int_Pointers_Unsafe;
    Test_Int_Pointers;
    Test_Int_Reference;
@@ -557,7 +571,7 @@ begin
    New_Line;
    Put_Line ("Storing unconstrained array");
    Test_Gnatcoll_Strings;
-   Test_Shared_Str;
+   Test_Cpp_Str (To_Address (Stdout'Unchecked_Access));
    Test_Strings;
    Stdout.Finish_Line;
 
@@ -568,6 +582,14 @@ begin
       ("'as reftype' is when the smart pointer itself is a reference type");
    Put_Line
       ("   current this doesn't work well since this is unconstrained type");
+
+   Put_Line
+      ("MANU Integer_Object'Size=" & Integer_Object'Size'Img
+       & " address'size=" & Standard'Address_Size'Img);
+   Put_Line
+      ("MANU Integer'Size=" & Integer'Size'Img & " +"
+       & Int_Pointers.Pools.Pool.Descriptor_Size'Img & " +"
+       & Counters'Size'Img);
 
    Test_Weak_Ref;
 

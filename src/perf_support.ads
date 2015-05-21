@@ -1,4 +1,5 @@
 with Report;        use Report;
+with System;
 
 package Perf_Support is
 
@@ -105,33 +106,33 @@ package Perf_Support is
    --  In some cases, we can't allocate as many items as Items_Count (when
    --  using Ada arrays). In such cases, we use a smaller number of items.
 
-   procedure Test_Lists_Int;
-   procedure Test_Lists_Int_Indefinite;
-   procedure Test_Lists_Int_Indefinite_SPARK;
-   procedure Test_Lists_Str;
-   procedure Test_Lists_Str_Access;
-   procedure Test_Lists_Str_Reference;
-   procedure Test_Lists_Bounded;
-   procedure Test_Lists_Bounded_Limited;
+   procedure Test_Lists_Int (Stdout : in out Output'Class);
+   procedure Test_Lists_Int_Indefinite (Stdout : in out Output'Class);
+   procedure Test_Lists_Int_Indefinite_SPARK (Stdout : in out Output'Class);
+   procedure Test_Lists_Str (Stdout : in out Output'Class);
+   procedure Test_Lists_Str_Access (Stdout : in out Output'Class);
+   procedure Test_Lists_Str_Reference (Stdout : in out Output'Class);
+   procedure Test_Lists_Bounded (Stdout : in out Output'Class);
+   procedure Test_Lists_Bounded_Limited (Stdout : in out Output'Class);
    --  Perform the tests for our own Conts containers
 
-   procedure Test_Cpp_Int;
+   procedure Test_Cpp_Int (Stdout : System.Address);
    pragma Import (C, Test_Cpp_Int, "test_c_int");
-   procedure Test_Cpp_Str;
+   procedure Test_Cpp_Str (Stdout : System.Address);
    pragma Import (C, Test_Cpp_Str, "test_c_str");
    --  Perform C++ testing
 
-   procedure Test_Ada2012_Int;
-   procedure Test_Ada2012_Int_No_Checks;
-   procedure Test_Ada2012_Int_Indefinite;
-   procedure Test_Ada2012_Str;
-   procedure Test_Ada2012_Str_No_Checks;
+   procedure Test_Ada2012_Int (Stdout : in out Output'Class);
+   procedure Test_Ada2012_Int_No_Checks (Stdout : in out Output'Class);
+   procedure Test_Ada2012_Int_Indefinite (Stdout : in out Output'Class);
+   procedure Test_Ada2012_Str (Stdout : in out Output'Class);
+   procedure Test_Ada2012_Str_No_Checks (Stdout : in out Output'Class);
    --  Test Ada2012 containers
 
-   procedure Test_Arrays_Int;
+   procedure Test_Arrays_Int (Stdout : in out Output'Class);
    --  Test standard Ada arrays
 
-   procedure Test_Tagged_Int;
+   procedure Test_Tagged_Int (Stdout : in out Output'Class);
    --  Test when the list is implemented as tagged types
 
 end Perf_Support;

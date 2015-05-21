@@ -7,6 +7,8 @@ procedure Perf is
    Ref_None : constant Performance_Counter := 1;
    Ref_Fill : constant Performance_Counter := 2;
    Ref_Loop : constant Performance_Counter := 3;
+
+   Stdout : aliased Output;
 begin
    Stdout.Setup
       (Counters_Count => 3,
@@ -25,28 +27,28 @@ begin
 
    Put_Line ("+--------- lists of integers");
    Stdout.Print_Header;
-   Test_Cpp_Int;
-   Test_Arrays_Int;
-   Test_Ada2012_Int;
-   Test_Ada2012_Int_No_Checks;
-   Test_Ada2012_Int_Indefinite;
-   Test_Tagged_Int;
-   Test_Lists_Int;
-   Test_Lists_Int_Indefinite;
-   Test_Lists_Int_Indefinite_SPARK;
-   Test_Lists_Bounded;
-   Test_Lists_Bounded_Limited;
+   Test_Cpp_Int (To_Address (Stdout'Unchecked_Access));
+   Test_Arrays_Int (Stdout);
+   Test_Ada2012_Int (Stdout);
+   Test_Ada2012_Int_No_Checks (Stdout);
+   Test_Ada2012_Int_Indefinite (Stdout);
+   Test_Tagged_Int (Stdout);
+   Test_Lists_Int (Stdout);
+   Test_Lists_Int_Indefinite (Stdout);
+   Test_Lists_Int_Indefinite_SPARK (Stdout);
+   Test_Lists_Bounded (Stdout);
+   Test_Lists_Bounded_Limited (Stdout);
    Stdout.Reset;  ---  Stdout.Finish_Line to preserve percent
 
    New_Line;
    Put_Line ("+--------- lists of strings or std::string");
    Stdout.Print_Header;
-   Test_Cpp_Str;
-   Test_Ada2012_Str;
-   Test_Ada2012_Str_No_Checks;
-   Test_Lists_Str;
-   Test_Lists_Str_Reference;
-   Test_Lists_Str_Access;
+   Test_Cpp_Str (To_Address (Stdout'Unchecked_Access));
+   Test_Ada2012_Str (Stdout);
+   Test_Ada2012_Str_No_Checks (Stdout);
+   Test_Lists_Str (Stdout);
+   Test_Lists_Str_Reference (Stdout);
+   Test_Lists_Str_Access (Stdout);
    Stdout.Finish_Line;
 
    New_Line;

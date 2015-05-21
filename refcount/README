@@ -46,3 +46,10 @@ TODO
 - Can we remove Set (a storage pool to instrument "new")
 - use integer_64 on 64 bits targets, and corresponding builtins in gnatcoll.atomic
 - Can we use pragma Atomic ? Does not seem so
+
+References
+==========
+
+http://www.codesynthesis.com/~boris/blog/2009/01/11/shared-ptr-counter/
+http://www.drdobbs.com/weak-pointers/184402026  (shared_from_this)
+http://www.gotw.ca/gotw/043.htm

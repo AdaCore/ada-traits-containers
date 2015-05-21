@@ -1,23 +1,24 @@
 #include <ctime>
+#include <iostream>
 #include <memory>
 
 extern "C" {
-   void test_shared_int();
-   void test_shared_str();
-   extern void _ada_print_time(double elapsed);
-   extern void _ada_start_line(const char* title);
+   void test_shared_int(void* output);
+   void test_shared_str(void* output);
+   extern void ada_print_time(void* output, double elapsed);
+   extern void ada_start_line(void* output, const char* title);
    extern const int items_count_for_smart_pointers;
 };
 
-void test_shared_int() {
-   _ada_start_line("C++ int");
+void test_shared_int(void* output) {
+   ada_start_line(output, "C++ int");
 
    // Set
    std::clock_t begin = clock();
    for (int i = 0; i < items_count_for_smart_pointers; i++) {
       std::shared_ptr<int> ref (new int);
    }
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
 
    // Assign
 
@@ -26,25 +27,25 @@ void test_shared_int() {
    for (int i = 0; i < items_count_for_smart_pointers; i++) {
       std::shared_ptr<int> ref2 = ref;
    }
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
 
    // Get
    begin = clock();
    for (int i = 0; i < items_count_for_smart_pointers; i++) {
-      int val = *ref;
+      volatile int val = *ref;
    }
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
 }
 
-void test_shared_str() {
-   _ada_start_line("C++ str");
+void test_shared_str(void* output) {
+   ada_start_line(output, "C++ str");
 
    // Set
    std::clock_t begin = clock();
    for (int i = 0; i < items_count_for_smart_pointers; i++) {
       std::shared_ptr<std::string> ref (new std::string("Foo"));
    }
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
 
    // Assign
 
@@ -53,12 +54,15 @@ void test_shared_str() {
    for (int i = 0; i < items_count_for_smart_pointers; i++) {
       std::shared_ptr<std::string> ref2 = ref;
    }
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
 
    // Get
    begin = clock();
    for (int i = 0; i < items_count_for_smart_pointers; i++) {
-      std::string val = *ref;
+      if (*ref != "Foo") {
+         std::cout << "Error";
+         break;
+      }
    }
-   _ada_print_time(double(clock() - begin) / CLOCKS_PER_SEC);
+   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
 }

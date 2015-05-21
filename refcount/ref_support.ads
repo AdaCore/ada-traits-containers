@@ -1,4 +1,3 @@
-with Refcount;            use Refcount;
 with Refcount_Ref;        use Refcount_Ref;
 with GNATCOLL.Refcount;   use GNATCOLL.Refcount;
 with GNAT.Strings;        use GNAT.Strings;
@@ -21,13 +20,17 @@ package Ref_Support is
 
    type Child is new Object with null record;
 
-   package Int_Pointers_Unsafe is new Refcount.Smart_Pointers
-      (Integer, Atomic_Counters => False);
-   package Int_Pointers is new Refcount.Smart_Pointers (Integer);
-   package Obj_Pointers is new Refcount.Smart_Pointers (Object'Class);
-   package Obj_Pointers_Free is new Refcount.Smart_Pointers
+   package Int_Pointers_Unsafe is new Shared_Pointers
+      (Integer, Atomic_Counters => False,
+       Potentially_Controlled => False);
+   package Int_Pointers is new Shared_Pointers
+      (Integer, Potentially_Controlled => False);
+   package Obj_Pointers is new Shared_Pointers (Object'Class);
+   package Obj_Pointers_Free is new Shared_Pointers
       (Object'Class, Release => Class_Wide_Free);
-   package String_Pointers is new Refcount.Smart_Pointers (String);
+   package String_Pointers is new Shared_Pointers
+      (String, Potentially_Controlled => False);
+   --  Reimplemention of the reference coutning in gnatcoll
 
    --------------------------------
    -- Refcount as reference_type --
@@ -40,9 +43,11 @@ package Ref_Support is
    package Obj_Pointers_Free_Ref is new Refcount_Ref.Smart_Pointers
       (Object'Class, Class_Wide_Free);
 
-   -----------------------
-   -- GNATCOLL Refcount --
-   -----------------------
+   --------------------
+   -- Smart pointers --
+   --------------------
+   --  The older version of reference counting in gnatcoll, where
+   --  the element_type must derive from a tagged type.
 
    type Integer_Object is new Refcounted with record
       Value : Integer;
@@ -60,11 +65,11 @@ package Ref_Support is
 
    type Child2 is new Object2 with null record;
 
-   package Int_Pointers_Gnatcoll is new GNATCOLL.Refcount.Smart_Pointers
-      (Integer_Object);
-   package Obj_Pointers_Gnatcoll is new GNATCOLL.Refcount.Smart_Pointers
-      (Object2);
-   package String_Pointers_Gnatcoll is new GNATCOLL.Refcount.Smart_Pointers
-      (String_Object);
+   package Int_Pointers_Gnatcoll
+      is new GNATCOLL.Refcount.Smart_Pointers (Integer_Object);
+   package Obj_Pointers_Gnatcoll
+      is new GNATCOLL.Refcount.Smart_Pointers (Object2);
+   package String_Pointers_Gnatcoll
+      is new GNATCOLL.Refcount.Smart_Pointers (String_Object);
 
 end Ref_Support;

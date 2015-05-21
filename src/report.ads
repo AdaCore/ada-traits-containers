@@ -1,7 +1,9 @@
 --  Support for output of the tests
 
+with Ada.Unchecked_Conversion;
 with Ada.Calendar;    use Ada.Calendar;
 with GNAT.Strings;    use GNAT.Strings;
+with System;
 
 package Report is
 
@@ -28,25 +30,13 @@ package Report is
    type Columns_Array_Access is access Columns_Array;
    --  First column must always be for the title of the row
 
-   type Output is tagged record
-      Columns : Columns_Array_Access;
-      Ref     : Reference_Times_Access;
-
-      Show_Percent : Boolean := True;
-
-      Basic        : Boolean := False;
-      --  If true, only ASCII characters are used
-
-      Current      : Column_Number := 1;
-
-      Fewer_Items  : Boolean;
-      --  Whether the test is run on fewer items
-   end record;
+   type Output is tagged private;
 
    procedure Setup
       (Self           : in out Output;
        Counters_Count : Performance_Counter;
-       Columns        : Columns_Array);
+       Columns        : Columns_Array;
+       Show_Percent   : Boolean := True);
    procedure Print_Header (Self : in out Output);
    procedure Reset (Self : in out Output);
    procedure Start_Line
@@ -64,13 +54,34 @@ package Report is
       with procedure Run
          (Self : in out Container; Col : Column_Number; Start : Time) is <>;
    procedure Run_Tests
-      (Title       : String;
+      (Stdout      : in out Output'Class;
+       Title       : String;
        Self        : in out Container;
        Fewer_Items : Boolean := False);
    --  For each column defined in Stdout and associated with a test, executes
    --  Run. Run can either print some output via Stdout.Print_Line (for
    --  instance), or let this procedure print the time on its own.
 
-   Stdout : Output;
+   type Output_Access is access all Output'Class;
+   pragma No_Strict_Aliasing (Output_Access);
+   function To_Address is new Ada.Unchecked_Conversion
+      (Output_Access, System.Address);
+   --  Interface to C++
+
+private
+   type Output is tagged record
+      Columns : Columns_Array_Access;
+      Ref     : Reference_Times_Access;
+
+      Show_Percent : Boolean := True;
+
+      Basic        : Boolean := False;
+      --  If true, only ASCII characters are used
+
+      Current      : Column_Number := 1;
+
+      Fewer_Items  : Boolean;
+      --  Whether the test is run on fewer items
+   end record;
 
 end Report;
