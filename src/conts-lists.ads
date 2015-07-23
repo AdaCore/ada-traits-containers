@@ -362,6 +362,8 @@ package Conts.Lists with SPARK_Mode is
       subtype Stored_Element_Type is Nodes.Elements.Stored_Element_Type;
       type Cursor is private;
 
+      No_Element : constant Cursor;
+
       procedure Append
          (Self    : in out List'Class;
           Element : Element_Type)
@@ -482,6 +484,8 @@ package Conts.Lists with SPARK_Mode is
       type Cursor is record
          Current : Nodes.Node_Access;
       end record;
+
+      No_Element : constant Cursor := (Current => Nodes.Null_Access);
    end Generic_Lists;
 
    generic
