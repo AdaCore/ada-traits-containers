@@ -33,9 +33,9 @@ is
    function "=" (M1, M2 : Map) return Boolean with
      Global => null,
      Post   => "="'Result =
-       (for all K in M1 => Mem (M2, K)
+       ((for all K in M1 => Mem (M2, K)
         and then Get (M2, K) = Get (M1, K))
-       and (for all K in M2 => Mem (M1, K));
+        and (for all K in M2 => Mem (M1, K)));
 
    pragma Warnings (Off, "unused variable");
    function Is_Empty (M : Map) return Boolean with
