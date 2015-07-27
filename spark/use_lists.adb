@@ -8,10 +8,10 @@ package body Use_Lists with SPARK_Mode is
          pragma Loop_Invariant (Capacity (L2) = Capacity (L2)'Loop_Entry);
          pragma Loop_Invariant
            (for all N in 1 .. Length (L2) =>
-                Is_Incr (Get (Get_Model (L1), N),
-                         Get (Get_Model (L2), N)));
+                Is_Incr (Element (Model (L1), N),
+                         Element (Model (L2), N)));
          pragma Loop_Invariant
-           (Get (Get_Positions (L1), Cu) = Length (L2) + 1);
+           (Get (Positions (L1), Cu) = Length (L2) + 1);
          if Element (L1, Cu) < Integer'Last then
             Append (L2, Element (L1, Cu) + 1);
          else
@@ -28,13 +28,13 @@ package body Use_Lists with SPARK_Mode is
          pragma Loop_Invariant (Capacity (L) = Capacity (L)'Loop_Entry);
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry);
          pragma Loop_Invariant
-           (for all N in 1 .. Get (Get_Positions (L), Cu) - 1 =>
-                Is_Incr (Get (Get_Model (L)'Loop_Entry, N),
-                         Get (Get_Model (L), N)));
+           (for all N in 1 .. Get (Positions (L), Cu) - 1 =>
+                Is_Incr (Element (Model (L)'Loop_Entry, N),
+                         Element (Model (L), N)));
          pragma Loop_Invariant
-           (for all N in Get (Get_Positions (L), Cu) .. Length (L) =>
-                Get (Get_Model (L)'Loop_Entry, N) =
-                Get (Get_Model (L), N));
+           (for all N in Get (Positions (L), Cu) .. Length (L) =>
+                Element (Model (L)'Loop_Entry, N) =
+                Element (Model (L), N));
          if Element (L, Cu) < Integer'Last then
             Replace_Element (L, Cu, Element (L, Cu) + 1);
          end if;
@@ -49,16 +49,16 @@ package body Use_Lists with SPARK_Mode is
          pragma Loop_Invariant (Capacity (L) = Capacity (L)'Loop_Entry);
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry);
          pragma Loop_Invariant
-           (for all N in 1 .. Get (Get_Positions (L), Cu) - 1 =>
-                Is_Incr (Get (Get_Model (L)'Loop_Entry, N),
-                         Get (Get_Model (L), N)));
+           (for all N in 1 .. Get (Positions (L), Cu) - 1 =>
+                Is_Incr (Element (Model (L)'Loop_Entry, N),
+                         Element (Model (L), N)));
          pragma Loop_Invariant
-           (for all N in Get (Get_Positions (L), Cu) .. Length (L) =>
-                Get (Get_Model (L)'Loop_Entry, N) =
-                Get (Get_Model (L), N));
+           (for all N in Get (Positions (L), Cu) .. Length (L) =>
+                Element (Model (L)'Loop_Entry, N) =
+                Element (Model (L), N));
          pragma Loop_Invariant
-           (Inc (Get_Positions (L)'Loop_Entry, Get_Positions (L))
-            and Inc (Get_Positions (L), Get_Positions (L)'Loop_Entry));
+           (Inc (Positions (L)'Loop_Entry, Positions (L))
+            and Inc (Positions (L), Positions (L)'Loop_Entry));
          if Element (L, Cu) < Integer'Last then
             Replace_Element (L, Cu, Element (L, Cu) + 1);
          end if;
@@ -75,13 +75,13 @@ package body Use_Lists with SPARK_Mode is
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry + I - 1);
          pragma Loop_Invariant
            (for all I in 1 .. Length (L)'Loop_Entry =>
-                Get (Get_Model (L), I) = Get (Get_Model (L)'Loop_Entry, I));
+              Element (Model (L), I) = Element (Model (L)'Loop_Entry, I));
          pragma Loop_Invariant
            (for all J in 1 .. I - 1 =>
-              Get (Get_Model (L), J + Length (L)'Loop_Entry) =
-                Get (Get_Model (L)'Loop_Entry, J));
+              Element (Model (L), J + Length (L)'Loop_Entry) =
+                Element (Model (L)'Loop_Entry, J));
          pragma Loop_Invariant
-           (Get (Get_Positions (L), Cu) = I);
+           (Get (Positions (L), Cu) = I);
          Append (L, Element (L, Cu));
          Next (L, Cu);
       end loop;
@@ -96,15 +96,15 @@ package body Use_Lists with SPARK_Mode is
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry + N);
          pragma Loop_Invariant
            (for all I in 1 .. N =>
-              Get (Get_Model (L), 2 * I) = Get (Get_Model (L)'Loop_Entry, I)
-            and Get (Get_Model (L), 2 * I - 1) =
-              Get (Get_Model (L)'Loop_Entry, I));
+            Element (Model (L), 2 * I) = Element (Model (L)'Loop_Entry, I)
+            and Element (Model (L), 2 * I - 1) =
+              Element (Model (L)'Loop_Entry, I));
          pragma Loop_Invariant
            (for all I in N + 1 .. Length (L)'Loop_Entry =>
-                Get (Get_Model (L), I + N) =
-              Get (Get_Model (L)'Loop_Entry, I));
+                Element (Model (L), I + N) =
+              Element (Model (L)'Loop_Entry, I));
          pragma Loop_Invariant
-           (Get (Get_Positions (L), Cu) = 2 * N + 1);
+           (Get (Positions (L), Cu) = 2 * N + 1);
          Insert (L, Cu, Element (L, Cu));
          Next (L, Cu);
          N := N + 1;
@@ -116,8 +116,8 @@ package body Use_Lists with SPARK_Mode is
    begin
       while Has_Element (L, Cu) loop
          pragma Loop_Invariant
-           (for all I in 1 .. Get (Get_Positions (L), Cu) - 1 =>
-              Get (Get_Model (L), I) /= E);
+           (for all I in 1 .. Get (Positions (L), Cu) - 1 =>
+              Element (Model (L), I) /= E);
          if Element (L, Cu) = E then
             return Cu;
          end if;

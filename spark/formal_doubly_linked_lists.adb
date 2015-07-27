@@ -7,8 +7,8 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
    function Capacity (L : List'Class) return Natural is
      (Element_Lists.Lists.Capacity (L));
 
-   package body Model is
-      function Get_Positions (L : List'Class) return Map is
+   package body Formal_Model is
+      function Positions (L : List'Class) return Map is
          Cu : Cursor := Cursor (First (Element_Lists.List (L)));
          R  : Map := Cursor_Map.Empty;
          I  : Positive := 1;
@@ -19,8 +19,8 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
             I := I + 1;
          end loop;
          return R;
-      end Get_Positions;
-      function Get_Model (L : List'Class) return Sequence is
+      end Positions;
+      function Model (L : List'Class) return Sequence is
          Cu : Cursor := Cursor (First (Element_Lists.List (L)));
          R  : Sequence := Element_Sequence.Empty;
       begin
@@ -29,8 +29,8 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
             Next (Element_Lists.List (L), Cu);
          end loop;
          return R;
-      end Get_Model;
-   end Model;
+      end Model;
+   end Formal_Model;
 
    function Element (L : List'Class; C : Cursor) return Element_Type is
       (Element_Lists.Lists.Element (L, Element_Lists.Lists.Cursor (C)));
