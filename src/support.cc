@@ -97,7 +97,7 @@ void test_cpp_string(void * output) {
 
 
    count = 0;
-   for (auto e : v) {
+   for (std::string& e : v) {
       if (startsWithStr(e)) {
          count ++;
       }
