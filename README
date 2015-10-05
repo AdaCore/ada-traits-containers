@@ -31,6 +31,25 @@ Goals
          ... C references deallocated memory since My_Function's result
          ... has been finalized
 
+Naming
+------
+
+'Traits' was the name used initially, inspired by the C++ notion. However,
+in C++, traits are really used to describe meta information about the types
+(through template specialization mostly), like what is the type pointed to
+for instance. That only applies to a few of our own packages.
+
+'Signature packages' is the term used in the Ada2012 rationale to describe
+generic packages with no body.
+
+'Policy' templates is the term used in C++ (see
+https://en.wikipedia.org/wiki/Policy-based_design), and that seems closest
+to what we are doing here in practice. Any time some design choice has to
+be made when implementing an algorithm, then that choice should be
+abstracted in its own policy template. Then the algorithm can be used with
+any version of the policy template, so that it can be used with all
+possible design choices (eventually).
+
 Proposal for using tagged types
 -------------------------------
 
