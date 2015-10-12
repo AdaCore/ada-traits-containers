@@ -35,20 +35,21 @@ Naming
 ------
 
 'Traits' was the name used initially, inspired by the C++ notion. However,
-in C++, traits are really used to describe meta information about the types
-(through template specialization mostly), like what is the type pointed to
-for instance. That only applies to a few of our own packages.
+in C++, traits are really used to extract properties from a generic type
+(through template specialization, mostly), such as what is the pointed type.
+That only applies to a few of our own packages.
 
 'Signature packages' is the term used in the Ada2012 rationale to describe
 generic packages with no body.
 
 'Policy' templates is the term used in C++ (see
 https://en.wikipedia.org/wiki/Policy-based_design), and that seems closest
-to what we are doing here in practice. Any time some design choice has to
-be made when implementing an algorithm, then that choice should be
-abstracted in its own policy template. Then the algorithm can be used with
-any version of the policy template, so that it can be used with all
-possible design choices (eventually).
+to what we are doing here in practice. A policy is used to inject behavior
+in a parent class, typically through inheritance.
+Any time some design choice has to be made when implementing an algorithm,
+then that choice should be abstracted in its own policy template. Then the
+algorithm can be used with any version of the policy template, so that it
+can be used with all possible design choices (eventually).
 
 Proposal for using tagged types
 -------------------------------
@@ -218,6 +219,27 @@ instead of the slower atomic operations. This is currently configured by
 a formal boolean parameter, but this could be computed automatically using
 some info from System.Soft_Links for instance.
 
+Proposal for storage pools (OA09-038)
+-------------------------------------
+
+Some packages need to perform memory allocation. In all such cases, we declare
+a formal generic package that provides the storage pools to use, so that users
+have ultimate control over memory allocation (for instance, the nodes packages
+themselves control how many allocations are taking place, and the storage pools
+control how they are actually performed).
+
+Rather than pass a single object of type access to Root_Storage_Pool'Class, we
+pass both a type for the storage pool, and an object access to that type. This
+is to avoid dynamic dispatching when calling the pool, since in some contexts
+like libadalang, with highly optimized pools, it has been shown that the cost
+of dispatching might become significant.
+
+The drawback is that a formal package parameter cannot have a default value
+(nor can a type, of course), so a user systematically has to provide a value.
+But this is only when using the low-level generic packages. When using the
+higher-level packages, they still simply take an Element_Type, and the
+storage_pool is always the default global pool.
+
 Misc Proposals
 --------------
 
@@ -327,3 +349,22 @@ to insert and traverse 10_000_000 integers:
                           forward-list  doubly-linked
       10_000_000 inserts   0.46454        0.52211
       traversing list      0.150259       0.25763
+
+Outcome tickets
+---------------
+
+The work on this library generated a number of discussions and improvements
+to the compiler or the runtime.
+
+O511-005 using Iterable aspect with indefinite types
+   The Iterable aspect was not usable with unconstrained element types
+O521-013 limited reference_type are slow
+O505-018 Improve efficient of for-of loop with indefinite element types
+O426-003 / N422-001   Suppressing checks in containers
+OA12-017 Iterable aspect applied to class-wide operations
+
+Could not find the tickets for:
+   - passing reference types on the stack rather than secondary stack
+     (since their size is known at compile time)
+O403-028 Reference_Types are unconstrained types passed on secondary stack
+
