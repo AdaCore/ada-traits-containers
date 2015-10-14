@@ -240,6 +240,11 @@ But this is only when using the low-level generic packages. When using the
 higher-level packages, they still simply take an Element_Type, and the
 storage_pool is always the default global pool.
 
+Example of use for custom pools:
+    - more efficient pool in some contexts
+    - persistent containers, by having a pool allocating a large buffer with
+      mmap, and then using this buffer when allocating small blocks.
+
 Misc Proposals
 --------------
 
@@ -310,17 +315,15 @@ Todo
 
   * A version of some algorithms that are multi-threaded
 
+  * Optimize releasing containers. For instance, for a bounded container we
+    could sometimes avoid having to free the nodes one by one.
+    => Perhaps this is already optimized automatically when we have null
+    subprograms ?
+
   * Indefinite_Element_Traits: move Element_Access to private part of nested
     package (for SPARK)
     For SPARK, the reference_type will be a null record, since SPARK cannot
     use access types anyway.
-
-  * Rename the formal parameter Reference_Type to a more general name, since
-    it need now be implemented as a reference_type. For instance, in the case
-    of definite elements, it is directly the element_type (which in fact does
-    not allow modifying the element, so might not be appropriate).
-    Can we implement the reference types outside of the element_traits
-    package, to simplify them ?
 
   * Use the Variable_Indexing aspect on containers
 

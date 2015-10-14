@@ -1,0 +1,17 @@
+with "src/conts";
+with "spark/spark";
+with "src/shared";
+project Tests is
+   for Source_Dirs use ("tests/");
+   for Object_Dir use "tests/obj";
+   for Languages use ("Ada", "C++");
+   for Main use ("perf.adb");
+
+   package Compiler extends Shared.Compiler is
+      for Switches ("s-memory.adb") use ("-gnatg", "-O2");
+   end Compiler;
+   package Builder renames Shared.Builder;
+   package Naming renames Shared.Naming;
+   package Binder renames Shared.Binder;
+   package Linker renames Shared.Linker;
+end Tests;

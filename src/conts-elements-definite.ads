@@ -19,16 +19,38 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
+--  This unit provides a specialization of the element traits, for use with
+--  definite elements, i.e. elements whose size is known at compile time.
+--  Such elements do not need an extra level of indirection via pointers to
+--  be stored in a container.
 
-package Conts.Algorithms is
+pragma Ada_2012;
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+generic
+   type Element_Type is private;
 
-end Conts.Algorithms;
+   with procedure Free (E : in out Element_Type) is null;
+   --  Free is called when the element is no longer used (removed from
+   --  its container for instance). Most of the time this will do
+   --  nothing, but this procedure is useful if the Element_Type is an
+   --  access type that you want to deallocate.
+
+   Copyable : Boolean := False;   --  should be False for access types
+   Movable  : Boolean := True;    --  should be False for controlled types
+
+package Conts.Elements.Definite with SPARK_Mode is
+
+   function Identity (E : Element_Type) return Element_Type is (E) with Inline;
+
+   package Traits is new Conts.Elements.Traits
+      (Element_Type  => Element_Type,
+       Stored_Type   => Element_Type,
+       Return_Type   => Element_Type,
+       Copyable      => Copyable,
+       Movable       => Movable,
+       Release       => Free,
+       To_Stored     => Identity,
+       To_Return     => Identity,
+       Copy          => Identity);
+
+end Conts.Elements.Definite;

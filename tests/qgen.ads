@@ -19,39 +19,63 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Unbounded lists of unconstrained elements
-
 pragma Ada_2012;
 with Ada.Finalization;
-with Conts.Elements.Indefinite;
-with Conts.Lists.Generics;
-with Conts.Lists.Cursors;
+with Conts.Elements.Indefinite_Ref;
 with Conts.Lists.Nodes.Unbounded;
+with Conts.Lists.Generics;
 
-generic
-   type Element_Type (<>) is private;
-package Conts.Lists.Indefinite_Unbounded is
+package QGen is
 
-   package Elements is new Conts.Elements.Indefinite
-      (Element_Type, Pool => Conts.Global_Pool);
+   --  This package checks that an organization as used in the QGen project
+   --  is compatible with our proposal.
+   --  We have a hierarchy of types, a matching hierarchy of lists, and when
+   --  we use a for..of loop on a list, we get the corresponding child type.
+   --  We do not want to duplicate the instance of lists, the goal is to
+   --  generate minimal additional code since there are hundreds of such
+   --  types in QGen.
+
+   type EObject is abstract tagged record
+      Id : Integer;
+   end record;
+   type Block is new EObject with null record;
+   type Sum is new Block with null record;
+
+   --  We do our own instances (not the ones in
+   --  Conts.Lists.Indefinite_Unbounded) for better sharing of code.
+
+   package Elements is new Conts.Elements.Indefinite_Ref
+      (EObject'Class, Pool => Conts.Global_Pool);
    package Nodes is new Conts.Lists.Nodes.Unbounded
-      (Elements  => Elements.Traits,
+      (Elements.Traits,
        Base_Type => Ada.Finalization.Controlled,
        Pool      => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
-   subtype Cursor is Lists.Cursor;
-   type List is new Lists.List with null record
+   type EObject_List is new Lists.List with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
-   --  ??? Should we provide a Copy function ?
-   --  This cannot be provided in the generic package, since the type could
-   --  be constrained and/or limited, so it has to be provided in all child
-   --  packages. However, when the type is controlled it is much easier to
-   --  just use the standard assignment operator.
+   type Block_List is new EObject_List with null record
+      with Iterable => (First       => First_Primitive,
+                        Next        => Next_Primitive,
+                        Has_Element => Has_Element_Primitive,
+                        Element     => As_Block);
+   function As_Block (C : Block_List; P : Lists.Cursor) return Block'Class
+      is (Block'Class (Lists.Element (C, P).E.all))
+      with Inline => True;
 
-   package Cursors is new Conts.Lists.Cursors (Lists, List);
-end Conts.Lists.Indefinite_Unbounded;
+   type Sum_List is new Block_List with null record
+      with Iterable => (First       => First_Primitive,
+                        Next        => Next_Primitive,
+                        Has_Element => Has_Element_Primitive,
+                        Element     => As_Sum);
+   function As_Sum (C : Sum_List; P : Lists.Cursor) return Sum'Class
+      is (Sum'Class (Lists.Element (C, P).E.all))
+      with Inline => True;
+
+   procedure Test_QGen;
+
+end QGen;

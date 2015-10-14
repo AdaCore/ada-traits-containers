@@ -19,16 +19,24 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
+pragma Ada_2012;
+with Ada.Unchecked_Deallocation;
 
-package Conts.Algorithms is
+package body Conts.Elements.Indefinite_SPARK with SPARK_Mode => Off is
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+   package body Impl with SPARK_Mode => Off is
+      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+         (Element_Type, Element_Access);
 
-end Conts.Algorithms;
+      ----------
+      -- Free --
+      ----------
+
+      procedure Free (X : in out Element_Access) is
+      begin
+         Unchecked_Free (X);
+      end Free;
+
+   end Impl;
+
+end Conts.Elements.Indefinite_SPARK;

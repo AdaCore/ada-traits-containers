@@ -20,30 +20,29 @@
 ------------------------------------------------------------------------------
 
 --  Unbounded lists of unconstrained elements.
---  Cursors are indexes into an array, to be able to write post-conditions
---  and for added safety
+--  These elements are returned as reference types, which avoids extra copies
+--  of the element, but is sometimes slightly less convenient to use.
 
 pragma Ada_2012;
-with Conts.Elements.Indefinite_SPARK;
-with Conts.Lists.Nodes.Unbounded_SPARK;
+with Ada.Finalization;
+with Conts.Elements.Indefinite_Ref;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
+with Conts.Lists.Nodes.Unbounded;
 
 generic
    type Element_Type (<>) is private;
-   --  Element_Type must not be a controlled type that needs to be
-   --  Adjusted when it is moved in memory, since the list will use the
-   --  realloc() system call.
+package Conts.Lists.Indefinite_Unbounded_Ref is
 
-package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
-
-   package Elements is new Conts.Elements.Indefinite_SPARK
+   package Elements is new Conts.Elements.Indefinite_Ref
       (Element_Type, Pool => Conts.Global_Pool);
-   package Nodes is new Conts.Lists.Nodes.Unbounded_SPARK
+   package Nodes is new Conts.Lists.Nodes.Unbounded
       (Elements  => Elements.Traits,
-       Base_Type => Limited_Base);
+       Base_Type => Ada.Finalization.Controlled,
+       Pool      => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
+   subtype Ref_Type is Elements.Ref_Type;
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record
       with Iterable => (First       => First_Primitive,
@@ -51,9 +50,11 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
-   function Copy (Self : List'Class) return List'Class;
-   --  Return a deep copy of Self
-   --  Complexity: O(n)
+   --  ??? Should we provide a Copy function ?
+   --  This cannot be provided in the generic package, since the type could
+   --  be constrained and/or limited, so it has to be provided in all child
+   --  packages. However, when the type is controlled it is much easier to
+   --  just use the standard assignment operator.
 
    package Cursors is new Conts.Lists.Cursors (Lists, List);
-end Conts.Lists.Indefinite_Unbounded_SPARK;
+end Conts.Lists.Indefinite_Unbounded_Ref;

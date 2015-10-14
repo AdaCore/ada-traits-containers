@@ -19,16 +19,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
-
-package Conts.Algorithms is
-
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
-
-end Conts.Algorithms;
+package body Memory is
+   procedure Reset is
+   begin
+      Live := 0;
+      Allocs := 0;
+      Frees := 0;
+      Reallocs := 0;
+   end Reset;
+end Memory;

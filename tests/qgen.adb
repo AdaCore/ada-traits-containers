@@ -19,16 +19,19 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
+package body QGen is
 
-package Conts.Algorithms is
+   procedure Test_QGen is
+      S : Sum_List;
+   begin
+      S.Append (Sum'(Id => 1, others => <>));
+      S.Append (Sum'(Id => 2, others => <>));
+      S.Append (Sum'(Id => 3, others => <>));
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+      --  Test requires that aspect Iterable supports unconstrained types
+      --  for E of S loop
+      --     Put_Line ("E=" & External_Tag (E'Tag));
+      --  end loop;
+   end Test_QGen;
 
-end Conts.Algorithms;
+end QGen;

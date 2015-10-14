@@ -19,16 +19,24 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
+pragma Ada_2012;
+with Ada.Unchecked_Deallocation;
 
-package Conts.Algorithms is
+package body Conts.Elements.Indefinite is
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+   procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+      (Element_Type, Element_Access);
 
-end Conts.Algorithms;
+   -------------
+   -- Release --
+   -------------
+
+   procedure Release (E : in out Element_Access) is
+   begin
+      if E /= null then
+         Free (E.all);
+         Unchecked_Free (E);
+      end if;
+   end Release;
+
+end Conts.Elements.Indefinite;

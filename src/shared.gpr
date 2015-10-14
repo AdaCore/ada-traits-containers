@@ -1,0 +1,57 @@
+abstract project Shared is
+   Version := "0.1";
+
+   type Build_Mode is ("Production", "Debug");
+   Mode : Build_Mode := external ("BUILD", "Production");
+
+   type Library_Kind_Type is ("relocatable", "static");
+   Library_Kind : Library_Kind_Type := external ("LIBRARY_TYPE", "static");
+
+   So_Ext := ".dylib";
+
+   package Naming is
+      for Implementation_Suffix ("C++") use ".cc";
+   end Naming;
+
+   package Builder is
+      for Switches ("Ada") use ("-j0", "-m");
+   end Builder;
+
+   package Compiler is
+      Common_Ada_Switches :=
+         ("-gnaty", "-gnatwu", "-gnat12", "-g",
+
+         --  Remove unusued subprograms
+         "-fdata-sections", "-ffunction-sections",
+
+         --  Link time optimization
+         "-flto"
+         );
+
+      case Mode is
+         when "Production" =>
+            for Switches ("Ada") use Common_Ada_Switches &
+               ("-O2", "-gnatp", "-gnatn", "-gnato3");
+            for Switches ("C++") use ("-O2", "-finline", "-std=c++11");
+
+         when "Debug" =>
+            for Switches ("Ada") use Common_Ada_Switches & ("-g", "-O0");
+            for Switches ("C++") use ("-std=c++11", "-O0");
+      end case;
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-E");
+   end Binder;
+
+   package Linker is
+      for Switches ("Ada") use (
+         --  Remove unused subprograms
+         "-Wl,-dead_strip",   --  OSX
+         --  "-Wl,--gc-sections"  --  linux
+         --  "-Wl,--print-gc-sections"
+
+         "-Wl,-flto"
+         );
+   end Linker;
+end Shared;

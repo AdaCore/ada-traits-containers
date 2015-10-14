@@ -19,16 +19,34 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
+package Conts.Dicts.Strings is
 
-package Conts.Algorithms is
+   type Stored_String is private;
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+   function Convert_From (E : String) return Stored_String;
 
-end Conts.Algorithms;
+   function Convert_To (E : Stored_String) return String;
+
+   function Get_Reference (E : Stored_String) return String;
+   --  how to implement this in this context
+
+   procedure Release (E : in out Stored_String);
+
+   function Hash (Str : String) return Unsigned_32;
+
+private
+
+   type String_Access is access String;
+   type String_Storage_Kind is (Short_String, Long_String);
+   Short_String_Size : constant := 12;
+
+   type Stored_String (Kind : String_Storage_Kind := Short_String) is record
+      case Kind is
+         when Short_String =>
+            Short_Value  : String (1 .. Short_String_Size);
+            Short_Length : Integer;
+         when Long_String =>
+            Long_Value   : String_Access := null;
+      end case;
+   end record;
+end Conts.Dicts.Strings;

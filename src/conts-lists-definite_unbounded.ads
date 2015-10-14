@@ -1,23 +1,45 @@
---  Unbounded lists of constrained elements
+------------------------------------------------------------------------------
+--                     Copyright (C) 2015, AdaCore                          --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- As a special exception under Section 7 of GPL version 3, you are granted --
+-- additional permissions described in the GCC Runtime Library Exception,   --
+-- version 3.1, as published by the Free Software Foundation.               --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
+--  Unbounded lists of constrained elements.
+--  Compared with standard Ada containers, this is saving half of the memory
+--  allocations, so much more efficient in general.
 
 pragma Ada_2012;
+with Ada.Finalization;
+with Conts.Elements.Definite;
+with Conts.Lists.Generics;
+with Conts.Lists.Cursors;
+with Conts.Lists.Nodes.Unbounded;
 
 generic
    type Element_Type is private;
-
-   Enable_Asserts : Boolean := False;
-   --  If True, extra asserts are added to the code. Apart from them, this
-   --  code runs with all compiler checks disabled.
-
 package Conts.Lists.Definite_Unbounded is
 
-   package Elements is new Definite_Elements_Traits (Element_Type);
-   package Nodes is new Unbounded_List_Nodes_Traits
-      (Elements              => Elements.Elements,
-       Controlled_Or_Limited => Controlled_Base_List);
-   package Lists is new Generic_Lists
-      (Nodes          => Nodes.Nodes,
-       Enable_Asserts => Enable_Asserts);
+   package Elements is new Conts.Elements.Definite (Element_Type);
+   package Nodes is new Conts.Lists.Nodes.Unbounded
+      (Elements  => Elements.Traits,
+       Base_Type => Ada.Finalization.Controlled,
+       Pool      => Conts.Global_Pool);
+   package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record
@@ -26,5 +48,5 @@ package Conts.Lists.Definite_Unbounded is
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
-   package Cursors is new List_Cursors (Lists, List);
+   package Cursors is new Conts.Lists.Cursors (Lists, List);
 end Conts.Lists.Definite_Unbounded;

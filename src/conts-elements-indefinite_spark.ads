@@ -19,41 +19,48 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Unbounded lists of unconstrained elements.
---  Cursors are indexes into an array, to be able to write post-conditions
---  and for added safety
+--  An implementation of the elements traits compatible with SPARK.
+--  This package hides the access types.
 
 pragma Ada_2012;
-with Conts.Elements.Indefinite_SPARK;
-with Conts.Lists.Nodes.Unbounded_SPARK;
-with Conts.Lists.Generics;
-with Conts.Lists.Cursors;
 
 generic
    type Element_Type (<>) is private;
-   --  Element_Type must not be a controlled type that needs to be
-   --  Adjusted when it is moved in memory, since the list will use the
-   --  realloc() system call.
 
-package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
+   with package Pool is new Conts.Pools (<>);
+   --  The storage pool used for Elements.
 
-   package Elements is new Conts.Elements.Indefinite_SPARK
-      (Element_Type, Pool => Conts.Global_Pool);
-   package Nodes is new Conts.Lists.Nodes.Unbounded_SPARK
-      (Elements  => Elements.Traits,
-       Base_Type => Limited_Base);
-   package Lists is new Conts.Lists.Generics (Nodes.Traits);
+package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
 
-   subtype Cursor is Lists.Cursor;
-   type List is new Lists.List with null record
-      with Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   package Impl with SPARK_Mode => On is
+      type Element_Access is private;
+      function To_Element_Access (E : Element_Type) return Element_Access
+         with Inline;
+      function To_Element_Type (E : Element_Access) return Element_Type
+         with Inline;
+      function Copy (E : Element_Access) return Element_Access with Inline;
+      procedure Free (X : in out Element_Access);
+   private
+      pragma SPARK_Mode (Off);
+      type Element_Access is access all Element_Type;
+      for Element_Access'Storage_Pool use Pool.Pool.all;
+      function To_Element_Access (E : Element_Type) return Element_Access
+         is (new Element_Type'(E));
+      function To_Element_Type (E : Element_Access) return Element_Type
+         is (E.all);
+      function Copy (E : Element_Access) return Element_Access
+         is (new Element_Type'(E.all));
+   end Impl;
 
-   function Copy (Self : List'Class) return List'Class;
-   --  Return a deep copy of Self
-   --  Complexity: O(n)
+   package Traits is new Conts.Elements.Traits
+      (Element_Type        => Element_Type,
+       Stored_Type         => Impl.Element_Access,
+       Return_Type         => Element_Type,
+       To_Stored           => Impl.To_Element_Access,
+       To_Return           => Impl.To_Element_Type,
+       Copy                => Impl.Copy,
+       Copyable            => False,
+       Movable             => False,
+       Release             => Impl.Free);
 
-   package Cursors is new Conts.Lists.Cursors (Lists, List);
-end Conts.Lists.Indefinite_Unbounded_SPARK;
+end Conts.Elements.Indefinite_SPARK;

@@ -19,16 +19,29 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
+package body Taggeds is
+   overriding function First (C : List) return Forward_Cursor'Class is
+   begin
+      return List_Cursor'(C => C.L.First);
+   end First;
 
-package Conts.Algorithms is
+   overriding procedure Append (C : in out List; P : T) is
+   begin
+      Internal_Lists.Append (C.L, P);
+   end Append;
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+   overriding function Element (C : List_Cursor) return T is
+   begin
+      return Internal_Lists.Element (C.C);
+   end Element;
 
-end Conts.Algorithms;
+   overriding procedure Next (C : in out List_Cursor) is
+   begin
+      Internal_Lists.Next (C.C);
+   end Next;
+
+   overriding function Has_Element (C : List_Cursor) return Boolean is
+   begin
+      return Internal_Lists.Has_Element (C.C);
+   end Has_Element;
+end Taggeds;

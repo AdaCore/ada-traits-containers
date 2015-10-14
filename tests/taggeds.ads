@@ -19,16 +19,41 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
+--  This package contains a simple list implemented via interfaces
+--  and tagged types, only used for testing performance of having a lot
+--  of dynamic dispatching.
+--  Such containers are slower, and the algorithms cannot so easily be
+--  adapted to other user-defined containers.
+--
+--  The primitive operations on cursor do not receive the container as
+--  a parameter, which means this cannot be used for formal containers.
 
-package Conts.Algorithms is
+with Ada.Containers.Doubly_Linked_Lists;
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
-      return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+generic
+   type T is private;
+package Taggeds is
+   type Forward_Cursor is interface;
+   function Element (C : Forward_Cursor) return T is abstract;
+   procedure Next (C : in out Forward_Cursor) is abstract;
+   function Has_Element (C : Forward_Cursor) return Boolean is abstract;
 
-end Conts.Algorithms;
+   type Container is interface;
+   function First (C : Container) return Forward_Cursor'Class is abstract;
+   procedure Append (C : in out Container; P : T) is abstract;
+
+   package Internal_Lists is new Ada.Containers.Doubly_Linked_Lists (T);
+
+   type List is new Container with record
+      L : Internal_Lists.List;
+   end record;
+   overriding function First (C : List) return Forward_Cursor'Class;
+   overriding procedure Append (C : in out List; P : T);
+
+   type List_Cursor is new Forward_Cursor with record
+      C : Internal_Lists.Cursor;
+   end record;
+   overriding function Element (C : List_Cursor) return T;
+   overriding procedure Next (C : in out List_Cursor);
+   overriding function Has_Element (C : List_Cursor) return Boolean;
+end Taggeds;

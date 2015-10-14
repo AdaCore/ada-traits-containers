@@ -1,2 +1,4 @@
-obj/*
-perf
+src/obj
+src/lib
+tests/obj
+spark/obj
