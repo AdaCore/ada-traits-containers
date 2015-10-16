@@ -54,10 +54,10 @@ class Test(object):
             count_if='',
             discriminant='',
             comments=comments or Comments(),
-            clear='',      # Explicit clear the container
-            clear_copy='', # Explicit clear the copy of the container
-            prefix='',     # Prefix for Element, Next and Has_Element
-            adaptors='',   # Creating adaptors for standard containers
+            clear='',       # Explicit clear the container
+            clear_copy='',  # Explicit clear the copy of the container
+            prefix='',      # Prefix for Element, Next and Has_Element
+            adaptors='',    # Creating adaptors for standard containers
             default=default)
 
         if self.args['base'].lower() == "limited":
@@ -65,10 +65,10 @@ class Test(object):
             self.args['copy'] = '.Copy'
             self.args['clear'] = '\n      V.Clear;'
             self.args['clear_copy'] = '\n         V_Copy.Clear;'
-    
+
         if self.args['nodes'].lower() == "bounded":
             self.args['discriminant'] = ' (Capacity => Items_Count)'
-    
+
         if not self.disable_count_if:
             self.args['count_if'] = """
          Stdout.Start_Test ("count_if", "{comments.countif}");
@@ -79,12 +79,12 @@ class Test(object):
 
     def __common(self):
         global body_withs, body_contents, spec_contents
-   
+
         spec_contents += """
     procedure Test_{base}_{definite}_{nodes}_{elem_type}
         (Stdout : not null access Output'Class);
 """.format(**self.args)
-    
+
         body_withs += """
 {withs}""".format(**self.args)
 
