@@ -171,9 +171,10 @@ class Test(object):
         Generate tests for the Ada 2012 containers
         """
 
-        self.args['adaptors'] = ("""
+        self.args['adaptors'] = (
+            """
        package Adaptors is new Conts.Cursors.Adaptors.""" +
-       adaptors + """ (Container);
+            adaptors + """ (Container);
        function Count_If is new Conts.Algorithms.Count_If
           (Adaptors.Cursors.Constant_Forward);
 """).format(**self.args)
@@ -190,7 +191,7 @@ Test("Integer", "Ada12", "Definite", "Unbounded", "List",
      "with Ada.Containers.Doubly_Linked_Lists;").gen_ada2012()
 Test("Integer", "Ada12", "Indefinite", "Unbounded", "List",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
-        " (Integer);",
+     " (Integer);",
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;").gen_ada2012(
      adaptors='Indefinite_List_Adaptors')
 Test("Integer", "Ada12_No_Checks", "Definite", "Unbounded", "List",
@@ -215,7 +216,7 @@ Test("Integer", "Limited", "Indefinite_Spark", "Unbounded_Spark", "List",
 
 Test("String", "Ada12", "Indefinite", "Unbounded", "List",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
-        " (String);",
+     " (String);",
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;").gen_ada2012(
      adaptors='Indefinite_List_Adaptors')
 Test("String", "Ada12_No_Checks", "Indefinite", "Unbounded", "List",
@@ -238,7 +239,7 @@ ads.write("package Generated_Tests is\n")
 ads.write("   pragma Style_Checks (Off);\n")
 ads.write(spec_contents)
 ads.write("end Generated_Tests;\n")
-ads.close();
+ads.close()
 
 adb.write(body_withs)
 adb.write("\n")
@@ -250,4 +251,3 @@ adb.write("   pragma Style_Checks (Off);\n")
 adb.write(body_contents)
 adb.write("end Generated_Tests;\n")
 adb.close()
-
