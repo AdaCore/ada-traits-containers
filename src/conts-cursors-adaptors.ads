@@ -50,7 +50,7 @@ package Conts.Cursors.Adaptors is
       pragma Inline (Element, Has_Element, Next, First);
 
       package Cursors is
-         package Forward is new Constant_Forward_Traits
+         package Constant_Forward is new Constant_Forward_Traits
             (Container    => List'Class,
              Cursor       => Cursor,
              Element_Type => Element_Type);
@@ -80,7 +80,7 @@ package Conts.Cursors.Adaptors is
       pragma Inline (Element, Has_Element, Next, First);
 
       package Cursors is
-         package Forward is new Constant_Forward_Traits
+         package Constant_Forward is new Constant_Forward_Traits
             (Container    => List'Class,
              Cursor       => Cursor,
              Element_Type => Element_Type);
@@ -109,7 +109,7 @@ package Conts.Cursors.Adaptors is
       pragma Inline (Element, Has_Element, Next, First);
 
       package Cursors is
-         package Forward is new Constant_Forward_Traits
+         package Constant_Forward is new Constant_Forward_Traits
             (Container    => Array_Type,
              Cursor       => Index_Type,
              Element_Type => Element_Type);

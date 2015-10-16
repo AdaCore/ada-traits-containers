@@ -25,5 +25,13 @@ package Memory is
    Frees    : Natural := 0;
    Reallocs : Natural := 0;
 
+   Paused : Boolean := False;
+
    procedure Reset;
+
+   procedure Pause;
+   --  Stop counting allocs and frees
+
+   procedure Unpause;
+   --  Resume counting
 end Memory;

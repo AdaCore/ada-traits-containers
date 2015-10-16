@@ -26,84 +26,89 @@
 #include <list>
 #include <string>
 
-bool IsGreaterThan3 (int i) { return i > 3; }
-bool startsWithStr (const std::string& s) { return s[0] == 's'; }
+bool IsLessEqual2 (int i) { return i <= 2; }
+bool startsWithStr (const std::string& s) { return s[0] == 'f'; }
 
 extern "C" {
    extern const int items_count;
-   extern void ada_print_time(void* output, double elapsed);
-   extern void ada_start_line(void* output, const char* title);
+   extern void start_container_test
+      (void* output, const char *base, const char* elements,
+       const char *nodes, const char* container, const char *e_type);
+   extern void end_container_test (void* output);
+   extern void start_test (void* output, const char* name);
+   extern void end_test (void* output);
 }
 
-void test_cpp(void * output) {
-   ada_start_line(output, "C++");
+extern "C"
+void test_cpp_int(void * output) {
+   start_container_test (output, "C++", "", "", "std::list", "Integer");
 
    std::list<int>  v;
 
-   std::clock_t begin = clock();
-   for (int c = 1; c <= items_count - 2; c++) {
+   start_test (output, "fill");
+   for (int c = 1; c <= items_count; c++) {
       v.push_back(2);
    }
-   v.push_back(5);
-   v.push_back(6);
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
+   end_test (output);
 
-   begin = clock();
+   start_test (output, "copy");
    std::list<int> v_copy (v);
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
+   end_test (output);
 
-   begin = clock();
    int count = 0;
+   start_test (output, "cursor loop");
    std::list<int>::const_iterator it (v.begin());
    while (it != v.end()) {
-      if (*it > 3) {
+      if (*it <= 2) {
          count ++;
       }
       it ++;
    }
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
-   if (count != 2) {
+   end_test (output);
+   if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
 
    count = 0;
+   start_test (output, "for-of loop");
    for (auto e : v) {
-      if (e > 3) {
+      if (e <= 2) {
          count ++;
       }
    }
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
-   if (count != 2) {
+   end_test (output);
+   if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-
-   begin = clock();
-   count = std::count_if (v.begin(), v.end(), IsGreaterThan3);
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
-   if (count != 2) {
+   start_test (output, "count_if");
+   count = std::count_if (v.begin(), v.end(), IsLessEqual2);
+   end_test (output);
+   if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
 
+   end_container_test (output);
 }
 
+extern "C"
 void test_cpp_string(void * output) {
+   start_container_test (output, "C++", "", "", "std::list", "String");
+
    std::list<std::string>  v;
 
-   ada_start_line(output, "C++");
-
-   std::clock_t begin = clock();
+   start_test (output, "fill");
    for (int c = 1; c <= items_count; c++) {
-      v.push_back("str1");
+      v.push_back("foo");
    }
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
+   end_test (output);
 
-   begin = clock();
+   start_test (output, "copy");
    std::list<std::string> v_copy (v);
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
+   end_test (output);
 
-   begin = clock();
    int count = 0;
+   start_test (output, "cursor loop");
    std::list<std::string>::const_iterator it (v.begin());
    while (it != v.end()) {
       if (startsWithStr(*it)) {
@@ -111,38 +116,29 @@ void test_cpp_string(void * output) {
       }
       it ++;
    }
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
+   end_test (output);
    if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-
    count = 0;
+   start_test (output, "for-of loop");
    for (std::string& e : v) {
       if (startsWithStr(e)) {
          count ++;
       }
    }
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
+   end_test (output);
    if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-
-   begin = clock();
+   start_test (output, "count_if");
    count = std::count_if (v.begin(), v.end(), startsWithStr);
-   ada_print_time(output, double(clock() - begin) / CLOCKS_PER_SEC);
+   end_test (output);
    if (count != items_count) {
       std::cout << "C++ error while counting" << std::endl;
    }
 
-}
-
-extern "C" {
-   void test_c_int(void* output) {
-      test_cpp(output);
-   }
-   void test_c_str(void* output) {
-      test_cpp_string(output);
-   }
+   end_container_test (output);
 }

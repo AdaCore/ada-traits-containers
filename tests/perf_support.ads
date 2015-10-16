@@ -25,20 +25,6 @@ with System;
 
 package Perf_Support is
 
-   Column_Title    : constant Column_Number := 1;
-   Column_Fill     : constant Column_Number := 2;
-   Column_Copy     : constant Column_Number := 3;
-   Column_Loop     : constant Column_Number := 4;
-   Column_For_Of   : constant Column_Number := 5;
-   Column_Count_If : constant Column_Number := 6;
-   Column_Allocate : constant Column_Number := 7;
-   Column_Allocs   : constant Column_Number := 8;
-   Column_Reallocs : constant Column_Number := 9;
-   Column_Frees    : constant Column_Number := 10;
-
-   --  Performance testing when using generics, virtual methods and
-   --  access to subprograms.
-
    --------------------
    -- Unary functors --
    --------------------
@@ -124,36 +110,20 @@ package Perf_Support is
    --  For some reason, using 600_000 results in a storage error when
    --  allocating the bounded limited containers.
 
-   Small_Items_Count : constant Integer := Items_Count;
-   --  In some cases, we can't allocate as many items as Items_Count (when
-   --  using Ada arrays). In such cases, we use a smaller number of items.
+   function Predicate (P : Integer) return Boolean is (P <= 2)
+      with Inline;
+   function Predicate (P : String) return Boolean is (P (P'First) = 'f')
+      with Inline;
+   procedure Assert (Count, Expected : Natural)
+      with Inline;
 
-   procedure Test_Lists_Int (Stdout : in out Output'Class);
-   procedure Test_Lists_Int_Indefinite (Stdout : in out Output'Class);
-   procedure Test_Lists_Int_Indefinite_SPARK (Stdout : in out Output'Class);
-   procedure Test_Lists_Str (Stdout : in out Output'Class);
-   procedure Test_Lists_Str_Reference (Stdout : in out Output'Class);
-   procedure Test_Lists_Bounded (Stdout : in out Output'Class);
-   procedure Test_Lists_Bounded_Limited (Stdout : in out Output'Class);
-   --  Perform the tests for our own Conts containers
-
-   procedure Test_Cpp_Int (Stdout : System.Address);
-   pragma Import (C, Test_Cpp_Int, "test_c_int");
-   procedure Test_Cpp_Str (Stdout : System.Address);
-   pragma Import (C, Test_Cpp_Str, "test_c_str");
+   procedure Test_Cpp_Int (Stdout : System.Address)
+      with Import, Convention => C, External_Name => "test_cpp_int";
+   procedure Test_Cpp_Str (Stdout : System.Address)
+      with Import, Convention => C, External_Name => "test_cpp_string";
    --  Perform C++ testing
 
-   procedure Test_Ada2012_Int (Stdout : in out Output'Class);
-   procedure Test_Ada2012_Int_No_Checks (Stdout : in out Output'Class);
-   procedure Test_Ada2012_Int_Indefinite (Stdout : in out Output'Class);
-   procedure Test_Ada2012_Str (Stdout : in out Output'Class);
-   procedure Test_Ada2012_Str_No_Checks (Stdout : in out Output'Class);
-   --  Test Ada2012 containers
-
-   procedure Test_Arrays_Int (Stdout : in out Output'Class);
+   procedure Test_Arrays_Int (Stdout : access Output'Class);
    --  Test standard Ada arrays
-
-   procedure Test_Tagged_Int (Stdout : in out Output'Class);
-   --  Test when the list is implemented as tagged types
 
 end Perf_Support;

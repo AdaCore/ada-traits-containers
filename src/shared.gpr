@@ -22,10 +22,10 @@ abstract project Shared is
          ("-gnaty", "-gnatwu", "-gnat12", "-g",
 
          --  Remove unusued subprograms
-         "-fdata-sections", "-ffunction-sections",
+         "-fdata-sections", "-ffunction-sections"
 
          --  Link time optimization
-         "-flto"
+         --  "-flto"
          );
 
       case Mode is
@@ -47,11 +47,11 @@ abstract project Shared is
    package Linker is
       for Switches ("Ada") use (
          --  Remove unused subprograms
-         "-Wl,-dead_strip",   --  OSX
+         "-Wl,-dead_strip"   --  OSX
          --  "-Wl,--gc-sections"  --  linux
          --  "-Wl,--print-gc-sections"
 
-         "-Wl,-flto"
+         --  "-Wl,-flto"
          );
    end Linker;
 end Shared;

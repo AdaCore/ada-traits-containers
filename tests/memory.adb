@@ -20,6 +20,11 @@
 ------------------------------------------------------------------------------
 
 package body Memory is
+
+   -----------
+   -- Reset --
+   -----------
+
    procedure Reset is
    begin
       Live := 0;
@@ -27,4 +32,22 @@ package body Memory is
       Frees := 0;
       Reallocs := 0;
    end Reset;
+
+   -----------
+   -- Pause --
+   -----------
+
+   procedure Pause is
+   begin
+      Paused := True;
+   end Pause;
+
+   -------------
+   -- Unpause --
+   -------------
+
+   procedure Unpause is
+   begin
+      Paused := False;
+   end Unpause;
 end Memory;

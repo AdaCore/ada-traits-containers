@@ -94,8 +94,10 @@ package body System.Memory is
          Abort_Undefer.all;
       end if;
 
-      Standard.Memory.Live := Standard.Memory.Live + Natural (Actual_Size);
-      Standard.Memory.Allocs := Standard.Memory.Allocs + 1;
+      if not Standard.Memory.Paused then
+         Standard.Memory.Live := Standard.Memory.Live + Natural (Actual_Size);
+         Standard.Memory.Allocs := Standard.Memory.Allocs + 1;
+      end if;
 
       if Result = System.Null_Address then
          Raise_Exception (Storage_Error'Identity, "heap exhausted");
@@ -110,7 +112,9 @@ package body System.Memory is
 
    procedure Free (Ptr : System.Address) is
    begin
-      Standard.Memory.Frees := Standard.Memory.Frees + 1;
+      if not Standard.Memory.Paused then
+         Standard.Memory.Frees := Standard.Memory.Frees + 1;
+      end if;
 
       if Parameters.No_Abort then
          c_free (Ptr);
@@ -150,8 +154,10 @@ package body System.Memory is
          Raise_Exception (Storage_Error'Identity, "heap exhausted");
       end if;
 
-      Standard.Memory.Reallocs := Standard.Memory.Reallocs + 1;
-      Standard.Memory.Live := Standard.Memory.Live + Natural (Actual_Size);
+      if not Standard.Memory.Paused then
+         Standard.Memory.Reallocs := Standard.Memory.Reallocs + 1;
+         Standard.Memory.Live := Standard.Memory.Live + Natural (Actual_Size);
+      end if;
 
       return Result;
    end Realloc;

@@ -1,6 +1,8 @@
 with "src/conts";
 with "spark/spark";
 with "src/shared";
+with "gnatcoll";
+
 project Tests is
    for Source_Dirs use ("tests/");
    for Object_Dir use "tests/obj";

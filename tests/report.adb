@@ -20,216 +20,171 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-with Ada.Unchecked_Deallocation;
 with Ada.Text_IO;        use Ada.Text_IO;
-with GNAT.Strings;
-with Interfaces.C.Strings;
+with Interfaces.C.Strings; use Interfaces.C.Strings;
 with Memory;
-with Perf_Support;       use Perf_Support;
 with System;
 
 package body Report is
 
+   type Output_Access is access all Output'Class;
+   pragma No_Strict_Aliasing (Output_Access);
    function To_Output is new Ada.Unchecked_Conversion
       (System.Address, Output_Access);
 
-   procedure Put (Self : in out Output; Str : String);
-   --  Display text in the current column
+   procedure Start_Container_Test
+      (Self : System.Address;
+       Base, Elements, Nodes, Container, E_Type : chars_ptr)
+       with Export, Convention => C, External_Name => "start_container_test";
+   procedure End_Container_Test (Self : System.Address)
+      with Export, Convention => C, External_Name => "end_container_test";
+   procedure Start_Test (Self : System.Address; Name : chars_ptr)
+      with Export, Convention => C, External_Name => "start_test";
+   procedure End_Test (Self : System.Address)
+      with Export, Convention => C, External_Name => "end_test";
 
-   procedure Setup
-      (Self           : in out Output;
-       Counters_Count : Performance_Counter;
-       Columns        : Columns_Array;
-       Show_Percent   : Boolean := True)
+   --------------------------
+   -- Start_Container_Test --
+   --------------------------
+
+   procedure Start_Container_Test
+      (Self       : not null access Output'Class;
+       Base       : String;
+       Elements   : String;
+       Nodes      : String;
+       Container  : String;
+       E_Type     : String)
    is
    begin
-      Self.Ref     := new Reference_Times (1 .. Counters_Count);
-      Self.Ref.all := (others => 0.0);
-      Self.Columns := new Columns_Array'(Columns);
-      Self.Show_Percent := Show_Percent;
-   end Setup;
+      Memory.Pause;
 
-   procedure Reset (Self : in out Output) is
-   begin
-      Self.Finish_Line;
-      Self.Ref.all := (others => 0.0);
-   end Reset;
-
-   procedure Print_Header (Self : in out Output) is
-   begin
-      Self.Finish_Line;
-      Self.Current := Self.Columns'First;
-      for C in Self.Columns'Range loop
-         Put (Self, Self.Columns (C).Title.all);
-      end loop;
-      New_Line;
-      Self.Current := Self.Columns'First;
-   end Print_Header;
-
-   procedure Put (Self : in out Output; Str : String) is
-      W : constant Natural :=
-         Self.Columns (Self.Current).Width;
-   begin
-      Put (Str (Str'First .. Natural'Min (Str'Last, Str'First + W - 1))
-           & (Str'Length + 1 .. W => ' '));
-      if not Self.Basic
-         and then Self.Columns (Self.Current).Wide_Separator
-      then
-         Put (Character'Val (16#E2#)
-              & Character'Val (16#95#)
-              & Character'Val (16#91#));
-      else
-         Put ('|');
+      if Self.Global_Result = JSON_Null then
+         Self.Global_Result := Create_Object;
       end if;
 
-      if Self.Current /= Self.Columns'Last then
-         Self.Current := Column_Number'Succ (Self.Current);
-      end if;
-   end Put;
+      Self.End_Container_Test;   --  In case one was started
+      Self.Container_Test := GNATCOLL.JSON.Create_Object;
+      Self.Container_Test.Set_Field ("base", Base);
+      Self.Container_Test.Set_Field ("elements", Elements);
+      Self.Container_Test.Set_Field ("nodes", Nodes);
+      Self.Container_Test.Set_Field ("container", Container);
+      Self.Container_Test.Set_Field ("elem_type", E_Type);
 
-   procedure Start_Line
-      (Self : in out Output; Title : String; Fewer_Items : Boolean := False) is
-   begin
-      Self.Finish_Line;
+      Self.Tests_In_Container := Create_Object;
+      Self.Container_Test.Set_Field ("tests", Self.Tests_In_Container);
+
       Memory.Reset;
-      Self.Current := Self.Columns'First;
-      Put (Self, Title);
-      Self.Fewer_Items := Fewer_Items;
-   end Start_Line;
+      Memory.Unpause;
+   end Start_Container_Test;
 
-   procedure Finish_Line (Self : in out Output) is
+   ------------------------
+   -- End_Container_Test --
+   ------------------------
+
+   procedure End_Container_Test (Self : not null access Output'Class) is
    begin
-      if Self.Current /= Self.Columns'First then
-         while Self.Current /= Self.Columns'Last loop
-            Put (Self, "");
-         end loop;
-         Put (Self, Memory.Frees'Img);
-         if Items_Count /= Small_Items_Count and then Self.Fewer_Items then
-            Put_Line (" fewer items");
-         else
-            New_Line;
-         end if;
-         Self.Current := Self.Columns'First;
+      Memory.Pause;
+      Self.End_Test;  --  In case one was started
+
+      if Self.Container_Test /= JSON_Null then
+         --  Allocations include the ones done for JSON results
+         Self.Container_Test.Set_Field ("allocated", Memory.Live);
+         Self.Container_Test.Set_Field ("allocs", Memory.Allocs);
+         Self.Container_Test.Set_Field ("reallocs", Memory.Reallocs);
+         Self.Container_Test.Set_Field ("frees", Memory.Frees);
+
+         Append (Self.All_Tests, Self.Container_Test);
+         Self.Container_Test := JSON_Null;
       end if;
-   end Finish_Line;
-
-   procedure Print_Time
-      (Self : in out Output; D : Duration; Extra : String := "")
-   is
-      Ref : Duration;
-   begin
-      if Self.Show_Percent then
-         Ref := Self.Ref (Self.Columns (Self.Current).Ref);
-         if Ref = 0.0 then
-            Self.Ref (Self.Columns (Self.Current).Ref) := D;
-            Ref := D;
-         end if;
-
-         declare
-            S : constant String := Integer'Image
-               (Integer (Float'Floor (Float (D) / Float (Ref) * 100.0))) & '%';
-         begin
-            Put (Self, S & Extra);
-         end;
-
-      else
-         declare
-            S   : constant String := D'Img;
-            Sub : constant String :=
-               S (S'First .. Integer'Min (S'Last, S'First + 7));
-         begin
-            Put (Self, Sub & Extra);
-         end;
-      end if;
-   end Print_Time;
-
-   -------------------
-   -- Print_Not_Run --
-   -------------------
-
-   procedure Print_Not_Run (Self : in out Output; Extra : String := "") is
-   begin
-      Put (Self, Extra);
-   end Print_Not_Run;
+      Memory.Unpause;
+   end End_Container_Test;
 
    ----------------
-   -- Print_Size --
+   -- Start_Test --
    ----------------
 
-   procedure Print_Size (Self : in out Output; Size : Natural) is
-      Actual_Size : constant Natural := Size + Natural (Memory.Live);
-   begin
-      if Actual_Size >= 1_000_000 then
-         --  Approximate a kb as 1000 bytes, easier to compare
-         Put (Self, Integer'Image (Actual_Size / 1000) & "kb");
-      else
-         Put (Self, Integer'Image (Actual_Size) & "b");
-      end if;
-
-      Put (Self, Memory.Allocs'Img);
-      Put (Self, Memory.Reallocs'Img);
-   end Print_Size;
-
-   ---------------
-   -- Run_Tests --
-   ---------------
-
-   procedure Run_Tests
-      (Stdout      : in out Output'Class;
-       Title       : String;
-       Self        : in out Container;
-       Fewer_Items : Boolean := False)
+   procedure Start_Test
+      (Self : not null access Output'Class; Name : String)
    is
-      Start : Time;
    begin
-      Stdout.Start_Line (Title, Fewer_Items => Fewer_Items);
-      for Col in Stdout.Columns'First + 1 .. Stdout.Columns'Last loop
-         exit when Stdout.Columns (Col).Ref = Last_Column_With_Test;
-         Start := Clock;
-         Run (Self, Col, Start => Start);
-         if Stdout.Current = Col then
-            Stdout.Print_Time (Clock - Start);
-         end if;
-      end loop;
-      Stdout.Print_Size (Self'Size);
-   end Run_Tests;
+      Memory.Pause;
+      Self.End_Test;  --  In case one was started
+      Self.Current_Test := GNATCOLL.JSON.Create_Object;
+      Self.Tests_In_Container.Set_Field (Name, Self.Current_Test);
+
+      Memory.Unpause;
+      Self.Start_Time := Clock;
+   end Start_Test;
 
    --------------
-   -- Finalize --
+   -- End_Test --
    --------------
 
-   procedure Finalize (Self : in out Output) is
-      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-         (Columns_Array, Columns_Array_Access);
-      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-         (Reference_Times, Reference_Times_Access);
+   procedure End_Test (Self : not null access Output'Class) is
+      D : constant Duration := Clock - Self.Start_Time;
    begin
-      for C of Self.Columns.all loop
-         Free (C.Title);
-      end loop;
-      Unchecked_Free (Self.Columns);
-      Unchecked_Free (Self.Ref);
-   end Finalize;
+      if Self.Current_Test /= JSON_Null then
+         Memory.Pause;
+         Self.Current_Test.Set_Field ("duration", Float (D));
+         Self.Current_Test := JSON_Null;
+         Memory.Unpause;
+      end if;
+   end End_Test;
 
-   ------------------
-   -- Print_From_C --
-   ------------------
+   -------------
+   -- Display --
+   -------------
 
-   procedure Print_From_C
-      (Stdout : System.Address; D : Interfaces.C.double);
-   pragma Export (C, Print_From_C, "ada_print_time");
-   procedure Print_From_C
-      (Stdout : System.Address; D : Interfaces.C.double) is
+   procedure Display (Self : not null access Output'Class) is
+      F : File_Type;
    begin
-      To_Output (Stdout).Print_Time (Duration (D));
-   end Print_From_C;
+      Self.Global_Result.Set_Field ("tests", Self.All_Tests);
 
-   procedure Start_Line_C
-      (Stdout : System.Address; Title : Interfaces.C.Strings.chars_ptr);
-   pragma Export (C, Start_Line_C, "ada_start_line");
-   procedure Start_Line_C
-      (Stdout : System.Address; Title : Interfaces.C.Strings.chars_ptr) is
+      Create (F, Out_File, "data.js");
+      Put (F, "var data = ");
+      Put (F, GNATCOLL.JSON.Write (Self.Global_Result, Compact => False));
+      Put (F, ";");
+      Close (F);
+   end Display;
+
+   --------------------------
+   -- Start_Container_Test --
+   --------------------------
+
+   procedure Start_Container_Test
+      (Self : System.Address;
+       Base, Elements, Nodes, Container, E_Type : chars_ptr) is
    begin
-      To_Output (Stdout).Start_Line (Interfaces.C.Strings.Value (Title));
-   end Start_Line_C;
+      Start_Container_Test
+         (To_Output (Self), Value (Base), Value (Elements), Value (Nodes),
+          Value (Container), Value (E_Type));
+   end Start_Container_Test;
+
+   ------------------------
+   -- End_Container_Test --
+   ------------------------
+
+   procedure End_Container_Test (Self : System.Address) is
+   begin
+      End_Container_Test (To_Output (Self));
+   end End_Container_Test;
+
+   ----------------
+   -- Start_Test --
+   ----------------
+
+   procedure Start_Test (Self : System.Address; Name : chars_ptr) is
+   begin
+      Start_Test (To_Output (Self), Value (Name));
+   end Start_Test;
+
+   --------------
+   -- End_Test --
+   --------------
+
+   procedure End_Test (Self : System.Address) is
+   begin
+      End_Test (To_Output (Self));
+   end End_Test;
+
 end Report;

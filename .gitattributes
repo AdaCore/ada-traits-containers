@@ -1,1 +1,3 @@
 spark/* no-precommit-check
+
+generate_test.py  no-precommit-check
