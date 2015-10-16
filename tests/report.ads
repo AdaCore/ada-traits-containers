@@ -42,7 +42,10 @@ package Report is
    --  This automatically starts measuring the number of allocation and
    --  deallocations done by that test.
 
-   procedure Start_Test (Self : not null access Output'Class; Name : String);
+   procedure Start_Test
+      (Self    : not null access Output'Class;
+       Name    : String;
+       Comment : String := "");
    procedure End_Test (Self : not null access Output'Class);
    --  A test on the current container is executed. These procedures measure
    --  the execution time. Calling End_Test is optional if you are calling

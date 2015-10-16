@@ -1,0 +1,97 @@
+<html ng-app='containers'>
+<head>
+   <script src="data.js"></script>
+   <script src="angular.min.js"></script>
+   <script src="support.js"></script>
+   <style>
+.worse { color: red }
+html { font-size: 12px}
+table { border-collapse: collapse; table-layout: fixed }
+tr.separator {
+   border-top: 2px solid #222;
+}
+td {
+   width: 55px;
+   text-align: center;
+   padding: 10px 5px;
+   border: 1px solid #ccc;
+   white-space: nowrap;
+}
+td {
+   font-family: monospace;
+}
+th {
+   font-size: 0.8em;
+   color: #333;
+}
+th.rotate {
+   height: 140px;
+   white-space: nowrap;
+}
+th.rotate div {
+   transform: translate(42px,35px) rotate(-45deg);
+   width: 55px;
+}
+th.rotate div span {
+   border-bottom: 2px solid #222;
+   padding: 0 0 15px 0;
+}
+th.row-header {
+   padding: 0 10px;
+   border-bottom: 1px solid #ccc;
+   border-right: 2px solid #222;
+}
+.comment {
+   text-decoration: underline;
+   cursor: pointer;
+}
+   </style>
+</head>
+<body>
+   <h1>Testsuite result</h1>
+
+   <div ng-controller='ResultsCtrl'>
+      <div>
+         <input type='checkbox' ng-model='as_percent'>
+         <span ng-if='as_percent'>As percent</span>
+         <span ng-if='!as_percent'>As milliseconds</span>
+      </div>
+
+      <table>
+         <thead>
+            <tr>
+               <th></th>
+               <th class='rotate' ng-repeat='t in data.tests'>
+                  <div><span>{{t.base}} {{t.elements}} {{t.nodes}} {{t.container}} of {{t.elem_type}}</span></div>
+               </th>
+            </tr>
+         </thead>
+         <tbody>
+            <tr ng-repeat='name in test_names' ng-class='{separator: ref_test_names[name]}'>
+               <th class='row-header'>{{name}}</th>
+               <td ng-repeat='c in data.tests'>
+                  <span ct-duration='name' aspercent='as_percent' container='c'></span>
+               </td>
+            </tr>
+            <tr class='separator'>
+               <th class='row-header'>Ada Allocated</th>
+               <td ng-repeat='c in data.tests'>{{c.allocated | kb}}</td>
+            </tr>
+            <tr>
+               <th class='row-header'>Ada Allocs</th>
+               <td ng-repeat='c in data.tests'>{{c.allocs}}</td>
+            </tr>
+            <tr>
+               <th class='row-header'>Ada Reallocs</th>
+               <td ng-repeat='c in data.tests'>{{c.reallocs}}</td>
+            </tr>
+            <tr>
+               <th class='row-header'>Ada Free</th>
+               <td ng-repeat='c in data.tests' ng-class="{worse:c.frees!=c.allocs}">{{c.frees}}</td>
+            </tr>
+         </tbody>
+      </table>
+
+</body>
+</html>
+

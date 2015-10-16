@@ -104,13 +104,18 @@ package body Report is
    ----------------
 
    procedure Start_Test
-      (Self : not null access Output'Class; Name : String)
-   is
+      (Self    : not null access Output'Class;
+       Name    : String;
+       Comment : String := "") is
    begin
       Memory.Pause;
       Self.End_Test;  --  In case one was started
       Self.Current_Test := GNATCOLL.JSON.Create_Object;
       Self.Tests_In_Container.Set_Field (Name, Self.Current_Test);
+
+      if Comment /= "" then
+         Self.Current_Test.Set_Field ("comment", Comment);
+      end if;
 
       Memory.Unpause;
       Self.Start_Time := Clock;

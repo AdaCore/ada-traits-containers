@@ -11,6 +11,14 @@ body_withs = ""
 body_contents = ""
 
 
+class Comments(object):
+    def __init__(self, **kwargs):
+        self.comments = kwargs
+
+    def __getattr__(self, key):
+        return self.comments.get(key, '')
+
+
 class Test(object):
 
     def __init__(
@@ -22,7 +30,8 @@ class Test(object):
         type,        # "List", "Vector", ...
         instance,    # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
-        disable_count_if=False
+        disable_count_if=False,
+        comments=None  # instance of Comments
     ):
 
         if elem_type.lower() == "integer":
@@ -44,24 +53,29 @@ class Test(object):
             copy='',
             count_if='',
             discriminant='',
-            prefix='',   # Prefix for Element, Next and Has_Element
-            adaptors='', # Creating adaptors for standard containers
+            comments=comments or Comments(),
+            clear='',      # Explicit clear the container
+            clear_copy='', # Explicit clear the copy of the container
+            prefix='',     # Prefix for Element, Next and Has_Element
+            adaptors='',   # Creating adaptors for standard containers
             default=default)
 
         if self.args['base'].lower() == "limited":
             # Need an explicit copy, since ":=" is not defined for limited types
             self.args['copy'] = '.Copy'
+            self.args['clear'] = '\n      V.Clear;'
+            self.args['clear_copy'] = '\n         V_Copy.Clear;'
     
         if self.args['nodes'].lower() == "bounded":
             self.args['discriminant'] = ' (Capacity => Items_Count)'
     
         if not self.disable_count_if:
             self.args['count_if'] = """
-         Stdout.Start_Test ("count_if");
+         Stdout.Start_Test ("count_if", "{comments.countif}");
          Co := Count_If (V2, Predicate'Access);
          Stdout.End_Test;
          Assert (Co, Items_Count);
-    """
+    """.format(**self.args)
 
     def __common(self):
         global body_withs, body_contents, spec_contents
@@ -88,24 +102,25 @@ class Test(object):
 
        procedure Run (V2 : in out Container.{type}'Class) is
           It : Container.Cursor;
-          Co : Natural := 0;
+          Co : Natural;
        begin
-          Stdout.Start_Test ("fill");
+          Stdout.Start_Test ("fill", "{comments.fill}");
           for C in 1 .. Items_Count loop
              V2.Append ({default});
           end loop;
           Stdout.End_Test;
 
-          Stdout.Start_Test ("copy");
+          Stdout.Start_Test ("copy", "{comments.copy}");
           declare
              V_Copy : Container.{type}'Class := V2{copy};
              pragma Unreferenced (V_Copy);
           begin
              --  Measure the time before we destroy the copy
-             Stdout.End_Test;
+             Stdout.End_Test;{clear_copy}
           end;
 
-          Stdout.Start_Test ("cursor loop");
+          Co := 0;
+          Stdout.Start_Test ("cursor loop", "{comments.cursorloop}");
           It := V2.First;
           while {prefix}Has_Element (It) loop
              if Predicate ({prefix}Element (It)) then
@@ -117,7 +132,7 @@ class Test(object):
           Assert (Co, Items_Count);
 
           Co := 0;
-          Stdout.Start_Test ("for-of loop");
+          Stdout.Start_Test ("for-of loop", "{comments.forofloop}");
           for E of V2 loop
              if Predicate (E) then
                 Co := Co + 1;
@@ -134,7 +149,7 @@ class Test(object):
        declare
           V : Container.{type}{discriminant};
        begin
-          Run (V);
+          Run (V);{clear}
        end;
        Stdout.End_Container_Test;
     end Test_{base}_{definite}_{nodes}_{elem_type};
@@ -211,7 +226,8 @@ Test("String", "Ada12_No_Checks", "Indefinite", "Unbounded", "List",
 
 Test("String", "Controlled", "Indefinite", "Unbounded", "List",
      "package Container is new Conts.Lists.Indefinite_Unbounded (String);",
-     "with Conts.Lists.Indefinite_Unbounded;").gen()
+     "with Conts.Lists.Indefinite_Unbounded;",
+     comments=Comments(cursorloop="Cost if for copying the string")).gen()
 Test("String", "Controlled", "Indefinite", "Unbounded_Ref", "List",
      "package Container is new Conts.Lists.Indefinite_Unbounded_Ref (String);",
      "with Conts.Lists.Indefinite_Unbounded_Ref;",
