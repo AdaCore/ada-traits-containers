@@ -22,6 +22,8 @@ var ref_test_names = {
    'cursor loop': true
 };
 
+// Same as data (from data.js), but grouped by element type
+var processed_data = {};
 
 app.factory('Reftime', function() {
    var reftimes = {};  // elem_type -> { testname -> duration }
@@ -38,6 +40,15 @@ app.factory('Reftime', function() {
     * Compute the reference times
     */
    Reftime.prototype.set_reftimes = function(base) {
+      // Group data by element type
+      angular.forEach(data.tests, function(container) {
+         var arr = processed_data[container.elem_type];
+         if (!arr) {
+            arr = processed_data[container.elem_type] = [];
+         }
+         arr.push(container);
+      });
+
       // Compute the reference times (C++ always for now)
       angular.forEach(data.tests, function(container) {
          if (container.base == base) {
@@ -77,7 +88,7 @@ app.factory('Reftime', function() {
 });
 
 app.controller('ResultsCtrl', function($scope, Reftime) {
-   $scope.data = data;  // from global variable
+   $scope.data = processed_data;  // from global variable
    $scope.as_percent = true;
    $scope.test_names = Reftime.test_names();
    $scope.ref_test_names = ref_test_names;
