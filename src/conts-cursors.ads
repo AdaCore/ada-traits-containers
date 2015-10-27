@@ -33,10 +33,10 @@ package Conts.Cursors with SPARK_Mode is
    generic
       type Container (<>) is limited private;
       type Cursor is private;
-      type Element_Type (<>) is private;
+      type Return_Type (<>) is private;
       with function First (Self : Container) return Cursor is <>;
       with function Element (Self : Container; Pos : Cursor)
-         return Element_Type is <>;
+         return Return_Type is <>;
       with function Has_Element (Self : Container; Pos : Cursor)
          return Boolean is <>;
       with function Next (Self : Container; Pos : Cursor) return Cursor is <>;
@@ -55,10 +55,10 @@ package Conts.Cursors with SPARK_Mode is
    generic
       type Container (<>) is limited private;
       type Cursor is private;
-      type Element_Type (<>) is private;
+      type Return_Type (<>) is private;
       with function First (Self : Container) return Cursor is <>;
       with function Element (Self : Container; Pos : Cursor)
-         return Element_Type is <>;
+         return Return_Type is <>;
       with function Has_Element (Self : Container; Pos : Cursor)
          return Boolean is <>;
       with function Next (Self : Container; Pos : Cursor) return Cursor is <>;
@@ -69,7 +69,7 @@ package Conts.Cursors with SPARK_Mode is
 
       --  A bidirectional cursor is also a forward cursor
       package Constant_Forward is new Constant_Forward_Traits
-         (Container, Cursor, Element_Type);
+         (Container, Cursor, Return_Type);
 
    end Constant_Bidirectional_Traits;
 

@@ -27,7 +27,7 @@ package body Conts.Algorithms is
 
    function Count_If
       (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
+       Predicate : access function (E : Cursors.Return_Type) return Boolean)
       return Natural
    is
       C : Cursors.Cursor := Cursors.First (Self);

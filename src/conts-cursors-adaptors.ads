@@ -53,7 +53,7 @@ package Conts.Cursors.Adaptors is
          package Constant_Forward is new Constant_Forward_Traits
             (Container    => List'Class,
              Cursor       => Cursor,
-             Element_Type => Element_Type);
+             Return_Type  => Element_Type);
       end Cursors;
    end List_Adaptors;
 
@@ -83,7 +83,7 @@ package Conts.Cursors.Adaptors is
          package Constant_Forward is new Constant_Forward_Traits
             (Container    => List'Class,
              Cursor       => Cursor,
-             Element_Type => Element_Type);
+             Return_Type  => Element_Type);
       end Cursors;
    end Indefinite_List_Adaptors;
 
@@ -112,7 +112,7 @@ package Conts.Cursors.Adaptors is
          package Constant_Forward is new Constant_Forward_Traits
             (Container    => Array_Type,
              Cursor       => Index_Type,
-             Element_Type => Element_Type);
+             Return_Type  => Element_Type);
       end Cursors;
    end Array_Adaptors;
 

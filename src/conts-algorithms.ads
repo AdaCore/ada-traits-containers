@@ -27,7 +27,7 @@ package Conts.Algorithms is
       with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
    function Count_If
       (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Element_Type) return Boolean)
+       Predicate : access function (E : Cursors.Return_Type) return Boolean)
       return Natural;
    --  Should we have a version that takes a 'From:Cursor' parameter ?
 

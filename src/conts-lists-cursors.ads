@@ -51,7 +51,7 @@ package Conts.Lists.Cursors with SPARK_Mode is
    subtype Return_Type is Lists.Nodes.Elements.Return_Type;
 
    function Cursors_First (Self : List'Class) return Cursor
-      is (Lists.First (Self));
+      is (Lists.First (Self)) with Inline;
    function Cursors_Element
       (Self : List'Class; Position : Cursor) return Return_Type
       is (Lists.Element (Self, Position))
@@ -71,13 +71,12 @@ package Conts.Lists.Cursors with SPARK_Mode is
       is (Lists.Previous (Self, Position))
       with Pre => Lists.Has_Element (Self, Position),
            Inline => True;
-   pragma Inline (Cursors_First);
 
    package Constant_Bidirectional is
       new Conts.Cursors.Constant_Bidirectional_Traits
          (Container    => List'Class,
           Cursor       => Cursor,
-          Element_Type => Return_Type,
+          Return_Type  => Return_Type,
           First        => Cursors_First,
           Next         => Cursors_Next,
           Has_Element  => Cursors_Has_Element,
