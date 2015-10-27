@@ -10,7 +10,6 @@ spec_contents = ""
 body_withs = ""
 body_contents = ""
 
-
 class Comments(object):
     def __init__(self, **kwargs):
         self.comments = kwargs
@@ -31,7 +30,8 @@ class Test(object):
         instance,    # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
         disable_count_if=False,
-        comments=None  # instance of Comments
+        comments=None, # instance of Comments
+        favorite=False # Whether this should be highlighted in the results
     ):
 
         if elem_type.lower() == "integer":
@@ -53,6 +53,7 @@ class Test(object):
             copy='',
             count_if='',
             discriminant='',
+            favorite=favorite,
             comments=comments or Comments(),
             clear='',       # Explicit clear the container
             clear_copy='',  # Explicit clear the copy of the container
@@ -75,7 +76,13 @@ class Test(object):
          Co := Count_If (V2, Predicate'Access);
          Stdout.End_Test;
          Assert (Co, Items_Count);
-    """.format(**self.args)
+""".format(**self.args)
+        else:
+             self.args['count_if'] = """
+         Stdout.Start_Test ("count_if", "{comments.countif}");
+         Stdout.End_Test;
+""".format(**self.args)
+
 
     def __common(self):
         global body_withs, body_contents, spec_contents
@@ -145,12 +152,14 @@ class Test(object):
 
     begin
        Stdout.Start_Container_Test
-          ("{base}", "{definite}", "{nodes}", "{type}", "{elem_type}");
-       declare
-          V : Container.{type}{discriminant};
-       begin
-          Run (V);{clear}
-       end;
+          ("{base}", "{definite}", "{nodes}", "{type}", "{elem_type}", {favorite});
+       for C in 1 .. Repeat_Count loop
+          declare
+             V : Container.{type}{discriminant};
+          begin
+             Run (V);{clear}
+          end;
+       end loop;
        Stdout.End_Container_Test;
     end Test_{base}_{definite}_{nodes}_{elem_type};
 """.format(**self.args)
@@ -196,14 +205,19 @@ Test("Integer", "Ada12", "Indefinite", "Unbounded", "List",
      adaptors='Indefinite_List_Adaptors')
 Test("Integer", "Ada12_No_Checks", "Definite", "Unbounded", "List",
      "package Container is new Ada.Containers.Doubly_Linked_Lists (Integer);",
-     "with Ada.Containers.Doubly_Linked_Lists;").gen_ada2012(disable_checks=True)
+     "with Ada.Containers.Doubly_Linked_Lists;",
+     favorite=True).gen_ada2012(disable_checks=True)
 
 Test("Integer", "Controlled", "Indefinite", "Unbounded", "List",
      "package Container is new Conts.Lists.Indefinite_Unbounded (Integer);",
      "with Conts.Lists.Indefinite_Unbounded;").gen()
 Test("Integer", "Controlled", "Definite", "Unbounded", "List",
      "package Container is new Conts.Lists.Definite_Unbounded (Integer);",
-     "with Conts.Lists.Definite_Unbounded;").gen()
+     "with Conts.Lists.Definite_Unbounded;",
+     favorite=True,
+     comments=Comments(forofloop=
+          "Because of dynamic dispatching -- When avoided, we gain 40%")
+    ).gen()
 Test("Integer", "Controlled", "Definite", "Bounded", "List",
      "package Container is new Conts.Lists.Definite_Bounded (Integer);",
      "with Conts.Lists.Definite_Bounded;").gen()
@@ -217,11 +231,12 @@ Test("Integer", "Limited", "Indefinite_Spark", "Unbounded_Spark", "List",
 Test("String", "Ada12", "Indefinite", "Unbounded", "List",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
      " (String);",
-     "with Ada.Containers.Indefinite_Doubly_Linked_Lists;").gen_ada2012(
-     adaptors='Indefinite_List_Adaptors')
+     "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
+     favorite=False).gen_ada2012(adaptors='Indefinite_List_Adaptors')
 Test("String", "Ada12_No_Checks", "Indefinite", "Unbounded", "List",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);",
-     "with Ada.Containers.Indefinite_Doubly_Linked_Lists;").gen_ada2012(
+     "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
+     favorite=True).gen_ada2012(
          adaptors='Indefinite_List_Adaptors',
          disable_checks=True)
 
@@ -232,7 +247,9 @@ Test("String", "Controlled", "Indefinite", "Unbounded", "List",
 Test("String", "Controlled", "Indefinite", "Unbounded_Ref", "List",
      "package Container is new Conts.Lists.Indefinite_Unbounded_Ref (String);",
      "with Conts.Lists.Indefinite_Unbounded_Ref;",
-     disable_count_if=True).gen()
+     disable_count_if=True,
+     comments=Comments(countif="Algorithm expects a String parameter, but receives a reference type"),
+     favorite=True).gen()
 
 ads.write("with Report; use Report;\n")
 ads.write("package Generated_Tests is\n")

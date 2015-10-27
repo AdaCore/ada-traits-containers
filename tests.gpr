@@ -10,7 +10,8 @@ project Tests is
    for Main use ("perf.adb");
 
    package Compiler extends Shared.Compiler is
-      for Switches ("s-memory.adb") use ("-gnatg", "-O2");
+      for Switches ("s-memory.adb") use ("-gnatg")
+         & Compiler'Switches ("Ada");
    end Compiler;
    package Builder renames Shared.Builder;
    package Naming renames Shared.Naming;

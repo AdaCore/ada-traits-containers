@@ -21,18 +21,26 @@ td {
 }
 th {
    font-size: 0.8em;
+   font-weight: normal;
    color: #333;
+}
+th.favorite {
+   font-weight: bold;
+}
+td.favorite, td.favorite {
+   background: #eee;
 }
 th.rotate {
    height: 180px;
    white-space: nowrap;
 }
 th.rotate div {
+   // when width=65px => transform: translate(49px,50px) rotate(-45deg);
    transform: translate(41px,55px) rotate(-45deg);
    width: 55px;
 }
 th.rotate div span {
-   border-bottom: 2px solid #222;
+   border-bottom: 1px solid #ccc;
    padding: 0 0 15px 0;
 }
 th.row-header {
@@ -52,6 +60,8 @@ th.row-header {
          <input type='checkbox' ng-model='as_percent'>
          <span ng-if='as_percent'>As percent</span>
          <span ng-if='!as_percent'>As milliseconds</span>
+         <br>
+         {{items_count}} items, tests are repeated {{repeat_count}} times.
       </div>
 
       <div ng-repeat='(elem_type, containers) in data'>
@@ -61,7 +71,9 @@ th.row-header {
             <thead>
                <tr>
                   <th></th>
-                  <th class='rotate' ng-repeat='t in containers'>
+                  <th class='rotate'
+                      ng-class="{favorite:t.favorite}"
+                      ng-repeat='t in containers'>
                      <div><span>{{t.base}} {{t.elements}} {{t.nodes}} {{t.container}}</span></div>
                   </th>
                </tr>
@@ -69,30 +81,43 @@ th.row-header {
             <tbody>
                <tr ng-repeat='name in test_names' ng-class='{separator: ref_test_names[name]}'>
                   <th class='row-header'>{{name}}</th>
-                  <td ng-repeat='c in containers'>
+                  <td ng-repeat='c in containers' ng-class="{favorite:c.favorite}">
                      <span ct-duration='name' aspercent='as_percent' container='c'></span>
                   </td>
                </tr>
                <tr class='separator'>
+                  <th class='row-header'></th>
+                  <td colspan='99'>Allocations and frees per test run</td>
+               </tr>
+               <tr>
                   <th class='row-header'>Ada Allocated</th>
-                  <td ng-repeat='c in containers'>{{c.allocated | kb}}</td>
+                  <td ng-repeat='c in containers'>{{c.allocated / repeat_count | kb}}</td>
                </tr>
                <tr>
                   <th class='row-header'>Ada Allocs</th>
-                  <td ng-repeat='c in containers'>{{c.allocs}}</td>
+                  <td ng-repeat='c in containers'>{{c.allocs / repeat_count}}</td>
                </tr>
                <tr>
                   <th class='row-header'>Ada Reallocs</th>
-                  <td ng-repeat='c in containers'>{{c.reallocs}}</td>
+                  <td ng-repeat='c in containers'>{{c.reallocs / repeat_count}}</td>
                </tr>
                <tr>
                   <th class='row-header'>Ada Free</th>
-                  <td ng-repeat='c in containers' ng-class="{worse:c.frees!=c.allocs}">{{c.frees}}</td>
+                  <td ng-repeat='c in containers'
+                      ng-class="{worse:c.frees!=c.allocs}">{{c.frees / repeat_count}}</td>
                </tr>
             </tbody>
          </table>
       </div>
-
+   </div>
+   <div>
+      <h2>Legend</h2>
+      <ul>
+         <li>In <b>grey</b>: container that will likely be used most often.</li>
+         <li>In <b>red</b>: timing is slower than the reference timing (usually C++), within a 5% margin</li>
+         <li><b>Underlined</b> when there is a tooltip explaining the timing</li>
+      </ul>
+   </div>
 </body>
 </html>
 

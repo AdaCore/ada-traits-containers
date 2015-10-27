@@ -31,9 +31,11 @@ bool startsWithStr (const std::string& s) { return s[0] == 'f'; }
 
 extern "C" {
    extern const int items_count;
+   extern const int repeat_count;
    extern void start_container_test
       (void* output, const char *base, const char* elements,
-       const char *nodes, const char* container, const char *e_type);
+       const char *nodes, const char* container, const char *e_type,
+       int favorite);
    extern void end_container_test (void* output);
    extern void start_test (void* output, const char* name);
    extern void end_test (void* output);
@@ -41,51 +43,51 @@ extern "C" {
 
 extern "C"
 void test_cpp_int(void * output) {
-   start_container_test (output, "C++", "", "", "std::list", "Integer");
+   start_container_test (output, "C++", "", "", "std::list", "Integer", 1);
 
-   std::list<int>  v;
+   for (int r = 0; r < repeat_count; r++) {
+      std::list<int>  v;
 
-   start_test (output, "fill");
-   for (int c = 1; c <= items_count; c++) {
-      v.push_back(2);
-   }
-   end_test (output);
-
-   start_test (output, "copy");
-   std::list<int> v_copy (v);
-   end_test (output);
-
-   int count = 0;
-   start_test (output, "cursor loop");
-   std::list<int>::const_iterator it (v.begin());
-   while (it != v.end()) {
-      if (*it <= 2) {
-         count ++;
+      start_test (output, "fill");
+      for (int c = 1; c <= items_count; c++) {
+	 v.push_back(2);
       }
-      it ++;
-   }
-   end_test (output);
-   if (count != items_count) {
-      std::cout << "C++ error while counting" << std::endl;
-   }
+      end_test (output);
 
-   count = 0;
-   start_test (output, "for-of loop");
-   for (auto e : v) {
-      if (e <= 2) {
-         count ++;
+      start_test (output, "copy");
+      std::list<int> v_copy (v);
+      end_test (output);
+
+      int count = 0;
+      start_test (output, "cursor loop");
+      for (auto it = v.begin(), __end=v.end(); it != __end; ++it) {
+	 if (*it <= 2) {
+	    count ++;
+	 }
       }
-   }
-   end_test (output);
-   if (count != items_count) {
-      std::cout << "C++ error while counting" << std::endl;
-   }
+      end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
 
-   start_test (output, "count_if");
-   count = std::count_if (v.begin(), v.end(), IsLessEqual2);
-   end_test (output);
-   if (count != items_count) {
-      std::cout << "C++ error while counting" << std::endl;
+      count = 0;
+      start_test (output, "for-of loop");
+      for (auto e : v) {
+	 if (e <= 2) {
+	    count ++;
+	 }
+      }
+      end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+
+      start_test (output, "count_if");
+      count = std::count_if (v.begin(), v.end(), IsLessEqual2);
+      end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
    }
 
    end_container_test (output);
@@ -93,51 +95,51 @@ void test_cpp_int(void * output) {
 
 extern "C"
 void test_cpp_string(void * output) {
-   start_container_test (output, "C++", "", "", "std::list", "String");
+   start_container_test (output, "C++", "", "", "std::list", "String", 1);
 
-   std::list<std::string>  v;
+   for (int r = 0; r < repeat_count; r++) {
+      std::list<std::string>  v;
 
-   start_test (output, "fill");
-   for (int c = 1; c <= items_count; c++) {
-      v.push_back("foo");
-   }
-   end_test (output);
-
-   start_test (output, "copy");
-   std::list<std::string> v_copy (v);
-   end_test (output);
-
-   int count = 0;
-   start_test (output, "cursor loop");
-   std::list<std::string>::const_iterator it (v.begin());
-   while (it != v.end()) {
-      if (startsWithStr(*it)) {
-         count ++;
+      start_test (output, "fill");
+      for (int c = 1; c <= items_count; c++) {
+	 v.push_back("foo");
       }
-      it ++;
-   }
-   end_test (output);
-   if (count != items_count) {
-      std::cout << "C++ error while counting" << std::endl;
-   }
+      end_test (output);
 
-   count = 0;
-   start_test (output, "for-of loop");
-   for (std::string& e : v) {
-      if (startsWithStr(e)) {
-         count ++;
+      start_test (output, "copy");
+      std::list<std::string> v_copy (v);
+      end_test (output);
+
+      int count = 0;
+      start_test (output, "cursor loop");
+      for (auto it = v.begin(), __end=v.end(); it != __end; ++it) {
+	 if (startsWithStr(*it)) {
+	    count ++;
+	 }
       }
-   }
-   end_test (output);
-   if (count != items_count) {
-      std::cout << "C++ error while counting" << std::endl;
-   }
+      end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
 
-   start_test (output, "count_if");
-   count = std::count_if (v.begin(), v.end(), startsWithStr);
-   end_test (output);
-   if (count != items_count) {
-      std::cout << "C++ error while counting" << std::endl;
+      count = 0;
+      start_test (output, "for-of loop");
+      for (std::string& e : v) {
+	 if (startsWithStr(e)) {
+	    count ++;
+	 }
+      }
+      end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+
+      start_test (output, "count_if");
+      count = std::count_if (v.begin(), v.end(), startsWithStr);
+      end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
    }
 
    end_container_test (output);

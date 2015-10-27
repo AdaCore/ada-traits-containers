@@ -110,6 +110,10 @@ package Perf_Support is
    --  For some reason, using 600_000 results in a storage error when
    --  allocating the bounded limited containers.
 
+   Repeat_Count : constant Natural := 5;
+   pragma Export (C, Repeat_Count, "repeat_count");
+   --  Number of times that tests should be repeated
+
    function Predicate (P : Integer) return Boolean is (P <= 2)
       with Inline;
    function Predicate (P : String) return Boolean is (P (P'First) = 'f')

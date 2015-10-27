@@ -35,7 +35,9 @@ package Report is
        Elements   : String;    --  "definite", "indefinite", ...
        Nodes      : String;    --  "bounded", "unbounded", ...
        Container  : String;    --  "list", "vector",..
-       E_Type     : String);   --  "integer", "string", ...
+       E_Type     : String;    --  "integer", "string", ...
+       Favorite   : Boolean := False);
+   --  If Favorite is true, the container will be highlighted in the results
 
    procedure End_Container_Test (Self : not null access Output'Class);
    --  A new set of tests is started, for a specific container.
@@ -50,6 +52,8 @@ package Report is
    --  A test on the current container is executed. These procedures measure
    --  the execution time. Calling End_Test is optional if you are calling
    --  Start_Test immediately.
+   --  You can run the same test multiple times after calling
+   --  Start_Container_Test. All timings will be recorded.
 
    procedure Display (Self : not null access Output'Class);
    --  Outputs the results to a JSON file

@@ -24,6 +24,7 @@ with Ada.Text_IO;        use Ada.Text_IO;
 with Interfaces.C.Strings; use Interfaces.C.Strings;
 with Memory;
 with System;
+with Perf_Support;         use Perf_Support;
 
 package body Report is
 
@@ -34,7 +35,8 @@ package body Report is
 
    procedure Start_Container_Test
       (Self : System.Address;
-       Base, Elements, Nodes, Container, E_Type : chars_ptr)
+       Base, Elements, Nodes, Container, E_Type : chars_ptr;
+       Favorite : Integer)
        with Export, Convention => C, External_Name => "start_container_test";
    procedure End_Container_Test (Self : System.Address)
       with Export, Convention => C, External_Name => "end_container_test";
@@ -53,22 +55,30 @@ package body Report is
        Elements   : String;
        Nodes      : String;
        Container  : String;
-       E_Type     : String)
-   is
+       E_Type     : String;
+       Favorite   : Boolean := False) is
    begin
-      Memory.Pause;
-
       if Self.Global_Result = JSON_Null then
+         Memory.Pause;
          Self.Global_Result := Create_Object;
+         Self.Global_Result.Set_Field ("repeat_count", Repeat_Count);
+         Self.Global_Result.Set_Field ("items_count", Items_Count);
       end if;
 
       Self.End_Container_Test;   --  In case one was started
+
+      Memory.Pause;
       Self.Container_Test := GNATCOLL.JSON.Create_Object;
+      Append (Self.All_Tests, Self.Container_Test);
       Self.Container_Test.Set_Field ("base", Base);
       Self.Container_Test.Set_Field ("elements", Elements);
       Self.Container_Test.Set_Field ("nodes", Nodes);
       Self.Container_Test.Set_Field ("container", Container);
       Self.Container_Test.Set_Field ("elem_type", E_Type);
+
+      if Favorite then
+         Self.Container_Test.Set_Field ("favorite", Favorite);
+      end if;
 
       Self.Tests_In_Container := Create_Object;
       Self.Container_Test.Set_Field ("tests", Self.Tests_In_Container);
@@ -92,8 +102,6 @@ package body Report is
          Self.Container_Test.Set_Field ("allocs", Memory.Allocs);
          Self.Container_Test.Set_Field ("reallocs", Memory.Reallocs);
          Self.Container_Test.Set_Field ("frees", Memory.Frees);
-
-         Append (Self.All_Tests, Self.Container_Test);
          Self.Container_Test := JSON_Null;
       end if;
       Memory.Unpause;
@@ -108,10 +116,16 @@ package body Report is
        Name    : String;
        Comment : String := "") is
    begin
-      Memory.Pause;
       Self.End_Test;  --  In case one was started
-      Self.Current_Test := GNATCOLL.JSON.Create_Object;
-      Self.Tests_In_Container.Set_Field (Name, Self.Current_Test);
+      Memory.Pause;
+
+      --  Is this a second run for this test ?
+      Self.Current_Test := Self.Tests_In_Container.Get (Name);
+      if Self.Current_Test = JSON_Null then
+         Self.Current_Test := GNATCOLL.JSON.Create_Object;
+         Self.Tests_In_Container.Set_Field (Name, Self.Current_Test);
+         Self.Current_Test.Set_Field ("duration", Empty_Array);
+      end if;
 
       if Comment /= "" then
          Self.Current_Test.Set_Field ("comment", Comment);
@@ -130,7 +144,14 @@ package body Report is
    begin
       if Self.Current_Test /= JSON_Null then
          Memory.Pause;
-         Self.Current_Test.Set_Field ("duration", Float (D));
+
+         declare
+            Arr : JSON_Array := Self.Current_Test.Get ("duration");
+         begin
+            Append (Arr, Create (Float (D)));
+            Self.Current_Test.Set_Field ("duration", Arr);
+         end;
+
          Self.Current_Test := JSON_Null;
          Memory.Unpause;
       end if;
@@ -158,11 +179,13 @@ package body Report is
 
    procedure Start_Container_Test
       (Self : System.Address;
-       Base, Elements, Nodes, Container, E_Type : chars_ptr) is
+       Base, Elements, Nodes, Container, E_Type : chars_ptr;
+       Favorite : Integer) is
    begin
       Start_Container_Test
          (To_Output (Self), Value (Base), Value (Elements), Value (Nodes),
-          Value (Container), Value (E_Type));
+          Value (Container), Value (E_Type),
+          Favorite => Favorite /= 0);
    end Start_Container_Test;
 
    ------------------------

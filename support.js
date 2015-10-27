@@ -40,6 +40,17 @@ app.factory('Reftime', function() {
     * Compute the reference times
     */
    Reftime.prototype.set_reftimes = function(base) {
+      // Compute mean execution time for each tests
+      angular.forEach(data.tests, function(container) {
+         angular.forEach(container.tests, function(test) {
+            var g = 0.0;
+            angular.forEach(test.duration, function(d) {
+               g += d;
+            });
+            test.mean_duration = g / test.duration.length;
+         });
+      });
+
       // Group data by element type
       angular.forEach(data.tests, function(container) {
          var arr = processed_data[container.elem_type];
@@ -56,7 +67,7 @@ app.factory('Reftime', function() {
                if (!reftimes[container.elem_type]) {
                   reftimes[container.elem_type] = {};
                }
-               reftimes[container.elem_type][name] = test.duration;
+               reftimes[container.elem_type][name] = test.mean_duration;
             });
          }
       });
@@ -65,16 +76,16 @@ app.factory('Reftime', function() {
    /**
     * Return the computed percent value for a given test
     */
-   Reftime.prototype.percent = function(test_name, elem_type, duration) {
+   Reftime.prototype.percent = function(test_name, elem_type, mean_duration) {
       var r = test_name_to_reftime[test_name] || test_name;
       var rt = reftimes[elem_type];
       if (!rt) {
          rt = reftimes[elem_type] = {};
       }
       if (!rt[r]) {
-         rt[r] = duration;
+         rt[r] = mean_duration;
       }
-      return duration / rt[r];
+      return mean_duration / rt[r];
    };
 
    /**
@@ -89,6 +100,8 @@ app.factory('Reftime', function() {
 
 app.controller('ResultsCtrl', function($scope, Reftime) {
    $scope.data = processed_data;  // from global variable
+   $scope.repeat_count = data.repeat_count;
+   $scope.items_count = data.items_count;
    $scope.as_percent = true;
    $scope.test_names = Reftime.test_names();
    $scope.ref_test_names = ref_test_names;
@@ -107,16 +120,17 @@ directive('ctDuration', function() {
             $scope.test.percent = (Reftime.percent(
                    $scope.testname,
                    $scope.container.elem_type,
-                   $scope.test.duration) * 100).
+                   $scope.test.mean_duration) * 100).
                     toFixed(0);
-            $scope.test.duration_str = ($scope.test.duration * 1000).toFixed(2);
+            $scope.test.mean_duration_str = (
+               $scope.test.mean_duration * 1000).toFixed(2);
          }
       },
    template: '<span ng-if="test"' +
-           ' ng-class="{worse:test.percent>100, comment:test.comment}"' +
+           ' ng-class="{worse:test.percent>105, comment:test.comment}"' +
            ' title="{{test.comment}}">' +
          '<span ng-if="aspercent">{{test.percent}}%</span>' +
-         '<span ng-if="!aspercent">{{test.duration_str}}</span>' +
+         '<span ng-if="!aspercent">{{test.mean_duration_str}}</span>' +
          '</span>'
    };
 }).
