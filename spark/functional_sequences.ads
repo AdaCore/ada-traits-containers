@@ -7,7 +7,7 @@ generic
    with function "=" (E1, E2 : Element_Type) return Boolean;
 package Functional_Sequences  with
   SPARK_Mode,
-  Initial_Condition => Length (Empty) = 0
+  Initial_Condition => Natural'(Length (Empty)) = 0
 is
    type Sequence is private;
    Empty : constant Sequence;

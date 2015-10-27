@@ -36,7 +36,7 @@ package Conts with SPARK_Mode is
    generic
       type Storage_Pool is new Root_Storage_Pool with private;
       Pool : access Storage_Pool;
-   package Pools is
+   package Pools with SPARK_Mode => Off is
    end Pools;
    --  This package provides a way to pass storage pools as a generic parameter
    --  to other packages.

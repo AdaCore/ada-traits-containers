@@ -32,11 +32,6 @@ package body Use_Sets with SPARK_Mode is
          Include (R, F (Element (S, Cu)));
          Next (S, Cu);
       end loop;
-      pragma Assert (for all I in 1 .. Length (S) =>
-                       Mem (Model (R), F (Get (Elements (S), I))));
-      pragma Assert (for all G in Model (R) =>
-                       (for some I in 1 .. Length (S) =>
-                            G = F (Get (Elements (S), I))));
    end Apply_F;
 
    function Are_Disjoint (S1, S2 : My_Sets.Set) return Boolean is
@@ -47,13 +42,10 @@ package body Use_Sets with SPARK_Mode is
            (for all I in 1 .. Get (Positions (S1), Cu) - 1 =>
               not Mem (Model (S2), Get (Elements (S1), I)));
          if Contains (S2, Element (S1, Cu)) then
-            pragma Assert (Mem (Model (S1), Element (S1, Cu)));
             return False;
          end if;
          Next (S1, Cu);
       end loop;
-      pragma Assert (for all E in Model (S1) =>
-                        not Mem (Model (S2), E));
       return True;
    end Are_Disjoint;
 
