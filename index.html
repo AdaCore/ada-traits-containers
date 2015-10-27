@@ -90,19 +90,19 @@ th.row-header {
                   <td colspan='99'>Allocations and frees per test run</td>
                </tr>
                <tr>
-                  <th class='row-header'>Ada Allocated</th>
+                  <th class='row-header'>Allocated</th>
                   <td ng-repeat='c in containers'>{{c.allocated / repeat_count | kb}}</td>
                </tr>
                <tr>
-                  <th class='row-header'>Ada Allocs</th>
+                  <th class='row-header'>Allocs</th>
                   <td ng-repeat='c in containers'>{{c.allocs / repeat_count}}</td>
                </tr>
                <tr>
-                  <th class='row-header'>Ada Reallocs</th>
+                  <th class='row-header'>Reallocs</th>
                   <td ng-repeat='c in containers'>{{c.reallocs / repeat_count}}</td>
                </tr>
                <tr>
-                  <th class='row-header'>Ada Free</th>
+                  <th class='row-header'>Frees</th>
                   <td ng-repeat='c in containers'
                       ng-class="{worse:c.frees!=c.allocs}">{{c.frees / repeat_count}}</td>
                </tr>

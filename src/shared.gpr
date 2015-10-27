@@ -35,22 +35,22 @@ abstract project Shared is
             for Switches ("C++") use ("-O3", "-finline", "-std=c++11");
 
          when "Debug" =>
-            for Switches ("Ada") use Common_Ada_Switches & ("-g", "-O0");
-            for Switches ("C++") use ("-std=c++11", "-O0");
+            for Switches ("Ada") use Common_Ada_Switches & ("-O0");
+            for Switches ("C++") use ("-std=c++11", "-O0", "-g");
       end case;
    end Compiler;
 
    package Binder is
-      for Switches ("Ada") use ("-E");
+      for Switches ("Ada") use ("-E", "-g");
    end Binder;
 
    package Linker is
       for Switches ("Ada") use (
          --  Remove unused subprograms
-         "-Wl,-dead_strip"   --  OSX
+         --  "-Wl,-dead_strip"   --  OSX
          --  "-Wl,--gc-sections"  --  linux
-         --  "-Wl,--print-gc-sections"
 
+         --  "-Wl,--print-gc-sections"
          --  "-Wl,-flto"
          );
    end Linker;

@@ -76,7 +76,12 @@ package body Report is
       Self.Container_Test.Set_Field ("elements", Elements);
       Self.Container_Test.Set_Field ("nodes", Nodes);
       Self.Container_Test.Set_Field ("container", Container);
-      Self.Container_Test.Set_Field ("elem_type", E_Type);
+
+      if E_Type = "Unbounded_String" then
+         Self.Container_Test.Set_Field ("elem_type", "String");
+      else
+         Self.Container_Test.Set_Field ("elem_type", E_Type);
+      end if;
 
       if Favorite then
          Self.Container_Test.Set_Field ("favorite", Favorite);

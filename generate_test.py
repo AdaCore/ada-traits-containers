@@ -38,6 +38,8 @@ class Test(object):
             default = 2
         elif elem_type.lower() == "string":
             default = '"foo"'
+        elif elem_type.lower() == "unbounded_string":
+            default = 'To_Unbounded_String ("foo")'
         else:
             raise Exception("Unknown element type: %s" % elem_type)
 
@@ -250,6 +252,10 @@ Test("String", "Controlled", "Indefinite", "Unbounded_Ref", "List",
      disable_count_if=True,
      comments=Comments(countif="Algorithm expects a String parameter, but receives a reference type"),
      favorite=True).gen()
+Test("Unbounded_String", "Controlled", "Definite", "Unbounded", "List",
+     "package Container is new Conts.Lists.Definite_Unbounded (Unbounded_String);",
+     "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
+     "with Conts.Lists.Indefinite_Unbounded;").gen()
 
 ads.write("with Report; use Report;\n")
 ads.write("package Generated_Tests is\n")

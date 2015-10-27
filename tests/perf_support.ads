@@ -20,7 +20,8 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-with Report;        use Report;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Report;                use Report;
 with System;
 
 package Perf_Support is
@@ -117,6 +118,9 @@ package Perf_Support is
    function Predicate (P : Integer) return Boolean is (P <= 2)
       with Inline;
    function Predicate (P : String) return Boolean is (P (P'First) = 'f')
+      with Inline;
+   function Predicate (P : Unbounded_String) return Boolean is
+      (Element (P, 1) = 'f')
       with Inline;
    procedure Assert (Count, Expected : Natural)
       with Inline;
