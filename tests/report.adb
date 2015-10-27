@@ -142,7 +142,7 @@ package body Report is
    --------------
 
    procedure End_Test (Self : not null access Output'Class) is
-      D : constant Duration := Clock - Self.Start_Time;
+      E : constant Time := Clock;
    begin
       if Self.Current_Test /= JSON_Null then
          Memory.Pause;
@@ -150,7 +150,7 @@ package body Report is
          declare
             Arr : JSON_Array := Self.Current_Test.Get ("duration");
          begin
-            Append (Arr, Create (Float (D)));
+            Append (Arr, Create (Float (E - Self.Start_Time)));
             Self.Current_Test.Set_Field ("duration", Arr);
          end;
 
