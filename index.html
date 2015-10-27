@@ -6,13 +6,13 @@
    <style>
 .worse { color: red }
 html { font-size: 12px}
-h2 { font-size: 1.5em; color: blue}
 table { border-collapse: collapse; table-layout: fixed }
 tr.separator {
    border-top: 2px solid #222;
 }
 td {
    width: 55px;
+   max-width: 55px;
    text-align: center;
    padding: 3px 5px;
    border: 1px solid #ccc;
@@ -24,19 +24,25 @@ th {
    font-weight: normal;
    color: #333;
 }
+th.elem_type {
+   color: blue;
+   font-size: 1.2em;
+   font-weight: bold;
+   text-align: left;
+}
 th.favorite {
    font-weight: bold;
 }
-td.favorite, td.favorite {
+td.favorite {
    background: #eee;
 }
 th.rotate {
-   height: 180px;
+   height: 220px;
    white-space: nowrap;
 }
 th.rotate div {
    // when width=65px => transform: translate(49px,50px) rotate(-45deg);
-   transform: translate(41px,55px) rotate(-45deg);
+   transform: translate(41px,73px) rotate(-45deg);
    width: 55px;
 }
 th.rotate div span {
@@ -62,15 +68,23 @@ th.row-header {
          <span ng-if='!as_percent'>As milliseconds</span>
          <br>
          {{items_count}} items, tests are repeated {{repeat_count}} times.
+
+         <ul>
+            <li>In <b>grey</b>: container that will likely be used most often.</li>
+            <li>In <b>red</b>: timing is slower than the reference timing (usually C++), within a 5% margin</li>
+            <li><b>Underlined</b> when there is a tooltip explaining the timing</li>
+         </ul>
       </div>
 
       <div ng-repeat='(elem_type, containers) in data'>
+         <!--
          <h2>{{elem_type}} containers</h2>
+         -->
 
          <table>
             <thead>
                <tr>
-                  <th></th>
+                  <th class='elem_type'>{{elem_type}}</th>
                   <th class='rotate'
                       ng-class="{favorite:t.favorite}"
                       ng-repeat='t in containers'>
@@ -109,14 +123,6 @@ th.row-header {
             </tbody>
          </table>
       </div>
-   </div>
-   <div>
-      <h2>Legend</h2>
-      <ul>
-         <li>In <b>grey</b>: container that will likely be used most often.</li>
-         <li>In <b>red</b>: timing is slower than the reference timing (usually C++), within a 5% margin</li>
-         <li><b>Underlined</b> when there is a tooltip explaining the timing</li>
-      </ul>
    </div>
 </body>
 </html>

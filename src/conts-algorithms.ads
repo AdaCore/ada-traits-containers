@@ -23,12 +23,27 @@ with Conts.Cursors;
 
 package Conts.Algorithms is
 
+   --------------
+   -- Count_If --
+   --------------
+
+   generic
+      with package Cursors
+         is new Conts.Cursors.Constant_Forward_Convert_Traits (<>);
+   function Count_If_Convert
+      (Self      : Cursors.Cursors.Container;
+       Predicate : not null access function
+          (E : Cursors.Element_Type) return Boolean)
+      return Natural;
+   --  Count the number of elements in the container that match the predicate
+
    generic
       with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
    function Count_If
       (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Return_Type) return Boolean)
+       Predicate : not null access function
+          (E : Cursors.Return_Type) return Boolean)
       return Natural;
-   --  Should we have a version that takes a 'From:Cursor' parameter ?
+   --  Count the number of elements in the container that match the predicate
 
 end Conts.Algorithms;

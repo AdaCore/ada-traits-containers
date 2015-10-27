@@ -25,6 +25,7 @@
 
 pragma Ada_2012;
 with Ada.Finalization;
+with Conts.Cursors;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
@@ -57,4 +58,20 @@ package Conts.Lists.Indefinite_Unbounded_Ref is
    --  just use the standard assignment operator.
 
    package Cursors is new Conts.Lists.Cursors (Lists, List);
+
+   function From_Ref_To_Elem (R : Ref_Type) return Element_Type
+      is (R.E.all) with Inline;
+   --  Convert from a reference type to an element type. In general, this is
+   --  done automatically by the compiler, but this is needed in the case of
+   --  algorithms that expect an element_type in parameter, because a cursor
+   --  in fact returns a reference type.
+
+   package Cursors_Forward_Convert
+      is new Conts.Cursors.Constant_Forward_Convert_Traits
+         (Cursors      => Cursors.Constant_Forward,
+          Element_Type => Element_Type,
+          Convert      => From_Ref_To_Elem);
+   --  A special wrapper around cursor, for which with algorithms, so that
+   --  the predicates can take an element_type in parameter
+
 end Conts.Lists.Indefinite_Unbounded_Ref;

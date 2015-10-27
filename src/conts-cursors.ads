@@ -73,4 +73,26 @@ package Conts.Cursors with SPARK_Mode is
 
    end Constant_Bidirectional_Traits;
 
+   -----------------------------
+   -- Cursors on Element_Type --
+   -----------------------------
+   --  The above cursor packages will return a Return_Type, not an
+   --  Element_Type as stored in the container.
+   --  For some containers, a Return_Type is in fact a reference type, as a
+   --  way to efficiently return unconstrained types without copying them.
+   --  However, algorithms often expect to work on the original Element_Type,
+   --  so the following provides a wrapper with a conversion function.
+   --
+   --  Design: we did not put these conversion functions in the Element_Traits
+   --  packages because a cursor traits does not have access to these element
+   --  traits.
+
+   generic
+      with package Cursors is new Constant_Forward_Traits (<>);
+      type Element_Type (<>) is private;
+      with function Convert
+         (E : Cursors.Return_Type) return Element_Type is <>;
+   package Constant_Forward_Convert_Traits is
+   end Constant_Forward_Convert_Traits;
+
 end Conts.Cursors;

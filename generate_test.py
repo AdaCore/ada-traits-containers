@@ -29,7 +29,6 @@ class Test(object):
         type,        # "List", "Vector", ...
         instance,    # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
-        disable_count_if=False,
         comments=None, # instance of Comments
         favorite=False # Whether this should be highlighted in the results
     ):
@@ -43,7 +42,6 @@ class Test(object):
         else:
             raise Exception("Unknown element type: %s" % elem_type)
 
-        self.disable_count_if = disable_count_if
         self.args = dict(
             base=base,
             definite=definite,
@@ -53,7 +51,7 @@ class Test(object):
             instance=instance,
             withs=withs,
             copy='',
-            count_if='',
+            call_count_if='',
             discriminant='',
             favorite=favorite,
             comments=comments or Comments(),
@@ -71,20 +69,6 @@ class Test(object):
 
         if self.args['nodes'].lower() == "bounded":
             self.args['discriminant'] = ' (Capacity => Items_Count)'
-
-        if not self.disable_count_if:
-            self.args['count_if'] = """
-         Stdout.Start_Test ("count_if", "{comments.countif}");
-         Co := Count_If (V2, Predicate'Access);
-         Stdout.End_Test;
-         Assert (Co, Items_Count);
-""".format(**self.args)
-        else:
-             self.args['count_if'] = """
-         Stdout.Start_Test ("count_if", "{comments.countif}");
-         Stdout.End_Test;
-""".format(**self.args)
-
 
     def __common(self):
         global body_withs, body_contents, spec_contents
@@ -149,7 +133,11 @@ class Test(object):
           end loop;
           Stdout.End_Test;
           Assert (Co, Items_Count);
-          {count_if}
+
+          Stdout.Start_Test ("count_if", "{comments.countif}");
+          Co := Count_If (V2, Predicate'Access);
+          Stdout.End_Test;
+          Assert (Co, Items_Count);
        end Run;
 
     begin
@@ -171,10 +159,17 @@ class Test(object):
         Generate tests for the new containers
         """
         self.args['prefix'] = 'V2.'
-        self.args['adaptors'] = """
+
+        # When using reference types
+        if self.args['nodes'].endswith("_Ref"):
+            self.args['adaptors'] = ("""
+       function Count_If is new Conts.Algorithms.Count_If_Convert
+          (Container.Cursors_Forward_Convert);""").format(**self.args)
+        else:
+            self.args['adaptors'] = ("""
        function Count_If is new Conts.Algorithms.Count_If
-          (Container.Cursors.Constant_Forward);
-"""
+          (Container.Cursors.Constant_Forward);""").format(**self.args)
+
         self.__common()
 
     def gen_ada2012(self, disable_checks=False, adaptors='{type}_Adaptors'):
@@ -249,8 +244,8 @@ Test("String", "Controlled", "Indefinite", "Unbounded", "List",
 Test("String", "Controlled", "Indefinite", "Unbounded_Ref", "List",
      "package Container is new Conts.Lists.Indefinite_Unbounded_Ref (String);",
      "with Conts.Lists.Indefinite_Unbounded_Ref;",
-     disable_count_if=True,
-     comments=Comments(countif="Algorithm expects a String parameter, but receives a reference type"),
+     comments=Comments(
+         countif="Conversion from Reference_Type to Element_Type"),
      favorite=True).gen()
 Test("Unbounded_String", "Controlled", "Definite", "Unbounded", "List",
      "package Container is new Conts.Lists.Definite_Unbounded (Unbounded_String);",

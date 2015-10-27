@@ -21,15 +21,51 @@
 
 package body Conts.Algorithms is
 
+   ----------------------
+   -- Count_If_Convert --
+   ----------------------
+
+   function Count_If_Convert
+      (Self      : Cursors.Cursors.Container;
+       Predicate : not null access function
+          (E : Cursors.Element_Type) return Boolean)
+      return Natural
+   is
+      C : Cursors.Cursors.Cursor := Cursors.Cursors.First (Self);
+      Count : Natural := 0;
+   begin
+      while Cursors.Cursors.Has_Element (Self, C) loop
+         if Predicate
+            (Cursors.Convert (Cursors.Cursors.Element (Self, C)))
+         then
+            Count := Count + 1;
+         end if;
+         C := Cursors.Cursors.Next (Self, C);
+      end loop;
+      return Count;
+   end Count_If_Convert;
+
    --------------
    -- Count_If --
    --------------
 
    function Count_If
       (Self      : Cursors.Container;
-       Predicate : access function (E : Cursors.Return_Type) return Boolean)
+       Predicate : not null access function
+          (E : Cursors.Return_Type) return Boolean)
       return Natural
    is
+      --   ??? Compiler complains that Return_Type is not visible
+      --   when instantiationg Count_If in the test packages
+--      function Identity (E : Cursors.Return_Type) return Cursors.Return_Type
+--         is (E) with Inline;
+--      package C is new Conts.Cursors.Constant_Forward_Convert_Traits
+--         (Cursors, Cursors.Return_Type, Identity);
+--      function Internal is new Count_If_Convert (C);
+--   begin
+--      return Internal (Self, Predicate);
+--   end Count_If;
+
       C : Cursors.Cursor := Cursors.First (Self);
       Count : Natural := 0;
    begin

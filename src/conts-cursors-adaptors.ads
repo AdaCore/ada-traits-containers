@@ -42,18 +42,21 @@ package Conts.Cursors.Adaptors is
       function First (Self : List) return Cursor
          renames Lists.First;
       function Element (Self : List; Position : Cursor) return Element_Type
-         is (Lists.Element (Position));
+         is (Lists.Element (Position)) with Inline;
       function Has_Element (Self : List; Position : Cursor) return Boolean
-         is (Lists.Has_Element (Position));
+         is (Lists.Has_Element (Position)) with Inline;
       function Next (Self : List; Position : Cursor) return Cursor
-         is (Lists.Next (Position));
-      pragma Inline (Element, Has_Element, Next, First);
+         is (Lists.Next (Position)) with Inline;
+      function Previous (Self : List; Position : Cursor) return Cursor
+         is (Lists.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Forward is new Constant_Forward_Traits
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
             (Container    => List'Class,
              Cursor       => Cursor,
              Return_Type  => Element_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
       end Cursors;
    end List_Adaptors;
 
@@ -72,18 +75,21 @@ package Conts.Cursors.Adaptors is
       function First (Self : List) return Cursor
          renames Lists.First;
       function Element (Self : List; Position : Cursor) return Element_Type
-         is (Lists.Element (Position));
+         is (Lists.Element (Position)) with Inline;
       function Has_Element (Self : List; Position : Cursor) return Boolean
-         is (Lists.Has_Element (Position));
+         is (Lists.Has_Element (Position)) with Inline;
       function Next (Self : List; Position : Cursor) return Cursor
-         is (Lists.Next (Position));
-      pragma Inline (Element, Has_Element, Next, First);
+         is (Lists.Next (Position)) with Inline;
+      function Previous (Self : List; Position : Cursor) return Cursor
+         is (Lists.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Forward is new Constant_Forward_Traits
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
             (Container    => List'Class,
              Cursor       => Cursor,
              Return_Type  => Element_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
       end Cursors;
    end Indefinite_List_Adaptors;
 
@@ -96,23 +102,28 @@ package Conts.Cursors.Adaptors is
       type Element_Type is private;
       type Array_Type is array (Index_Type range <>) of Element_Type;
    package Array_Adaptors is
-      function First (Self : Array_Type) return Index_Type is (Self'First);
+      function First (Self : Array_Type) return Index_Type
+         is (Self'First) with Inline;
       function Element
          (Self : Array_Type; Position : Index_Type) return Element_Type
-         is (Self (Position));
+         is (Self (Position)) with Inline;
       function Has_Element
          (Self : Array_Type; Position : Index_Type) return Boolean
-         is (Position <= Self'Last);
+         is (Position <= Self'Last) with Inline;
       function Next
          (Self : Array_Type; Position : Index_Type) return Index_Type
-         is (Index_Type'Succ (Position));
-      pragma Inline (Element, Has_Element, Next, First);
+         is (Index_Type'Succ (Position)) with Inline;
+      function Previous
+         (Self : Array_Type; Position : Index_Type) return Index_Type
+         is (Index_Type'Pred (Position)) with Inline;
 
       package Cursors is
-         package Constant_Forward is new Constant_Forward_Traits
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
             (Container    => Array_Type,
              Cursor       => Index_Type,
              Return_Type  => Element_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
       end Cursors;
    end Array_Adaptors;
 
