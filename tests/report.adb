@@ -38,7 +38,9 @@ package body Report is
        Base, Elements, Nodes, Container, E_Type : chars_ptr;
        Favorite : Integer)
        with Export, Convention => C, External_Name => "start_container_test";
-   procedure End_Container_Test (Self : System.Address)
+   procedure End_Container_Test
+     (Self : System.Address;
+      Allocated, Allocs_Count, Frees_Count : Natural)
       with Export, Convention => C, External_Name => "end_container_test";
    procedure Start_Test (Self : System.Address; Name : chars_ptr)
       with Export, Convention => C, External_Name => "start_test";
@@ -192,8 +194,15 @@ package body Report is
    -- End_Container_Test --
    ------------------------
 
-   procedure End_Container_Test (Self : System.Address) is
+   procedure End_Container_Test
+     (Self                      : System.Address;
+      Allocated, Allocs_Count, Frees_Count : Natural)
+   is
    begin
+      Memory.Allocs := Allocs_Count;
+      Memory.Frees := Frees_Count;
+      Memory.Reallocs := 0;
+      Memory.Live := Allocated;
       End_Container_Test (To_Output (Self));
    end End_Container_Test;
 

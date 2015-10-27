@@ -36,13 +36,76 @@ extern "C" {
       (void* output, const char *base, const char* elements,
        const char *nodes, const char* container, const char *e_type,
        int favorite);
-   extern void end_container_test (void* output);
+   extern void end_container_test
+      (void* output, int allocated, int allocs_count, int frees_count);
    extern void start_test (void* output, const char* name);
    extern void end_test (void* output);
 }
 
+
+/**
+ * Counting the number of allocations and frees.
+ * From
+ */
+int number_of_allocs = 0;
+int number_of_frees = 0;
+std::size_t total_allocated = 0;
+
+void reset_mem() {
+   number_of_allocs = 0;
+   number_of_frees = 0;
+   total_allocated = 0;
+}
+
+void* operator new(std::size_t size) throw(std::bad_alloc) {
+   ++number_of_allocs;
+   total_allocated += size;
+   void *p = malloc(size);
+   if(!p) throw std::bad_alloc();
+   return p;
+}
+void* operator new  [](std::size_t size) throw(std::bad_alloc) {
+   ++number_of_allocs;
+   total_allocated += size;
+   void *p = malloc(size);
+   if(!p) throw std::bad_alloc();
+   return p;
+}
+void* operator new  [](std::size_t size, const std::nothrow_t&) throw() {
+   ++number_of_allocs;
+   total_allocated += size;
+   return malloc(size);
+}
+void* operator new   (std::size_t size, const std::nothrow_t&) throw() {
+   ++number_of_allocs;
+   total_allocated += size;
+   return malloc(size);
+}
+void operator delete(void* ptr) throw() {
+   ++number_of_frees;
+   free(ptr);
+}
+void operator delete (void* ptr, const std::nothrow_t&) throw() {
+   ++number_of_frees;
+   free(ptr);
+}
+void operator delete[](void* ptr) throw() {
+   ++number_of_frees;
+   free(ptr);
+}
+void operator delete[](void* ptr, const std::nothrow_t&) throw() {
+   ++number_of_frees;
+   free(ptr);
+}
+
+/**
+ * our tests
+ */
+
 extern "C"
 void test_cpp_int(void * output) {
+   reset_mem();
+
    start_container_test (output, "C++", "", "", "std::list", "Integer", 1);
 
    for (int r = 0; r < repeat_count; r++) {
@@ -90,11 +153,14 @@ void test_cpp_int(void * output) {
       }
    }
 
-   end_container_test (output);
+   end_container_test
+      (output, total_allocated, number_of_allocs, number_of_frees);
 }
 
 extern "C"
 void test_cpp_string(void * output) {
+   reset_mem();
+
    start_container_test (output, "C++", "", "", "std::list", "String", 1);
 
    for (int r = 0; r < repeat_count; r++) {
@@ -142,5 +208,6 @@ void test_cpp_string(void * output) {
       }
    }
 
-   end_container_test (output);
+   end_container_test
+      (output, total_allocated, number_of_allocs, number_of_frees);
 }
