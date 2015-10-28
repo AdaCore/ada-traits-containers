@@ -4,7 +4,7 @@ with Functional_Maps;
 with Functional_Sets;
 
 generic
-   type Element_Type is private;
+   type Element_Type (<>) is private;
    None : Element_Type;
    with function "=" (E1, E2 : Element_Type) return Boolean;
 package Formal_Hashed_Sets with SPARK_Mode is
@@ -128,7 +128,8 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
    procedure Include (S : in out Set'Class; E : Element_Type) with
      Import,
-     Pre  => Length (S) < Capacity (S),
+     Pre  => (Length (S) < Capacity (S) and then E /= None)
+     or else Mem (Model (S), E),
      Post => Capacity (S) = Capacity (S)'Old
      and (if Mem (Model (S)'Old, E) then
             Length (S) = Length (S)'Old

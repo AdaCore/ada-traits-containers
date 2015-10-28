@@ -15,7 +15,8 @@ is
    type Map is private
       with Iterable => (First       => First_Key,
                         Next        => Next_Key,
-                        Has_Element => Mem);
+                        Has_Element => Mem,
+                        Element     => Get);
    Empty : constant Map;
 
    function Mem (M : Map; K : Key_Type) return Boolean with

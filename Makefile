@@ -9,8 +9,8 @@ check_spark:
 
 # Prove our files
 prove:
-	gnatprove -Pspark/spark.gpr -u use_sets.adb --dbg-proof-only --level=1
-	# gnatprove -P spark/spark.gpr -U --level=1
+	gnatprove -Pspark/spark.gpr -u use_sets.adb use_maps.adb --dbg-proof-only --level=1 --steps=300
+	# gnatprove -P spark/spark.gpr -U --level=1 --steps=300
 
 
 valgrind:
