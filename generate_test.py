@@ -164,8 +164,7 @@ class Test(object):
     end Test_{base}_{definite}_{nodes}_{elem_type};
 """.format(**self.args)
 
-    def gen(self,
-            use_cursor_convert=False):
+    def gen(self, use_cursor_convert=False):
         """
         Generate tests for the new containers
         """
@@ -183,18 +182,32 @@ class Test(object):
 
         self.__common()
 
-    def gen_ada2012(self, disable_checks=False, adaptors='{type}_Adaptors'):
+    def gen_ada2012(self,
+                    disable_checks=False,
+                    use_cursor_convert=False,
+                    adaptors='{type}_Adaptors'):
         """
         Generate tests for the Ada 2012 containers
         """
 
-        self.args['adaptors'] = (
+        if use_cursor_convert:
+            self.args['adaptors'] = (
+            """
+       package Adaptors is new Conts.Cursors.Adaptors.""" +
+            adaptors + """ (Container);
+       function Count_If is new Conts.Algorithms.Count_If_Convert
+          (Adaptors.Cursors_Forward_Convert);
+""").format(**self.args)
+
+        else:
+            self.args['adaptors'] = (
             """
        package Adaptors is new Conts.Cursors.Adaptors.""" +
             adaptors + """ (Container);
        function Count_If is new Conts.Algorithms.Count_If
           (Adaptors.Cursors.Constant_Forward);
 """).format(**self.args)
+
 
         if disable_checks:
             self.args['adaptors'] = """
@@ -210,7 +223,8 @@ Test("Integer", "Ada12", "Indefinite", "Unbounded", "List",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
      " (Integer);",
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;").gen_ada2012(
-     adaptors='Indefinite_List_Adaptors')
+         use_cursor_convert=True,
+         adaptors='Indefinite_List_Adaptors')
 Test("Integer", "Ada12_No_Checks", "Definite", "Unbounded", "List",
      "package Container is new Ada.Containers.Doubly_Linked_Lists (Integer);",
      "with Ada.Containers.Doubly_Linked_Lists;",
@@ -240,11 +254,14 @@ Test("String", "Ada12", "Indefinite", "Unbounded", "List",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
      " (String);",
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
-     favorite=False).gen_ada2012(adaptors='Indefinite_List_Adaptors')
+     favorite=False).gen_ada2012(
+         use_cursor_convert=True,
+         adaptors='Indefinite_List_Adaptors')
 Test("String", "Ada12_No_Checks", "Indefinite", "Unbounded", "List",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);",
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
      favorite=True).gen_ada2012(
+         use_cursor_convert=True,
          adaptors='Indefinite_List_Adaptors',
          disable_checks=True)
 
