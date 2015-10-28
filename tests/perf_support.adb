@@ -95,7 +95,7 @@ package body Perf_Support is
       end Run;
 
    begin
-      Stdout.Start_Container_Test ("Ada", "", "", "Array", "Integer");
+      Stdout.Start_Container_Test ("Ada Array", "", "", "Integer List");
       declare
          V     : Int_Array (1 .. Items_Count);
       begin

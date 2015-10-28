@@ -29,6 +29,8 @@ th.elem_type {
    font-size: 1.2em;
    font-weight: bold;
    text-align: left;
+   vertical-align: bottom;
+   padding-bottom: 10px;
 }
 th.favorite {
    font-weight: bold;
@@ -37,17 +39,18 @@ td.favorite {
    background: #eee;
 }
 th.rotate {
-   height: 220px;
+   height: 100px;
    white-space: nowrap;
 }
 th.rotate div {
-   // when width=65px => transform: translate(49px,50px) rotate(-45deg);
-   transform: translate(41px,73px) rotate(-45deg);
+   /* when width=65px : transform: translate(49px,50px) rotate(-45deg); */
+   transform: translate(47px,20px) rotate(-20deg);
    width: 55px;
 }
 th.rotate div span {
-   border-bottom: 1px solid #ccc;
-   padding: 0 0 15px 0;
+   /* border-bottom: 1px solid #ccc;
+      padding: 0 0 15px 0; */
+   margin-left: -25px;
 }
 th.row-header {
    padding: 0 10px;
@@ -62,40 +65,22 @@ th.row-header {
 </head>
 <body>
    <div ng-controller='ResultsCtrl'>
-      <div>
-         <input type='checkbox' ng-model='as_percent'>
-         <span ng-if='as_percent'>As percent</span>
-         <span ng-if='!as_percent'>As milliseconds</span>
-         <br>
-         {{items_count}} items, tests are repeated {{repeat_count}} times.
-
-         <ul>
-            <li>In <b>grey</b>: container that will likely be used most often.</li>
-            <li>In <b>red</b>: timing is slower than the reference timing (usually C++), within a 5% margin</li>
-            <li><b>Underlined</b> when there is a tooltip explaining the timing</li>
-         </ul>
-      </div>
-
-      <div ng-repeat='(elem_type, containers) in data'>
-         <!--
-         <h2>{{elem_type}} containers</h2>
-         -->
-
+      <div ng-repeat='(catname, cat) in data.categories'>
          <table>
             <thead>
                <tr>
-                  <th class='elem_type'>{{elem_type}}</th>
+                  <th class='elem_type'>{{catname}}</th>
                   <th class='rotate'
                       ng-class="{favorite:t.favorite}"
-                      ng-repeat='t in containers'>
-                     <div><span>{{t.base}} {{t.elements}} {{t.nodes}} {{t.container}}</span></div>
+                      ng-repeat='t in cat.containers'>
+                     <div><span>{{t.base}} {{t.elements}} {{t.nodes}}</span></div>
                   </th>
                </tr>
             </thead>
             <tbody>
-               <tr ng-repeat='name in test_names' ng-class='{separator: ref_test_names[name]}'>
+               <tr ng-repeat='name in data.test_names' ng-class='{separator: ref_test_names[name]}'>
                   <th class='row-header'>{{name}}</th>
-                  <td ng-repeat='c in containers' ng-class="{favorite:c.favorite}">
+                  <td ng-repeat='c in cat.containers' ng-class="{favorite:c.favorite}">
                      <span ct-duration='name' aspercent='as_percent' container='c'></span>
                   </td>
                </tr>
@@ -105,23 +90,37 @@ th.row-header {
                </tr>
                <tr>
                   <th class='row-header'>Allocated</th>
-                  <td ng-repeat='c in containers'>{{c.allocated / repeat_count | kb}}</td>
+                  <td ng-repeat='c in cat.containers'>{{c.allocated / data.repeat_count | kb}}</td>
                </tr>
                <tr>
                   <th class='row-header'>Allocs</th>
-                  <td ng-repeat='c in containers'>{{c.allocs / repeat_count}}</td>
+                  <td ng-repeat='c in cat.containers'>{{c.allocs / data.repeat_count}}</td>
                </tr>
                <tr>
                   <th class='row-header'>Reallocs</th>
-                  <td ng-repeat='c in containers'>{{c.reallocs / repeat_count}}</td>
+                  <td ng-repeat='c in cat.containers'>{{c.reallocs / data.repeat_count}}</td>
                </tr>
                <tr>
                   <th class='row-header'>Frees</th>
-                  <td ng-repeat='c in containers'
-                      ng-class="{worse:c.frees!=c.allocs}">{{c.frees / repeat_count}}</td>
+                  <td ng-repeat='c in cat.containers'
+                      ng-class="{worse:c.frees!=c.allocs}">{{c.frees / data.repeat_count}}</td>
                </tr>
             </tbody>
          </table>
+      </div>
+
+      <div style='margin-top: 20px'>
+         <input type='checkbox' ng-model='as_percent'>
+         <span ng-if='as_percent'>As percent</span>
+         <span ng-if='!as_percent'>As milliseconds</span>
+         <br>
+         {{data.items_count}} items, tests are repeated {{data.repeat_count}} times.
+
+         <ul>
+            <li>In <b>grey</b>: container that will likely be used most often.</li>
+            <li>In <b>red</b>: timing is slower than the reference timing (usually C++), within a 5% margin</li>
+            <li><b>Underlined</b> when there is a tooltip explaining the timing</li>
+         </ul>
       </div>
    </div>
 </body>

@@ -8,40 +8,38 @@ var test_name_to_reftime = {
    'count_if': 'cursor loop'
 };
 
-var all_test_names = [
-   'fill',
-   'copy',
-   'cursor loop',
-   'for-of loop',
-   'count_if'
-];
-
 // Tests before which we display a bold border
 var ref_test_names = {
    'fill': true,
    'cursor loop': true
 };
 
-// Same as data (from data.js), but grouped by element type
-var processed_data = {};
-
 app.factory('Reftime', function() {
-   var reftimes = {};  // elem_type -> { testname -> duration }
-
    /**
     * This class is used to compute percents compared to various reference
     * times.
     */
    function Reftime() {
-      this.set_reftimes('C++');
-   }
+      var ref = this;
 
-   /**
-    * Compute the reference times
-    */
-   Reftime.prototype.set_reftimes = function(base) {
-      // Compute mean execution time for each tests
+      ref.data = {
+         // For each category, include the following data:
+         //  reftimes: {testname -> duration}   reference time for each test
+         //  containers: [list of containers]  the lists of tests that were run
+         categories: {},
+         test_names: [
+            'fill',
+            'copy',
+            'cursor loop',
+            'for-of loop',
+            'count_if'
+         ],
+         repeat_count: data.repeat_count,
+         items_count: data.items_count
+      };
+
       angular.forEach(data.tests, function(container) {
+         // Compute mean execution time for each tests
          angular.forEach(container.tests, function(test) {
             var g = 0.0;
             angular.forEach(test.duration, function(d) {
@@ -49,62 +47,56 @@ app.factory('Reftime', function() {
             });
             test.mean_duration = g / test.duration.length;
          });
+
+         // Group data by category (these correspond to the various tables
+         // displayed in the output).
+         var e = container.category;
+         var cat = ref.data.categories[e];
+         if (!cat) {
+            cat = ref.data.categories[e] = {
+               reftimes: {},
+               containers: []};
+         }
+         cat.containers.push(container);
       });
 
-      // Group data by element type
-      angular.forEach(data.tests, function(container) {
-         var arr = processed_data[container.elem_type];
-         if (!arr) {
-            arr = processed_data[container.elem_type] = [];
-         }
-         arr.push(container);
-      });
+      this.set_reftimes('C++');
+   }
 
-      // Compute the reference times (C++ always for now)
-      angular.forEach(data.tests, function(container) {
-         if (container.base == base) {
-            angular.forEach(container.tests, function(test, name) {
-               if (!reftimes[container.elem_type]) {
-                  reftimes[container.elem_type] = {};
-               }
-               reftimes[container.elem_type][name] = test.mean_duration;
-            });
-         }
+   /**
+    * Compute the reference times. For each category, the reference times
+    * are taken from the container whose 'base' attribute is equal to base
+    */
+   Reftime.prototype.set_reftimes = function(base) {
+      angular.forEach(this.data.categories, function(cat, catname) {
+         cat.reftimes = {};
+
+         angular.forEach(cat.containers, function(container) {
+            if (container.base == base) {
+               angular.forEach(container.tests, function(test, name) {
+                  cat.reftimes[name] = test.mean_duration;
+               });
+            }
+         });
       });
    };
 
    /**
     * Return the computed percent value for a given test
     */
-   Reftime.prototype.percent = function(test_name, elem_type, mean_duration) {
-      var r = test_name_to_reftime[test_name] || test_name;
-      var rt = reftimes[elem_type];
-      if (!rt) {
-         rt = reftimes[elem_type] = {};
-      }
-      if (!rt[r]) {
-         rt[r] = mean_duration;
-      }
-      return mean_duration / rt[r];
-   };
-
-   /**
-    * Return the list of all known tests
-    */
-   Reftime.prototype.test_names = function() {
-      return all_test_names;
+   Reftime.prototype.percent = function(test_name, category, mean_duration) {
+      var ref = test_name_to_reftime[test_name] || test_name;
+      var rt = this.data.categories[category].reftimes[ref];  //  ref time
+      return mean_duration / rt;
    };
 
    return new Reftime;
 });
 
 app.controller('ResultsCtrl', function($scope, Reftime) {
-   $scope.data = processed_data;  // from global variable
-   $scope.repeat_count = data.repeat_count;
-   $scope.items_count = data.items_count;
-   $scope.as_percent = true;
-   $scope.test_names = Reftime.test_names();
+   $scope.data = Reftime.data;  // from global variable
    $scope.ref_test_names = ref_test_names;
+   $scope.as_percent = true;
 }).
 
 directive('ctDuration', function() {
@@ -118,10 +110,9 @@ directive('ctDuration', function() {
          $scope.test = $scope.container.tests[$scope.testname];
          if ($scope.test) {
             $scope.test.percent = (Reftime.percent(
-                   $scope.testname,
-                   $scope.container.elem_type,
-                   $scope.test.mean_duration) * 100).
-                    toFixed(0);
+               $scope.testname,
+               $scope.container.category,
+               $scope.test.mean_duration) * 100).toFixed(0);
             $scope.test.mean_duration_str = (
                $scope.test.mean_duration * 1000).toFixed(2);
          }

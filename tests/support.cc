@@ -34,8 +34,7 @@ extern "C" {
    extern const int repeat_count;
    extern void start_container_test
       (void* output, const char *base, const char* elements,
-       const char *nodes, const char* container, const char *e_type,
-       int favorite);
+       const char *nodes, const char* category, int favorite);
    extern void end_container_test
       (void* output, int allocated, int allocs_count, int frees_count);
    extern void start_test (void* output, const char* name);
@@ -106,14 +105,14 @@ extern "C"
 void test_cpp_int(void * output) {
    reset_mem();
 
-   start_container_test (output, "C++", "", "", "std::list", "Integer", 1);
+   start_container_test (output, "C++", "", "", "Integer List", 1);
 
    for (int r = 0; r < repeat_count; r++) {
       std::list<int>  v;
 
       start_test (output, "fill");
       for (int c = 1; c <= items_count; c++) {
-	 v.push_back(2);
+	      v.push_back(2);
       }
       end_test (output);
 
@@ -161,14 +160,18 @@ extern "C"
 void test_cpp_string(void * output) {
    reset_mem();
 
-   start_container_test (output, "C++", "", "", "std::list", "String", 1);
+   start_container_test (output, "C++", "", "", "String List", 1);
 
    for (int r = 0; r < repeat_count; r++) {
       std::list<std::string>  v;
 
       start_test (output, "fill");
       for (int c = 1; c <= items_count; c++) {
-	 v.push_back("foo");
+         if (c % 2 == 0) {
+            v.push_back("foo");
+         } else {
+            v.push_back("foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo");
+         }
       }
       end_test (output);
 

@@ -35,7 +35,7 @@ package body Report is
 
    procedure Start_Container_Test
       (Self : System.Address;
-       Base, Elements, Nodes, Container, E_Type : chars_ptr;
+       Base, Elements, Nodes, Category : chars_ptr;
        Favorite : Integer)
        with Export, Convention => C, External_Name => "start_container_test";
    procedure End_Container_Test
@@ -56,8 +56,7 @@ package body Report is
        Base       : String;
        Elements   : String;
        Nodes      : String;
-       Container  : String;
-       E_Type     : String;
+       Category   : String;
        Favorite   : Boolean := False) is
    begin
       if Self.Global_Result = JSON_Null then
@@ -75,13 +74,7 @@ package body Report is
       Self.Container_Test.Set_Field ("base", Base);
       Self.Container_Test.Set_Field ("elements", Elements);
       Self.Container_Test.Set_Field ("nodes", Nodes);
-      Self.Container_Test.Set_Field ("container", Container);
-
-      if E_Type = "Unbounded_String" then
-         Self.Container_Test.Set_Field ("elem_type", "String");
-      else
-         Self.Container_Test.Set_Field ("elem_type", E_Type);
-      end if;
+      Self.Container_Test.Set_Field ("category", Category);
 
       if Favorite then
          Self.Container_Test.Set_Field ("favorite", Favorite);
@@ -186,13 +179,12 @@ package body Report is
 
    procedure Start_Container_Test
       (Self : System.Address;
-       Base, Elements, Nodes, Container, E_Type : chars_ptr;
+       Base, Elements, Nodes, Category : chars_ptr;
        Favorite : Integer) is
    begin
       Start_Container_Test
          (To_Output (Self), Value (Base), Value (Elements), Value (Nodes),
-          Value (Container), Value (E_Type),
-          Favorite => Favorite /= 0);
+          Value (Category), Favorite => Favorite /= 0);
    end Start_Container_Test;
 
    ------------------------

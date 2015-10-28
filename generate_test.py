@@ -33,12 +33,21 @@ class Test(object):
         favorite=False # Whether this should be highlighted in the results
     ):
 
+        # We use two default strings (one short, one long), to test various
+        # approaches of storing elements
+
         if elem_type.lower() == "integer":
-            default = 2
+            category = '%s %s' % (elem_type, type)
+            append = "V2.Append (2);"
         elif elem_type.lower() == "string":
-            default = '"foo"'
+            category = '%s %s' % (elem_type, type)
+            append = 'V2.Append ((if C mod 2 = 0 then "foo" else ' + \
+               '"foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo"));'
         elif elem_type.lower() == "unbounded_string":
-            default = 'To_Unbounded_String ("foo")'
+            category = 'String %s' % (type, )
+            append = 'V2.Append (To_Unbounded_String ((' + \
+               ' if C mod 2 = 0 then "foo" else ' + \
+               '"foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo")));'
         else:
             raise Exception("Unknown element type: %s" % elem_type)
 
@@ -46,6 +55,7 @@ class Test(object):
             base=base,
             definite=definite,
             nodes=nodes,
+            category=category,
             type=type,
             elem_type=elem_type,
             instance=instance,
@@ -59,7 +69,7 @@ class Test(object):
             clear_copy='',  # Explicit clear the copy of the container
             prefix='',      # Prefix for Element, Next and Has_Element
             adaptors='',    # Creating adaptors for standard containers
-            default=default)
+            append=append)
 
         if self.args['base'].lower() == "limited":
             # Need an explicit copy, since ":=" is not defined for limited types
@@ -99,7 +109,7 @@ class Test(object):
        begin
           Stdout.Start_Test ("fill", "{comments.fill}");
           for C in 1 .. Items_Count loop
-             V2.Append ({default});
+             {append}
           end loop;
           Stdout.End_Test;
 
@@ -142,7 +152,7 @@ class Test(object):
 
     begin
        Stdout.Start_Container_Test
-          ("{base}", "{definite}", "{nodes}", "{type}", "{elem_type}", {favorite});
+          ("{base}", "{definite}", "{nodes}", "{category}", {favorite});
        for C in 1 .. Repeat_Count loop
           declare
              V : Container.{type}{discriminant};
@@ -250,7 +260,10 @@ Test("String", "Controlled", "Indefinite", "Unbounded_Ref", "List",
 Test("Unbounded_String", "Controlled", "Definite", "Unbounded", "List",
      "package Container is new Conts.Lists.Definite_Unbounded (Unbounded_String);",
      "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
-     "with Conts.Lists.Indefinite_Unbounded;").gen()
+     "with Conts.Lists.Indefinite_Unbounded;",
+     comments=Comments(
+         cursorloop="Maybe because of the atomic counters")
+    ).gen()
 
 ads.write("with Report; use Report;\n")
 ads.write("package Generated_Tests is\n")
