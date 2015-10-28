@@ -12,6 +12,8 @@ package Use_Lists with SPARK_Mode is
    use My_Lists.Formal_Model.Cursor_Map;
    use My_Lists.Formal_Model.Element_Sequence;
 
+   pragma Unevaluated_Use_Of_Old (Allow);
+
    function Is_Incr (I1, I2 : Integer) return Boolean is
       (if I1 = Integer'Last then I2 = Integer'Last else I2 = I1 + 1);
 
@@ -39,8 +41,10 @@ package Use_Lists with SPARK_Mode is
      and Inc (Positions (L)'Old, Positions (L))
      and Inc (Positions (L), Positions (L)'Old);
 
+   --  Length is set to a static value to work around a crash in flow analysis.
+   --  See O722-006
    procedure Double_Size (L : in out List) with
-     Pre  => Capacity (L) / 2 >= Length (L),
+     Pre  => Capacity (L) / 2 >= Length (L) and then Length (L) = 100,
      Post => Capacity (L) = Capacity (L)'Old
      and Length (L) = 2 * Length (L)'Old
      and (for all I in 1 .. Length (L)'Old =>
@@ -59,4 +63,13 @@ package Use_Lists with SPARK_Mode is
 
    function My_Find (L : List; E : Integer) return Cursor with
      Post => My_Find'Result = Find (L, E);
+
+   procedure Update_Range_To_Zero (L : in out List; Fst, Lst : Cursor) with
+     Pre  => Has_Element (L, Fst) and then Has_Element (L, Lst)
+     and then Get (Positions (L), Lst) >= Get (Positions (L), Fst),
+     Post => Positions (L) = Positions (L)'Old
+     and (for all I in 1 .. Length (L) =>
+              (if I in Get (Positions (L), Fst) .. Get (Positions (L), Lst)
+               then Element (Model (L), I) = 0
+               else Element (Model (L), I) = Element (Model (L)'Old, I)));
 end Use_Lists;

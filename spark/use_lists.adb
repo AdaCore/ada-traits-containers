@@ -69,7 +69,7 @@ package body Use_Lists with SPARK_Mode is
    procedure Double_Size (L : in out List) is
       Cu : Cursor := First (L);
    begin
-      for I in 1 .. Length (L) loop
+      for I in 1 .. 100 loop
          pragma Loop_Invariant (Has_Element (L, Cu));
          pragma Loop_Invariant (Capacity (L) = Capacity (L)'Loop_Entry);
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry + I - 1);
@@ -110,7 +110,7 @@ package body Use_Lists with SPARK_Mode is
          N := N + 1;
       end loop;
    end Double_Size_2;
-
+--
    function My_Find (L : List; E : Integer) return Cursor is
       Cu : Cursor := First (L);
    begin
@@ -125,4 +125,32 @@ package body Use_Lists with SPARK_Mode is
       end loop;
       return No_Element;
    end My_Find;
+
+   procedure Update_Range_To_Zero (L : in out List; Fst, Lst : Cursor) is
+      Current : Cursor := Fst;
+      N_Last  : Cursor := Lst;
+   begin
+      Next (L, N_Last);
+      while Current /= N_Last loop
+         pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry);
+         pragma Loop_Invariant (Positions (L) = Positions (L)'Loop_Entry);
+         pragma Loop_Invariant (Mem (Positions (L), Current));
+         pragma Loop_Invariant
+           (Get (Positions (L), Current) in
+              Get (Positions (L), Fst) .. Get (Positions (L), Lst));
+         pragma Loop_Invariant
+           (for all I in
+              Get (Positions (L), Fst) .. Get (Positions (L), Current) - 1 =>
+                Element (Model (L), I) = 0);
+         pragma Loop_Invariant
+           (for all I in 1 .. Get (Positions (L), Fst) - 1 =>
+              Element (Model (L), I) = Element (Model (L)'Loop_Entry, I));
+         pragma Loop_Invariant
+           (for all I in Get (Positions (L), Current) .. Length (L) =>
+                Element (Model (L), I) = Element (Model (L)'Loop_Entry, I));
+         Replace_Element (L, Current, 0);
+         Next (L, Current);
+      end loop;
+   end Update_Range_To_Zero;
+
 end Use_Lists;
