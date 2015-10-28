@@ -25,6 +25,8 @@
 --  Such elements are returned by copy. It might be more efficient to use
 --  conts-elements-indefinite_ref.ads instead to return the elements by
 --  reference.
+--  When the Element_Type is a string or an array, it might be worth
+--  experimenting with conts-elements-arrays.ads
 
 pragma Ada_2012;
 

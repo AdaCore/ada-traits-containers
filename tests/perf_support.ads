@@ -109,7 +109,7 @@ package Perf_Support is
    Items_Count : constant Integer := 300_000;
    pragma Export (C, Items_Count, "items_count");
    --  For some reason, using 600_000 results in a storage error when
-   --  allocating the bounded limited containers.
+   --  allocating the bounded limited containers (but not the Ada arrays)
 
    Repeat_Count : constant Natural := 5;
    pragma Export (C, Repeat_Count, "repeat_count");

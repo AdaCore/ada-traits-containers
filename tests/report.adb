@@ -69,6 +69,9 @@ package body Report is
       Self.End_Container_Test;   --  In case one was started
 
       Memory.Pause;
+
+      Put_Line ("Test for " & Base & " " & Elements & " " & Nodes);
+
       Self.Container_Test := GNATCOLL.JSON.Create_Object;
       Append (Self.All_Tests, Self.Container_Test);
       Self.Container_Test.Set_Field ("base", Base);

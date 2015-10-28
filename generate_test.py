@@ -164,14 +164,15 @@ class Test(object):
     end Test_{base}_{definite}_{nodes}_{elem_type};
 """.format(**self.args)
 
-    def gen(self):
+    def gen(self,
+            use_cursor_convert=False):
         """
         Generate tests for the new containers
         """
         self.args['prefix'] = 'V2.'
 
         # When using reference types
-        if self.args['nodes'].endswith("_Ref"):
+        if use_cursor_convert:
             self.args['adaptors'] = ("""
        function Count_If is new Conts.Algorithms.Count_If_Convert
           (Container.Cursors_Forward_Convert);""").format(**self.args)
@@ -256,14 +257,41 @@ Test("String", "Controlled", "Indefinite", "Unbounded_Ref", "List",
      "with Conts.Lists.Indefinite_Unbounded_Ref;",
      comments=Comments(
          countif="Conversion from Reference_Type to Element_Type"),
-     favorite=True).gen()
+     favorite=True).gen(use_cursor_convert=True)
 Test("Unbounded_String", "Controlled", "Definite", "Unbounded", "List",
      "package Container is new Conts.Lists.Definite_Unbounded (Unbounded_String);",
      "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
      "with Conts.Lists.Indefinite_Unbounded;",
      comments=Comments(
-         cursorloop="Maybe because of the atomic counters")
+         cursorloop="Maybe because of the atomic counters or controlled elements")
     ).gen()
+Test("String", "Controlled", "Arrays", "Unbounded", "List",
+     """
+     package Container is
+        package Elements is new Conts.Elements.Arrays
+           (Positive, Character, String, Conts.Global_Pool);
+        package Nodes is new Conts.Lists.Nodes.Unbounded
+           (Elements.Traits, Ada.Finalization.Controlled, Conts.Global_Pool);
+        package Lists is new Conts.Lists.Generics (Nodes.Traits);
+        subtype Cursor is Lists.Cursor;
+        type List is new Lists.List with null record
+           with Iterable => (First => First_Primitive,
+                             Next  => Next_Primitive,
+                             Has_Element => Has_Element_Primitive,
+                             Element => Element_Primitive);
+        package Cursors is new Conts.Lists.Cursors (Lists, List);
+        function From_Ref_To_Elem (R : Elements.Ref_Type) return String
+           is (R.E.all) with Inline;
+        package Cursors_Forward_Convert
+           is new Conts.Cursors.Constant_Forward_Convert_Traits
+            (Cursors.Constant_Forward, String, From_Ref_To_Elem);
+     end Container;""",
+     "with Conts.Lists.Nodes.Unbounded, Conts.Elements.Arrays;\n" + \
+     "with Conts.Lists.Generics, Ada.Finalization, Conts.Lists.Cursors;",
+     comments=Comments(
+         countif='conversion to String',
+         fill='strange, since we are doing fewer mallocs')
+    ).gen(use_cursor_convert=True)
 
 ads.write("with Report; use Report;\n")
 ads.write("package Generated_Tests is\n")

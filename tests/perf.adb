@@ -47,6 +47,7 @@ begin
    Test_Controlled_Indefinite_Unbounded_String (S);
    Test_Controlled_Indefinite_Unbounded_Ref_String (S);
    Test_Controlled_Definite_Unbounded_Unbounded_String (S);
+   Test_Controlled_Arrays_Unbounded_String (S);
 
    Test_QGen;
    Stdout.Display;
