@@ -42,8 +42,8 @@ package Conts.Elements.Indefinite_Ref with SPARK_Mode is
    type Element_Access is access all Element_Type;
    for Element_Access'Storage_Pool use Pool.Pool.all;
 
-   type Ref_Type (E : not null access Element_Type) is null record
-      with Implicit_Dereference => E;
+   type Ref_Type (Element : not null access Element_Type) is null record
+      with Implicit_Dereference => Element;
    --  ??? Would be nice if we could make this constrained by
    --  providing a default value for the discriminant, but this is
    --  illegal.
@@ -51,7 +51,7 @@ package Conts.Elements.Indefinite_Ref with SPARK_Mode is
    function To_Element_Access (E : Element_Type) return Element_Access
       is (new Element_Type'(E)) with Inline;
    function To_Ref (E : Element_Access) return Ref_Type
-      is (Ref_Type'(E => E)) with Inline;
+      is (Ref_Type'(Element => E)) with Inline;
    function Copy (E : Element_Access) return Element_Access
       is (new Element_Type'(E.all)) with Inline;
    procedure Release (E : in out Element_Access) with Inline;
@@ -66,5 +66,12 @@ package Conts.Elements.Indefinite_Ref with SPARK_Mode is
        Release             => Release,
        Copyable            => False,   --  would create aliases
        Movable             => True);
+
+   function From_Ref_To_Element (R : Ref_Type) return Element_Type
+      is (R.Element.all) with Inline;
+   --  Convenience function for use in algorithms, to convert from a Ref_Type
+   --  to an Element_Type. This is not needed in general, since the compiler
+   --  will automatically (and efficiently) dereference the reference_type.
+   --  But generic algorithm need an explicit conversion.
 
 end Conts.Elements.Indefinite_Ref;

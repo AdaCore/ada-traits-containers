@@ -71,26 +71,27 @@ body {
    margin: 0;
 }
 .header {
-   background-color: #eee;
+   background-color: rgba(230,230,230,0.97);
+   border-bottom: 1px solid rgb(200,200,200);
    position: fixed;
    top: 0;
    left: 0;
    height: 20px;
    width: 100%;
    margin: 0;
-   padding: 10px;
+   padding: 5px;
    z-index: 2;
 }
 .results {
-   margin-top: 40px; /* same a .header height + vertical padding */
+   margin-top: 30px; /* same a .header height + vertical padding */
+   margin-left: 5px;
 }
 
    </style>
 </head>
 <body>
    <div class='header' ng-controller='HeaderCtrl'>
-      <input type='checkbox' ng-model='$root.as_percent'>
-      As percent
+      <select ng-options='t.value as t.text for t in percents' ng-model='$root.as_percent'></select>
 
       <input style="margin-left:30px" type='checkbox' ng-model='$root.show_test_allocs'>
       allocs/free for each test

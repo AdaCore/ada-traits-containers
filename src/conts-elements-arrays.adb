@@ -50,7 +50,7 @@ package body Conts.Elements.Arrays is
          F  : constant C_Fat_Pointer := (FP.Data'Address, FP.Bounds'Address);
          AC : constant Array_Access := To_FP (F);
       begin
-         return Ref_Type'(E => AC);
+         return Ref_Type'(Element => AC);
       end Get;
    end Fat_Pointers;
 
@@ -84,7 +84,7 @@ package body Conts.Elements.Arrays is
          if S.Kind = Short_Array then
             return Fat_Pointers.Get (S.Short'Access);
          else
-            return Ref_Type'(E => S.Long);
+            return Ref_Type'(Element => S.Long);
          end if;
       end To_Ref;
 

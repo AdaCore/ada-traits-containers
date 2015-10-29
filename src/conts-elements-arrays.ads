@@ -52,8 +52,8 @@ generic
 
 package Conts.Elements.Arrays with SPARK_Mode => Off is
 
-   type Ref_Type (E : not null access constant Array_Type) is
-      null record with Implicit_Dereference => E;
+   type Ref_Type (Element : not null access constant Array_Type) is
+      null record with Implicit_Dereference => Element;
 
    --  This package stores a string with explicit bounds, but is able to
    --  cast it as a standard string acces by simulating the fat pointers,
@@ -105,5 +105,12 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
        Release             => Impl.Release,
        Copyable            => False,   --  would create aliases
        Movable             => True);
+
+   function From_Ref_To_Element (R : Ref_Type) return Array_Type
+      is (R.Element.all) with Inline;
+   --  Convenience function for use in algorithms, to convert from a Ref_Type
+   --  to an Element_Type. This is not needed in general, since the compiler
+   --  will automatically (and efficiently) dereference the reference_type.
+   --  But generic algorithm need an explicit conversion.
 
 end Conts.Elements.Arrays;

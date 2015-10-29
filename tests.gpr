@@ -13,7 +13,9 @@ project Tests is
       for Switches ("s-memory.adb") use ("-gnatg")
          & Compiler'Switches ("Ada");
    end Compiler;
-   package Builder renames Shared.Builder;
+   package Builder extends Shared.Builder is
+      for Global_Configuration_Pragmas use "gnat.adc";
+   end Builder;
    package Naming renames Shared.Naming;
    package Binder renames Shared.Binder;
    package Linker renames Shared.Linker;

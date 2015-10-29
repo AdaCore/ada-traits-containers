@@ -105,6 +105,10 @@ controller('ResultsCtrl', function($scope, Reftime) {
 
 controller('HeaderCtrl', function(Reftime, $scope) {
    $scope.data = Reftime.data;
+   $scope.percents = [
+      {value: true, text: 'As percent'},
+      {value: false, text: 'As milliseconds'}
+   ];
 }).
 
 /**

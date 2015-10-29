@@ -64,7 +64,7 @@ package QGen is
                         Has_Element => Has_Element_Primitive,
                         Element     => As_Block);
    function As_Block (C : Block_List; P : Lists.Cursor) return Block'Class
-      is (Block'Class (Lists.Element (C, P).E.all))
+      is (Block'Class (Lists.Element (C, P).Element.all))
       with Inline => True;
 
    type Sum_List is new Block_List with null record
@@ -73,7 +73,7 @@ package QGen is
                         Has_Element => Has_Element_Primitive,
                         Element     => As_Sum);
    function As_Sum (C : Sum_List; P : Lists.Cursor) return Sum'Class
-      is (Sum'Class (Lists.Element (C, P).E.all))
+      is (Sum'Class (Lists.Element (C, P).Element.all))
       with Inline => True;
 
    procedure Test_QGen;

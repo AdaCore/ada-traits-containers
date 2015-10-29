@@ -57,18 +57,11 @@ package Conts.Lists.Strings is
    --  will automatically be dereferenced to a String by the compiler, but
    --  is much more efficient than returning a copy of the String).
 
-   function From_Ref_To_Elem (R : Elements.Ref_Type) return String
-      is (R.E.all) with Inline;
-   --  Convert from a reference type to an element type. In general, this is
-   --  done automatically by the compiler, but this is needed in the case of
-   --  algorithms that expect an element_type in parameter, because a cursor
-   --  in fact returns a reference type.
-
    package Cursors_Forward_Convert
       is new Conts.Cursors.Constant_Forward_Convert_Traits
          (Cursors      => Cursors.Constant_Forward,
           Element_Type => String,
-          Convert      => From_Ref_To_Elem);
+          Convert      => Elements.From_Ref_To_Element);
    --  A special wrapper around cursor, for use with algorithms, so that
    --  the predicates can take an element_type in parameter
 
