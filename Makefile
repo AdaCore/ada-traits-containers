@@ -1,4 +1,5 @@
 all:
+	@mkdir -p tests/generated
 	python ./generate_test.py
 	gprbuild -p -Ptests -j0
 	./tests/obj/perf

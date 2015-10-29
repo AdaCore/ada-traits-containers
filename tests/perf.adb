@@ -22,9 +22,22 @@
 with Perf_Support;    use Perf_Support;
 with QGen;            use QGen;
 with Report;          use Report;
-with Generated_Tests; use Generated_Tests;
 with Ada.Text_IO;     use Ada.Text_IO;
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
+with Test_Ada12_Definite_Unbounded_Integer;
+with Test_Ada12_No_Checks_Definite_Unbounded_Integer;
+with Test_Ada12_Indefinite_Unbounded_Integer;
+with Test_Controlled_Indefinite_Unbounded_Integer;
+with Test_Controlled_Definite_Unbounded_Integer;
+with Test_Controlled_Definite_Bounded_Integer;
+with Test_Limited_Definite_Bounded_Integer;
+with Test_Limited_Indefinite_Spark_Unbounded_Spark_Integer;
+with Test_Ada12_Indefinite_Unbounded_String;
+with Test_Ada12_No_Checks_Indefinite_Unbounded_String;
+with Test_Controlled_Indefinite_Unbounded_String;
+with Test_Controlled_Indefinite_Unbounded_Ref_String;
+with Test_Controlled_Definite_Unbounded_Unbounded_String;
+with Test_Controlled_Arrays_Unbounded_String;
 
 procedure Perf is
    Stdout : aliased Output;

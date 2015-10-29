@@ -3,5 +3,5 @@ src/lib
 tests/obj
 spark/obj
 
-tests/generated_tests.ad?
+tests/generated/
 data.js

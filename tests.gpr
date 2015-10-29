@@ -4,7 +4,7 @@ with "src/shared";
 with "gnatcoll";
 
 project Tests is
-   for Source_Dirs use ("tests/");
+   for Source_Dirs use ("tests/", "tests/generated");
    for Object_Dir use "tests/obj";
    for Languages use ("Ada", "C++");
    for Main use ("perf.adb");

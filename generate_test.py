@@ -3,12 +3,6 @@
 This script is used to generate test for the various container combinations.
 """
 
-ads = open("tests/generated_tests.ads", "w")
-adb = open("tests/generated_tests.adb", "w")
-
-spec_contents = ""
-body_withs = ""
-body_contents = ""
 
 class Comments(object):
     def __init__(self, **kwargs):
@@ -80,90 +74,103 @@ class Test(object):
         if self.args['nodes'].lower() == "bounded":
             self.args['discriminant'] = ' (Capacity => Items_Count)'
 
+        self.args['test_name'] = \
+            "Test_{base}_{definite}_{nodes}_{elem_type}".format(**self.args)
+
     def __common(self):
-        global body_withs, body_contents, spec_contents
+        filename = self.args['test_name'].lower()
 
-        spec_contents += """
-    procedure Test_{base}_{definite}_{nodes}_{elem_type}
-        (Stdout : not null access Output'Class);
-""".format(**self.args)
+        ads = open("tests/generated/%s.ads" % filename, "w")
+        ads.write("""
+with Report; use Report;
+pragma Style_Checks (Off);
+procedure {test_name}
+   (Stdout : not null access Output'Class);
+            """.format(**self.args))
+        ads.close()
 
-        body_withs += """
-{withs}""".format(**self.args)
+        adb = open("tests/generated/%s.adb" % filename, "w")
+        adb.write("""
+{withs}
+pragma Style_Checks (Off);
+pragma Warnings (Off, "unit * is not referenced");
+with Perf_Support;  use Perf_Support;
+with Conts.Algorithms;
+with Conts.Cursors.Adaptors;
+pragma Warnings (On, "unit * is not referenced");
+procedure {test_name}
+   (Stdout : not null access Output'Class)
+is
+   {instance}
+   use Container;{adaptors}
 
-        body_contents += """
+   procedure Run (V2 : in out Container.{type}'Class);
+   --  Force dynamic dispatching for the container (if relevant), as a
+   --  a way to check we do not waste time there.
 
-    procedure Test_{base}_{definite}_{nodes}_{elem_type}
-        (Stdout : not null access Output'Class)
-    is
-       {instance}
-       use Container;{adaptors}
+   procedure Run (V2 : in out Container.{type}'Class) is
+      It : Container.Cursor;
+      Co : Natural;
+   begin
+      Stdout.Start_Test ("fill", "{comments.fill}");
+      for C in 1 .. Items_Count loop
+         {append}
+      end loop;
+      Stdout.End_Test;
 
-       procedure Run (V2 : in out Container.{type}'Class);
-       --  Force dynamic dispatching for the container (if relevant), as a
-       --  a way to check we do not waste time there.
+      Stdout.Start_Test ("copy", "{comments.copy}");
+      declare
+         V_Copy : Container.{type}'Class := V2{copy};
+         pragma Unreferenced (V_Copy);
+      begin
+         --  Measure the time before we destroy the copy
+         Stdout.End_Test;{clear_copy}
+      end;
 
-       procedure Run (V2 : in out Container.{type}'Class) is
-          It : Container.Cursor;
-          Co : Natural;
-       begin
-          Stdout.Start_Test ("fill", "{comments.fill}");
-          for C in 1 .. Items_Count loop
-             {append}
-          end loop;
-          Stdout.End_Test;
+      Co := 0;
+      Stdout.Start_Test ("cursor loop", "{comments.cursorloop}");
+      It := V2.First;
+      while {prefix}Has_Element (It) loop
+         if Predicate ({prefix}Element (It)) then
+            Co := Co + 1;
+         end if;
+         It := {prefix}Next (It);
+      end loop;
+      Stdout.End_Test;
+      Assert (Co, Items_Count);
 
-          Stdout.Start_Test ("copy", "{comments.copy}");
-          declare
-             V_Copy : Container.{type}'Class := V2{copy};
-             pragma Unreferenced (V_Copy);
-          begin
-             --  Measure the time before we destroy the copy
-             Stdout.End_Test;{clear_copy}
-          end;
+      Co := 0;
+      Stdout.Start_Test ("for-of loop", "{comments.forofloop}");
+      for E of V2 loop
+         if Predicate (E) then
+            Co := Co + 1;
+         end if;
+      end loop;
+      Stdout.End_Test;
+      Assert (Co, Items_Count);
 
-          Co := 0;
-          Stdout.Start_Test ("cursor loop", "{comments.cursorloop}");
-          It := V2.First;
-          while {prefix}Has_Element (It) loop
-             if Predicate ({prefix}Element (It)) then
-                Co := Co + 1;
-             end if;
-             It := {prefix}Next (It);
-          end loop;
-          Stdout.End_Test;
-          Assert (Co, Items_Count);
+      Stdout.Start_Test ("count_if", "{comments.countif}");
+      Co := Count_If (V2, Predicate'Access);
+      Stdout.End_Test;
+      Assert (Co, Items_Count);
+   end Run;
 
-          Co := 0;
-          Stdout.Start_Test ("for-of loop", "{comments.forofloop}");
-          for E of V2 loop
-             if Predicate (E) then
-                Co := Co + 1;
-             end if;
-          end loop;
-          Stdout.End_Test;
-          Assert (Co, Items_Count);
+begin
+   Stdout.Start_Container_Test
+      ("{base}", "{definite}", "{nodes}", "{category}", {favorite});
+   for C in 1 .. Repeat_Count loop
+      declare
+         V : Container.{type}{discriminant};
+      begin
+         Stdout.Save_Container_Size (V'Size);
+         Run (V);{clear}
+      end;
+   end loop;
+   Stdout.End_Container_Test;
+end {test_name};
+""".format(**self.args))
 
-          Stdout.Start_Test ("count_if", "{comments.countif}");
-          Co := Count_If (V2, Predicate'Access);
-          Stdout.End_Test;
-          Assert (Co, Items_Count);
-       end Run;
-
-    begin
-       Stdout.Start_Container_Test
-          ("{base}", "{definite}", "{nodes}", "{category}", {favorite});
-       for C in 1 .. Repeat_Count loop
-          declare
-             V : Container.{type}{discriminant};
-          begin
-             Stdout.Save_Container_Size (V'Size);
-             Run (V);{clear}
-          end;
-       end loop;
-       Stdout.End_Container_Test;
-    end Test_{base}_{definite}_{nodes}_{elem_type};
-""".format(**self.args)
+        adb.close()
 
     def gen(self, use_cursor_convert=False):
         """
@@ -279,7 +286,7 @@ Test("String", "Controlled", "Indefinite", "Unbounded_Ref", "List",
 Test("Unbounded_String", "Controlled", "Definite", "Unbounded", "List",
      "package Container is new Conts.Lists.Definite_Unbounded (Unbounded_String);",
      "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
-     "with Conts.Lists.Indefinite_Unbounded;",
+     "with Conts.Lists.Definite_Unbounded;",
      comments=Comments(
          cursorloop="Maybe because of the atomic counters or controlled elements")
     ).gen()
@@ -311,20 +318,3 @@ Test("String", "Controlled", "Arrays", "Unbounded", "List",
          fill='strange, since we are doing fewer mallocs')
     ).gen(use_cursor_convert=True)
 
-ads.write("with Report; use Report;\n")
-ads.write("package Generated_Tests is\n")
-ads.write("   pragma Style_Checks (Off);\n")
-ads.write(spec_contents)
-ads.write("end Generated_Tests;\n")
-ads.close()
-
-adb.write(body_withs)
-adb.write("\n")
-adb.write("with Perf_Support;  use Perf_Support;\n")
-adb.write("with Conts.Algorithms;\n")
-adb.write("with Conts.Cursors.Adaptors;\n")
-adb.write("package body Generated_Tests is")
-adb.write("   pragma Style_Checks (Off);\n")
-adb.write(body_contents)
-adb.write("end Generated_Tests;\n")
-adb.close()
