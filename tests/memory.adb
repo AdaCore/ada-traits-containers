@@ -27,11 +27,23 @@ package body Memory is
 
    procedure Reset is
    begin
-      Live := 0;
-      Allocs := 0;
-      Frees := 0;
-      Reallocs := 0;
+      Current := (Total_Allocated => 0,
+                  Allocs => 0,
+                  Frees => 0,
+                  Reallocs => 0);
    end Reset;
+
+   ---------
+   -- "-" --
+   ---------
+
+   function "-" (M1, M2 : Mem_Info) return Mem_Info is
+   begin
+      return (Total_Allocated => M1.Total_Allocated - M2.Total_Allocated,
+              Allocs          => M1.Allocs - M2.Allocs,
+              Frees           => M1.Frees - M2.Frees,
+              Reallocs        => M1.Reallocs - M2.Reallocs);
+   end "-";
 
    -----------
    -- Pause --

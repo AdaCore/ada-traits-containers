@@ -14,7 +14,12 @@ var ref_test_names = {
    'cursor loop': true
 };
 
-app.factory('Reftime', function() {
+app.
+run(function($rootScope) {
+   $rootScope.as_percent = true;
+}).
+
+factory('Reftime', function() {
    /**
     * This class is used to compute percents compared to various reference
     * times.
@@ -91,12 +96,37 @@ app.factory('Reftime', function() {
    };
 
    return new Reftime;
-});
+}).
 
-app.controller('ResultsCtrl', function($scope, Reftime) {
+controller('ResultsCtrl', function($scope, Reftime) {
    $scope.data = Reftime.data;  // from global variable
    $scope.ref_test_names = ref_test_names;
-   $scope.as_percent = true;
+}).
+
+controller('HeaderCtrl', function(Reftime, $scope) {
+   $scope.data = Reftime.data;
+}).
+
+/**
+ * Display memory usage for a test
+ */
+directive('ctMem', function() {
+   return {
+      scope: {
+         testname: '=ctMem',
+         container: '='
+      },
+      controller: function($scope, Reftime, $rootScope) {
+         $scope.test = $scope.container.tests[$scope.testname];
+      },
+   template:
+      '<div class="mem" ng-if="test && $root.show_test_allocs">' +
+         '<div ng-if="test.allocated">{{test.allocated | kb}}</div>' +
+         '<div ng-if="test.allocs">+{{test.allocs}}</div>' +
+         '<div ng-if="test.reallocs">@{{test.reallocs}}</div>' +
+         '<div ng-if="test.frees">-{{test.frees}}</div>' +
+      '</div>'
+   };
 }).
 
 directive('ctDuration', function() {
@@ -106,7 +136,7 @@ directive('ctDuration', function() {
          aspercent: '=',
          container: '='
       },
-      controller: function($scope, Reftime) {
+      controller: function($scope, Reftime, $rootScope) {
          $scope.test = $scope.container.tests[$scope.testname];
          if ($scope.test) {
             $scope.test.percent = (Reftime.percent(
@@ -120,8 +150,8 @@ directive('ctDuration', function() {
    template: '<span ng-if="test"' +
            ' ng-class="{worse:test.percent>105, comment:test.comment}"' +
            ' title="{{test.comment}}">' +
-         '<span ng-if="aspercent">{{test.percent}}%</span>' +
-         '<span ng-if="!aspercent">{{test.mean_duration_str}}</span>' +
+         '<span ng-if="$root.as_percent">{{test.percent}}%</span>' +
+         '<span ng-if="!$root.as_percent">{{test.mean_duration_str}}</span>' +
          '</span>'
    };
 }).
@@ -129,7 +159,7 @@ directive('ctDuration', function() {
 filter('kb', function() {
    return function(value) {
       if (!value) {
-         return '';
+         return '0';
       } else if (value > 1000) {
          return (value / 1000).toFixed(0) + 'kb';
       } else {

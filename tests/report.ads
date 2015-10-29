@@ -24,6 +24,7 @@
 with Ada.Unchecked_Conversion;
 with Ada.Calendar;    use Ada.Calendar;
 with GNATCOLL.JSON;   use GNATCOLL.JSON;
+with Memory;          use Memory;
 
 package Report is
 
@@ -37,6 +38,11 @@ package Report is
        Category   : String;    --  "integer list", "string list", ...
        Favorite   : Boolean := False);
    --  If Favorite is true, the container will be highlighted in the results
+
+   procedure Save_Container_Size
+     (Self        : not null access Output'Class;
+      Size        : Long_Integer);
+   --  Saves the size of the container in the output (for information only)
 
    procedure End_Container_Test (Self : not null access Output'Class);
    --  A new set of tests is started, for a specific container.
@@ -79,6 +85,7 @@ private
       Tests_In_Container : JSON_Value;
 
       Current_Test   : JSON_Value := JSON_Null;
+      At_Test_Start  : Mem_Info;
       Start_Time     : Ada.Calendar.Time;
    end record;
 

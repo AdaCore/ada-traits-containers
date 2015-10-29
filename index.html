@@ -14,6 +14,7 @@ td {
    width: 55px;
    max-width: 55px;
    text-align: center;
+   vertical-align: top;
    padding: 3px 5px;
    border: 1px solid #ccc;
    white-space: nowrap;
@@ -57,14 +58,49 @@ th.row-header {
    border-bottom: 1px solid #ccc;
    border-right: 2px solid #222;
 }
+.mem {
+   color: #999;
+   text-align: right;
+   font-size: 0.8em;
+}
 .comment {
    text-decoration: underline;
    cursor: pointer;
 }
+body {
+   margin: 0;
+}
+.header {
+   background-color: #eee;
+   position: fixed;
+   top: 0;
+   left: 0;
+   height: 20px;
+   width: 100%;
+   margin: 0;
+   padding: 10px;
+   z-index: 2;
+}
+.results {
+   margin-top: 40px; /* same a .header height + vertical padding */
+}
+
    </style>
 </head>
 <body>
-   <div ng-controller='ResultsCtrl'>
+   <div class='header' ng-controller='HeaderCtrl'>
+      <input type='checkbox' ng-model='$root.as_percent'>
+      As percent
+
+      <input style="margin-left:30px" type='checkbox' ng-model='$root.show_test_allocs'>
+      allocs/free for each test
+
+      <span style="margin-left:30px">
+         {{data.items_count}} items, tests are repeated {{data.repeat_count}} times.
+      </span>
+   </div>
+
+   <div ng-controller='ResultsCtrl' class='results'>
       <div ng-repeat='(catname, cat) in data.categories'>
          <table>
             <thead>
@@ -81,12 +117,17 @@ th.row-header {
                <tr ng-repeat='name in data.test_names' ng-class='{separator: ref_test_names[name]}'>
                   <th class='row-header'>{{name}}</th>
                   <td ng-repeat='c in cat.containers' ng-class="{favorite:c.favorite}">
-                     <span ct-duration='name' aspercent='as_percent' container='c'></span>
+                     <span ct-duration='name' container='c'></span>
+                     <span ct-mem='name' container='c'></span>
                   </td>
                </tr>
                <tr class='separator'>
                   <th class='row-header'></th>
                   <td colspan='99'>Allocations and frees per test run</td>
+               </tr>
+               <tr>
+                  <th class='row-header'>Container Size</th>
+                  <td ng-repeat='c in cat.containers'>{{c.size | kb}}</td>
                </tr>
                <tr>
                   <th class='row-header'>Allocated</th>
@@ -110,16 +151,11 @@ th.row-header {
       </div>
 
       <div style='margin-top: 20px'>
-         <input type='checkbox' ng-model='as_percent'>
-         <span ng-if='as_percent'>As percent</span>
-         <span ng-if='!as_percent'>As milliseconds</span>
-         <br>
-         {{data.items_count}} items, tests are repeated {{data.repeat_count}} times.
-
          <ul>
             <li>In <b>grey</b>: container that will likely be used most often.</li>
             <li>In <b>red</b>: timing is slower than the reference timing (usually C++), within a 5% margin</li>
             <li><b>Underlined</b> when there is a tooltip explaining the timing</li>
+            <li>Memory information for each test (in light gray) shows the total allocated for one run of the test, the number of allocations (with a '+' sign), the number of reallocs (with a '@' sign) and the number of frees (with a '-' sign)</li>
          </ul>
       </div>
    </div>

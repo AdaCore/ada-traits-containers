@@ -95,8 +95,9 @@ package body System.Memory is
       end if;
 
       if not Standard.Memory.Paused then
-         Standard.Memory.Live := Standard.Memory.Live + Natural (Actual_Size);
-         Standard.Memory.Allocs := Standard.Memory.Allocs + 1;
+         Standard.Memory.Current.Total_Allocated :=
+           Standard.Memory.Current.Total_Allocated + Natural (Actual_Size);
+         Standard.Memory.Current.Allocs := Standard.Memory.Current.Allocs + 1;
       end if;
 
       if Result = System.Null_Address then
@@ -113,7 +114,7 @@ package body System.Memory is
    procedure Free (Ptr : System.Address) is
    begin
       if not Standard.Memory.Paused then
-         Standard.Memory.Frees := Standard.Memory.Frees + 1;
+         Standard.Memory.Current.Frees := Standard.Memory.Current.Frees + 1;
       end if;
 
       if Parameters.No_Abort then
@@ -155,8 +156,10 @@ package body System.Memory is
       end if;
 
       if not Standard.Memory.Paused then
-         Standard.Memory.Reallocs := Standard.Memory.Reallocs + 1;
-         Standard.Memory.Live := Standard.Memory.Live + Natural (Actual_Size);
+         Standard.Memory.Current.Reallocs :=
+           Standard.Memory.Current.Reallocs + 1;
+         Standard.Memory.Current.Total_Allocated :=
+           Standard.Memory.Current.Total_Allocated + Natural (Actual_Size);
       end if;
 
       return Result;

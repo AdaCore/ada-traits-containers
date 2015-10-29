@@ -157,6 +157,7 @@ class Test(object):
           declare
              V : Container.{type}{discriminant};
           begin
+             Stdout.Save_Container_Size (V'Size);
              Run (V);{clear}
           end;
        end loop;

@@ -1,6 +1,6 @@
 all:
 	python ./generate_test.py
-	gprbuild -p -Ptests
+	gprbuild -p -Ptests -j0
 	./tests/obj/perf
 
 # Check that our files are compatible with SPARK mode

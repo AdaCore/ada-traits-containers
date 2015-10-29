@@ -38,13 +38,19 @@ package body Report is
        Base, Elements, Nodes, Category : chars_ptr;
        Favorite : Integer)
        with Export, Convention => C, External_Name => "start_container_test";
+   procedure Save_Container_Size
+     (Self : System.Address;
+      Size : Long_Integer)
+     with Export, Convention => C, External_Name => "save_container_size";
    procedure End_Container_Test
      (Self : System.Address;
       Allocated, Allocs_Count, Frees_Count : Natural)
       with Export, Convention => C, External_Name => "end_container_test";
    procedure Start_Test (Self : System.Address; Name : chars_ptr)
       with Export, Convention => C, External_Name => "start_test";
-   procedure End_Test (Self : System.Address)
+   procedure End_Test
+     (Self : System.Address;
+      Allocated, Allocs_Count, Frees_Count : Natural)
       with Export, Convention => C, External_Name => "end_test";
 
    --------------------------
@@ -90,6 +96,19 @@ package body Report is
       Memory.Unpause;
    end Start_Container_Test;
 
+   -------------------------
+   -- Save_Container_Size --
+   -------------------------
+
+   procedure Save_Container_Size
+     (Self        : not null access Output'Class;
+      Size        : Long_Integer) is
+   begin
+      Memory.Pause;
+      Self.Container_Test.Set_Field ("size", Size);
+      Memory.Pause;
+   end Save_Container_Size;
+
    ------------------------
    -- End_Container_Test --
    ------------------------
@@ -100,13 +119,12 @@ package body Report is
       Self.End_Test;  --  In case one was started
 
       if Self.Container_Test /= JSON_Null then
-         --  Allocations include the ones done for JSON results
-         Self.Container_Test.Set_Field ("allocated", Memory.Live);
-         Self.Container_Test.Set_Field ("allocs", Memory.Allocs);
-         Self.Container_Test.Set_Field ("reallocs", Memory.Reallocs);
-         Self.Container_Test.Set_Field ("frees", Memory.Frees);
-         Self.Container_Test := JSON_Null;
+         Self.Container_Test.Set_Field ("allocated", Current.Total_Allocated);
+         Self.Container_Test.Set_Field ("allocs", Current.Allocs);
+         Self.Container_Test.Set_Field ("reallocs", Current.Reallocs);
+         Self.Container_Test.Set_Field ("frees", Current.Frees);
       end if;
+
       Memory.Unpause;
    end End_Container_Test;
 
@@ -134,6 +152,8 @@ package body Report is
          Self.Current_Test.Set_Field ("comment", Comment);
       end if;
 
+      Self.At_Test_Start := Memory.Current;
+
       Memory.Unpause;
       Self.Start_Time := Clock;
    end Start_Test;
@@ -144,6 +164,7 @@ package body Report is
 
    procedure End_Test (Self : not null access Output'Class) is
       E : constant Time := Clock;
+      Info : Mem_Info;
    begin
       if Self.Current_Test /= JSON_Null then
          Memory.Pause;
@@ -154,6 +175,12 @@ package body Report is
             Append (Arr, Create (Float (E - Self.Start_Time)));
             Self.Current_Test.Set_Field ("duration", Arr);
          end;
+
+         Info := Memory.Current - Self.At_Test_Start;
+         Self.Current_Test.Set_Field ("allocated", Info.Total_Allocated);
+         Self.Current_Test.Set_Field ("allocs", Info.Allocs);
+         Self.Current_Test.Set_Field ("reallocs", Info.Reallocs);
+         Self.Current_Test.Set_Field ("frees", Info.Frees);
 
          Self.Current_Test := JSON_Null;
          Memory.Unpause;
@@ -190,19 +217,29 @@ package body Report is
           Value (Category), Favorite => Favorite /= 0);
    end Start_Container_Test;
 
+   -------------------------
+   -- Save_Container_Size --
+   -------------------------
+
+   procedure Save_Container_Size
+     (Self : System.Address;
+      Size : Long_Integer) is
+   begin
+      Save_Container_Size (To_Output (Self), Size);
+   end Save_Container_Size;
+
    ------------------------
    -- End_Container_Test --
    ------------------------
 
    procedure End_Container_Test
-     (Self                      : System.Address;
-      Allocated, Allocs_Count, Frees_Count : Natural)
-   is
+     (Self                                 : System.Address;
+      Allocated, Allocs_Count, Frees_Count : Natural) is
    begin
-      Memory.Allocs := Allocs_Count;
-      Memory.Frees := Frees_Count;
-      Memory.Reallocs := 0;
-      Memory.Live := Allocated;
+      Memory.Current := (Total_Allocated => Allocated,
+                         Allocs          => Allocs_Count,
+                         Frees           => Frees_Count,
+                         Reallocs        => 0);
       End_Container_Test (To_Output (Self));
    end End_Container_Test;
 
@@ -219,8 +256,14 @@ package body Report is
    -- End_Test --
    --------------
 
-   procedure End_Test (Self : System.Address) is
+   procedure End_Test
+     (Self                                 : System.Address;
+      Allocated, Allocs_Count, Frees_Count : Natural) is
    begin
+      Memory.Current := (Total_Allocated => Allocated,
+                         Allocs          => Allocs_Count,
+                         Frees           => Frees_Count,
+                         Reallocs        => 0);
       End_Test (To_Output (Self));
    end End_Test;
 

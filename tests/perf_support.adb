@@ -96,11 +96,14 @@ package body Perf_Support is
 
    begin
       Stdout.Start_Container_Test ("Ada Array", "", "", "Integer List");
-      declare
-         V     : Int_Array (1 .. Items_Count);
-      begin
-         Run (V);
-      end;
+      for R in 1 .. Repeat_Count loop
+         declare
+            V     : Int_Array (1 .. Items_Count);
+         begin
+            Stdout.Save_Container_Size (V'Size);
+            Run (V);
+         end;
+      end loop;
       Stdout.End_Container_Test;
    end Test_Arrays_Int;
 
