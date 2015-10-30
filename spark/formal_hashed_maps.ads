@@ -152,8 +152,9 @@ package Formal_Hashed_Maps with SPARK_Mode is
           else Length (S) = Length (S)'Old + 1
             and Is_Add (Model (S)'Old, K, E, Model (S))
             and (for all C in Positions (S)'Old =>
+                 Mem (Positions (S), C) and
                  Get (Keys (S), Get (Positions (S), C)) =
-              Get (Keys (S)'Old, Get (Positions (S)'Old, C))));
+                 Get (Keys (S)'Old, Get (Positions (S)'Old, C))));
 
    procedure Clear (S : in out Map'Class)
    with

@@ -39,11 +39,12 @@ is
    with
      Global => null,
      Post   => Is_Add'Result =
-       (Mem (Result, E)
+       (E /= No_Element and Mem (Result, E) and not Mem (S, E)
         and (for all F in Result => Mem (S, F) or F = E)
         and (for all E in S => Mem (Result, E)));
    function Add (S : Set; E : Element_Type) return Set with
      Global => null,
+     Pre    => E /= No_Element and then not Mem (S, E),
      Post   => Is_Add (S, E, Add'Result);
 
    function Is_Intersection (S1, S2, Result : Set) return Boolean with

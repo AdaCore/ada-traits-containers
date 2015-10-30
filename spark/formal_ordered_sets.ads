@@ -6,8 +6,10 @@ with Functional_Sets;
 generic
    type Element_Type (<>) is private;
    None : Element_Type;
+   --  ASSUMPTION: "=" and "<" should be compatible.
+   with function "<" (E1, E2 : Element_Type) return Boolean;
    with function "=" (E1, E2 : Element_Type) return Boolean;
-package Formal_Hashed_Sets with SPARK_Mode is
+package Formal_Ordered_Sets with SPARK_Mode is
 
    --  To be replaced with an instance of the proper set package.
 
@@ -69,8 +71,8 @@ package Formal_Hashed_Sets with SPARK_Mode is
         and then
             (for all I in 1 .. Length (S) =>
                (for all J in 1 .. Length (S) =>
-                    (if Get (Elements'Result, I) = Get (Elements'Result, J)
-                     then I = J)));
+                    (Get (Elements'Result, I) < Get (Elements'Result, J))
+                      = (I < J)));
 
       function Positions (S : Set'Class) return Map with
         Import,
@@ -138,10 +140,20 @@ package Formal_Hashed_Sets with SPARK_Mode is
             and Positions (S) = Positions (S)'Old
           else Length (S) = Length (S)'Old + 1
             and Is_Add (Model (S)'Old, E, Model (S))
+            and (for all I in 1 .. Length (S) - 1 =>
+                  (if I < Get (Positions (S), Find (S, E))
+                   then Get (Elements (S)'Old, I) = Get (Elements (S), I)
+                   else Get (Elements (S)'Old, I) = Get (Elements (S), I + 1)))
+            and (for all C in Positions (S)'Old =>
+                     (if Get (Elements (S), Get (Positions (S), C)) < E
+                     then Get (Positions (S), C) =
+                        Get (Positions (S)'Old, C)
+                     else Get (Positions (S), C) =
+                        Get (Positions (S)'Old, C) + 1))
             and (for all C in Positions (S)'Old =>
                    Mem (Positions (S), C) and
                  Get (Elements (S), Get (Positions (S), C)) =
-              Get (Elements (S)'Old, Get (Positions (S)'Old, C))));
+                Get (Elements (S)'Old, Get (Positions (S)'Old, C))));
 
    procedure Exclude (S : in out Set'Class; E : Element_Type) with
      Import,
@@ -153,10 +165,20 @@ package Formal_Hashed_Sets with SPARK_Mode is
             and Positions (S) = Positions (S)'Old
           else Length (S) = Length (S)'Old - 1
             and Is_Add (Model (S), E, Model (S)'Old)
+            and (for all I in 1 .. Length (S) =>
+                  (if I < Get (Positions (S)'Old, Find (S, E)'Old)
+                   then Get (Elements (S), I) = Get (Elements (S)'Old, I)
+                   else Get (Elements (S), I) = Get (Elements (S)'Old, I + 1)))
+            and (for all C in Positions (S) =>
+                     (if Get (Elements (S), Get (Positions (S), C)) < E
+                     then Get (Positions (S)'Old, C) =
+                        Get (Positions (S), C)
+                     else Get (Positions (S)'Old, C) =
+                        Get (Positions (S), C) + 1))
             and (for all C in Positions (S) =>
                    Mem (Positions (S)'Old, C) and
-                   Get (Elements (S), Get (Positions (S), C)) =
-                     Get (Elements (S)'Old, Get (Positions (S)'Old, C))));
+                 Get (Elements (S), Get (Positions (S), C)) =
+                 Get (Elements (S)'Old, Get (Positions (S)'Old, C))));
 
    procedure Union (S1 : in out Set'Class; S2 : Set'Class) with
      Import,
@@ -186,4 +208,4 @@ private
 
    type Set is new Element_Sets.Set with null record;
 
-end Formal_Hashed_Sets;
+end Formal_Ordered_Sets;

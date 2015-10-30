@@ -1,4 +1,4 @@
-package body Use_Sets with SPARK_Mode is
+package body Use_Ordered_Sets with SPARK_Mode is
 
    function My_Find (S : My_Sets.Set; E : Integer) return Cursor is
       Cu : Cursor := First (S);
@@ -93,6 +93,29 @@ package body Use_Sets with SPARK_Mode is
    begin
       Clear (S2);
       while Has_Element (S1, Cu) loop
+         pragma Loop_Invariant (Capacity (S1) = Capacity (S1)'Loop_Entry);
+         pragma Loop_Invariant (Capacity (S2) = Capacity (S2)'Loop_Entry);
+         pragma Loop_Invariant (Get (Positions (S1), Cu) = 1);
+         pragma Loop_Invariant
+           (Length (S1) = Length (S1)'Loop_Entry - Length (S2));
+         pragma Loop_Invariant
+           (for all I in 1 .. Length (S2) =>
+                Get (Elements (S2), I) = Get (Elements (S1)'Loop_Entry, I));
+         pragma Loop_Invariant
+           (for all I in 1 .. Length (S1) =>
+                Get (Elements (S1), I) =
+                Get (Elements (S1)'Loop_Entry, Length (S2) + I));
+         Include (S2, Element (S1, Cu));
+         Exclude (S1, Element (S1, Cu));
+         Cu := First (S1);
+      end loop;
+   end Move_2;
+
+   procedure Move_3 (S1, S2 : in out My_Sets.Set) is
+      Cu : Cursor := First (S1);
+   begin
+      Clear (S2);
+      while Has_Element (S1, Cu) loop
          pragma Loop_Invariant (Capacity (S2) = Capacity (S2)'Loop_Entry);
          pragma Loop_Invariant (Get (Positions (S1), Cu) = Length (S2) + 1);
          pragma Loop_Invariant
@@ -106,15 +129,54 @@ package body Use_Sets with SPARK_Mode is
          Next (S1, Cu);
       end loop;
       Clear (S1);
-   end Move_2;
+   end Move_3;
 
-   procedure Insert_5 (S : in out My_Sets.Set) is
+   procedure Move_4 (S1, S2 : in out My_Sets.Set) is
+      Cu : Cursor := First (S1);
+   begin
+      Clear (S2);
+      while Has_Element (S1, Cu) loop
+         pragma Loop_Invariant (Capacity (S2) = Capacity (S2)'Loop_Entry);
+         pragma Loop_Invariant (Get (Positions (S1), Cu) = Length (S2) + 1);
+         pragma Loop_Invariant
+           (for all I in 1 .. Length (S2) =>
+                Get (Elements (S2), I) = Get (Elements (S1), I));
+         Include (S2, Element (S1, Cu));
+         Next (S1, Cu);
+      end loop;
+      Clear (S1);
+   end Move_4;
+
+   procedure Double_Size (S : in out My_Sets.Set) is
+      Cu : Cursor := First (S);
+      N  : Natural := 0 with Ghost;
+   begin
+      while Has_Element (S, Cu) loop
+         pragma Loop_Invariant (Capacity (S) = Capacity (S)'Loop_Entry);
+         pragma Loop_Invariant (Length (S) = Length (S)'Loop_Entry + N);
+         pragma Loop_Invariant
+           (for all I in 1 .. N =>
+            Get (Elements (S), 2 * I) = Get (Elements (S)'Loop_Entry, I) + 1
+            and Get (Elements (S), 2 * I - 1) =
+              Get (Elements (S)'Loop_Entry, I));
+         pragma Loop_Invariant
+           (for all I in 2 * N + 1 .. Length (S) =>
+                Get (Elements (S), I) =
+              Get (Elements (S)'Loop_Entry, I - N));
+         pragma Loop_Invariant (Get (Positions (S), Cu) = 2 * N + 1);
+         Include (S, Element (S, Cu) + 1);
+         Next (S, Cu);
+         Next (S, Cu);
+         N := N + 1;
+      end loop;
+   end Double_Size;
+
+   procedure Insert_4 (S : in out My_Sets.Set) is
    begin
       Include (S, 1);
       Include (S, 2);
       Include (S, 3);
       Include (S, 4);
-      Include (S, 5);
-   end Insert_5;
+   end Insert_4;
 
-end Use_Sets;
+end Use_Ordered_Sets;

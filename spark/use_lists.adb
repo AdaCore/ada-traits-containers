@@ -56,9 +56,7 @@ package body Use_Lists with SPARK_Mode is
            (for all N in Get (Positions (L), Cu) .. Length (L) =>
                 Element (Model (L)'Loop_Entry, N) =
                 Element (Model (L), N));
-         pragma Loop_Invariant
-           (Inc (Positions (L)'Loop_Entry, Positions (L))
-            and Inc (Positions (L), Positions (L)'Loop_Entry));
+         pragma Loop_Invariant (Positions (L)'Loop_Entry = Positions (L));
          if Element (L, Cu) < Integer'Last then
             Replace_Element (L, Cu, Element (L, Cu) + 1);
          end if;
@@ -152,5 +150,14 @@ package body Use_Lists with SPARK_Mode is
          Next (L, Current);
       end loop;
    end Update_Range_To_Zero;
+
+   procedure Insert_5 (L : in out List; Cu : Cursor) is
+   begin
+      Insert (L, Cu, 0);
+      Insert (L, Cu, 0);
+      Insert (L, Cu, 0);
+      Insert (L, Cu, 0);
+      Insert (L, Cu, 0);
+   end Insert_5;
 
 end Use_Lists;

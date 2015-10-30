@@ -38,8 +38,7 @@ package Use_Lists with SPARK_Mode is
      and (for all N in 1 .. Length (L) =>
               Is_Incr (Element (Model (L)'Old, N),
                        Element (Model (L), N)))
-     and Inc (Positions (L)'Old, Positions (L))
-     and Inc (Positions (L), Positions (L)'Old);
+     and Positions (L)'Old = Positions (L);
 
    --  Length is set to a static value to work around a crash in flow analysis.
    --  See O722-006
@@ -72,4 +71,17 @@ package Use_Lists with SPARK_Mode is
               (if I in Get (Positions (L), Fst) .. Get (Positions (L), Lst)
                then Element (Model (L), I) = 0
                else Element (Model (L), I) = Element (Model (L)'Old, I)));
+
+   procedure Insert_5 (L : in out List; Cu : Cursor) with
+     Pre  => Has_Element (L, Cu) and Capacity (L) - 5 >= Length (L),
+     Post => Length (L) = Length (L)'Old + 5
+     and (for all I in 1 .. Get (Positions (L)'Old, Cu) - 1 =>
+        Element (Model (L), I) = Element (Model (L)'Old, I))
+     and (for all I in Get (Positions (L)'Old, Cu) ..
+            Get (Positions (L)'Old, Cu) + 4 =>
+        Element (Model (L), I) = 0)
+     and (for all I in Get (Positions (L)'Old, Cu) + 5 .. Length (L) =>
+              Element (Model (L), I) = Element (Model (L)'Old, I - 5))
+     and Mem (Positions (L), Cu)
+     and Get (Positions (L), Cu) = Get (Positions (L)'Old, Cu) + 5;
 end Use_Lists;

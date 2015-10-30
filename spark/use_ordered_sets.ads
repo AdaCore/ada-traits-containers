@@ -1,10 +1,11 @@
 pragma Ada_2012;
-with Formal_Hashed_Sets;
-pragma Elaborate_All (Formal_Hashed_Sets);
+with Formal_Ordered_Sets;
+pragma Elaborate_All (Formal_Ordered_Sets);
 
-package Use_Sets with SPARK_Mode is
-   package My_Sets is new Formal_Hashed_Sets
+package Use_Ordered_Sets with SPARK_Mode is
+   package My_Sets is new Formal_Ordered_Sets
      (Element_Type => Integer,
+      "<"          => "<",
       "="          => "=",
       None         => Integer'First);
    use My_Sets;
@@ -54,12 +55,32 @@ package Use_Sets with SPARK_Mode is
 
    procedure Move_2 (S1, S2 : in out My_Sets.Set) with
      Pre  => Capacity (S2) >= Length (S1),
+     Post => Model (S1)'Old = Model (S2) and Elements (S1)'Old = Elements (S2)
+     and Length (S1) = 0;
+
+   procedure Move_3 (S1, S2 : in out My_Sets.Set) with
+     Pre  => Capacity (S2) >= Length (S1),
      Post => Model (S1)'Old = Model (S2) and Length (S1) = 0;
 
-   procedure Insert_5 (S : in out My_Sets.Set) with
-     Pre  => Capacity (S) - 5 >= Length (S),
-     Post => Length (S) <= Length (S)'Old + 5
+   procedure Move_4 (S1, S2 : in out My_Sets.Set) with
+     Pre  => Capacity (S2) >= Length (S1),
+     Post => Model (S1)'Old = Model (S2) and Elements (S1)'Old = Elements (S2)
+     and Length (S1) = 0;
+
+   procedure Double_Size (S : in out My_Sets.Set) with
+     Pre  => Capacity (S) / 2 >= Length (S) and
+     (for all E in Model (S) => E mod 2 = 0),
+     Post => Capacity (S) = Capacity (S)'Old
+     and Length (S) = 2 * Length (S)'Old
+     and (for all I in 1 .. Length (S)'Old =>
+       Get (Elements (S), 2 * I - 1) = Get (Elements (S)'Old, I)
+       and Get (Elements (S), 2 * I) =
+           Get (Elements (S)'Old, I) + 1);
+
+   procedure Insert_4 (S : in out My_Sets.Set) with
+     Pre  => Capacity (S) - 4 >= Length (S),
+     Post => Length (S) <= Length (S)'Old + 4
      and Inc (Model (S)'Old, Model (S))
-     and (for all E in 1 .. 5 => Mem (Model (S), E))
-     and (for all E in Model (S) => Mem (Model (S)'Old, E) or E in 1 .. 5);
-end Use_Sets;
+     and (for all E in 1 .. 4 => Mem (Model (S), E))
+     and (for all E in Model (S) => Mem (Model (S)'Old, E) or E in 1 .. 4);
+end Use_Ordered_Sets;
