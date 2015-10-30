@@ -47,7 +47,7 @@ package body Functional_Sets with SPARK_Mode => Off is
                (if Mem (S2, E) then Mem (Result, E))));
    function Intersection (S1, S2 : Set) return Set is
       Cu : Cursor := First (S1);
-      SS : Set := Empty;
+      SS : Set;
    begin
       while Has_Element (Cu) loop
          if Contains (S2, Element (Cu)) then

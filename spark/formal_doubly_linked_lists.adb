@@ -10,7 +10,7 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
    package body Formal_Model is
       function Positions (L : List'Class) return Map is
          Cu : Cursor := Cursor (First (Element_Lists.List (L)));
-         R  : Map := Cursor_Map.Empty;
+         R  : Map;
          I  : Positive := 1;
       begin
          while Has_Element (Element_Lists.List (L), Cu) loop
@@ -22,7 +22,7 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
       end Positions;
       function Model (L : List'Class) return Sequence is
          Cu : Cursor := Cursor (First (Element_Lists.List (L)));
-         R  : Sequence := Element_Sequence.Empty;
+         R  : Sequence;
       begin
          while Has_Element (Element_Lists.List (L), Cu) loop
             R := Add (R, Element (Element_Lists.List (L), Cu));
