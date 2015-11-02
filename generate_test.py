@@ -172,7 +172,7 @@ begin
       declare
          V : Container.{type}{discriminant};
       begin
-         Stdout.Save_Container_Size (V'Size);
+         Stdout.Save_Container_Size (V'Size / 8);  --  in bytes
          Run (V);{clear}
       end;
    end loop;
