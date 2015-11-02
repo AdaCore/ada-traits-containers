@@ -100,7 +100,7 @@ package body Perf_Support is
          declare
             V     : Int_Array (1 .. Items_Count);
          begin
-            Stdout.Save_Container_Size (V'Size);
+            Stdout.Save_Container_Size (V'Size / 8);  --  in bytes
             Run (V);
          end;
       end loop;
