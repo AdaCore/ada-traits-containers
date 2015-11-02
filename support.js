@@ -14,9 +14,12 @@ var ref_test_names = {
    'cursor loop': true
 };
 
+var MEAN_PERCENT = 0;
+var MEAN_MS = 1;
+
 app.
 run(function($rootScope) {
-   $rootScope.as_percent = true;
+   $rootScope.display = MEAN_PERCENT;
 }).
 
 factory('Reftime', function() {
@@ -51,6 +54,7 @@ factory('Reftime', function() {
                g += d;
             });
             test.mean_duration = g / test.duration.length;
+            test.cumulated = g;
          });
 
          // Group data by category (these correspond to the various tables
@@ -79,7 +83,7 @@ factory('Reftime', function() {
          angular.forEach(cat.containers, function(container) {
             if (container.base == base) {
                angular.forEach(container.tests, function(test, name) {
-                  cat.reftimes[name] = test.mean_duration;
+                  cat.reftimes[name] = test;
                });
             }
          });
@@ -89,10 +93,14 @@ factory('Reftime', function() {
    /**
     * Return the computed percent value for a given test
     */
-   Reftime.prototype.percent = function(test_name, category, mean_duration) {
+   Reftime.prototype.compute_percent = function(test_name, test, category) {
       var ref = test_name_to_reftime[test_name] || test_name;
       var rt = this.data.categories[category].reftimes[ref];  //  ref time
-      return mean_duration / rt;
+
+      test.mean_percent = (
+         (test.mean_duration / rt.mean_duration) * 100).toFixed(0);
+      test.mean_duration_str = (
+         test.mean_duration * 1000).toFixed(2);
    };
 
    return new Reftime;
@@ -106,8 +114,8 @@ controller('ResultsCtrl', function($scope, Reftime) {
 controller('HeaderCtrl', function(Reftime, $scope) {
    $scope.data = Reftime.data;
    $scope.percents = [
-      {value: true, text: 'As percent'},
-      {value: false, text: 'As milliseconds'}
+      {value: MEAN_PERCENT, text: 'As percent'},
+      {value: MEAN_MS, text: 'As milliseconds'}
    ];
 }).
 
@@ -143,19 +151,23 @@ directive('ctDuration', function() {
       controller: function($scope, Reftime, $rootScope) {
          $scope.test = $scope.container.tests[$scope.testname];
          if ($scope.test) {
-            $scope.test.percent = (Reftime.percent(
+            Reftime.compute_percent(
                $scope.testname,
-               $scope.container.category,
-               $scope.test.mean_duration) * 100).toFixed(0);
-            $scope.test.mean_duration_str = (
-               $scope.test.mean_duration * 1000).toFixed(2);
+               $scope.test,
+               $scope.container.category);
          }
       },
    template: '<span ng-if="test"' +
-           ' ng-class="{worse:test.percent>105, comment:test.comment}"' +
+           ' ng-class="{worse:test.mean_percent>105, comment:test.comment}"' +
            ' title="{{test.comment}}">' +
-         '<span ng-if="$root.as_percent">{{test.percent}}%</span>' +
-         '<span ng-if="!$root.as_percent">{{test.mean_duration_str}}</span>' +
+
+         '<span ng-if="$root.display==0"' +
+              ' ng-class="{worse:test.mean_percent>105}">' +
+              '{{test.mean_percent}}%</span>' +
+
+         '<span ng-if="$root.display==1"' +
+              ' ng-class="{worse:test.mean_percent>105}">' +
+              '{{test.mean_duration_str}}</span>' +
          '</span>'
    };
 }).

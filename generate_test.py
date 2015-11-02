@@ -33,15 +33,25 @@ class Test(object):
         if elem_type.lower() == "integer":
             category = '%s %s' % (elem_type, type)
             append = "V2.Append (2);"
+
         elif elem_type.lower() == "string":
             category = '%s %s' % (elem_type, type)
-            append = 'V2.Append ((if C mod 2 = 0 then "foo" else ' + \
-               '"foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo"));'
+            append = """
+         if C mod 2 = 0 then
+             V2.Append ("foo");
+         else
+             V2.Append ("foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo");
+         end if;"""
+
         elif elem_type.lower() == "unbounded_string":
             category = 'String %s' % (type, )
-            append = 'V2.Append (To_Unbounded_String ((' + \
-               ' if C mod 2 = 0 then "foo" else ' + \
-               '"foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo")));'
+            append = """
+         if C mod 2 = 0 then
+             V2.Append (To_Unbounded_String ("foo"));
+         else
+             V2.Append (To_Unbounded_String
+                ("foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo"));
+         end if;"""
         else:
             raise Exception("Unknown element type: %s" % elem_type)
 

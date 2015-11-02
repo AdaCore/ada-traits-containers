@@ -91,7 +91,7 @@ body {
 </head>
 <body>
    <div class='header' ng-controller='HeaderCtrl'>
-      <select ng-options='t.value as t.text for t in percents' ng-model='$root.as_percent'></select>
+      <select ng-options='t.value as t.text for t in percents' ng-model='$root.display'></select>
 
       <input style="margin-left:30px" type='checkbox' ng-model='$root.show_test_allocs'>
       allocs/free for each test
