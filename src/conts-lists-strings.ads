@@ -38,7 +38,7 @@ with Conts.Lists.Nodes.Unbounded;
 package Conts.Lists.Strings is
 
    package Elements is new Conts.Elements.Arrays
-      (Positive, Character, String, Pool => Conts.Global_Pool);
+      (Positive, Character, String, Conts.Global_Pool);
    package Nodes is new Conts.Lists.Nodes.Unbounded
       (Elements  => Elements.Traits,
        Base_Type => Ada.Finalization.Controlled,

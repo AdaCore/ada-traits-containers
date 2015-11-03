@@ -87,11 +87,11 @@ package Conts.Lists.Nodes.Bounded with SPARK_Mode is
       type Container (Capacity : Count_Type) is
          abstract new Base_Type
       with record
-         Nodes : Nodes_Array (1 .. Capacity);
-
          Free  : Integer := 0;   --  head of free nodes list
          --  For a negative value, its absolute value points to the first free
          --  element
+
+         Nodes : Nodes_Array (1 .. Capacity);
       end record;
    end Impl;
 

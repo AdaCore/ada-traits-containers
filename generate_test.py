@@ -305,6 +305,7 @@ Test("String", "Controlled", "Arrays", "Unbounded", "List",
      "with Conts.Lists.Strings;",
      comments=Comments(
          countif='conversion to String',
-         fill='strange, since we are doing fewer mallocs')
+         fill='strange, since we are doing fewer mallocs. Faster if we only' +
+             'preallocate a 1 element array')
     ).gen(use_cursor_convert=True)
 
