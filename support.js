@@ -5,7 +5,8 @@ var test_name_to_reftime = {
    'copy': 'fill',
    'cursor loop': 'cursor loop',
    'for-of loop': 'cursor loop',
-   'count_if': 'cursor loop'
+   'count_if': 'cursor loop',
+   'find': 'cursor loop'
 };
 
 // Tests before which we display a bold border
@@ -40,7 +41,8 @@ factory('Reftime', function() {
             'copy',
             'cursor loop',
             'for-of loop',
-            'count_if'
+            'count_if',
+            'find'
          ],
          repeat_count: data.repeat_count,
          items_count: data.items_count
@@ -69,23 +71,21 @@ factory('Reftime', function() {
          cat.containers.push(container);
       });
 
-      this.set_reftimes('C++');
+      this.set_reftimes();
    }
 
    /**
     * Compute the reference times. For each category, the reference times
     * are taken from the container whose 'base' attribute is equal to base
     */
-   Reftime.prototype.set_reftimes = function(base) {
+   Reftime.prototype.set_reftimes = function() {
       angular.forEach(this.data.categories, function(cat, catname) {
          cat.reftimes = {};
 
-         angular.forEach(cat.containers, function(container) {
-            if (container.base == base) {
-               angular.forEach(container.tests, function(test, name) {
-                  cat.reftimes[name] = test;
-               });
-            }
+         // First container is the reference
+         var container = cat.containers[0];
+         angular.forEach(container.tests, function(test, name) {
+            cat.reftimes[name] = test;
          });
       });
    };

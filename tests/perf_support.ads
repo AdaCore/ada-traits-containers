@@ -125,10 +125,15 @@ package Perf_Support is
    procedure Assert (Count, Expected : Natural)
       with Inline;
 
-   procedure Test_Cpp_Int (Stdout : System.Address)
-      with Import, Convention => C, External_Name => "test_cpp_int";
-   procedure Test_Cpp_Str (Stdout : System.Address)
-      with Import, Convention => C, External_Name => "test_cpp_string";
+   procedure Test_Cpp_Int_List (Stdout : System.Address)
+      with Import, Convention => C, External_Name => "test_cpp_int_list";
+   procedure Test_Cpp_Str_List (Stdout : System.Address)
+      with Import, Convention => C, External_Name => "test_cpp_str_list";
+   procedure Test_Cpp_Str_Str_Map (Stdout : System.Address)
+     with Import, Convention => C, External_Name => "test_cpp_str_str_map";
+   procedure Test_Cpp_Str_Str_Unordered_Map (Stdout : System.Address)
+     with Import, Convention => C,
+          External_Name => "test_cpp_str_str_unordered_map";
    --  Perform C++ testing
 
    procedure Test_Arrays_Int (Stdout : access Output'Class);

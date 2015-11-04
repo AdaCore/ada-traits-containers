@@ -25,6 +25,8 @@
 pragma Ada_2012;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Hashed_Maps;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 package Conts.Cursors.Adaptors is
 
@@ -99,6 +101,82 @@ package Conts.Cursors.Adaptors is
          new Conts.Cursors.Constant_Forward_Convert_Traits
            (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
    end Indefinite_List_Adaptors;
+
+   ----------------------------------------
+   -- Adaptor for indefinite hashed maps --
+   ----------------------------------------
+
+   generic
+      with package Maps is
+         new Ada.Containers.Indefinite_Hashed_Maps (<>);
+   package Indefinite_Hashed_Maps_Adaptors is
+      subtype Element_Type is Maps.Element_Type;
+      subtype Return_Type is Maps.Constant_Reference_Type;
+      subtype Map is Maps.Map;
+      subtype Cursor is Maps.Cursor;
+
+      function First (Self : Map) return Cursor
+         renames Maps.First;
+      function Element (Self : Map; Position : Cursor) return Return_Type
+         is (Maps.Constant_Reference (Self, Position)) with Inline;
+      function Has_Element (Self : Map; Position : Cursor) return Boolean
+         is (Maps.Has_Element (Position)) with Inline;
+      function Next (Self : Map; Position : Cursor) return Cursor
+         is (Maps.Next (Position)) with Inline;
+
+      package Cursors is
+         package Constant_Forward is new Constant_Forward_Traits
+            (Container    => Map'Class,
+             Cursor       => Cursor,
+             Return_Type  => Return_Type);
+      end Cursors;
+
+      function From_Ref_To_Elem (R : Return_Type) return Element_Type
+         is (R.Element.all) with Inline;
+      package Cursors_Forward_Convert is
+         new Conts.Cursors.Constant_Forward_Convert_Traits
+           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+   end Indefinite_Hashed_Maps_Adaptors;
+
+   -----------------------------------------
+   -- Adaptor for indefinite ordered maps --
+   -----------------------------------------
+
+   generic
+      with package Maps is
+         new Ada.Containers.Indefinite_Ordered_Maps (<>);
+   package Indefinite_Ordered_Maps_Adaptors is
+      subtype Element_Type is Maps.Element_Type;
+      subtype Return_Type is Maps.Constant_Reference_Type;
+      subtype Map is Maps.Map;
+      subtype Cursor is Maps.Cursor;
+
+      function First (Self : Map) return Cursor
+         renames Maps.First;
+      function Element (Self : Map; Position : Cursor) return Return_Type
+         is (Maps.Constant_Reference (Self, Position)) with Inline;
+      function Has_Element (Self : Map; Position : Cursor) return Boolean
+         is (Maps.Has_Element (Position)) with Inline;
+      function Next (Self : Map; Position : Cursor) return Cursor
+         is (Maps.Next (Position)) with Inline;
+      function Previous (Self : Map; Position : Cursor) return Cursor
+         is (Maps.Previous (Position)) with Inline;
+
+      package Cursors is
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+            (Container    => Map'Class,
+             Cursor       => Cursor,
+             Return_Type  => Return_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
+      end Cursors;
+
+      function From_Ref_To_Elem (R : Return_Type) return Element_Type
+         is (R.Element.all) with Inline;
+      package Cursors_Forward_Convert is
+         new Conts.Cursors.Constant_Forward_Convert_Traits
+           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+   end Indefinite_Ordered_Maps_Adaptors;
 
    ------------------------
    -- Adaptor for arrays --
