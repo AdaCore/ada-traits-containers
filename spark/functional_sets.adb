@@ -71,7 +71,7 @@ package body Functional_Sets with SPARK_Mode => Off is
    end Union;
 
    function First_Element (S : Set) return Element_Type is
-      (Element (S, 1));
+      (if Is_Empty (Vector (S)) then No_Element else Element (S, 1));
    function Next_Element (S : Set; E : Element_Type) return Element_Type is
      (if Find_Index (S, E) in 1 .. Natural (Length (S)) - 1
       then Element (S, Find_Index (S, E) + 1)
