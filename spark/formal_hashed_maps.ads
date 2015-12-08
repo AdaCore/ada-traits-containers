@@ -67,7 +67,7 @@ package Formal_Hashed_Maps with SPARK_Mode is
 
       function Model (S : Map'Class) return Element_Map.Map with
         Import;
-      --  The highlevel model of a amp is a map from keys to elements. Neither
+      --  The highlevel model of a map is a map from keys to elements. Neither
       --  cursors nor order of elements are represented in this model.
 
       function Keys (S : Map'Class) return Sequence with
