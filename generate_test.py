@@ -372,6 +372,7 @@ is
             Co := Co + 1;
          end if;
       end loop;
+      Assert (Co, Items_Count);
    end Run;
 
 begin
@@ -409,7 +410,10 @@ end {test_name};
         self.__common()
 
 
-
+List("Integer", "Ada12", "Def", "Bounded",
+     "package Container is new Ada.Containers.Bounded_Doubly_Linked_Lists (Integer);",
+     "with Ada.Containers.Bounded_Doubly_Linked_Lists;").gen_ada2012(
+        adaptors='Bounded_List_Adaptors')
 List("Integer", "Ada12", "Def", "Unbounded",
      "package Container is new Ada.Containers.Doubly_Linked_Lists (Integer);",
      "with Ada.Containers.Doubly_Linked_Lists;").gen_ada2012()

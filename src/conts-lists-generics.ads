@@ -57,8 +57,6 @@ package Conts.Lists.Generics with SPARK_Mode is
            Pre    => Length (Self) <= Capacity (Self) - 1;
    --  Append a new element to the list.
    --  Complexity: O(1)
-   --  Raises: Storage_Error if Enable_Asserts is True and the node can't
-   --     be allocated.
 
    function Length (Self : List'Class) return Count_Type
       with Inline => True,

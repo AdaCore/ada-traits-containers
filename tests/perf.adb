@@ -25,6 +25,7 @@ with Report;          use Report;
 with Ada.Text_IO;     use Ada.Text_IO;
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
 with List_Ada12_Def_Unbounded_Integer;
+with List_Ada12_Def_Bounded_Integer;
 with List_Ada12_No_Checks_Def_Unbounded_Integer;
 with List_Ada12_Indef_Unbounded_Integer;
 with List_Controlled_Indef_Unbounded_Integer;
@@ -47,6 +48,7 @@ procedure Perf is
 begin
    Test_Cpp_Int_List (Stdout'Address);
    Test_Arrays_Int (S);
+   List_Ada12_Def_Bounded_Integer (S);
    List_Ada12_Def_Unbounded_Integer (S);
    List_Ada12_No_Checks_Def_Unbounded_Integer (S);
    List_Ada12_Indef_Unbounded_Integer (S);

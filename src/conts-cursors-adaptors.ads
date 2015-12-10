@@ -23,12 +23,46 @@
 --  they can be used with the algorithms declared in our containers hierarchy
 
 pragma Ada_2012;
+with Ada.Containers.Bounded_Doubly_Linked_Lists;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
 package Conts.Cursors.Adaptors is
+
+   ---------------------------------------------
+   -- Adaptor for bounded doubly linked lists --
+   ---------------------------------------------
+
+   generic
+      with package Lists is
+          new Ada.Containers.Bounded_Doubly_Linked_Lists (<>);
+   package Bounded_List_Adaptors is
+      subtype Element_Type is Lists.Element_Type;
+      subtype List is Lists.List;
+      subtype Cursor is Lists.Cursor;
+
+      function First (Self : List) return Cursor
+         renames Lists.First;
+      function Element (Self : List; Position : Cursor) return Element_Type
+         is (Lists.Element (Position)) with Inline;
+      function Has_Element (Self : List; Position : Cursor) return Boolean
+         is (Lists.Has_Element (Position)) with Inline;
+      function Next (Self : List; Position : Cursor) return Cursor
+         is (Lists.Next (Position)) with Inline;
+      function Previous (Self : List; Position : Cursor) return Cursor
+         is (Lists.Previous (Position)) with Inline;
+
+      package Cursors is
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+            (Container    => List'Class,
+             Cursor       => Cursor,
+             Return_Type  => Element_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
+      end Cursors;
+   end Bounded_List_Adaptors;
 
    -------------------------------------
    -- Adaptor for doubly linked lists --

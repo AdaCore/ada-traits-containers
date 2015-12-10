@@ -69,7 +69,7 @@ package body Report is
          Memory.Pause;
          Self.Global_Result := Create_Object;
          Self.Global_Result.Set_Field ("repeat_count", Repeat_Count);
-         Self.Global_Result.Set_Field ("items_count", Items_Count);
+         Self.Global_Result.Set_Field ("items_count", Integer_Items_Count);
       end if;
 
       Self.End_Container_Test;   --  In case one was started
