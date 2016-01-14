@@ -31,7 +31,11 @@ abstract project Shared is
       case Mode is
          when "Production" =>
             for Switches ("Ada") use Common_Ada_Switches &
-               ("-O3", "-gnatp", "-gnatn", "-gnato3");
+               ("-O3", "-gnatp", "-gnatn", "-gnato3"
+
+                --  See assembly
+                --  , "-save-temps"
+               );
             for Switches ("C++") use ("-O3", "-finline", "-std=c++11");
 
          when "Debug" =>
