@@ -23,15 +23,16 @@ pragma Ada_2012;
 with Ada.Calendar;       use Ada.Calendar;
 with Ada.Text_IO;        use Ada.Text_IO;
 with Graph1_Support;     use Graph1_Support;
+with Conts.Graphs.DFS;
 
 procedure Graph1 is
-   procedure Search is new DFS.Search_From_Vertex
-      (My_Visitor, Set_Color, Get_Color);
+   procedure Search is new Conts.Graphs.DFS.Search_From_Vertex
+      (Custom_Graphs, My_Visitor, Set_Color, Get_Color);
    --  ??? We could avoid this instantiation if DFS_Visitor was defined in
    --  Conts.Graphs.Traits directly.
 
-   procedure Search is new DFS.Search_From_Vertex
-      (My_Visitor2, Set_Color, Get_Color);
+   procedure Search is new Conts.Graphs.DFS.Search_From_Vertex
+      (Custom_Graphs, My_Visitor2, Set_Color, Get_Color);
 
    V     : My_Visitor;
    V2    : My_Visitor2;

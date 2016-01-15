@@ -42,7 +42,7 @@ package Graph1_Support is
    end record;
 
    function Get_Target (G : Graph; E : Edge) return Vertex;
-   package Custom_Graphs is new Conts.Graphs.Traits
+   package Base_Graphs is new Conts.Graphs.Traits
       (Graph  => Graph,
        Vertex => Vertex,
        Edge   => Edge);
@@ -62,7 +62,7 @@ package Graph1_Support is
    function Next
       (G : Graph; C : Vertex_Cursor) return Vertex_Cursor with Inline;
 
-   package Custom_Vertices is new Custom_Graphs.Vertex_Cursors (Vertex_Cursor);
+   package Custom_Vertices is new Base_Graphs.Vertex_Cursors (Vertex_Cursor);
 
    ------------------
    -- Edge_Cursors --
@@ -78,25 +78,22 @@ package Graph1_Support is
    function Next
       (G : Graph; C : Edge_Cursor) return Edge_Cursor with Inline;
 
-   package Custom_Edges is new Custom_Graphs.Edge_Cursors (Edge_Cursor);
+   package Custom_Edges is new Base_Graphs.Edge_Cursors (Edge_Cursor);
 
    ----------------------
    -- Incidence_Graphs --
    ----------------------
 
-   package Custom_Incidents is new Incidence_Graph_Traits
-      (Custom_Graphs, Custom_Vertices, Custom_Edges);
+   package Custom_Graphs is new Incidence_Graph_Traits
+      (Base_Graphs, Custom_Vertices, Custom_Edges);
 
    ----------------
    -- Algorithms --
    ----------------
 
-   package DFS is new Conts.Graphs.DFS (Custom_Incidents);
-   --  ??? Should not be necessary
+   type My_Visitor is new Base_Graphs.DFS_Visitor with null record;
 
-   type My_Visitor is new Custom_Graphs.DFS_Visitor with null record;
-
-   type My_Visitor2 is new Custom_Graphs.DFS_Visitor with null record;
+   type My_Visitor2 is new Base_Graphs.DFS_Visitor with null record;
    overriding procedure Initialize_Vertex
       (Self : in out My_Visitor2; G : Graph; V : Vertex);
    overriding procedure Start_Vertex

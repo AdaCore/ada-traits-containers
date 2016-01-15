@@ -28,8 +28,13 @@ package body Conts.Graphs.DFS is
    ---------------------------------
 
    procedure Search_From_Vertex_With_Map
-      (G : Graph; Visit : in out Visitor; Map : in out Maps.Map; V : Vertex)
+      (G     : Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       Map   : in out Maps.Map;
+       V     : Graphs.Graphs.Vertex)
    is
+      use Graphs.Graphs;
+
       procedure Impl (Current : Vertex);
 
       procedure Impl (Current : Vertex) is
@@ -101,10 +106,12 @@ package body Conts.Graphs.DFS is
    ---------------------
 
    procedure Search_With_Map
-      (G : Graph; Visit : in out Visitor; Map : in out Maps.Map)
+      (G     : Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       Map   : in out Maps.Map)
    is
       procedure Internal is new
-         Search_From_Vertex_With_Map (Visitor, Maps, Terminator);
+         Search_From_Vertex_With_Map (Graphs, Visitor, Maps, Terminator);
    begin
       Internal (G, Visit, Map, Graphs.Default_Start_Vertex (G));
    end Search_With_Map;
@@ -113,13 +120,13 @@ package body Conts.Graphs.DFS is
    -- Search --
    ------------
 
-   procedure Search (G : in out Graph; Visit : in out Visitor) is
+   procedure Search (G : in out Graphs.Graphs.Graph; Visit : in out Visitor) is
       package Maps is new Graphs.Graphs.Color_Property_Maps.Traits
-         (Map => Graph,
+         (Map => Graphs.Graphs.Graph,
           Set => Set_Color,
           Get => Get_Color);
       procedure Internal is new
-         Search_From_Vertex_With_Map (Visitor, Maps, Terminator);
+         Search_From_Vertex_With_Map (Graphs, Visitor, Maps, Terminator);
    begin
       Internal (G, Visit, Map => G, V => Graphs.Default_Start_Vertex (G));
    end Search;
@@ -129,14 +136,16 @@ package body Conts.Graphs.DFS is
    ------------------------
 
    procedure Search_From_Vertex
-      (G : in out Graph; Visit : in out Visitor; V : Vertex)
+      (G     : in out Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       V     : Graphs.Graphs.Vertex)
    is
       package Maps is new Graphs.Graphs.Color_Property_Maps.Traits
-         (Map => Graph,
+         (Map => Graphs.Graphs.Graph,
           Set => Set_Color,
           Get => Get_Color);
       procedure Internal is new
-         Search_From_Vertex_With_Map (Visitor, Maps, Terminator);
+         Search_From_Vertex_With_Map (Graphs, Visitor, Maps, Terminator);
    begin
       Internal (G, Visit, Map => G, V => V);
    end Search_From_Vertex;
