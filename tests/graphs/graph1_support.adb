@@ -24,9 +24,6 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Graph1_Support is
 
-   Edges : constant array (Natural range <>) of Edge :=
-      ((2, 1), (2, 4), (5, 6), (3, 2));
-
    procedure Set_Color (G : in out Graph; V : Vertex; C : Color) is
    begin
       G.Colors (V) := C;
@@ -69,28 +66,58 @@ package body Graph1_Support is
       Put_Line ("Discover" & V'Img);
    end Discover_Vertex;
 
-   procedure For_Each_Vertex
-      (G : Graph;
-       Callback : not null access procedure (V : Vertex)) is
+   function First (G : Graph) return Vertex_Cursor is
    begin
-      for J in G.Colors'Range loop
-         Callback (J);
-      end loop;
-   end For_Each_Vertex;
+      return Vertex_Cursor (G.Colors'First);
+   end First;
 
-   procedure For_Each_Out_Edge
-      (G : Graph;
-       V : Vertex;
-       Callback : not null access procedure (E : Edge))
+   function Element (G : Graph; C : Vertex_Cursor) return Vertex is
+      pragma Unreferenced (G);
+   begin
+      return Vertex (C);
+   end Element;
+
+   function Has_Element
+      (G : Graph; C : Vertex_Cursor) return Boolean is
+   begin
+      return C <= Vertex_Cursor (G.Colors'Last);
+   end Has_Element;
+
+   function Next
+      (G : Graph; C : Vertex_Cursor) return Vertex_Cursor
    is
       pragma Unreferenced (G);
    begin
-      for E in Edges'Range loop
-         if Edges (E).Source = V then
-            Callback (Edges (E));
-         end if;
-      end loop;
-   end For_Each_Out_Edge;
+      return C + 1;
+   end Next;
+
+   function First (G : Graph; V : Vertex) return Edge_Cursor is
+      pragma Unreferenced (G);
+   begin
+      return Edge_Cursor (V);
+   end First;
+
+   function Element (G : Graph; C : Edge_Cursor) return Edge is
+      pragma Unreferenced (G);
+   begin
+      return (Source => Vertex (C), Target => Vertex (C + 1));
+   end Element;
+
+   function Has_Element
+      (G : Graph; C : Edge_Cursor) return Boolean is
+   begin
+      return Integer (C) >= Integer (G.Colors'First)
+         and then Integer (C) < Integer (G.Colors'Last);
+   end Has_Element;
+
+   function Next
+      (G : Graph; C : Edge_Cursor) return Edge_Cursor
+   is
+      pragma Unreferenced (C);
+   begin
+      --  Only one edge from each vertex
+      return Edge_Cursor (G.Colors'Last + 1);
+   end Next;
 
    function Get_Target (G : Graph; E : Edge) return Vertex is
       pragma Unreferenced (G);

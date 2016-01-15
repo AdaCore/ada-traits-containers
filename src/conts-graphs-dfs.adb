@@ -30,65 +30,70 @@ package body Conts.Graphs.DFS is
    procedure Search_From_Vertex_With_Map
       (G : Graph; Visit : in out Visitor; Map : in out Maps.Map; V : Vertex)
    is
-      procedure Impl (Current : Vertex) with Inline;
-      procedure Init (V : Vertex) with Inline;
-      procedure Find_Source (V : Vertex) with Inline;
-      procedure On_Edge (E : Edge) with Inline;
-
-      procedure Init (V : Vertex) is
-      begin
-         Maps.Set (Map, V, White);
-         Visit.Initialize_Vertex (G, V);
-      end Init;
-
-      procedure On_Edge (E : Edge) is
-         Target : constant Vertex := Get_Target (G, E);
-      begin
-         Visit.Examine_Edge (G, E);
-
-         case Maps.Get (Map, Target) is
-            when White =>
-               Visit.Tree_Edge (G, E);
-               Impl (Target);
-            when Gray =>
-               Visit.Back_Edge (G, E);
-            when Black =>
-               Visit.Forward_Or_Cross_Edge (G, E);
-         end case;
-
-         Visit.Finish_Edge (G, E);
-      end On_Edge;
+      procedure Impl (Current : Vertex);
 
       procedure Impl (Current : Vertex) is
+         EC : Graphs.Out_Edges.Cursor;
       begin
          Maps.Set (Map, Current, Gray);
          Visit.Discover_Vertex (G, Current);
 
          if not Terminator (G, Current) then
-            For_Each_Out_Edge (G, Current, On_Edge'Access);
+            EC := Graphs.Out_Edges.First (G, Current);
+            while Graphs.Out_Edges.Has_Element (G, EC) loop
+               declare
+                  E      : Edge renames Graphs.Out_Edges.Element (G, EC);
+                  Target : constant Vertex := Get_Target (G, E);
+               begin
+                  Visit.Examine_Edge (G, E);
+
+                  case Maps.Get (Map, Target) is
+                     when White =>
+                        Visit.Tree_Edge (G, E);
+                        Impl (Target);
+                     when Gray =>
+                        Visit.Back_Edge (G, E);
+                     when Black =>
+                        Visit.Forward_Or_Cross_Edge (G, E);
+                  end case;
+
+                  Visit.Finish_Edge (G, E);
+               end;
+
+               EC := Graphs.Out_Edges.Next (G, EC);
+            end loop;
          end if;
 
          Maps.Set (Map, Current, Black);
          Visit.Finish_Vertex (G, Current);
       end Impl;
 
-      procedure Find_Source (V : Vertex) is
-      begin
-         if Maps.Get (Map, V) = White then
-            Impl (V);
-         end if;
-      end Find_Source;
-
+      VC : Graphs.Vertices.Cursor;
    begin
-      --  When For_Each_Vertex was declared as inline by the application,
-      --  this generates no subprogram call to For_Each_Vertex but it
-      --  does generate subprogram call to Init.
-      For_Each_Vertex (G, Init'Access);
+      --  Initialize
+
+      VC := Graphs.Vertices.First (G);
+      while Graphs.Vertices.Has_Element (G, VC) loop
+         Maps.Set (Map, Graphs.Vertices.Element (G, VC), White);
+         Visit.Initialize_Vertex (G, Graphs.Vertices.Element (G, VC));
+         VC := Graphs.Vertices.Next (G, VC);
+      end loop;
+
+      --  Search from the start vertex
 
       Visit.Start_Vertex (G, V);
       Impl (V);
 
-      For_Each_Vertex (G, Find_Source'Access);
+      --  Search from remaining unvisited vertices
+
+      VC := Graphs.Vertices.First (G);
+      while Graphs.Vertices.Has_Element (G, VC) loop
+         if Maps.Get (Map, Graphs.Vertices.Element (G, VC)) = White then
+            Impl (Graphs.Vertices.Element (G, VC));
+         end if;
+
+         VC := Graphs.Vertices.Next (G, VC);
+      end loop;
    end Search_From_Vertex_With_Map;
 
    ---------------------
@@ -96,27 +101,27 @@ package body Conts.Graphs.DFS is
    ---------------------
 
    procedure Search_With_Map
-      (G : Graphs.Graph; Visit : in out Visitor; Map : in out Maps.Map)
+      (G : Graph; Visit : in out Visitor; Map : in out Maps.Map)
    is
       procedure Internal is new
          Search_From_Vertex_With_Map (Visitor, Maps, Terminator);
    begin
-      Internal (G, Visit, Map, Default_Start_Vertex (G));
+      Internal (G, Visit, Map, Graphs.Default_Start_Vertex (G));
    end Search_With_Map;
 
    ------------
    -- Search --
    ------------
 
-   procedure Search (G : in out Graphs.Graph; Visit : in out Visitor) is
-      package Maps is new Graphs.Color_Property_Maps.Traits
-         (Map => Graphs.Graph,
+   procedure Search (G : in out Graph; Visit : in out Visitor) is
+      package Maps is new Graphs.Graphs.Color_Property_Maps.Traits
+         (Map => Graph,
           Set => Set_Color,
           Get => Get_Color);
       procedure Internal is new
          Search_From_Vertex_With_Map (Visitor, Maps, Terminator);
    begin
-      Internal (G, Visit, Map => G, V => Default_Start_Vertex (G));
+      Internal (G, Visit, Map => G, V => Graphs.Default_Start_Vertex (G));
    end Search;
 
    ------------------------
@@ -126,8 +131,8 @@ package body Conts.Graphs.DFS is
    procedure Search_From_Vertex
       (G : in out Graph; Visit : in out Visitor; V : Vertex)
    is
-      package Maps is new Graphs.Color_Property_Maps.Traits
-         (Map => Graphs.Graph,
+      package Maps is new Graphs.Graphs.Color_Property_Maps.Traits
+         (Map => Graph,
           Set => Set_Color,
           Get => Get_Color);
       procedure Internal is new

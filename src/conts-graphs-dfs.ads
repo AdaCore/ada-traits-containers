@@ -44,70 +44,9 @@
 pragma Ada_2012;
 
 generic
-   with package Graphs is new Conts.Graphs.Traits (<>);
+   with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
 package Conts.Graphs.DFS is
-   use Graphs;
-
-   -----------------
-   -- DFS_Visitor --
-   -----------------
-
-   type DFS_Visitor is interface;
-   --  Used to insert actions at various points in the execution of the
-   --  Depth-First-Search algorithm.
-   --  Thanks to generics, there is only an impact on performance for the
-   --  subprograms you actually override.
-
-   procedure Initialize_Vertex
-      (Self : in out DFS_Visitor; G : Graph; V : Vertex) is null;
-   --  Called on every vertex before the start of the search
-
-   procedure Start_Vertex
-      (Self : in out DFS_Visitor; G : Graph; V : Vertex) is null;
-   --  Called on a source vertex once before the start of the search.
-   --  All vertices reachable from the source will not be source vertices
-   --  themselves, so will not be called for Start_Vertex.
-
-   procedure Finish_Vertex
-      (Self : in out DFS_Visitor; G : Graph; V : Vertex) is null;
-   --  Called on every vertex after all its out edges have been added to the
-   --  search tree and its adjacent vertices have been visited.
-
-   procedure Discover_Vertex
-      (Self : in out DFS_Visitor; G : Graph; V : Vertex) is null;
-   --  Called when a vertex is encountered the first time.
-
-   procedure Examine_Edge
-      (Self : in out DFS_Visitor; G : Graph; E : Edge) is null;
-   --  Called for every out edge of every vertex, after it is discovered.
-
-   procedure Tree_Edge
-      (Self : in out DFS_Visitor; G : Graph; E : Edge) is null;
-   --  Called on each edge when it becomes a member of the edges that form
-   --  a spanning tree (i.e. for out edges that do not lead to an already
-   --  visited vertex)
-
-   procedure Back_Edge
-      (Self : in out DFS_Visitor; G : Graph; E : Edge) is null;
-   --  Called on the back edges of the graph.
-   --  These are the edges for which Tree_Edge is not called.
-   --  For an undirected graph, there is an ambiguity between Back_Edge and
-   --  Tree_Edge, so both are called.
-
-   procedure Forward_Or_Cross_Edge
-      (Self : in out DFS_Visitor; G : Graph; E : Edge) is null;
-   --  Called on forward or cross edges, unused for undirected
-
-   procedure Finish_Edge
-      (Self : in out DFS_Visitor; G : Graph; E : Edge) is null;
-   --  Called when the algorithm finishes processing an edge
-
-   ------------------------
-   -- Depth First Search --
-   ------------------------
-
-   function Never_Stop (G : Graph; V : Vertex) return Boolean
-       is (False) with Inline;
+   use Graphs.Graphs;
 
    generic
       type Visitor (<>) is new DFS_Visitor with private;

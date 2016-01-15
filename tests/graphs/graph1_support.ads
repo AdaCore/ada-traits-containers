@@ -25,6 +25,10 @@ with Conts.Graphs.DFS;
 
 package Graph1_Support is
 
+   ------------
+   -- Graphs --
+   ------------
+
    type Vertex is new Integer;
 
    type Edge is record
@@ -34,31 +38,65 @@ package Graph1_Support is
    type Color_Map is array (Vertex range <>) of Color;
 
    type Graph is record
-      Colors : Color_Map (1 .. 6_000);
+      Colors : Color_Map (1 .. 10);
    end record;
 
-   procedure Set_Color (G : in out Graph; V : Vertex; C : Color);
-   function Get_Color (G : Graph; V : Vertex) return Color;
-
-   procedure For_Each_Vertex
-      (G : Graph;
-       Callback : not null access procedure (V : Vertex)) with Inline;
-   procedure For_Each_Out_Edge
-      (G : Graph;
-       V : Vertex;
-       Callback : not null access procedure (E : Edge)) with Inline;
    function Get_Target (G : Graph; E : Edge) return Vertex;
-   function Default_Start_Vertex (G : Graph) return Vertex is (1);
-
    package Custom_Graphs is new Conts.Graphs.Traits
       (Graph  => Graph,
        Vertex => Vertex,
        Edge   => Edge);
-   package DFS is new Conts.Graphs.DFS (Custom_Graphs);
 
-   type My_Visitor is new DFS.DFS_Visitor with null record;
+   procedure Set_Color (G : in out Graph; V : Vertex; C : Color);
+   function Get_Color (G : Graph; V : Vertex) return Color;
 
-   type My_Visitor2 is new DFS.DFS_Visitor with null record;
+   --------------------
+   -- Vertex_Cursors --
+   --------------------
+
+   type Vertex_Cursor is new Integer;
+   function First (G : Graph) return Vertex_Cursor with Inline;
+   function Element (G : Graph; C : Vertex_Cursor) return Vertex with Inline;
+   function Has_Element
+      (G : Graph; C : Vertex_Cursor) return Boolean with Inline;
+   function Next
+      (G : Graph; C : Vertex_Cursor) return Vertex_Cursor with Inline;
+
+   package Custom_Vertices is new Custom_Graphs.Vertex_Cursors (Vertex_Cursor);
+
+   ------------------
+   -- Edge_Cursors --
+   ------------------
+   --  Not a very interesting graph
+   --     1 -> 2 -> 3 -> 4 -> 5 -> ...
+
+   type Edge_Cursor is new Integer;
+   function First (G : Graph; V : Vertex) return Edge_Cursor with Inline;
+   function Element (G : Graph; C : Edge_Cursor) return Edge with Inline;
+   function Has_Element
+      (G : Graph; C : Edge_Cursor) return Boolean with Inline;
+   function Next
+      (G : Graph; C : Edge_Cursor) return Edge_Cursor with Inline;
+
+   package Custom_Edges is new Custom_Graphs.Edge_Cursors (Edge_Cursor);
+
+   ----------------------
+   -- Incidence_Graphs --
+   ----------------------
+
+   package Custom_Incidents is new Incidence_Graph_Traits
+      (Custom_Graphs, Custom_Vertices, Custom_Edges);
+
+   ----------------
+   -- Algorithms --
+   ----------------
+
+   package DFS is new Conts.Graphs.DFS (Custom_Incidents);
+   --  ??? Should not be necessary
+
+   type My_Visitor is new Custom_Graphs.DFS_Visitor with null record;
+
+   type My_Visitor2 is new Custom_Graphs.DFS_Visitor with null record;
    overriding procedure Initialize_Vertex
       (Self : in out My_Visitor2; G : Graph; V : Vertex);
    overriding procedure Start_Vertex
