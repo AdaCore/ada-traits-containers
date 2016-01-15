@@ -33,13 +33,20 @@ package Conts.Graphs is
    -------------------
    --  This package describes how to associate values with edges or vertices
    --  or a graph.
-   --  In some implementations of graph, the map could be the graph itself,
-   --  and the information stored directly in the vertex for instance. In
-   --  other cases, one would chose to store this information in vectors
-   --  indexed by a unique integer id associated with vertices or edges. In
-   --  yet other cases, one could use a map from a vertex to the value.
+   --  There are two approaches here:
+   --    * Either the graph itself is able to store the information directly
+   --      (in the vertex, the edge, or in some other internal field).
+   --      These are the Interior_Property_Maps.
+   --    * Or an external data structure (provided just for the duration of
+   --      the algorithm) is used. For instance, a vector indexed by a unique
+   --      integer id associated with the vertices or edges. Or a map.
+   --      These are the Property_Maps.
+   --
+   --  In general, two versions of the algorithms will be provided that use
+   --  either one of the two types of maps (implementations are shared).
 
    generic
+      type Graph (<>) is private;
       type Key (<>) is private;
       type Value (<>) is private;
    package Property_Maps is
@@ -47,8 +54,14 @@ package Conts.Graphs is
          type Map (<>) is private;
          with procedure Set (M : in out Map; K : Key; V : Value) is <>;
          with function Get (M : Map; K : Key) return Value is <>;
-      package Traits is
-      end Traits;
+      package Exterior is
+      end Exterior;
+
+      generic
+         with procedure Set (G : in out Graph; K : Key; V : Value) is <>;
+         with function Get (G : Graph; K : Key) return Value is <>;
+      package Interior is
+      end Interior;
    end Property_Maps;
 
    ------------
@@ -68,7 +81,7 @@ package Conts.Graphs is
       --  Return the target of the edge.
 
    package Traits is
-      package Color_Property_Maps is new Property_Maps (Vertex, Color);
+      package Color_Property_Maps is new Property_Maps (Graph, Vertex, Color);
 
       function Never_Stop (G : Graph; V : Vertex) return Boolean
          is (False) with Inline_Always;
@@ -163,14 +176,9 @@ package Conts.Graphs is
       with package Vertices is new Graphs.Vertex_Cursors (<>);
       with package Out_Edges is new Graphs.Edge_Cursors (<>);
    package Incidence_Graph_Traits is
-      use Graphs;
-
-      function Default_Start_Vertex (G : Graph) return Vertex;
-      --  The default vertex, as a starting point for some algorithms. This
-      --  assumes the graph is not empty.
 
       package Cursors is new Conts.Cursors.Constant_Forward_Traits
-         (Container   => Graph,
+         (Container   => Graphs.Graph,
           Cursor      => Vertices.Cursor,
           Return_Type => Graphs.Vertex,
           First       => Vertices.First,

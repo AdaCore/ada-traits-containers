@@ -27,12 +27,12 @@ with Conts.Graphs.DFS;
 
 procedure Graph1 is
    procedure DFS is new Conts.Graphs.DFS.Search
-      (Custom_Graphs, My_Visitor, Set_Color, Get_Color);
+      (Custom_Graphs, My_Visitor, Color_Maps);
    --  ??? We could avoid this instantiation if DFS_Visitor was defined in
    --  Conts.Graphs.Traits directly.
 
    procedure DFS is new Conts.Graphs.DFS.Search
-      (Custom_Graphs, My_Visitor2, Set_Color, Get_Color);
+      (Custom_Graphs, My_Visitor2, Color_Maps);
 
    V     : My_Visitor;
    V2    : My_Visitor2;

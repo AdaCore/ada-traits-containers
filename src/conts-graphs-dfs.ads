@@ -52,7 +52,7 @@ package Conts.Graphs.DFS is
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
       type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Traits (<>);
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
       with function Terminator
          (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
          is Graphs.Graphs.Never_Stop;
@@ -69,13 +69,7 @@ package Conts.Graphs.DFS is
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
       type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
-      with procedure Set_Color
-         (G : in out Graphs.Graphs.Graph;
-          V : Graphs.Graphs.Vertex;
-          C : Color) is <>;
-      with function Get_Color
-         (G : Graphs.Graphs.Graph;
-          V : Graphs.Graphs.Vertex) return Color is <>;
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
       with function Terminator
          (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
          is Graphs.Graphs.Never_Stop;

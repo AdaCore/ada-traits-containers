@@ -51,6 +51,9 @@ package Graph1_Support is
    procedure Set_Color (G : in out Graph; V : Vertex; C : Color);
    function Get_Color (G : Graph; V : Vertex) return Color;
 
+   package Color_Maps is new Base_Graphs.Color_Property_Maps.Interior
+      (Set_Color, Get_Color);
+
    --------------------
    -- Vertex_Cursors --
    --------------------

@@ -112,12 +112,12 @@ package body Conts.Graphs.DFS is
        Visit : in out Visitor;
        V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
    is
-      package Maps is new Graphs.Graphs.Color_Property_Maps.Traits
+      package Ext is new Graphs.Graphs.Color_Property_Maps.Exterior
          (Map => Graphs.Graphs.Graph,
-          Set => Set_Color,
-          Get => Get_Color);
+          Set => Maps.Set,
+          Get => Maps.Get);
       procedure Internal is new
-         Search_With_Map (Graphs, Visitor, Maps, Terminator);
+         Search_With_Map (Graphs, Visitor, Ext, Terminator);
    begin
       Internal (G, Visit, Map => G, V => V);
    end Search;
