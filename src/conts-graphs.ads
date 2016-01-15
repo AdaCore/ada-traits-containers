@@ -50,10 +50,17 @@ package Conts.Graphs is
       type Key (<>) is private;
       type Value (<>) is private;
    package Property_Maps is
+      function Identity (G : Graph) return Graph is (G) with Inline_Always;
+      --  Help to instantiate some of the generic property maps
+
       generic
          type Map (<>) is private;
          with procedure Set (M : in out Map; K : Key; V : Value) is <>;
          with function Get (M : Map; K : Key) return Value is <>;
+
+         with function Get_Map (G : Graph) return Map is <>;
+         --  Create an uninitialized Map from the graph.
+         --  This is used to create temporary variables for algorithms.
       package Exterior is
       end Exterior;
 
@@ -61,6 +68,12 @@ package Conts.Graphs is
          with procedure Set (G : in out Graph; K : Key; V : Value) is <>;
          with function Get (G : Graph; K : Key) return Value is <>;
       package Interior is
+
+         package As_Exterior is new Exterior (Graph, Set, Get, Identity);
+         --  An adaptor for algorithms. This way, algorithms can be
+         --  written only for external maps, and the version with interior
+         --  maps can easily call that version.
+
       end Interior;
    end Property_Maps;
 

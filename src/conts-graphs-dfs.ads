@@ -59,7 +59,6 @@ package Conts.Graphs.DFS is
    procedure Search_With_Map
       (G     : Graphs.Graphs.Graph;
        Visit : in out Visitor;
-       Map   : in out Maps.Map;
        V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
    --  Depth-First-Search
    --  This version stores the vertices colors in an external map.
@@ -81,5 +80,23 @@ package Conts.Graphs.DFS is
    --  Depth-First-Search
    --  This version stores the vertices colors in the graph itself.
    --  It starts with vertex V.
+
+   generic
+      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+   procedure Is_Acyclic_With_Map
+      (G       : in out Graphs.Graphs.Graph;
+       Acyclic : out Boolean);
+   --  Sets Acyclic to True if the graph has no cycles, i.e. if there is no
+   --  vertex that can be reached from any path in the graph.
+
+   generic
+      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
+   procedure Is_Acyclic
+      (G       : in out Graphs.Graphs.Graph;
+       Acyclic : out Boolean);
+   --  Sets Acyclic to True if the graph has no cycles, i.e. if there is no
+   --  vertex that can be reached from any path in the graph.
 
 end Conts.Graphs.DFS;

@@ -23,11 +23,34 @@ pragma Ada_2012;
 
 package body Conts.Graphs.DFS is
 
-   ---------------------
-   -- Search_With_Map --
-   ---------------------
+   generic
+      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
+      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+      with function Terminator
+         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
+         is Graphs.Graphs.Never_Stop;
+   procedure Internal_DFS
+      (G     : Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       Map   : in out Maps.Map;
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
+   --  Internal implementation
 
-   procedure Search_With_Map
+   generic
+      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+   procedure Internal_Is_Acyclic
+      (G       : Graphs.Graphs.Graph;
+       Map     : in out Maps.Map;
+       Acyclic : out Boolean);
+   --  Internal implementation
+
+   ------------------
+   -- Internal_DFS --
+   ------------------
+
+   procedure Internal_DFS
       (G     : Graphs.Graphs.Graph;
        Visit : in out Visitor;
        Map   : in out Maps.Map;
@@ -101,6 +124,22 @@ package body Conts.Graphs.DFS is
 
          VC := Graphs.Vertices.Next (G, VC);
       end loop;
+   end Internal_DFS;
+
+   ---------------------
+   -- Search_With_Map --
+   ---------------------
+
+   procedure Search_With_Map
+      (G     : Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+   is
+      Map : Maps.Map := Maps.Get_Map (G);   --  uninitialized map
+      procedure Internal is new
+         Internal_DFS (Graphs, Visitor, Maps, Terminator);
+   begin
+      Internal (G, Visit, Map, V);
    end Search_With_Map;
 
    ------------
@@ -112,14 +151,70 @@ package body Conts.Graphs.DFS is
        Visit : in out Visitor;
        V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
    is
-      package Ext is new Graphs.Graphs.Color_Property_Maps.Exterior
-         (Map => Graphs.Graphs.Graph,
-          Set => Maps.Set,
-          Get => Maps.Get);
       procedure Internal is new
-         Search_With_Map (Graphs, Visitor, Ext, Terminator);
+         Internal_DFS (Graphs, Visitor, Maps.As_Exterior, Terminator);
    begin
       Internal (G, Visit, Map => G, V => V);
    end Search;
+
+   -------------------------
+   -- Internal_Is_Acyclic --
+   -------------------------
+
+   procedure Internal_Is_Acyclic
+      (G       : Graphs.Graphs.Graph;
+       Map     : in out Maps.Map;
+       Acyclic : out Boolean)
+   is
+      use Graphs.Graphs;
+
+      function Terminator (G : Graph; V : Vertex) return Boolean
+         is (not Acyclic) with Inline;
+      --  Stop searching as soon as we have found a cycle
+
+      type Visitor is new DFS_Visitor with null record;
+      overriding procedure Back_Edge
+         (Self : in out Visitor; G : Graph; E : Edge)
+      is
+         pragma Unreferenced (Self, G, E);
+      begin
+         Acyclic := False;
+      end Back_Edge;
+
+      procedure DFS is
+         new Search_With_Map (Graphs, Visitor, Maps, Terminator);
+
+      V : Visitor;
+   begin
+      Acyclic := True;
+      DFS (G, V);
+   end Internal_Is_Acyclic;
+
+   -------------------------
+   -- Is_Acyclic_With_Map --
+   -------------------------
+
+   procedure Is_Acyclic_With_Map
+      (G       : in out Graphs.Graphs.Graph;
+       Acyclic : out Boolean)
+   is
+      Map : Maps.Map := Maps.Get_Map (G);   --  uninitialized map
+      procedure Int is new Internal_Is_Acyclic (Graphs, Maps);
+   begin
+      Int (G, Map, Acyclic);
+   end Is_Acyclic_With_Map;
+
+   ----------------
+   -- Is_Acyclic --
+   ----------------
+
+   procedure Is_Acyclic
+      (G       : in out Graphs.Graphs.Graph;
+       Acyclic : out Boolean)
+   is
+      procedure Int is new Internal_Is_Acyclic (Graphs, Maps.As_Exterior);
+   begin
+      Int (G, G, Acyclic);
+   end Is_Acyclic;
 
 end Conts.Graphs.DFS;
