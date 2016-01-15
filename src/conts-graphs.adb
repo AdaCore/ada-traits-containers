@@ -32,8 +32,13 @@ package body Conts.Graphs is
       --------------------------
 
       function Default_Start_Vertex (G : Graph) return Vertex is
+         C : constant Vertices.Cursor := Vertices.First (G);
       begin
-         return Vertices.Element (G, Vertices.First (G));
+         if Vertices.Has_Element (G, C) then
+            return Vertices.Element (G, C);
+         else
+            return Graphs.Null_Vertex;
+         end if;
       end Default_Start_Vertex;
 
    end Incidence_Graph_Traits;

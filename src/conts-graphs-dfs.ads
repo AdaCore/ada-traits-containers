@@ -56,30 +56,15 @@ package Conts.Graphs.DFS is
       with function Terminator
          (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
          is Graphs.Graphs.Never_Stop;
-   procedure Search_From_Vertex_With_Map
-      (G     : Graphs.Graphs.Graph;
-       Visit : in out Visitor;
-       Map   : in out Maps.Map;
-       V     : Graphs.Graphs.Vertex);
-   --  Depth-First-Search
-   --  This version stores the vertices colors in an external map.
-   --  It starts with vertex V.
-
-   generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Traits (<>);
-      with function Terminator
-         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
-         is Graphs.Graphs.Never_Stop;
    procedure Search_With_Map
       (G     : Graphs.Graphs.Graph;
        Visit : in out Visitor;
-       Map   : in out Maps.Map)
-      with Inline;
+       Map   : in out Maps.Map;
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
    --  Depth-First-Search
    --  This version stores the vertices colors in an external map.
-   --  It starts with a random vertex.
+   --  It starts with vertex V (if specified), or with any vertex
+   --  otherwise.
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
@@ -95,29 +80,9 @@ package Conts.Graphs.DFS is
          (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
          is Graphs.Graphs.Never_Stop;
    procedure Search
-      (G : in out Graphs.Graphs.Graph; Visit : in out Visitor)
-      with Inline;
-   --  Depth-First-Search
-   --  This version stores the vertices colors in the graph itself.
-   --  It starts with a random vertex.
-
-   generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
-      with procedure Set_Color
-         (G : in out Graphs.Graphs.Graph;
-          V : Graphs.Graphs.Vertex;
-          C : Color) is <>;
-      with function Get_Color
-         (G : Graphs.Graphs.Graph;
-          V : Graphs.Graphs.Vertex) return Color is <>;
-      with function Terminator
-         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
-         is Graphs.Graphs.Never_Stop;
-   procedure Search_From_Vertex
       (G     : in out Graphs.Graphs.Graph;
        Visit : in out Visitor;
-       V     : Graphs.Graphs.Vertex)
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
       with Inline;
    --  Depth-First-Search
    --  This version stores the vertices colors in the graph itself.

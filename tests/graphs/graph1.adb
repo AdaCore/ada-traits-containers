@@ -26,12 +26,12 @@ with Graph1_Support;     use Graph1_Support;
 with Conts.Graphs.DFS;
 
 procedure Graph1 is
-   procedure Search is new Conts.Graphs.DFS.Search_From_Vertex
+   procedure DFS is new Conts.Graphs.DFS.Search
       (Custom_Graphs, My_Visitor, Set_Color, Get_Color);
    --  ??? We could avoid this instantiation if DFS_Visitor was defined in
    --  Conts.Graphs.Traits directly.
 
-   procedure Search is new Conts.Graphs.DFS.Search_From_Vertex
+   procedure DFS is new Conts.Graphs.DFS.Search
       (Custom_Graphs, My_Visitor2, Set_Color, Get_Color);
 
    V     : My_Visitor;
@@ -40,10 +40,10 @@ procedure Graph1 is
    Start : Time;
 begin
    Start := Clock;
-   Search (G, V, 3);
+   DFS (G, V, 3);
    Put_Line ("No visitor: " & Duration'Image (Clock - Start));
 
    Start := Clock;
-   Search (G, V2, 3);
+   DFS (G, V2);
    Put_Line ("visitor: " & Duration'Image (Clock - Start));
 end Graph1;

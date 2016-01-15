@@ -43,9 +43,10 @@ package Graph1_Support is
 
    function Get_Target (G : Graph; E : Edge) return Vertex;
    package Base_Graphs is new Conts.Graphs.Traits
-      (Graph  => Graph,
-       Vertex => Vertex,
-       Edge   => Edge);
+      (Graph       => Graph,
+       Vertex      => Vertex,
+       Null_Vertex => -1,
+       Edge        => Edge);
 
    procedure Set_Color (G : in out Graph; V : Vertex; C : Color);
    function Get_Color (G : Graph; V : Vertex) return Color;

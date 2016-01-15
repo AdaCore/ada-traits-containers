@@ -62,6 +62,7 @@ package Conts.Graphs is
       type Graph (<>) is private;
       type Vertex (<>) is private;
       type Edge (<>) is private;
+      Null_Vertex : Vertex;
 
       with function Get_Target (G : Graph; E : Edge) return Vertex is <>;
       --  Return the target of the edge.

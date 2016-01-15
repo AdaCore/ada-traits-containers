@@ -23,15 +23,15 @@ pragma Ada_2012;
 
 package body Conts.Graphs.DFS is
 
-   ---------------------------------
-   -- Search_From_Vertex_With_Map --
-   ---------------------------------
+   ---------------------
+   -- Search_With_Map --
+   ---------------------
 
-   procedure Search_From_Vertex_With_Map
+   procedure Search_With_Map
       (G     : Graphs.Graphs.Graph;
        Visit : in out Visitor;
        Map   : in out Maps.Map;
-       V     : Graphs.Graphs.Vertex)
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
    is
       use Graphs.Graphs;
 
@@ -86,8 +86,10 @@ package body Conts.Graphs.DFS is
 
       --  Search from the start vertex
 
-      Visit.Start_Vertex (G, V);
-      Impl (V);
+      if V /= Graphs.Graphs.Null_Vertex then
+         Visit.Start_Vertex (G, V);
+         Impl (V);
+      end if;
 
       --  Search from remaining unvisited vertices
 
@@ -99,55 +101,25 @@ package body Conts.Graphs.DFS is
 
          VC := Graphs.Vertices.Next (G, VC);
       end loop;
-   end Search_From_Vertex_With_Map;
-
-   ---------------------
-   -- Search_With_Map --
-   ---------------------
-
-   procedure Search_With_Map
-      (G     : Graphs.Graphs.Graph;
-       Visit : in out Visitor;
-       Map   : in out Maps.Map)
-   is
-      procedure Internal is new
-         Search_From_Vertex_With_Map (Graphs, Visitor, Maps, Terminator);
-   begin
-      Internal (G, Visit, Map, Graphs.Default_Start_Vertex (G));
    end Search_With_Map;
 
    ------------
    -- Search --
    ------------
 
-   procedure Search (G : in out Graphs.Graphs.Graph; Visit : in out Visitor) is
-      package Maps is new Graphs.Graphs.Color_Property_Maps.Traits
-         (Map => Graphs.Graphs.Graph,
-          Set => Set_Color,
-          Get => Get_Color);
-      procedure Internal is new
-         Search_From_Vertex_With_Map (Graphs, Visitor, Maps, Terminator);
-   begin
-      Internal (G, Visit, Map => G, V => Graphs.Default_Start_Vertex (G));
-   end Search;
-
-   ------------------------
-   -- Search_From_Vertex --
-   ------------------------
-
-   procedure Search_From_Vertex
+   procedure Search
       (G     : in out Graphs.Graphs.Graph;
        Visit : in out Visitor;
-       V     : Graphs.Graphs.Vertex)
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
    is
       package Maps is new Graphs.Graphs.Color_Property_Maps.Traits
          (Map => Graphs.Graphs.Graph,
           Set => Set_Color,
           Get => Get_Color);
       procedure Internal is new
-         Search_From_Vertex_With_Map (Graphs, Visitor, Maps, Terminator);
+         Search_With_Map (Graphs, Visitor, Maps, Terminator);
    begin
       Internal (G, Visit, Map => G, V => V);
-   end Search_From_Vertex;
+   end Search;
 
 end Conts.Graphs.DFS;
