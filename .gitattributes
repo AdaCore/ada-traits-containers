@@ -2,3 +2,4 @@ spark/* no-precommit-check
 
 generate_test.py  no-precommit-check
 angular.min.js    no-precommit-check
+doc/conf.py       no-precommit-check

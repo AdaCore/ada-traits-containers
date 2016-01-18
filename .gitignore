@@ -3,5 +3,7 @@ src/lib
 tests/obj
 spark/obj
 
+doc/build/
+
 tests/generated/
 data.js
