@@ -84,18 +84,21 @@ package Conts.Graphs.DFS is
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
       with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
-   procedure Is_Acyclic_With_Map
-      (G       : in out Graphs.Graphs.Graph;
-       Acyclic : out Boolean);
+   package Is_Acyclic_With_Map is
+      function Is_Acyclic (G : Graphs.Graphs.Graph) return Boolean;
+   end Is_Acyclic_With_Map;
    --  Sets Acyclic to True if the graph has no cycles, i.e. if there is no
    --  vertex that can be reached from any path in the graph.
+   --
+   --  We use a package here, so that this can be used in formal parts of
+   --  other package, since there is no way in Ada to specify that a formal
+   --  subprogram is an instance of a specific generic subprogram.
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
       with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
-   procedure Is_Acyclic
-      (G       : in out Graphs.Graphs.Graph;
-       Acyclic : out Boolean);
+   function Is_Acyclic
+      (G : in out Graphs.Graphs.Graph) return Boolean;
    --  Sets Acyclic to True if the graph has no cycles, i.e. if there is no
    --  vertex that can be reached from any path in the graph.
 

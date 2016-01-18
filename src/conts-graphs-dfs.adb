@@ -174,6 +174,9 @@ package body Conts.Graphs.DFS is
 
       type Visitor is new DFS_Visitor with null record;
       overriding procedure Back_Edge
+         (Self : in out Visitor; G : Graph; E : Edge);
+
+      overriding procedure Back_Edge
          (Self : in out Visitor; G : Graph; E : Edge)
       is
          pragma Unreferenced (Self, G, E);
@@ -181,40 +184,40 @@ package body Conts.Graphs.DFS is
          Acyclic := False;
       end Back_Edge;
 
-      procedure DFS is
-         new Search_With_Map (Graphs, Visitor, Maps, Terminator);
+      procedure DFS is new Internal_DFS (Graphs, Visitor, Maps, Terminator);
 
       V : Visitor;
    begin
       Acyclic := True;
-      DFS (G, V);
+      DFS (G, V, Map);
    end Internal_Is_Acyclic;
 
    -------------------------
    -- Is_Acyclic_With_Map --
    -------------------------
 
-   procedure Is_Acyclic_With_Map
-      (G       : in out Graphs.Graphs.Graph;
-       Acyclic : out Boolean)
-   is
-      Map : Maps.Map := Maps.Get_Map (G);   --  uninitialized map
+   package body Is_Acyclic_With_Map is
       procedure Int is new Internal_Is_Acyclic (Graphs, Maps);
-   begin
-      Int (G, Map, Acyclic);
+
+      function Is_Acyclic (G : Graphs.Graphs.Graph) return Boolean is
+         Map : Maps.Map := Maps.Get_Map (G);   --  uninitialized map
+         Acyclic : Boolean;
+      begin
+         Int (G, Map, Acyclic);
+         return Acyclic;
+      end Is_Acyclic;
    end Is_Acyclic_With_Map;
 
    ----------------
    -- Is_Acyclic --
    ----------------
 
-   procedure Is_Acyclic
-      (G       : in out Graphs.Graphs.Graph;
-       Acyclic : out Boolean)
-   is
+   function Is_Acyclic (G : in out Graphs.Graphs.Graph) return Boolean is
       procedure Int is new Internal_Is_Acyclic (Graphs, Maps.As_Exterior);
+      Acyclic : Boolean;
    begin
       Int (G, G, Acyclic);
+      return Acyclic;
    end Is_Acyclic;
 
 end Conts.Graphs.DFS;

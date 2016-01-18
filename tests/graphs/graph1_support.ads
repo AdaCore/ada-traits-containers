@@ -21,7 +21,6 @@
 
 pragma Ada_2012;
 with Conts.Graphs;      use Conts.Graphs;
-with Conts.Graphs.DFS;
 
 package Graph1_Support is
 
