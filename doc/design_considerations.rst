@@ -198,5 +198,3 @@ This is however invalid for two reasons:
 
     That way, we have no code duplication, and yet have full preconditions
     for users who need them.
-
-

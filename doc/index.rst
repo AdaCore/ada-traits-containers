@@ -11,7 +11,12 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   intro
    making_of
+   vectors
+   lists
+   graphs
+   graph_algorithms
    design_considerations
 
 
