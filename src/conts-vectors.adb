@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2015-2016, AdaCore                     --
+--                     Copyright (C) 2016, AdaCore                          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -19,27 +19,45 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package Memory is
+pragma Ada_2012;
 
-   type Mem_Info is record
-      Total_Allocated : Long_Long_Integer := 0;
-      Allocs          : Integer := 0;
-      Frees           : Integer := 0;
-      Reallocs        : Integer := 0;
-   end record;
+package body Conts.Vectors is
 
-   Current : Mem_Info;
+   --------------
+   -- Grow_1_5 --
+   --------------
 
-   function "-" (M1, M2 : Mem_Info) return Mem_Info;
-   --  Compute the delta between two memory usage
+   function Grow_1_5
+     (Current_Size, Min_Expected : Count_Type) return Count_Type is
+   begin
+      if Current_Size < Min_Expected then
+         return Count_Type'Max
+           (Min_Expected, Count_Type'Max (4, Current_Size * 3 / 2));
+      else
+         return Current_Size;
+      end if;
+   end Grow_1_5;
 
-   Paused : Boolean := False;
+   ----------------
+   -- Shrink_1_5 --
+   ----------------
 
-   procedure Reset;
+   function Shrink_1_5
+     (Current_Size, Min_Expected : Count_Type) return Count_Type
+   is
+      Tmp, Result : Count_Type;
+   begin
+      if Min_Expected = 0 then
+         return 0;
+      else
+         Tmp    := Count_Type (Current_Size * 2 / 3);
+         Result := Current_Size;
+         while Tmp >= Min_Expected loop
+            Result := Tmp;
+            Tmp := Count_Type (Result * 2 / 3);
+         end loop;
+         return Result;
+      end if;
+   end Shrink_1_5;
 
-   procedure Pause;
-   --  Stop counting allocs and frees
-
-   procedure Unpause;
-   --  Resume counting
-end Memory;
+end Conts.Vectors;

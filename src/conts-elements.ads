@@ -52,22 +52,27 @@ package Conts.Elements with SPARK_Mode is
       --  Memory can be freed at this point, and other resources can be closed.
 
       with function Copy (E : Stored_Type) return Stored_Type;
-      Copyable : Boolean;
-      --  If True, a stored_type can be copied in memory using
-      --  low-level function calls that bypass the Adjust and Finalize
-      --  primitives of controlled types. This speeds things up significantly
-      --  in some cases. In this case, Copy is never used.
-      --  This should be set to False when the element is potentially a
-      --  controlled type, to preserve correct semantics. In this case, copies
-      --  will be done via  Convert_From (Convert_To (E)).
-      --  It should also be set to False for most pointer types, since copying
-      --  would create an alias and it would be impossible to know who the
-      --  owner of the element is and when to free it.
 
-      Movable : Boolean;
-      --  If True, a stored_Element can be moved in memory. This is very
-      --  similar to Copyable, but no aliasing issue occurs, so this should be
-      --  safe for access types.
+      Copyable : Boolean := False;
+      --  True when a stored_type variable can be copied (duplicated) in
+      --  memory using the standard Ada operations (assigning an array
+      --  for instance), including Adjust and Finalize call when
+      --  applicable.
+      --  False when an explicit Copy operation needs to be performed. This
+      --  is safer in general, but less efficient.
+      --  It should be set to False when Stored_Type is an access type,
+      --  since copying would create an alias and it would be impossible to
+      --  know who the owner of the element is and when to free it.
+
+      Movable : Boolean := True;
+      --  If True, a stored_Element can be moved in memory (as part of a
+      --  realloc call for instance), bypassing Adjust and Finalize calls
+      --  on controlled types.
+      --
+      --  This is very similar to Copyable, but no aliasing issue occurs, so
+      --  this should be safe for access types.
+      --  When an element is not Movable, a copy is made (via Copy), and the
+      --  original element is deleted.
 
    package Traits is
    end Traits;

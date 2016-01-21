@@ -24,6 +24,9 @@ with QGen;            use QGen;
 with Report;          use Report;
 with Ada.Text_IO;     use Ada.Text_IO;
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
+
+--  Integer lists
+
 with List_Ada12_Def_Unbounded_Integer;
 with List_Ada12_Def_Bounded_Integer;
 with List_Ada12_No_Checks_Def_Unbounded_Integer;
@@ -33,12 +36,29 @@ with List_Controlled_Def_Unbounded_Integer;
 with List_Controlled_Def_Bounded_Integer;
 with List_Limited_Def_Bounded_Integer;
 with List_Limited_Indef_Spark_Unbounded_Spark_Integer;
+
+--  String lists
+
 with List_Ada12_Indef_Unbounded_String;
 with List_Ada12_No_Checks_Indef_Unbounded_String;
 with List_Controlled_Indef_Unbounded_String;
 with List_Controlled_Indef_Unbounded_Ref_String;
 with List_Controlled_Def_Unbounded_Unbounded_String;
 with List_Controlled_Arrays_Unbounded_String;
+
+--  Integer vectors
+
+with Vector_Ada12_Def_Unbounded_Integer;
+with Vector_Ada12_Def_Bounded_Integer;
+with Vector_Ada12_No_Checks_Def_Unbounded_Integer;
+with Vector_Ada12_Indef_Unbounded_Integer;
+with Vector_Controlled_Indef_Unbounded_Integer;
+with Vector_Controlled_Def_Unbounded_Integer;
+with Vector_Controlled_Def_Bounded_Integer;
+with Vector_Limited_Def_Bounded_Integer;
+
+--  String maps
+
 with Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr;
 with Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr;
 
@@ -46,32 +66,57 @@ procedure Perf is
    Stdout : aliased Output;
    S      : constant access Output'Class := Stdout'Access;
 begin
-   Test_Cpp_Int_List (Stdout'Address);
-   Test_Arrays_Int (S);
-   List_Ada12_Def_Bounded_Integer (S);
-   List_Ada12_Def_Unbounded_Integer (S);
-   List_Ada12_No_Checks_Def_Unbounded_Integer (S);
-   List_Ada12_Indef_Unbounded_Integer (S);
-   List_Controlled_Indef_Unbounded_Integer (S);
-   List_Controlled_Def_Unbounded_Integer (S);
-   List_Controlled_Def_Bounded_Integer (S);
-   List_Limited_Def_Bounded_Integer (S);
-   List_Limited_Indef_Spark_Unbounded_Spark_Integer (S);
+   if True then
+      Test_Cpp_Int_List (Stdout'Address);
+      List_Ada12_Def_Bounded_Integer (S);
+      List_Ada12_Def_Unbounded_Integer (S);
+      List_Ada12_No_Checks_Def_Unbounded_Integer (S);
+      List_Ada12_Indef_Unbounded_Integer (S);
+      List_Controlled_Indef_Unbounded_Integer (S);
+      List_Controlled_Def_Unbounded_Integer (S);
+      List_Controlled_Def_Bounded_Integer (S);
+      List_Limited_Def_Bounded_Integer (S);
+      List_Limited_Indef_Spark_Unbounded_Spark_Integer (S);
+   end if;
 
-   Test_Cpp_Str_List (Stdout'Address);
-   List_Ada12_Indef_Unbounded_String (S);
-   List_Ada12_No_Checks_Indef_Unbounded_String (S);
-   List_Controlled_Indef_Unbounded_String (S);
-   List_Controlled_Indef_Unbounded_Ref_String (S);
-   List_Controlled_Def_Unbounded_Unbounded_String (S);
-   List_Controlled_Arrays_Unbounded_String (S);
+   if True then
+      Test_Cpp_Str_List (Stdout'Address);
+      List_Ada12_Indef_Unbounded_String (S);
+      List_Ada12_No_Checks_Indef_Unbounded_String (S);
+      List_Controlled_Indef_Unbounded_String (S);
+      List_Controlled_Indef_Unbounded_Ref_String (S);
+      List_Controlled_Def_Unbounded_Unbounded_String (S);
+      List_Controlled_Arrays_Unbounded_String (S);
+   end if;
 
-   Test_Cpp_Str_Str_Map (Stdout'Address);
-   Test_Cpp_Str_Str_Unordered_Map (Stdout'Address);
-   Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr (S);
-   Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr (S);
+   if True then
+      Test_Cpp_Int_Vector (Stdout'Address);
+      Test_Arrays_Int (S);
+      Vector_Ada12_Def_Bounded_Integer (S);
+      Vector_Ada12_Def_Unbounded_Integer (S);
+      Vector_Ada12_No_Checks_Def_Unbounded_Integer (S);
+      Vector_Ada12_Indef_Unbounded_Integer (S);
+      Vector_Controlled_Indef_Unbounded_Integer (S);
+      Vector_Controlled_Def_Unbounded_Integer (S);
+      Vector_Controlled_Def_Bounded_Integer (S);
+      Vector_Limited_Def_Bounded_Integer (S);
+   end if;
 
-   Test_QGen;
+   if True then
+      Test_Cpp_Str_Vector (Stdout'Address);
+   end if;
+
+   if True then
+      Test_Cpp_Str_Str_Map (Stdout'Address);
+      Test_Cpp_Str_Str_Unordered_Map (Stdout'Address);
+      Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr (S);
+      Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr (S);
+   end if;
+
+   if True then
+      Test_QGen;
+   end if;
+
    Stdout.Display;
 
    Put_Line ("open file://" & Get_Current_Dir & "/index.html");

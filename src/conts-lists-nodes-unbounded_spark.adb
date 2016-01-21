@@ -88,6 +88,7 @@ package body Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
                Self.Nodes := Convert (Alloc (S));
             else
                Self.Nodes := Convert (Realloc (Convert (Self.Nodes), S));
+               --   ??? if not movable, need to do something
             end if;
          end if;
 

@@ -263,6 +263,135 @@ void test_cpp_str_list (void * output) {
 }
 
 /**
+ * test_cpp_int_vector
+ */
+
+extern "C"
+void test_cpp_int_vector (void * output) {
+   reset_mem();
+
+   start_container_test (output, "C++", "", "", "Integer Vector", 1);
+   save_container_size (output, sizeof(std::vector<int>));
+
+   for (int r = 0; r < repeat_count; r++) {
+      std::vector<int>  v;
+
+      mem_start_test (output, "fill");
+      for (int c = 1; c <= items_count; c++) {
+	 v.push_back(c);
+      }
+      mem_end_test (output);
+
+      mem_start_test (output, "copy");
+      {
+	 std::vector<int> v_copy (v);
+	 mem_end_test (output);
+      }
+
+      int count = 0;
+      mem_start_test (output, "cursor loop");
+      for (auto it = v.begin(), __end=v.end(); it != __end; ++it) {
+	 if (*it <= 2) {
+	    count ++;
+	 }
+      }
+      mem_end_test (output);
+      if (count != 2) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+
+      count = 0;
+      mem_start_test (output, "for-of loop");
+      for (auto e : v) {
+	 if (e <= 2) {
+	    count ++;
+	 }
+      }
+      mem_end_test (output);
+      if (count != 2) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+
+      mem_start_test (output, "count_if");
+      count = std::count_if (v.begin(), v.end(), IsLessEqual2);
+      mem_end_test (output);
+      if (count != 2) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+   }
+
+   end_container_test
+      (output, total_allocated, number_of_allocs, number_of_frees);
+}
+
+/**
+ * test_cpp_str_vector
+ */
+
+
+extern "C"
+void test_cpp_str_vector (void * output) {
+   reset_mem();
+
+   start_container_test (output, "C++", "", "", "String Vector", 1);
+   save_container_size (output, sizeof(std::vector<int>));
+
+   for (int r = 0; r < repeat_count; r++) {
+      std::vector<std::string>  v;
+
+      mem_start_test (output, "fill");
+      for (int c = 1; c <= items_count; c++) {
+         if (c % 2 == 0) {
+            v.push_back("foo");
+         } else {
+            v.push_back("foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo");
+         }
+      }
+      mem_end_test (output);
+
+      mem_start_test (output, "copy");
+      {
+	 std::vector<std::string> v_copy (v);
+	 mem_end_test (output);
+      }
+
+      int count = 0;
+      mem_start_test (output, "cursor loop");
+      for (auto it = v.begin(), __end=v.end(); it != __end; ++it) {
+	 if (startsWithStr(*it)) {
+	    count ++;
+	 }
+      }
+      mem_end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+
+      count = 0;
+      mem_start_test (output, "for-of loop");
+      for (std::string& e : v) {
+	 if (startsWithStr(e)) {
+	    count ++;
+	 }
+      }
+      mem_end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+
+      mem_start_test (output, "count_if");
+      count = std::count_if (v.begin(), v.end(), startsWithStr);
+      mem_end_test (output);
+      if (count != items_count) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+   }
+
+   end_container_test
+      (output, total_allocated, number_of_allocs, number_of_frees);
+}
+
+/**
  * test_cpp_str_str_map
  */
 

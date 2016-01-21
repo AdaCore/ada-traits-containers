@@ -19,27 +19,35 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package Memory is
+--  Unbounded Vectors of constrained elements.
+--  Compared with standard Ada containers, this is saving half of the memory
+--  allocations, so much more efficient in general.
 
-   type Mem_Info is record
-      Total_Allocated : Long_Long_Integer := 0;
-      Allocs          : Integer := 0;
-      Frees           : Integer := 0;
-      Reallocs        : Integer := 0;
-   end record;
+pragma Ada_2012;
+with Ada.Finalization;
+with Conts.Elements.Definite;
+with Conts.Vectors.Generics;
+with Conts.Vectors.Cursors;
+with Conts.Vectors.Nodes.Unbounded;
 
-   Current : Mem_Info;
+generic
+   type Index_Type is range <>;
+   type Element_Type is private;
+package Conts.Vectors.Definite_Unbounded is
 
-   function "-" (M1, M2 : Mem_Info) return Mem_Info;
-   --  Compute the delta between two memory usage
+   package Elements is new Conts.Elements.Definite (Element_Type);
+   package Nodes is new Conts.Vectors.Nodes.Unbounded
+      (Elements      => Elements.Traits,
+       Base_Type     => Ada.Finalization.Controlled,
+       Resize_Policy => Conts.Vectors.Resize_1_5);
+   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   Paused : Boolean := False;
+   subtype Cursor is Vectors.Cursor;
+   type Vector is new Vectors.Vector with null record
+      with Iterable => (First       => First_Primitive,
+                        Next        => Next_Primitive,
+                        Has_Element => Has_Element_Primitive,
+                        Element     => Element_Primitive);
 
-   procedure Reset;
-
-   procedure Pause;
-   --  Stop counting allocs and frees
-
-   procedure Unpause;
-   --  Resume counting
-end Memory;
+   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
+end Conts.Vectors.Definite_Unbounded;

@@ -119,7 +119,8 @@ package body Report is
       Self.End_Test;  --  In case one was started
 
       if Self.Container_Test /= JSON_Null then
-         Self.Container_Test.Set_Field ("allocated", Current.Total_Allocated);
+         Self.Container_Test.Set_Field
+            ("allocated", Current.Total_Allocated'Img);
          Self.Container_Test.Set_Field ("allocs", Current.Allocs);
          Self.Container_Test.Set_Field ("reallocs", Current.Reallocs);
          Self.Container_Test.Set_Field ("frees", Current.Frees);
@@ -177,7 +178,7 @@ package body Report is
          end;
 
          Info := Memory.Current - Self.At_Test_Start;
-         Self.Current_Test.Set_Field ("allocated", Info.Total_Allocated);
+         Self.Current_Test.Set_Field ("allocated", Info.Total_Allocated'Img);
          Self.Current_Test.Set_Field ("allocs", Info.Allocs);
          Self.Current_Test.Set_Field ("reallocs", Info.Reallocs);
          Self.Current_Test.Set_Field ("frees", Info.Frees);
@@ -236,7 +237,7 @@ package body Report is
      (Self                                 : System.Address;
       Allocated, Allocs_Count, Frees_Count : Natural) is
    begin
-      Memory.Current := (Total_Allocated => Allocated,
+      Memory.Current := (Total_Allocated => Long_Long_Integer (Allocated),
                          Allocs          => Allocs_Count,
                          Frees           => Frees_Count,
                          Reallocs        => 0);
@@ -260,7 +261,7 @@ package body Report is
      (Self                                 : System.Address;
       Allocated, Allocs_Count, Frees_Count : Natural) is
    begin
-      Memory.Current := (Total_Allocated => Allocated,
+      Memory.Current := (Total_Allocated => Long_Long_Integer (Allocated),
                          Allocs          => Allocs_Count,
                          Frees           => Frees_Count,
                          Reallocs        => 0);

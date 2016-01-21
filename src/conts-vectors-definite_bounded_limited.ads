@@ -19,27 +19,36 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package Memory is
+--  Bounded Vectors of constrained elements
 
-   type Mem_Info is record
-      Total_Allocated : Long_Long_Integer := 0;
-      Allocs          : Integer := 0;
-      Frees           : Integer := 0;
-      Reallocs        : Integer := 0;
-   end record;
+pragma Ada_2012;
+with Conts.Elements.Definite;
+with Conts.Vectors.Cursors;
+with Conts.Vectors.Generics;
+with Conts.Vectors.Nodes.Bounded;
 
-   Current : Mem_Info;
+generic
+   type Index_Type is range <>;
+   type Element_Type is private;
+package Conts.Vectors.Definite_Bounded_Limited is
 
-   function "-" (M1, M2 : Mem_Info) return Mem_Info;
-   --  Compute the delta between two memory usage
+   package Elements is new Conts.Elements.Definite (Element_Type);
+   package Nodes is new Conts.Vectors.Nodes.Bounded
+      (Elements  => Elements.Traits,
+       Base_Type => Limited_Base);
+   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   Paused : Boolean := False;
+   subtype Cursor is Vectors.Cursor;
+   type Vector (Capacity : Count_Type) is
+      new Vectors.Vector (Capacity) with null record
+      with Iterable => (First       => First_Primitive,
+                        Next        => Next_Primitive,
+                        Has_Element => Has_Element_Primitive,
+                        Element     => Element_Primitive);
 
-   procedure Reset;
+   function Copy (Self : Vector'Class) return Vector'Class;
+   --  Return a deep copy of Self
+   --  Complexity: O(n)
 
-   procedure Pause;
-   --  Stop counting allocs and frees
-
-   procedure Unpause;
-   --  Resume counting
-end Memory;
+   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
+end Conts.Vectors.Definite_Bounded_Limited;

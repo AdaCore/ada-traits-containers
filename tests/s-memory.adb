@@ -6,7 +6,7 @@
 --                                                                          --
 --                                 B o d y                                  --
 --                                                                          --
---          Copyright (C) 2001-2015, Free Software Foundation, Inc.         --
+--          Copyright (C) 2001-2016, Free Software Foundation, Inc.         --
 --                                                                          --
 -- GNAT is free software;  you can  redistribute it  and/or modify it under --
 -- terms of the  GNU General Public License as published  by the Free Soft- --
@@ -96,7 +96,8 @@ package body System.Memory is
 
       if not Standard.Memory.Paused then
          Standard.Memory.Current.Total_Allocated :=
-           Standard.Memory.Current.Total_Allocated + Natural (Actual_Size);
+           Standard.Memory.Current.Total_Allocated
+           + Long_Long_Integer (Actual_Size);
          Standard.Memory.Current.Allocs := Standard.Memory.Current.Allocs + 1;
       end if;
 
@@ -159,7 +160,8 @@ package body System.Memory is
          Standard.Memory.Current.Reallocs :=
            Standard.Memory.Current.Reallocs + 1;
          Standard.Memory.Current.Total_Allocated :=
-           Standard.Memory.Current.Total_Allocated + Natural (Actual_Size);
+           Standard.Memory.Current.Total_Allocated
+           + Long_Long_Integer (Actual_Size);
       end if;
 
       return Result;

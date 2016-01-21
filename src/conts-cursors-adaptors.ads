@@ -24,10 +24,13 @@
 
 pragma Ada_2012;
 with Ada.Containers.Bounded_Doubly_Linked_Lists;
+with Ada.Containers.Bounded_Vectors;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Vectors;
 
 package Conts.Cursors.Adaptors is
 
@@ -135,6 +138,109 @@ package Conts.Cursors.Adaptors is
          new Conts.Cursors.Constant_Forward_Convert_Traits
            (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
    end Indefinite_List_Adaptors;
+
+   ---------------------------------
+   -- Adaptor for bounded vectors --
+   ---------------------------------
+
+   generic
+      with package Vectors is new Ada.Containers.Bounded_Vectors (<>);
+   package Bounded_Vector_Adaptors is
+      subtype Element_Type is Vectors.Element_Type;
+      subtype Vector is Vectors.Vector;
+      subtype Cursor is Vectors.Cursor;
+
+      function First (Self : Vector) return Cursor
+         renames Vectors.First;
+      function Element (Self : Vector; Position : Cursor) return Element_Type
+         is (Vectors.Element (Position)) with Inline;
+      function Has_Element (Self : Vector; Position : Cursor) return Boolean
+         is (Vectors.Has_Element (Position)) with Inline;
+      function Next (Self : Vector; Position : Cursor) return Cursor
+         is (Vectors.Next (Position)) with Inline;
+      function Previous (Self : Vector; Position : Cursor) return Cursor
+         is (Vectors.Previous (Position)) with Inline;
+
+      package Cursors is
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+            (Container    => Vector'Class,
+             Cursor       => Cursor,
+             Return_Type  => Element_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
+      end Cursors;
+   end Bounded_Vector_Adaptors;
+
+   -------------------------
+   -- Adaptor for Vectors --
+   -------------------------
+
+   generic
+      with package Vectors is new Ada.Containers.Vectors (<>);
+   package Vector_Adaptors is
+      subtype Element_Type is Vectors.Element_Type;
+      subtype Vector is Vectors.Vector;
+      subtype Cursor is Vectors.Cursor;
+
+      function First (Self : Vector) return Cursor
+         renames Vectors.First;
+      function Element (Self : Vector; Position : Cursor) return Element_Type
+         is (Vectors.Element (Position)) with Inline;
+      function Has_Element (Self : Vector; Position : Cursor) return Boolean
+         is (Vectors.Has_Element (Position)) with Inline;
+      function Next (Self : Vector; Position : Cursor) return Cursor
+         is (Vectors.Next (Position)) with Inline;
+      function Previous (Self : Vector; Position : Cursor) return Cursor
+         is (Vectors.Previous (Position)) with Inline;
+
+      package Cursors is
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+            (Container    => Vector'Class,
+             Cursor       => Cursor,
+             Return_Type  => Element_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
+      end Cursors;
+   end Vector_Adaptors;
+
+   ------------------------------------
+   -- Adaptor for indefinite Vectors --
+   ------------------------------------
+
+   generic
+      with package Vectors is new Ada.Containers.Indefinite_Vectors (<>);
+   package Indefinite_Vector_Adaptors is
+      subtype Element_Type is Vectors.Element_Type;
+      subtype Return_Type is Vectors.Constant_Reference_Type;
+      subtype Vector is Vectors.Vector;
+      subtype Cursor is Vectors.Cursor;
+
+      function First (Self : Vector) return Cursor
+         renames Vectors.First;
+      function Element (Self : Vector; Position : Cursor) return Return_Type
+         is (Vectors.Constant_Reference (Self, Position)) with Inline;
+      function Has_Element (Self : Vector; Position : Cursor) return Boolean
+         is (Vectors.Has_Element (Position)) with Inline;
+      function Next (Self : Vector; Position : Cursor) return Cursor
+         is (Vectors.Next (Position)) with Inline;
+      function Previous (Self : Vector; Position : Cursor) return Cursor
+         is (Vectors.Previous (Position)) with Inline;
+
+      package Cursors is
+         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+            (Container    => Vector'Class,
+             Cursor       => Cursor,
+             Return_Type  => Return_Type);
+         package Constant_Forward
+            renames Constant_Bidirectional.Constant_Forward;
+      end Cursors;
+
+      function From_Ref_To_Elem (R : Return_Type) return Element_Type
+         is (R.Element.all) with Inline;
+      package Cursors_Forward_Convert is
+         new Conts.Cursors.Constant_Forward_Convert_Traits
+           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+   end Indefinite_Vector_Adaptors;
 
    ----------------------------------------
    -- Adaptor for indefinite hashed maps --

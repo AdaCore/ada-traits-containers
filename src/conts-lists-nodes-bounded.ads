@@ -73,7 +73,8 @@ package Conts.Lists.Nodes.Bounded with SPARK_Mode is
           New_Head : out Impl.Node_Access;
           Old_Head : Impl.Node_Access;
           New_Tail : out Impl.Node_Access;
-          Old_Tail : Impl.Node_Access);
+          Old_Tail : Impl.Node_Access)
+        with Pre => Nodes.Capacity >= Source.Capacity;
       --  See description in Conts.Lists.Nodes
 
    private

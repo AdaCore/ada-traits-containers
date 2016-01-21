@@ -19,27 +19,40 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package Memory is
+--  Unbounded Vectors of unconstrained elements
 
-   type Mem_Info is record
-      Total_Allocated : Long_Long_Integer := 0;
-      Allocs          : Integer := 0;
-      Frees           : Integer := 0;
-      Reallocs        : Integer := 0;
-   end record;
+pragma Ada_2012;
+with Ada.Finalization;
+with Conts.Elements.Indefinite;
+with Conts.Vectors.Generics;
+with Conts.Vectors.Cursors;
+with Conts.Vectors.Nodes.Unbounded;
 
-   Current : Mem_Info;
+generic
+   type Index_Type is range <>;
+   type Element_Type (<>) is private;
+package Conts.Vectors.Indefinite_Unbounded is
 
-   function "-" (M1, M2 : Mem_Info) return Mem_Info;
-   --  Compute the delta between two memory usage
+   package Elements is new Conts.Elements.Indefinite
+      (Element_Type, Pool => Conts.Global_Pool);
+   package Nodes is new Conts.Vectors.Nodes.Unbounded
+      (Elements      => Elements.Traits,
+       Base_Type     => Ada.Finalization.Controlled,
+       Resize_Policy => Conts.Vectors.Resize_1_5);
+   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   Paused : Boolean := False;
+   subtype Cursor is Vectors.Cursor;
+   type Vector is new Vectors.Vector with null record
+      with Iterable => (First       => First_Primitive,
+                        Next        => Next_Primitive,
+                        Has_Element => Has_Element_Primitive,
+                        Element     => Element_Primitive);
 
-   procedure Reset;
+   --  ??? Should we provide a Copy function ?
+   --  This cannot be provided in the generic package, since the type could
+   --  be constrained and/or limited, so it has to be provided in all child
+   --  packages. However, when the type is controlled it is much easier to
+   --  just use the standard assignment operator.
 
-   procedure Pause;
-   --  Stop counting allocs and frees
-
-   procedure Unpause;
-   --  Resume counting
-end Memory;
+   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
+end Conts.Vectors.Indefinite_Unbounded;

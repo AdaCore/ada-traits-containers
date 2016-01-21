@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2015-2016, AdaCore                     --
+--                     Copyright (C) 2016, AdaCore                          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -19,27 +19,37 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package Memory is
+pragma Ada_2012;
 
-   type Mem_Info is record
-      Total_Allocated : Long_Long_Integer := 0;
-      Allocs          : Integer := 0;
-      Frees           : Integer := 0;
-      Reallocs        : Integer := 0;
-   end record;
+package Conts.Vectors with SPARK_Mode => On is
 
-   Current : Mem_Info;
+   generic
+      with function Grow
+        (Current_Size, Min_Expected_Size : Count_Type) return Count_Type;
+      with function Shrink
+        (Current_Size, Min_Expected_Size : Count_Type) return Count_Type;
+   package Resize_Strategy is
+   end Resize_Strategy;
+   --  This package is used whenever a vector needs to be resized, and
+   --  must return the new size. There are two cases:
+   --     Grow:
+   --        Space for more elements must be added to the vector. A common
+   --        strategy is to double the size, although it is also possible to
+   --        chose to add a fixed number of elements.
+   --     Shrink:
+   --        The vector is too big for what it needs. In general, it should
+   --        not immediately resize and free memory, in case elements are
+   --        added just afterwards.
+   --
+   --  Current_Size might be 0, so simply multiplying is not enough.
 
-   function "-" (M1, M2 : Mem_Info) return Mem_Info;
-   --  Compute the delta between two memory usage
+   function Grow_1_5
+     (Current_Size, Min_Expected : Count_Type) return Count_Type with Inline;
+   function Shrink_1_5
+     (Current_Size, Min_Expected : Count_Type) return Count_Type with Inline;
+   package Resize_1_5 is new Resize_Strategy
+     (Grow => Grow_1_5, Shrink => Shrink_1_5);
+   --  A package that multiplies the size by 1.5 every time some more space
+   --  is needed.
 
-   Paused : Boolean := False;
-
-   procedure Reset;
-
-   procedure Pause;
-   --  Stop counting allocs and frees
-
-   procedure Unpause;
-   --  Resume counting
-end Memory;
+end Conts.Vectors;

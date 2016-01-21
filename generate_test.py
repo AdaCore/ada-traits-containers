@@ -13,6 +13,7 @@ class Comments(object):
 
 
 class List(object):
+    type = "List"
 
     def __init__(
         self,
@@ -26,18 +27,16 @@ class List(object):
         favorite=False # Whether this should be highlighted in the results
     ):
 
-        type = "List"
-
         # We use two default strings (one short, one long), to test various
         # approaches of storing elements
 
         if elem_type.lower() == "integer":
-            category = '%s %s' % (elem_type, type)
+            category = '%s %s' % (elem_type, self.type)
             append = "V2.Append (C);"
             expected = "2"
 
         elif elem_type.lower() == "string":
-            category = '%s %s' % (elem_type, type)
+            category = '%s %s' % (elem_type, self.type)
             expected = "Items_Count"
             append = """
          if C mod 2 = 0 then
@@ -47,7 +46,7 @@ class List(object):
          end if;"""
 
         elif elem_type.lower() == "unbounded_string":
-            category = 'String %s' % (type, )
+            category = 'String %s' % (self.type, )
             expected = "Items_Count"
             append = """
          if C mod 2 = 0 then
@@ -65,7 +64,7 @@ class List(object):
             nodes=nodes,
             expected=expected,
             category=category,
-            type=type,
+            type=self.type,
             elem_type=elem_type,
             instance=instance,
             withs=withs,
@@ -410,6 +409,12 @@ end {test_name};
         self.__common()
 
 
+class Vector (List):
+    type = "Vector"
+
+
+# Integer lists
+
 List("Integer", "Ada12", "Def", "Bounded",
      "package Container is new Ada.Containers.Bounded_Doubly_Linked_Lists (Integer);",
      "with Ada.Containers.Bounded_Doubly_Linked_Lists;").gen_ada2012(
@@ -427,7 +432,6 @@ List("Integer", "Ada12_No_Checks", "Def", "Unbounded",
      "package Container is new Ada.Containers.Doubly_Linked_Lists (Integer);",
      "with Ada.Containers.Doubly_Linked_Lists;",
      favorite=True).gen_ada2012(disable_checks=True)
-
 List("Integer", "Controlled", "Indef", "Unbounded",
      "package Container is new Conts.Lists.Indefinite_Unbounded (Integer);",
      "with Conts.Lists.Indefinite_Unbounded;").gen()
@@ -448,6 +452,8 @@ List("Integer", "Limited", "Indef_Spark", "Unbounded_Spark",
      "package Container is new Conts.Lists.Indefinite_Unbounded_SPARK (Integer);",
      "with Conts.Lists.Indefinite_Unbounded_SPARK;").gen()
 
+# String lists
+
 List("String", "Ada12", "Indef", "Unbounded",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
      " (String);",
@@ -462,7 +468,6 @@ List("String", "Ada12_No_Checks", "Indef", "Unbounded",
          use_cursor_convert=True,
          adaptors='Indefinite_List_Adaptors',
          disable_checks=True)
-
 List("String", "Controlled", "Indef", "Unbounded",
      "package Container is new Conts.Lists.Indefinite_Unbounded (String);",
      "with Conts.Lists.Indefinite_Unbounded;",
@@ -488,6 +493,44 @@ List("String", "Controlled", "Arrays", "Unbounded",
          fill='strange, since we are doing fewer mallocs. Faster if we only' +
              'preallocate a 1 element array')
     ).gen(use_cursor_convert=True)
+
+# Integer vectors
+
+p = " (Natural, Integer);"
+
+Vector("Integer", "Ada12", "Def", "Bounded",
+     "package Container is new Ada.Containers.Bounded_Vectors" + p,
+     "with Ada.Containers.Bounded_Vectors;").gen_ada2012(
+        adaptors='Bounded_Vector_Adaptors')
+Vector("Integer", "Ada12", "Def", "Unbounded",
+     "package Container is new Ada.Containers.Vectors" + p,
+     "with Ada.Containers.Vectors;").gen_ada2012()
+Vector("Integer", "Ada12", "Indef", "Unbounded",
+     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
+     "with Ada.Containers.Indefinite_Vectors;").gen_ada2012(
+         use_cursor_convert=True,
+         adaptors='Indefinite_Vector_Adaptors')
+Vector("Integer", "Ada12_No_Checks", "Def", "Unbounded",
+     "package Container is new Ada.Containers.Vectors" + p,
+     "with Ada.Containers.Vectors;",
+     favorite=True).gen_ada2012(disable_checks=True)
+Vector("Integer", "Controlled", "Indef", "Unbounded",
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
+     "with Conts.Vectors.Indefinite_Unbounded;").gen()
+Vector("Integer", "Controlled", "Def", "Unbounded",
+     "package Container is new Conts.Vectors.Definite_Unbounded" + p,
+     "with Conts.Vectors.Definite_Unbounded;",
+       comments=Comments(
+           cursorloop='test in Next to see if we reached end of loop'),
+     favorite=True).gen()
+Vector("Integer", "Controlled", "Def", "Bounded",
+     "package Container is new Conts.Vectors.Definite_Bounded" + p,
+     "with Conts.Vectors.Definite_Bounded;").gen()
+Vector("Integer", "Limited", "Def", "Bounded",
+     "package Container is new Conts.Vectors.Definite_Bounded_Limited" + p,
+     "with Conts.Vectors.Definite_Bounded_Limited;").gen()
+
+# String maps
 
 Map("StrStr", "Ada12_ordered", "Indef", "Indef", "Unbounded",
      "package Container is new Ada.Containers.Indefinite_Ordered_Maps" +

@@ -19,31 +19,19 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  A generic and general list implementation
---  By providing appropriate values for the formal parameters, the same
---  implementation can be used for bounded and unbounded containers, or for
---  constrained and unconstrained elements.
---
---  Design: in C++ STL, none of the methods are virtual, so there is no
---  dynamic dispatching. We achieve the same here by using 'Class
---  parameters.  This still let's use Ada2012 dot notation (the reason why
---  we use a tagged type, in addition to the Iterable aspect), while
---  increasing the performance (the count-with-explicit-loop goes from 0.25s
---  to 0.51s when we do not use 'Class parameters).
+--  A vector abstract data type
 
 pragma Ada_2012;
-with Conts.Lists.Nodes;
+with Conts.Vectors.Nodes;
 
 generic
-   with package Nodes is new Conts.Lists.Nodes.Traits (<>);
-   --  Describes how the nodes of the list are stored.
+   type Index_Type is range <>;
+   with package Nodes is new Conts.Vectors.Nodes.Traits (<>);
+package Conts.Vectors.Generics with SPARK_Mode is
 
-package Conts.Lists.Generics with SPARK_Mode is
-
-   type List is new Nodes.Container with private;
-   --  We do not define the Iterable aspect here: this is not allowed,
-   --  since the parent type is a generic formal parameter. Instead, we
-   --  have to define it in the instantiations of Generic_List.
+   type Vector is new Nodes.Container with private;
+   --  Define the iterable aspect later, since this is not allowed when the
+   --  parent type is a generic formal.
 
    subtype Element_Type is Nodes.Elements.Element_Type;
    subtype Return_Type is Nodes.Elements.Return_Type;
@@ -52,55 +40,75 @@ package Conts.Lists.Generics with SPARK_Mode is
    type Cursor is private;
    No_Element : constant Cursor;
 
-   procedure Append (Self : in out List'Class; Element : Element_Type)
-      with Global => null,
-           Pre    => Length (Self) + 1 <= Capacity (Self);
-   --  Append a new element to the list.
-   --  Complexity: O(1)
+   procedure Reserve_Capacity
+     (Self : in out Vector'Class; Capacity : Count_Type);
+   --  Make sure the vector is at least big enough to contain Capacity items.
 
-   function Length (Self : List'Class) return Count_Type
-      with Inline => True,
-           Global => null;
-   --  Return the number of elements in the list.
-   --  Complexity: O(n)  (in practice, constant)
+   function Length (Self : Vector'Class) return Count_Type
+     with Inline => True, Global => null;
+   --  Return the number of elements in Self.
 
-   function Capacity (Self : List'Class) return Count_Type
-      is (Nodes.Capacity (Self))
-      with Inline => True,
-           Global => null;
-   --  Return the maximal number of elements in the list. This will be
-   --  Count_Type'Last for unbounded containers.
-   --  Complexity: constant
+   function Is_Empty (Self : Vector'Class) return Boolean
+      is (Self.Length = 0) with Inline;
+   --  Whether the vector is empty
 
-   procedure Clear (Self : in out List'Class);
-   --  Free the contents of the list
-   --  Complexity:  O(n)
+   function Element
+     (Self : Vector'Class; Position : Index_Type) return Return_Type;
 
-   procedure Assign (Self : in out List'Class; Source : List'Class);
+   procedure Replace_Element
+     (Self     : in out Vector'Class;
+      Index    : Index_Type;
+      New_Item : Element_Type)
+     with Global => null,
+          Pre    => Count_Type (Index) - Conts.Vectors.Nodes.Min_Index + 1
+                    <= Length (Self);
+   --  Replace the element at the given position.
+   --  Nothing is done if Index is not a valid index in the container.
+
+   procedure Append
+     (Self    : in out Vector'Class;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+     with Global => null,
+          Pre    => Length (Self) + Count <= Nodes.Max_Capacity (Self);
+   --  Append Count copies of Element to the vector, increasing the capacity
+   --  as needed.
+
+   procedure Clear (Self : in out Vector'Class);
+   --  Remove all contents from the vector.
+
+   procedure Delete_Last (Self : in out Vector'Class)
+     with Global => null, Pre => not Self.Is_Empty;
+   --  Remove the last element from the vector.
+
+   function Last_Element (Self : Vector'Class) return Return_Type
+     with Global => null, Pre => not Self.Is_Empty;
+   --  Return the last element in the vector.
+
+   procedure Assign (Self : in out Vector'Class; Source : Vector'Class);
    --  Replace all elements of Self with a copy of the elements of Source.
    --  When the list is controlled, this has the same behavior as calling
    --  Self := Source.
-   --  Complexity: O(n)
 
-   function First (Self : List'Class) return Cursor
+   function First (Self : Vector'Class) return Cursor
       with Inline,
            Global => null;
    function Element
-      (Self : List'Class; Position : Cursor) return Return_Type
+      (Self : Vector'Class; Position : Cursor) return Return_Type
       with Inline,
            Global => null,
            Pre    => Has_Element (Self, Position);
    function Has_Element
-      (Self : List'Class; Position : Cursor) return Boolean
+      (Self : Vector'Class; Position : Cursor) return Boolean
       with Inline,
            Global => null;
    function Next
-      (Self : List'Class; Position : Cursor) return Cursor
+      (Self : Vector'Class; Position : Cursor) return Cursor
       with Inline,
            Global => null,
            Pre    => Has_Element (Self, Position);
    function Previous
-      (Self : List'Class; Position : Cursor) return Cursor
+      (Self : Vector'Class; Position : Cursor) return Cursor
       with Inline,
            Global => null,
            Pre    => Has_Element (Self, Position);
@@ -108,21 +116,21 @@ package Conts.Lists.Generics with SPARK_Mode is
    --  and post conditions.
    --  Complexity: constant for all cursor operations.
 
-   procedure Next (Self : List'Class; Position : in out Cursor)
+   procedure Next (Self : Vector'Class; Position : in out Cursor)
       with Inline,
            Global => null,
            Pre    => Has_Element (Self, Position);
 
-   function First_Primitive (Self : List) return Cursor
+   function First_Primitive (Self : Vector) return Cursor
       is (First (Self)) with Inline;
    function Element_Primitive
-      (Self : List; Position : Cursor) return Return_Type
+      (Self : Vector; Position : Cursor) return Return_Type
       is (Element (Self, Position)) with Inline;
    function Has_Element_Primitive
-      (Self : List; Position : Cursor) return Boolean
+      (Self : Vector; Position : Cursor) return Boolean
       is (Has_Element (Self, Position)) with Inline;
    function Next_Primitive
-      (Self : List; Position : Cursor) return Cursor
+      (Self : Vector; Position : Cursor) return Cursor
       is (Next (Self, Position)) with Inline;
    --  These are only needed because the Iterable aspect expects a parameter
    --  of type List instead of List'Class. But then it means that the loop
@@ -131,20 +139,21 @@ package Conts.Lists.Generics with SPARK_Mode is
 
 private
    pragma SPARK_Mode (Off);
-   procedure Adjust (Self : in out List);
-   procedure Finalize (Self : in out List);
-   --  In case the list is a controlled type, but irrelevant when the list
+   procedure Adjust (Self : in out Vector);
+   procedure Finalize (Self : in out Vector);
+   --  In case the list is a controlled type, but irrelevant when Self
    --  is not controlled.
 
-   type List is new Nodes.Container with record
-      Head, Tail : Nodes.Node_Access := Nodes.Null_Access;
-      Size : Natural := 0;
-   end record;
-
    type Cursor is record
-      Current : Nodes.Node_Access;
+      Index   : Count_Type;
    end record;
 
-   No_Element : constant Cursor := (Current => Nodes.Null_Access);
+   No_Element : constant Cursor :=
+     (Index => Conts.Vectors.Nodes.Min_Index - 1);
 
-end Conts.Lists.Generics;
+   type Vector is new Nodes.Container with record
+      Last  : Count_Type := No_Element.Index;
+      --  Last assigned element
+   end record;
+
+end Conts.Vectors.Generics;

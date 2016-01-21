@@ -19,27 +19,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package Memory is
+package body Conts.Vectors.Definite_Bounded_Limited is
 
-   type Mem_Info is record
-      Total_Allocated : Long_Long_Integer := 0;
-      Allocs          : Integer := 0;
-      Frees           : Integer := 0;
-      Reallocs        : Integer := 0;
-   end record;
+   ----------
+   -- Copy --
+   ----------
 
-   Current : Mem_Info;
+   function Copy (Self : Vector'Class) return Vector'Class is
+   begin
+      return Result : Vector (Capacity => Self.Capacity) do
+         Result.Assign (Self);
+      end return;
+   end Copy;
 
-   function "-" (M1, M2 : Mem_Info) return Mem_Info;
-   --  Compute the delta between two memory usage
-
-   Paused : Boolean := False;
-
-   procedure Reset;
-
-   procedure Pause;
-   --  Stop counting allocs and frees
-
-   procedure Unpause;
-   --  Resume counting
-end Memory;
+end Conts.Vectors.Definite_Bounded_Limited;

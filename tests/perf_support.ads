@@ -130,6 +130,10 @@ package Perf_Support is
       with Import, Convention => C, External_Name => "test_cpp_int_list";
    procedure Test_Cpp_Str_List (Stdout : System.Address)
       with Import, Convention => C, External_Name => "test_cpp_str_list";
+   procedure Test_Cpp_Int_Vector (Stdout : System.Address)
+      with Import, Convention => C, External_Name => "test_cpp_int_vector";
+   procedure Test_Cpp_Str_Vector (Stdout : System.Address)
+      with Import, Convention => C, External_Name => "test_cpp_str_vector";
    procedure Test_Cpp_Str_Str_Map (Stdout : System.Address)
      with Import, Convention => C, External_Name => "test_cpp_str_str_map";
    procedure Test_Cpp_Str_Str_Unordered_Map (Stdout : System.Address)
