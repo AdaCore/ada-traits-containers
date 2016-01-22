@@ -530,6 +530,30 @@ Vector("Integer", "Limited", "Def", "Bounded",
      "package Container is new Conts.Vectors.Definite_Bounded_Limited" + p,
      "with Conts.Vectors.Definite_Bounded_Limited;").gen()
 
+# String vectors
+
+p = " (Natural, String);"
+
+Vector("String", "Ada12", "Indef", "Unbounded",
+     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
+     "with Ada.Containers.Indefinite_Vectors;").gen_ada2012(
+         use_cursor_convert=True,
+         adaptors='Indefinite_Vector_Adaptors')
+Vector("String", "Ada12_No_Checks", "Indef", "Unbounded",
+     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
+     "with Ada.Containers.Indefinite_Vectors;",
+     favorite=True).gen_ada2012(
+         use_cursor_convert=True,
+         adaptors='Indefinite_Vector_Adaptors',
+         disable_checks=True)
+Vector("String", "Controlled", "Indef", "Unbounded",
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
+     "with Conts.Vectors.Indefinite_Unbounded;").gen()
+Vector("String", "Controlled", "Indef", "Unbounded_Ref",
+     "package Container is new Conts.Vectors.Indefinite_Unbounded_Ref" + p,
+     "with Conts.Vectors.Indefinite_Unbounded_Ref;", favorite=True).gen(
+         use_cursor_convert=True)
+
 # String maps
 
 Map("StrStr", "Ada12_ordered", "Indef", "Indef", "Unbounded",

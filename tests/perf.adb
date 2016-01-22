@@ -57,6 +57,13 @@ with Vector_Controlled_Def_Unbounded_Integer;
 with Vector_Controlled_Def_Bounded_Integer;
 with Vector_Limited_Def_Bounded_Integer;
 
+--  String vectors
+
+with Vector_Ada12_Indef_Unbounded_String;
+with Vector_Ada12_No_Checks_Indef_Unbounded_String;
+with Vector_Controlled_Indef_Unbounded_String;
+with Vector_Controlled_Indef_Unbounded_Ref_String;
+
 --  String maps
 
 with Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr;
@@ -104,6 +111,10 @@ begin
 
    if True then
       Test_Cpp_Str_Vector (Stdout'Address);
+      Vector_Ada12_Indef_Unbounded_String (S);
+      Vector_Ada12_No_Checks_Indef_Unbounded_String (S);
+      Vector_Controlled_Indef_Unbounded_String (S);
+      Vector_Controlled_Indef_Unbounded_Ref_String (S);
    end if;
 
    if True then
