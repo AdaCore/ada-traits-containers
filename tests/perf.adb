@@ -22,8 +22,6 @@
 with Perf_Support;    use Perf_Support;
 with QGen;            use QGen;
 with Report;          use Report;
-with Ada.Text_IO;     use Ada.Text_IO;
-with GNAT.Directory_Operations; use GNAT.Directory_Operations;
 
 --  Integer lists
 
@@ -129,6 +127,4 @@ begin
    end if;
 
    Stdout.Display;
-
-   Put_Line ("open file://" & Get_Current_Dir & "/index.html");
 end Perf;

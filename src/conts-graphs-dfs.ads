@@ -72,6 +72,19 @@ package Conts.Graphs.DFS is
       with function Terminator
          (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
          is Graphs.Graphs.Never_Stop;
+   procedure Recursive_Search
+      (G     : in out Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+      with Inline;
+
+   generic
+      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
+      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
+      with function Terminator
+         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
+         is Graphs.Graphs.Never_Stop;
    procedure Search
       (G     : in out Graphs.Graphs.Graph;
        Visit : in out Visitor;

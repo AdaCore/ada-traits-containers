@@ -3,9 +3,6 @@ all:
 	python ./generate_test.py
 	gprbuild -m -p -Ptests -j0
 
-	# Optionally build the Boost tests
-	-gprbuild -m -p -Ptests/graphs/graph_cpp -j0
-
 run_test:
 	./tests/obj/perf
 

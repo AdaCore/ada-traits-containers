@@ -42,6 +42,20 @@ package body Conts.Graphs.DFS is
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
+      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+      with function Terminator
+         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
+         is Graphs.Graphs.Never_Stop;
+   procedure Internal_Recursive_DFS
+      (G     : Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       Map   : in out Maps.Map;
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
+   --  Internal implementation
+
+   generic
+      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
       with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
    procedure Internal_Is_Acyclic
       (G       : Graphs.Graphs.Graph;
@@ -108,7 +122,9 @@ package body Conts.Graphs.DFS is
             if not Graphs.Out_Edges.Has_Element (G, Info.EC) then
                --  No more out edges
                declare
-                  V : constant Vertex :=
+                  --   ??? Inefficient, we might be using the secondary
+                  --   stack here.
+                  V : Vertex renames
                      Graphs.Graphs.Vertices.To_Element
                         (Graphs.Graphs.Vertices.To_Return (Info.VC));
                begin
@@ -129,6 +145,8 @@ package body Conts.Graphs.DFS is
 
                declare
                   E      : constant Edge := Graphs.Out_Edges.Element (G, EC);
+
+                  --  ??? Might be using secondary stack
                   Target : constant Vertex := Get_Target (G, E);
                begin
                   Visit.Examine_Edge (G, E);
@@ -159,10 +177,102 @@ package body Conts.Graphs.DFS is
       use type Vertex;
 
       VC : Graphs.Vertices.Cursor;
+      Count : Natural := 0;
    begin
-      --  Preallocate some space, to improve performance
-      Stack.Reserve_Capacity (200);
+      --  Initialize
 
+      VC := Graphs.Vertices.First (G);
+      while Graphs.Vertices.Has_Element (G, VC) loop
+         Maps.Set (Map, Graphs.Vertices.Element (G, VC), White);
+         Visit.Initialize_Vertex (G, Graphs.Vertices.Element (G, VC));
+         Count := Count + 1;
+         VC := Graphs.Vertices.Next (G, VC);
+      end loop;
+
+      --  Preallocate some space, to improve performance
+      --  Unless the graph is a tree with depth n, we do not need as many
+      --  nodes in the stack as they are elements in the graph. So we use
+      --  a number somewhere in between, as an attempt to limit the number
+      --  of allocations, and yet not allocating too much memory.
+      Stack.Reserve_Capacity (Count_Type'Min (300_000, Count));
+
+      --  Search from the start vertex
+
+      if V /= Graphs.Graphs.Null_Vertex then
+         Visit.Start_Vertex (G, V);
+         Impl (V);
+      end if;
+
+      --  Search for remaining unvisited vertices
+
+      VC := Graphs.Vertices.First (G);
+      while not Terminated and then Graphs.Vertices.Has_Element (G, VC) loop
+         if Maps.Get (Map, Graphs.Vertices.Element (G, VC)) = White then
+            Impl (Graphs.Vertices.Element (G, VC));
+         end if;
+
+         VC := Graphs.Vertices.Next (G, VC);
+      end loop;
+
+      Stack.Clear;
+   end Internal_DFS;
+
+   ----------------------------
+   -- Internal_Recursive_DFS --
+   ----------------------------
+
+   procedure Internal_Recursive_DFS
+      (G     : Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       Map   : in out Maps.Map;
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+   is
+      use Graphs.Graphs;
+
+      Terminated : Boolean := False;
+
+      procedure Impl (Current : Vertex);
+
+      procedure Impl (Current : Vertex) is
+         EC   : Graphs.Out_Edges.Cursor;
+      begin
+         Maps.Set (Map, Current, Gray);
+         Visit.Discover_Vertex (G, Current);
+
+         if not Terminator (G, Current) then
+            EC := Graphs.Out_Edges.First (G, Current);
+            while Graphs.Out_Edges.Has_Element (G, EC) loop
+               declare
+                  E : Edge renames Graphs.Out_Edges.Element (G, EC);
+                  Target : constant Vertex := Get_Target (G, E);
+               begin
+                  Visit.Examine_Edge (G, E);
+                  case Maps.Get (Map, Target) is
+                     when White =>
+                        Visit.Tree_Edge (G, E);
+                        Impl (Target);
+
+                     when Gray =>
+                        Visit.Back_Edge (G, E);
+
+                     when Black =>
+                        Visit.Forward_Or_Cross_Edge (G, E);
+                  end case;
+               end;
+               EC := Graphs.Out_Edges.Next (G, EC);
+            end loop;
+         else
+            Terminated := True;
+         end if;
+
+         Maps.Set (Map, Current, Black);
+         Visit.Finish_Vertex (G, Current);
+      end Impl;
+
+      use type Vertex;
+
+      VC : Graphs.Vertices.Cursor;
+   begin
       --  Initialize
 
       VC := Graphs.Vertices.First (G);
@@ -189,9 +299,7 @@ package body Conts.Graphs.DFS is
 
          VC := Graphs.Vertices.Next (G, VC);
       end loop;
-
-      Stack.Clear;
-   end Internal_DFS;
+   end Internal_Recursive_DFS;
 
    ---------------------
    -- Search_With_Map --
@@ -223,6 +331,21 @@ package body Conts.Graphs.DFS is
    begin
       Internal (G, Visit, Map => G, V => V);
    end Search;
+
+   ----------------------
+   -- Recursive_Search --
+   ----------------------
+
+   procedure Recursive_Search
+      (G     : in out Graphs.Graphs.Graph;
+       Visit : in out Visitor;
+       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+   is
+      procedure Internal is new Internal_Recursive_DFS
+         (Graphs, Visitor, Maps.As_Exterior, Terminator);
+   begin
+      Internal (G, Visit, Map => G, V => V);
+   end Recursive_Search;
 
    -------------------------
    -- Internal_Is_Acyclic --

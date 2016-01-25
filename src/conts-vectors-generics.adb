@@ -42,8 +42,19 @@ package body Conts.Vectors.Generics is
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type) is
    begin
-      Nodes.Resize (Self, Capacity, Self.Last, Force => True);
+      Nodes.Resize
+         (Self, Count_Type'Max (Self.Last, Capacity),
+          Self.Last, Force => True);
    end Reserve_Capacity;
+
+   -------------------
+   -- Shrink_To_Fit --
+   -------------------
+
+   procedure Shrink_To_Fit (Self : in out Vector'Class) is
+   begin
+      Nodes.Resize (Self, Self.Last, Self.Last, Force => True);
+   end Shrink_To_Fit;
 
    ------------
    -- Length --
@@ -116,7 +127,8 @@ package body Conts.Vectors.Generics is
          Nodes.Release_Element (Self, J);
       end loop;
 
-      Nodes.Resize (Self, 0, L, Force => False);
+      --  Deallocate all memory
+      Nodes.Resize (Self, 0, L, Force => True);
       Self.Last := Min_Index - 1;
    end Clear;
 
@@ -127,7 +139,6 @@ package body Conts.Vectors.Generics is
    procedure Delete_Last (Self : in out Vector'Class) is
    begin
       Nodes.Release_Element (Self, Self.Last);
-      Nodes.Resize (Self, Self.Last - 1, Self.Last, Force => False);
       Self.Last := Self.Last - 1;
    end Delete_Last;
 

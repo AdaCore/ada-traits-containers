@@ -46,19 +46,26 @@ package Report is
 
    procedure End_Container_Test (Self : not null access Output'Class);
    --  A new set of tests is started, for a specific container.
-   --  This automatically starts measuring the number of allocation and
+   --  This automatically counts the number of allocation and
    --  deallocations done by that test.
 
    procedure Start_Test
-      (Self    : not null access Output'Class;
-       Name    : String;
-       Comment : String := "");
+      (Self        : not null access Output'Class;
+       Name        : String;
+       Comment     : String := "";
+       Start_Group : Boolean := False);
    procedure End_Test (Self : not null access Output'Class);
    --  A test on the current container is executed. These procedures measure
    --  the execution time. Calling End_Test is optional if you are calling
    --  Start_Test immediately.
    --  You can run the same test multiple times after calling
    --  Start_Container_Test. All timings will be recorded.
+   --  Tests are grouped, so that the first test run in a group, for the
+   --  first container, is displayed as "100%", and other tests in the same
+   --  group are displayed relative to this one.
+   --  Set Start_Group to True to start a new group. All following tests
+   --  will belong to the same group, until a test that also sets Start_Group
+   --  to True.
 
    procedure Display (Self : not null access Output'Class);
    --  Outputs the results to a JSON file

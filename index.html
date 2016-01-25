@@ -102,20 +102,20 @@ body {
    </div>
 
    <div ng-controller='ResultsCtrl' class='results'>
-      <div ng-repeat='(catname, cat) in data.categories'>
+      <div ng-repeat='cat in data.categories'>
          <table>
             <thead>
                <tr>
-                  <th class='elem_type'>{{catname}}</th>
+                  <th class='elem_type'>{{cat.name}}</th>
                   <th class='rotate'
                       ng-class="{favorite:t.favorite}"
-                      ng-repeat='t in cat.containers'>
-                     <div><span>{{t.base}} {{t.elements}} {{t.nodes}}</span></div>
+                      ng-repeat='c in cat.containers'>
+                     <div><span>{{c.base}} {{c.elements}} {{c.nodes}}</span></div>
                   </th>
                </tr>
             </thead>
             <tbody>
-               <tr ng-repeat='name in data.test_names' ng-class='{separator: ref_test_names[name]}'>
+               <tr ng-repeat='name in cat.test_names' ng-class='{separator: cat.is_ref_test[name]}'>
                   <th class='row-header'>{{name}}</th>
                   <td ng-repeat='c in cat.containers' ng-class="{favorite:c.favorite}">
                      <span ct-duration='name' container='c'></span>

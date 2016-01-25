@@ -22,6 +22,7 @@
 pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Graphs;      use Conts.Graphs;
+with Perf_Support;
 
 package Graph1_Support is
 
@@ -39,7 +40,7 @@ package Graph1_Support is
    type Color_Map is array (Vertex range <>) of Color;
 
    type Graph is record
-      Colors : Color_Map (1 .. 1_000_000);
+      Colors : Color_Map (1 .. Perf_Support.Items_Count);
    end record;
 
    function Get_Target (G : Graph; E : Edge) return Vertex;

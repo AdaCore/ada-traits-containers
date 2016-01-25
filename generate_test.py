@@ -126,13 +126,13 @@ is
       It : Container.Cursor;
       Co : Natural;
    begin
-      Stdout.Start_Test ("fill", "{comments.fill}");
+      Stdout.Start_Test ("fill", "{comments.fill}", Start_Group => True);
       for C in 1 .. Items_Count loop
          {append}
       end loop;
       Stdout.End_Test;
 
-      Stdout.Start_Test ("copy", "{comments.copy}");
+      Stdout.Start_Test ("copy", "{comments.copy}", Start_Group => False);
       declare
          V_Copy : Container.{type}'Class := V2{copy};
          pragma Unreferenced (V_Copy);
@@ -142,7 +142,8 @@ is
       end;
 
       Co := 0;
-      Stdout.Start_Test ("cursor loop", "{comments.cursorloop}");
+      Stdout.Start_Test ("cursor loop", "{comments.cursorloop}",
+                         Start_Group => True);
       It := V2.First;
       while {prefix}Has_Element (It) loop
          if Predicate ({prefix}Element (It)) then
@@ -154,7 +155,8 @@ is
       Assert (Co, {expected});
 
       Co := 0;
-      Stdout.Start_Test ("for-of loop", "{comments.forofloop}");
+      Stdout.Start_Test ("for-of loop", "{comments.forofloop}",
+                         Start_Group => False);
       for E of V2 loop
          if Predicate (E) then
             Co := Co + 1;
@@ -163,7 +165,8 @@ is
       Stdout.End_Test;
       Assert (Co, {expected});
 
-      Stdout.Start_Test ("count_if", "{comments.countif}");
+      Stdout.Start_Test ("count_if", "{comments.countif}",
+                         Start_Group => False);
       Co := Count_If (V2, Predicate'Access);
       Stdout.End_Test;
       Assert (Co, {expected});
@@ -322,13 +325,15 @@ is
       It : Container.Cursor;
       Co : Natural;
    begin
-      Stdout.Start_Test ("fill", "{comments.fill}");
+      Stdout.Start_Test ("fill", "{comments.fill}",
+                         Start_Group => True);
       for C in 1 .. Items_Count loop
          {append}
       end loop;
       Stdout.End_Test;
 
-      Stdout.Start_Test ("copy", "{comments.copy}");
+      Stdout.Start_Test ("copy", "{comments.copy}",
+                         Start_Group => False);
       declare
          V_Copy : Container.{type}'Class := V2{copy};
          pragma Unreferenced (V_Copy);
@@ -338,7 +343,8 @@ is
       end;
 
       Co := 0;
-      Stdout.Start_Test ("cursor loop", "{comments.cursorloop}");
+      Stdout.Start_Test ("cursor loop", "{comments.cursorloop}",
+                         Start_Group => True);
       It := V2.First;
       while {prefix}Has_Element (It) loop
          if Predicate ({prefix}Element (It)) then
@@ -350,7 +356,8 @@ is
       Assert (Co, Items_Count);
 
       Co := 0;
-      Stdout.Start_Test ("for-of loop", "{comments.forofloop}");
+      Stdout.Start_Test ("for-of loop", "{comments.forofloop}",
+                         Start_Group => False);
       for E of V2 loop
          if Predicate (E) then
             Co := Co + 1;
@@ -359,13 +366,15 @@ is
       Stdout.End_Test;
       Assert (Co, Items_Count);
 
-      Stdout.Start_Test ("count_if", "{comments.countif}");
+      Stdout.Start_Test ("count_if", "{comments.countif}",
+                         Start_Group => False);
       Co := Count_If (V2, Predicate'Access);
       Stdout.End_Test;
       Assert (Co, Items_Count);
 
       Co := 0;
-      Stdout.Start_Test ("find", "{comments.find}");
+      Stdout.Start_Test ("find", "{comments.find}",
+                         Start_Group => False);
       for C in 1 .. Items_Count loop
          if Predicate (V2 ("1")) then
             Co := Co + 1;

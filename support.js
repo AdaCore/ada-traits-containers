@@ -1,20 +1,5 @@
 var app = angular.module('containers', []);
 
-var test_name_to_reftime = {
-   'fill': 'fill',
-   'copy': 'fill',
-   'cursor loop': 'cursor loop',
-   'for-of loop': 'cursor loop',
-   'count_if': 'cursor loop',
-   'find': 'cursor loop'
-};
-
-// Tests before which we display a bold border
-var ref_test_names = {
-   'fill': true,
-   'cursor loop': true
-};
-
 var MEAN_PERCENT = 0;
 var MEAN_MS = 1;
 
@@ -25,30 +10,39 @@ run(function($rootScope) {
 
 factory('Reftime', function() {
    /**
-    * This class is used to compute percents compared to various reference
-    * times.
+    * A category of tests if generally for a given container and element_type.
+    * They correspond to a table displayed in the output. They include their
+    * own reference times and list of tests.
+    * @constructor
+    * @param {str} name   The name of the category.
     */
-   function Reftime() {
-      var ref = this;
+   function Category(name) {
+      this.name = name;
+      this.containers = [];  // List of containers in this category
+      this.test_names = [];  // List of tests run for any container in this
+                             // category
+      this.is_ref_test = {}; // List of tests that are references
 
-      ref.data = {
-         // For each category, include the following data:
-         //  reftimes: {testname -> duration}   reference time for each test
-         //  containers: [list of containers]  the lists of tests that were run
-         categories: {},
-         test_names: [
-            'fill',
-            'copy',
-            'cursor loop',
-            'for-of loop',
-            'count_if',
-            'find'
-         ],
-         repeat_count: data.repeat_count,
-         items_count: data.items_count
-      };
+   }
+
+   /**
+    * Get the list of categories and their attributes from the data generated
+    * by the tests.
+    * @return {array<Category>} the list of categories.
+    */
+   Category.compute = function() {
+      var result = [];
+      var seen = {};   // {name->Category}
 
       angular.forEach(data.tests, function(container) {
+         var cat = seen[container.category];
+         if (!cat) {
+            cat = seen[container.category] = new Category(container.category);
+            result.push(cat);
+         }
+
+         cat.containers.push(container);
+
          // Compute mean execution time for each tests
          angular.forEach(container.tests, function(test) {
             var g = 0.0;
@@ -58,49 +52,55 @@ factory('Reftime', function() {
             test.mean_duration = g / test.duration.length;
             test.cumulated = g;
          });
-
-         // Group data by category (these correspond to the various tables
-         // displayed in the output).
-         var e = container.category;
-         var cat = ref.data.categories[e];
-         if (!cat) {
-            cat = ref.data.categories[e] = {
-               reftimes: {},
-               containers: []};
-         }
-         cat.containers.push(container);
       });
 
-      this.set_reftimes();
-   }
+      angular.forEach(result, function(cat) {
+         var seen = {};  // Set of tests known for this category
+         var refs = {};  // Name -> test   the reference tests
+         var ref_test = undefined;  // Current ref test (a Test object)
 
-   /**
-    * Compute the reference times. For each category, the reference times
-    * are taken from the container whose 'base' attribute is equal to base
-    */
-   Reftime.prototype.set_reftimes = function() {
-      angular.forEach(this.data.categories, function(cat, catname) {
-         cat.reftimes = {};
-
-         // First container is the reference
-         var container = cat.containers[0];
-         angular.forEach(container.tests, function(test, name) {
-            cat.reftimes[name] = test;
+         angular.forEach(cat.containers, function(container) {
+            angular.forEach(container.tests, function(test, name) {
+               if (!seen[name]) {
+                  seen[name] = {};
+                  cat.test_names.push(name);
+               }
+               if (test.group) {
+                  cat.is_ref_test[name] = true;
+                  ref_test = refs[name];
+                  if (!ref_test) {
+                     ref_test = test;
+                     refs[name] = ref_test;
+                  }
+               }
+               test.ref = ref_test;
+            });
          });
       });
+
+      return result;
    };
+
+   /**
+    * This class is used to compute percents compared to various reference
+    * times.
+    */
+   function Reftime() {
+      this.data = {
+         categories: Category.compute(),  // list of Category
+         repeat_count: data.repeat_count,
+         items_count: data.items_count
+      };
+   }
 
    /**
     * Return the computed percent value for a given test
     */
    Reftime.prototype.compute_percent = function(test_name, test, category) {
-      var ref = test_name_to_reftime[test_name] || test_name;
-      var rt = this.data.categories[category].reftimes[ref];  //  ref time
-
+      var rt = test.ref;
       test.mean_percent = (
          (test.mean_duration / rt.mean_duration) * 100).toFixed(0);
-      test.mean_duration_str = (
-         test.mean_duration * 1000).toFixed(2);
+      test.mean_duration_str = (test.mean_duration * 1000).toFixed(2);
    };
 
    return new Reftime;
@@ -108,7 +108,6 @@ factory('Reftime', function() {
 
 controller('ResultsCtrl', function($scope, Reftime) {
    $scope.data = Reftime.data;  // from global variable
-   $scope.ref_test_names = ref_test_names;
 }).
 
 controller('HeaderCtrl', function(Reftime, $scope) {

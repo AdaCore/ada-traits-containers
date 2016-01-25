@@ -106,7 +106,7 @@ package Perf_Support is
    -- Tests --
    -----------
 
-   Items_Count : constant := 300_000;  -- untyped, for standard containers
+   Items_Count : constant := 250_000;  -- untyped, for standard containers
    Integer_Items_Count : constant Integer := Items_Count;
    pragma Export (C, Integer_Items_Count, "items_count");
    --  For some reason, using 600_000 results in a storage error when

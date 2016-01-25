@@ -42,7 +42,18 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type);
-   --  Make sure the vector is at least big enough to contain Capacity items.
+   --  Make sure the vector is at least big enough to contain Capacity items
+   --  (the vector must also be big enough to contain all its current
+   --  elements)
+   --  If you insert more items, the vector might be resized to a bigger
+   --  capacity (when using unbounded nodes, for instance).
+   --  If you remove items, a vector is never resized.
+   --  If you clear the vector, it's capacity is reset to 0 and memory is
+   --  freed if possible.
+
+   procedure Shrink_To_Fit (Self : in out Vector'Class);
+   --  Resize the vector to fit its number of elements. This might free
+   --  memory.
 
    function Length (Self : Vector'Class) return Count_Type
      with Inline => True, Global => null;
@@ -80,6 +91,8 @@ package Conts.Vectors.Generics with SPARK_Mode is
    procedure Delete_Last (Self : in out Vector'Class)
      with Global => null, Pre => not Self.Is_Empty;
    --  Remove the last element from the vector.
+   --  The vector is not resized, so it will keep its current capacity, for
+   --  efficient insertion of future elements. You can call Shrink_To_Fit
 
    function Last_Element (Self : Vector'Class) return Return_Type
      with Global => null, Pre => not Self.Is_Empty;
