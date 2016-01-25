@@ -11,20 +11,20 @@ flexibility it proposes:
   - [X] Bounded/Unbounded containers and even more variants suitable
         for use with the SPARK language.
 
-  - [X} Finite/Indefinite elements, and even more specialized
+  - [X] Finite/Indefinite elements, and even more specialized
         variants optimized for specific types
 
-  - [X} Pre and Post conditions, compatible with SPARK, so that some
+  - [X] Pre and Post conditions, compatible with SPARK, so that some
         variants of the containers can be proven.
 
-  - [X} Highly efficient; the user has full control over memory
+  - [X] Highly efficient; the user has full control over memory
         allocations, checks, locks, ...
 
 All this flexibility is done via the intentive use of generic
 packages, themselves used to instantiate other generic packages.
 
-Check the documentation for more details on the design of the API,
-and its current usage.
+Check the [documentation](doc/making_of.rst) for more details on the
+design of the API, and its current usage.
 
 ## Compiling
 
@@ -40,8 +40,7 @@ Compiling and running the testsuite requires that you also have a
 C++ compiler in your environment. In addition, you must install the
 Boost Graph Library (http://www.boost.org).
 
-Once this is done, modify the file
-AdaCore/ada-traits-containers/src/shared.gpr@master to modify the
+Once this is done, modify the [shared.gpr](src/shared.gpr) file.
 
 ```
    Boost_Include := "/usr/include";
@@ -53,5 +52,5 @@ variable. Finally, compile and run the test with
 make
 ```
 
-and finally open the file AdaCore/ada-traits-containers/index.html
+and finally open the file [index.html](index.html)
 in a browser to view the performance comparison.
