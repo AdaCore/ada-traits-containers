@@ -19,9 +19,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+pragma Ada_2012;
 with Perf_Support;    use Perf_Support;
 with QGen;            use QGen;
 with Report;          use Report;
+with System;
 
 --  Integer lists
 
@@ -67,7 +69,14 @@ with Vector_Controlled_Indef_Unbounded_Ref_String;
 with Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr;
 with Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr;
 
+--  Graphs
+
+with Custom_Graph;
+
 procedure Perf is
+   procedure Test_Cpp_Graph (Stdout : System.Address)
+      with Import, Convention => C, External_Name => "test_cpp_graph";
+
    Stdout : aliased Output;
    S      : constant access Output'Class := Stdout'Access;
 begin
@@ -120,6 +129,11 @@ begin
       Test_Cpp_Str_Str_Unordered_Map (Stdout'Address);
       Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr (S);
       Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr (S);
+   end if;
+
+   if True then
+      Test_Cpp_Graph (Stdout'Address);
+      Custom_Graph (S);
    end if;
 
    if True then

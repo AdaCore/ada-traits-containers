@@ -24,9 +24,8 @@ with Graph1_Support;     use Graph1_Support;
 with Conts.Graphs.DFS;
 with Report;             use Report;
 with Perf_Support;
-with System;
 
-procedure Graph1 is
+procedure Custom_Graph (Stdout : not null access Output'Class) is
    procedure DFS is new Conts.Graphs.DFS.Search
       (Custom_Graphs, My_Visitor, Color_Maps);
 
@@ -35,19 +34,13 @@ procedure Graph1 is
    procedure DFS is new Conts.Graphs.DFS.Search
       (Custom_Graphs, My_Visitor2, Color_Maps);
 
-   procedure Test_Cpp_Graph (Stdout : System.Address)
-      with Import, Convention => C, External_Name => "test_cpp_graph";
-
    V      : My_Visitor;
    V2     : My_Visitor2;
-   Stdout : aliased Report.Output;
 begin
-   Test_Cpp_Graph (Stdout'Address);
-
    Stdout.Start_Container_Test
-      (Base     => "controlled",
-       Elements => "definite",
-       Nodes    => "unbounded",
+      (Base     => "custom graph",
+       Elements => "",
+       Nodes    => "",
        Category => "Graph");
 
    for C in 1 .. Perf_Support.Repeat_Count loop
@@ -70,6 +63,4 @@ begin
    end loop;
 
    Stdout.End_Container_Test;
-
-   Stdout.Display;
-end Graph1;
+end Custom_Graph;
