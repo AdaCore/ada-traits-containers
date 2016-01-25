@@ -9,6 +9,9 @@ abstract project Shared is
 
    So_Ext := ".dylib";
 
+   Boost_Include := "/opt/local/include";
+   --  Install directory for Boost (for tests only)
+
    package Naming is
       for Implementation_Suffix ("C++") use ".cc";
    end Naming;
