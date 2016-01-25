@@ -78,6 +78,8 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
       type Stored_Array is private;
       function To_Stored (A : Array_Type) return Stored_Array with Inline;
       function To_Ref (S : Stored_Array) return Ref_Type with Inline;
+      function To_Element (R : Ref_Type) return Array_Type
+         is (R.Element.all) with Inline;
       function Copy (S : Stored_Array) return Stored_Array with Inline;
       procedure Release (S : in out Stored_Array) with Inline;
 
@@ -101,6 +103,7 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
        Return_Type         => Ref_Type,
        To_Stored           => Impl.To_Stored,
        To_Return           => Impl.To_Ref,
+       To_Element          => Impl.To_Element,
        Copy                => Impl.Copy,
        Release             => Impl.Release,
        Copyable            => False,   --  would create aliases

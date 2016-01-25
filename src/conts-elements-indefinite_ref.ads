@@ -52,6 +52,8 @@ package Conts.Elements.Indefinite_Ref with SPARK_Mode is
       is (new Element_Type'(E)) with Inline;
    function To_Ref (E : Element_Access) return Ref_Type
       is (Ref_Type'(Element => E)) with Inline;
+   function To_Element (E : Ref_Type) return Element_Type
+      is (E.Element.all) with Inline;
    function Copy (E : Element_Access) return Element_Access
       is (new Element_Type'(E.all)) with Inline;
    procedure Release (E : in out Element_Access) with Inline;
@@ -62,6 +64,7 @@ package Conts.Elements.Indefinite_Ref with SPARK_Mode is
        Return_Type         => Ref_Type,
        To_Stored           => To_Element_Access,
        To_Return           => To_Ref,
+       To_Element          => To_Element,
        Copy                => Copy,
        Release             => Release,
        Copyable            => False,   --  would create aliases

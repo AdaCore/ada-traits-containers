@@ -37,14 +37,15 @@ package Conts.Elements with SPARK_Mode is
       --  The type of elements stored internally. This must be unconstrained.
 
       type Return_Type (<>) is private;
-      --  The type of elements returned by getters. Various possibilities
-      --  exit: you could return an Element_Type (which might be big and thus
-      --  slow), a Stored_Element_Type (which might be an access type, and
-      --  thus unsafe), or a Reference type as introduced by Ada 2012. Other
-      --  variations are of course possible.
+      --  The type of elements returned by getters. Various possibilities exit:
+      --  you could return an Element_Type (which might be big and thus slow),
+      --  a Stored_Type (which might be an access type, and thus unsafe), or a
+      --  Reference type as introduced by Ada 2012. Other variations are of
+      --  course possible.
 
       with function To_Stored (E : Element_Type) return Stored_Type;
       with function To_Return (E : Stored_Type) return Return_Type;
+      with function To_Element (E : Return_Type) return Element_Type;
       --  Converting between the types
 
       with procedure Release (E : in out Stored_Type) is null;

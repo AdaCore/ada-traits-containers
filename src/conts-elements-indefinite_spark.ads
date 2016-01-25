@@ -38,6 +38,8 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
          with Inline;
       function To_Element_Type (E : Element_Access) return Element_Type
          with Inline;
+      function Identity (E : Element_Type) return Element_Type
+         is (E) with Inline;
       function Copy (E : Element_Access) return Element_Access with Inline;
       procedure Free (X : in out Element_Access);
    private
@@ -58,6 +60,7 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
        Return_Type         => Element_Type,
        To_Stored           => Impl.To_Element_Access,
        To_Return           => Impl.To_Element_Type,
+       To_Element          => Impl.Identity,
        Copy                => Impl.Copy,
        Copyable            => False,
        Movable             => False,

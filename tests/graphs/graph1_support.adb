@@ -24,6 +24,8 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Graph1_Support is
 
+   Output : constant Boolean := False;
+
    procedure Set_Color (G : in out Graph; V : Vertex; C : Color) is
    begin
       G.Colors (V) := C;
@@ -39,7 +41,9 @@ package body Graph1_Support is
    is
       pragma Unreferenced (Self, G);
    begin
-      Put_Line ("Initialize" & V'Img);
+      if Output then
+         Put_Line ("Initialize" & V'Img);
+      end if;
    end Initialize_Vertex;
 
    overriding procedure Start_Vertex
@@ -47,7 +51,9 @@ package body Graph1_Support is
    is
       pragma Unreferenced (Self, G);
    begin
-      Put_Line ("Start" & V'Img);
+      if Output then
+         Put_Line ("Start" & V'Img);
+      end if;
    end Start_Vertex;
 
    overriding procedure Finish_Vertex
@@ -55,7 +61,9 @@ package body Graph1_Support is
    is
       pragma Unreferenced (Self, G);
    begin
-      Put_Line ("Finish" & V'Img);
+      if Output then
+         Put_Line ("Finish" & V'Img);
+      end if;
    end Finish_Vertex;
 
    overriding procedure Discover_Vertex
@@ -63,7 +71,9 @@ package body Graph1_Support is
    is
       pragma Unreferenced (Self, G);
    begin
-      Put_Line ("Discover" & V'Img);
+      if Output then
+         Put_Line ("Discover" & V'Img);
+      end if;
    end Discover_Vertex;
 
    function First (G : Graph) return Vertex_Cursor is

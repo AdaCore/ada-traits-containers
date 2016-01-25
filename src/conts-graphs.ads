@@ -22,6 +22,7 @@
 pragma Ada_2012;
 
 with Conts.Cursors;
+with Conts.Elements;
 
 package Conts.Graphs is
 
@@ -86,14 +87,17 @@ package Conts.Graphs is
 
    generic
       type Graph (<>) is private;
-      type Vertex (<>) is private;
+      with package Vertices is new Conts.Elements.Traits (<>);
       type Edge (<>) is private;
-      Null_Vertex : Vertex;
+      Null_Vertex : Vertices.Element_Type;
 
-      with function Get_Target (G : Graph; E : Edge) return Vertex is <>;
+      with function Get_Target
+         (G : Graph; E : Edge) return Vertices.Element_Type is <>;
       --  Return the target of the edge.
 
    package Traits is
+      subtype Vertex is Vertices.Element_Type;
+
       package Color_Property_Maps is new Property_Maps (Graph, Vertex, Color);
 
       function Never_Stop (G : Graph; V : Vertex) return Boolean

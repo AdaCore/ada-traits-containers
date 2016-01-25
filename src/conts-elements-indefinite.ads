@@ -48,6 +48,8 @@ package Conts.Elements.Indefinite with SPARK_Mode is
       is (new Element_Type'(E)) with Inline;
    function To_Element (E : Element_Access) return Element_Type
       is (E.all) with Inline;
+   function Identity (E : Element_Type) return Element_Type
+      is (E) with Inline;
    function Copy (E : Element_Access) return Element_Access
       is (new Element_Type'(E.all)) with Inline;
    procedure Release (E : in out Element_Access) with Inline;
@@ -58,6 +60,7 @@ package Conts.Elements.Indefinite with SPARK_Mode is
        Return_Type         => Element_Type,
        To_Stored           => To_Element_Access,
        To_Return           => To_Element,
+       To_Element          => Identity,
        Copy                => Copy,
        Release             => Release,
        Copyable            => False,   --  would create aliases

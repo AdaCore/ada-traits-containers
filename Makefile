@@ -2,6 +2,8 @@ all:
 	@mkdir -p tests/generated
 	python ./generate_test.py
 	gprbuild -p -Ptests -j0
+
+run_test:
 	./tests/obj/perf
 
 # Check that our files are compatible with SPARK mode

@@ -51,6 +51,7 @@ package Conts.Elements.Definite with SPARK_Mode is
        Release       => Free,
        To_Stored     => Identity,
        To_Return     => Identity,
+       To_Element    => Identity,
        Copy          => Identity);
 
 end Conts.Elements.Definite;
