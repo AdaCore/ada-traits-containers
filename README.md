@@ -1,5 +1,5 @@
 
-# The Generic Ada Library for Algorithms and Containers
+# Generic Ada Library for Algorithms and Containers
 
 ## Goals
 
@@ -20,7 +20,7 @@ flexibility it proposes:
   - [X] Highly efficient; the user has full control over memory
         allocations, checks, locks, ...
 
-All this flexibility is done via the intentive use of generic
+All this flexibility is done via the intensive use of generic
 packages, themselves used to instantiate other generic packages.
 
 Check the [documentation](doc/making_of.rst) for more details on the
@@ -29,7 +29,7 @@ design of the API, and its current usage.
 ## Compiling
 
 The library itself is pure Ada code, and only requires a working
-compiler to be available in your environment.
+Ada compiler to be available in your environment.
 
 This library comes with a testsuite which measures the performance
 of the various variants of the containers, and compares them with
@@ -41,12 +41,14 @@ C++ compiler in your environment. In addition, you must install the
 Boost Graph Library (http://www.boost.org).
 
 Once this is done, modify the [shared.gpr](src/shared.gpr) file.
+Set the variable ```Boost_Include''' to point to the install prefix
+for Boost:
 
 ```
    Boost_Include := "/usr/include";
 ```
 
-variable. Finally, compile and run the test with
+Finally, compile and run the test with
 
 ```
 make
