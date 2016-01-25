@@ -198,3 +198,99 @@ This is however invalid for two reasons:
 
     That way, we have no code duplication, and yet have full preconditions
     for users who need them.
+
+The use of these containers in the context of SPARK imposes a minor changes
+compared to the API used for the standard Ada containers: we now need to
+pass the container explicitly in the cursor operations like `Next` and
+`Has_Element`, whereas these are not needed for standard Ada containers.
+This is so that the implementation does not need to store a pointer to the
+container inside the cursor, which could be unsafe.
+
+In practice, this makes the implementation cleaner and even faster since
+the cursor are lighter weight.
+
+Tasking
+-------
+
+Currently, the containers are not thread safe.
+
+There are various ideas on the subject though:
+
+   - a container that is written to from a single task, should be
+     safe to read from multiple tasks. This is not the case with the
+     standard Ada containers, since even in "read-only" mode they
+     still modify their tampering flags.
+
+   - we will likely introduce a new `Tasking_Policy` package to help
+     control locking of the data structure: the default implementation
+     would do nothing, providing maximum efficiency, but other
+     implementation could use locks implemented in different ways.
+
+   - Likewise, we could use atomic counters for reference-counted types,
+     and through a policy use standard integers if task-safety is not
+     an issue.
+
+Tagged types
+------------
+
+For the convenience of using the dot-notation for calling primitive operations,
+we are making all containers tagged types.
+
+However, they are not meant to be subclassed, and thus most operations are
+class-wide. This provides maximum efficient (no dynamic dispatching), and
+matches what is done in the C++ STL (no virtual methods).
+
+The cursors themselves are not tagged. All cursor operations take both the
+container and the cursor in parameter (to support bounded containers), and
+thus the container is used in the dot-notation call (Self.Has_Element (Pos)).
+
+One other advantage to tagged types is that this forces the instances to
+be passed by reference, and thus limits the number of implicit copies
+done when passing a container as a parameter to a subprogram.
+They do not avoid copies when a function returns a container though.
+
+Implementation Note: currently, the Iterable aspect requires primitive
+operations, which make it slow. It should be enhanced to accept class-wide
+operations instead, which would also remove a number of primitive operations
+on the container types.
+
+Controlled types
+----------------
+
+All standard Ada containers are controlled types. This is in general more
+convenient for the user, but is not compatible with SPARK.
+
+In this library, we do not force containers to be controlled. Instead, a
+generic formal parameter `Base_Type` is often provided to let users
+decide whether to use controlled types (with automatic copy and clear
+operations for instance), or limited types (which prevent the assignment
+iterator to avoid aliasing issues).
+
+Storage pools
+-------------
+
+ome packages need to perform memory allocation. In all such cases, we declare
+a formal generic package that provides the storage pools to use, so that users
+have ultimate control over memory allocation (for instance, the nodes packages
+themselves control how many allocations are taking place, and the storage pools
+control how they are actually performed).
+
+Rather than pass a single object of type access to Root_Storage_Pool'Class, we
+pass both a type for the storage pool, and an object access to that type. This
+is to avoid dynamic dispatching when calling the pool, since in some contexts
+like libadalang, with highly optimized pools, it has been shown that the cost
+of dispatching might become significant.
+
+The drawback is that a formal package parameter cannot have a default value
+(nor can a type, of course), so a user systematically has to provide a value.
+But this is only when using the low-level generic packages. When using the
+higher-level packages, they still simply take an Element_Type, and the
+storage_pool is always the default global pool.
+
+Example of use for custom pools:
+
+    - more efficient pool in some contexts
+
+    - persistent containers, by having a pool allocating a large buffer with
+      mmap, and then using this buffer when allocating small blocks.
+
