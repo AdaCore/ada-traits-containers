@@ -10,10 +10,13 @@ flexibility it proposes:
 
   - [X] Bounded/Unbounded containers and even more variants suitable
         for use with the SPARK language.
+
   - [X} Finite/Indefinite elements, and even more specialized
         variants optimized for specific types
+
   - [X} Pre and Post conditions, compatible with SPARK, so that some
         variants of the containers can be proven.
+
   - [X} Highly efficient; the user has full control over memory
         allocations, checks, locks, ...
 
@@ -42,13 +45,13 @@ AdaCore/ada-traits-containers/src/shared.gpr@master to modify the
 
 ```
    Boost_Include := "/usr/include";
-'''
+```
 
 variable. Finally, compile and run the test with
 
 ```
 make
-'''
+```
 
 and finally open the file AdaCore/ada-traits-containers/index.html
 in a browser to view the performance comparison.
