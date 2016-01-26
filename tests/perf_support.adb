@@ -41,7 +41,7 @@ package body Perf_Support is
    -- Test_Arrays_Int --
    ---------------------
 
-   procedure Test_Arrays_Int (Stdout : access Output'Class) is
+   procedure Test_Arrays_Int (Stdout : not null access Output'Class) is
       type Int_Array is array (Integer range <>) of Integer;
       package Adaptors is new Array_Adaptors
          (Index_Type   => Integer,

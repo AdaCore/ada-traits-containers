@@ -22,4 +22,6 @@
 pragma Ada_2012;
 with Report;             use Report;
 
-procedure Custom_Graph (Stdout : not null access Output'Class);
+package Custom_Graph is
+   procedure Test (Stdout : not null access Output'Class);
+end Custom_Graph;

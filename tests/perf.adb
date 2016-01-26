@@ -20,9 +20,13 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-with Perf_Support;    use Perf_Support;
-with QGen;            use QGen;
-with Report;          use Report;
+with Ada.Command_Line; use Ada.Command_Line;
+with Ada.Text_IO;      use Ada.Text_IO;
+with GNAT.Strings;     use GNAT.Strings;
+with GNATCOLL.Utils;   use GNATCOLL.Utils;
+with Perf_Support;     use Perf_Support;
+with QGen;             use QGen;
+with Report;           use Report;
 with System;
 
 --  Integer lists
@@ -77,68 +81,122 @@ procedure Perf is
    procedure Test_Cpp_Graph (Stdout : System.Address)
       with Import, Convention => C, External_Name => "test_cpp_graph";
 
+   Test_Name : String_Access;
    Stdout : aliased Output;
-   S      : constant access Output'Class := Stdout'Access;
+
+   type CPP_Test is not null access procedure (S : System.Address)
+      with Convention => C;
+
+   procedure Run_Test
+      (Name : String;
+       Proc : not null access procedure (S : not null access Output'Class));
+   procedure Run_Test (Name : String; Proc : CPP_Test);
+   --  Run a test if the command line arguments allow it
+
+   procedure Run_Test
+      (Name : String;
+       Proc : not null access procedure (S : not null access Output'Class)) is
+   begin
+      if Test_Name = null
+         or else Starts_With (Name, Test_Name.all)
+      then
+         Put_Line ("Run " & Name);
+         Proc (Stdout'Access);
+      end if;
+   end Run_Test;
+
+   procedure Run_Test (Name : String; Proc : CPP_Test) is
+   begin
+      if Test_Name = null
+         or else Starts_With (Name, Test_Name.all)
+      then
+         Put_Line ("Run " & Name);
+         Proc (Stdout'Address);
+      end if;
+   end Run_Test;
+
 begin
-   if True then
-      Test_Cpp_Int_List (Stdout'Address);
-      List_Ada12_Def_Bounded_Integer (S);
-      List_Ada12_Def_Unbounded_Integer (S);
-      List_Ada12_No_Checks_Def_Unbounded_Integer (S);
-      List_Ada12_Indef_Unbounded_Integer (S);
-      List_Controlled_Indef_Unbounded_Integer (S);
-      List_Controlled_Def_Unbounded_Integer (S);
-      List_Controlled_Def_Bounded_Integer (S);
-      List_Limited_Def_Bounded_Integer (S);
-      List_Limited_Indef_Spark_Unbounded_Spark_Integer (S);
+   if Ada.Command_Line.Argument_Count >= 1 then
+      Test_Name := new String'(Ada.Command_Line.Argument (1));
    end if;
 
-   if True then
-      Test_Cpp_Str_List (Stdout'Address);
-      List_Ada12_Indef_Unbounded_String (S);
-      List_Ada12_No_Checks_Indef_Unbounded_String (S);
-      List_Controlled_Indef_Unbounded_String (S);
-      List_Controlled_Indef_Unbounded_Ref_String (S);
-      List_Controlled_Def_Unbounded_Unbounded_String (S);
-      List_Controlled_Arrays_Unbounded_String (S);
-   end if;
+   Run_Test ("int_list_c++", Test_Cpp_Int_List'Access);
+   Run_Test ("int_list_ada_def_bounded",
+             List_Ada12_Def_Bounded_Integer'Access);
+   Run_Test ("int_list_ada_def_unbounded",
+             List_Ada12_Def_Unbounded_Integer'Access);
+   Run_Test ("int_list_ada_def_unbounded_nochecks",
+             List_Ada12_No_Checks_Def_Unbounded_Integer'Access);
+   Run_Test ("int_list_ada_indef_unbounded",
+             List_Ada12_Indef_Unbounded_Integer'Access);
+   Run_Test ("int_list_controlled_indef_unbounded",
+             List_Controlled_Indef_Unbounded_Integer'Access);
+   Run_Test ("int_list_controlled_def_unbounded",
+             List_Controlled_Def_Unbounded_Integer'Access);
+   Run_Test ("int_list_controlled_def_bounded",
+             List_Controlled_Def_Bounded_Integer'Access);
+   Run_Test ("int_list_limited_def_bounded",
+             List_Limited_Def_Bounded_Integer'Access);
+   Run_Test ("int_list_spark_indef_unbounded",
+             List_Limited_Indef_Spark_Unbounded_Spark_Integer'Access);
 
-   if True then
-      Test_Cpp_Int_Vector (Stdout'Address);
-      Test_Arrays_Int (S);
-      Vector_Ada12_Def_Bounded_Integer (S);
-      Vector_Ada12_Def_Unbounded_Integer (S);
-      Vector_Ada12_No_Checks_Def_Unbounded_Integer (S);
-      Vector_Ada12_Indef_Unbounded_Integer (S);
-      Vector_Controlled_Indef_Unbounded_Integer (S);
-      Vector_Controlled_Def_Unbounded_Integer (S);
-      Vector_Controlled_Def_Bounded_Integer (S);
-      Vector_Limited_Def_Bounded_Integer (S);
-   end if;
+   Run_Test ("str_list_c++", Test_Cpp_Str_List'Access);
+   Run_Test ("str_list_ada_indef_unbounded",
+             List_Ada12_Indef_Unbounded_String'Access);
+   Run_Test ("str_list_ada_indef_unbounded_nochecks",
+             List_Ada12_No_Checks_Indef_Unbounded_String'Access);
+   Run_Test ("str_list_controlled_indef_unbounded",
+             List_Controlled_Indef_Unbounded_String'Access);
+   Run_Test ("str_list_controlled_indef_unbounded_ref",
+             List_Controlled_Indef_Unbounded_Ref_String'Access);
+   Run_Test ("str_list_controlled_def_unbounded_ustr",
+             List_Controlled_Def_Unbounded_Unbounded_String'Access);
+   Run_Test ("str_list_controlled_arrays_ustr",
+             List_Controlled_Arrays_Unbounded_String'Access);
 
-   if True then
-      Test_Cpp_Str_Vector (Stdout'Address);
-      Vector_Ada12_Indef_Unbounded_String (S);
-      Vector_Ada12_No_Checks_Indef_Unbounded_String (S);
-      Vector_Controlled_Indef_Unbounded_String (S);
-      Vector_Controlled_Indef_Unbounded_Ref_String (S);
-   end if;
+   Run_Test ("int_vector_c++", Test_Cpp_Int_Vector'Access);
+   Run_Test ("int_vector_ada_arrays", Test_Arrays_Int'Access);
+   Run_Test ("int_vector_ada_def_bounded",
+             Vector_Ada12_Def_Bounded_Integer'Access);
+   Run_Test ("int_vector_ada_def_unbounded",
+             Vector_Ada12_Def_Unbounded_Integer'Access);
+   Run_Test ("int_vector_ada_def_unbounded_nochecks",
+             Vector_Ada12_No_Checks_Def_Unbounded_Integer'Access);
+   Run_Test ("int_vector_ada_indef_unbounded",
+             Vector_Ada12_Indef_Unbounded_Integer'Access);
+   Run_Test ("int_vector_controlled_indef_unbounded",
+             Vector_Controlled_Indef_Unbounded_Integer'Access);
+   Run_Test ("int_vector_controlled_def_unbounded",
+             Vector_Controlled_Def_Unbounded_Integer'Access);
+   Run_Test ("int_vector_controlled_def_bounded",
+             Vector_Controlled_Def_Bounded_Integer'Access);
+   Run_Test ("int_vector_limited_def_bounded",
+             Vector_Limited_Def_Bounded_Integer'Access);
 
-   if True then
-      Test_Cpp_Str_Str_Map (Stdout'Address);
-      Test_Cpp_Str_Str_Unordered_Map (Stdout'Address);
-      Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr (S);
-      Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr (S);
-   end if;
+   Run_Test ("str_vector_c++", Test_Cpp_Str_Vector'Access);
+   Run_Test ("str_vector_ada_indef_unbounded",
+             Vector_Ada12_Indef_Unbounded_String'Access);
+   Run_Test ("str_vector_ada_indef_unbounded_nochecks",
+             Vector_Ada12_No_Checks_Indef_Unbounded_String'Access);
+   Run_Test ("str_vector_controlled_indef_unbounded",
+             Vector_Controlled_Indef_Unbounded_String'Access);
+   Run_Test ("str_vector_controlled_indef_unbounded_ref",
+             Vector_Controlled_Indef_Unbounded_Ref_String'Access);
 
-   if True then
-      Test_Cpp_Graph (Stdout'Address);
-      Custom_Graph (S);
-   end if;
+   Run_Test ("strstr_map_c++", Test_Cpp_Str_Str_Map'Access);
+   Run_Test ("strstr_map_c++_unordered",
+             Test_Cpp_Str_Str_Unordered_Map'Access);
+   Run_Test ("strstr_map_ada_ordered_indef_indef",
+             Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr'Access);
+   Run_Test ("strstr_map_ada_hashed_indef_indef",
+             Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr'Access);
 
-   if True then
-      Test_QGen;
-   end if;
+   Run_Test ("graph_c++", Test_Cpp_Graph'Access);
+   Run_Test ("graph_ada_custom", Custom_Graph.Test'Access);
+
+   Test_QGen;
 
    Stdout.Display;
+
+   Free (Test_Name);
 end Perf;

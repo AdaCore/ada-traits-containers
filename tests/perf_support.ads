@@ -141,7 +141,7 @@ package Perf_Support is
           External_Name => "test_cpp_str_str_unordered_map";
    --  Perform C++ testing
 
-   procedure Test_Arrays_Int (Stdout : access Output'Class);
+   procedure Test_Arrays_Int (Stdout : not null access Output'Class);
    --  Test standard Ada arrays
 
 end Perf_Support;

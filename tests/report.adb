@@ -81,8 +81,6 @@ package body Report is
 
       Memory.Pause;
 
-      Put_Line ("Test for " & Base & " " & Elements & " " & Nodes);
-
       Self.Container_Test := GNATCOLL.JSON.Create_Object;
       Append (Self.All_Tests, Self.Container_Test);
       Self.Container_Test.Set_Field ("base", Base);

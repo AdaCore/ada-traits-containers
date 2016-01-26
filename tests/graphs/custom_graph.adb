@@ -25,42 +25,44 @@ with Conts.Graphs.DFS;
 with Report;             use Report;
 with Perf_Support;
 
-procedure Custom_Graph (Stdout : not null access Output'Class) is
-   procedure DFS is new Conts.Graphs.DFS.Search
-      (Custom_Graphs, My_Visitor, Color_Maps);
+package body Custom_Graph is
+   procedure Test (Stdout : not null access Output'Class) is
+      procedure DFS is new Conts.Graphs.DFS.Search
+         (Custom_Graphs, My_Visitor, Color_Maps);
 
-   procedure Recursive_DFS is new Conts.Graphs.DFS.Recursive_Search
-      (Custom_Graphs, My_Visitor2, Color_Maps);
-   procedure DFS is new Conts.Graphs.DFS.Search
-      (Custom_Graphs, My_Visitor2, Color_Maps);
+      procedure Recursive_DFS is new Conts.Graphs.DFS.Recursive_Search
+         (Custom_Graphs, My_Visitor2, Color_Maps);
+      procedure DFS is new Conts.Graphs.DFS.Search
+         (Custom_Graphs, My_Visitor2, Color_Maps);
 
-   V      : My_Visitor;
-   V2     : My_Visitor2;
-begin
-   Stdout.Start_Container_Test
-      (Base     => "custom graph",
-       Elements => "",
-       Nodes    => "",
-       Category => "Graph");
+      V      : My_Visitor;
+      V2     : My_Visitor2;
+   begin
+      Stdout.Start_Container_Test
+         (Base     => "custom graph",
+          Elements => "",
+          Nodes    => "",
+          Category => "Graph");
 
-   for C in 1 .. Perf_Support.Repeat_Count loop
-      declare
-         G     : Graph;
-      begin
-         Stdout.Save_Container_Size (G'Size / 8);
-         Stdout.Start_Test ("dfs, no visitor", Start_Group => True);
-         DFS (G, V, 3);
-         Stdout.End_Test;
+      for C in 1 .. Perf_Support.Repeat_Count loop
+         declare
+            G     : Graph;
+         begin
+            Stdout.Save_Container_Size (G'Size / 8);
+            Stdout.Start_Test ("dfs, no visitor", Start_Group => True);
+            DFS (G, V, 3);
+            Stdout.End_Test;
 
-         Stdout.Start_Test ("dfs, visitor");
-         DFS (G, V2);
-         Stdout.End_Test;
+            Stdout.Start_Test ("dfs, visitor");
+            DFS (G, V2);
+            Stdout.End_Test;
 
-         Stdout.Start_Test ("dfs-recursive, visitor");
-         Recursive_DFS (G, V2);
-         Stdout.End_Test;
-      end;
-   end loop;
+            Stdout.Start_Test ("dfs-recursive, visitor");
+            Recursive_DFS (G, V2);
+            Stdout.End_Test;
+         end;
+      end loop;
 
-   Stdout.End_Container_Test;
+      Stdout.End_Container_Test;
+   end Test;
 end Custom_Graph;

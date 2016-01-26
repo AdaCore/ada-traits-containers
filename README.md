@@ -40,6 +40,9 @@ Compiling and running the testsuite requires that you also have a
 C++ compiler in your environment. In addition, you must install the
 Boost Graph Library (http://www.boost.org).
 
+You must also download and install the
+[GNAT Components Collection](http://libre.adacore.com).
+
 Once this is done, modify the [shared.gpr](src/shared.gpr) file.
 Set the variable ```Boost_Include''' to point to the install prefix
 for Boost:

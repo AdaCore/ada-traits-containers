@@ -3,6 +3,11 @@ all:
 	python ./generate_test.py
 	gprbuild -m -p -Ptests -j0
 
+debug:
+	@mkdir -p tests/generated
+	python ./generate_test.py
+	gprbuild -m -p -Ptests -j0 -XBUILD=Debug
+
 run_test:
 	./tests/obj/perf
 
