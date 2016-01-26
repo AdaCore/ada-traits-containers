@@ -24,17 +24,6 @@ pragma Ada_2012;
 package body Conts.Vectors.Generics is
    use Conts.Vectors.Nodes;
 
-   --------------
-   -- To_Count --
-   --------------
-
-   function To_Count (Idx : Index_Type) return Count_Type
-     is (Count_Type
-         (Min_Index
-          + Count_Type'Base (Idx)
-          - Count_Type'Base (Index_Type'First)))
-     with Inline;
-
    ----------------------
    -- Reserve_Capacity --
    ----------------------
@@ -132,6 +121,22 @@ package body Conts.Vectors.Generics is
       Self.Last := Min_Index - 1;
    end Clear;
 
+   ------------
+   -- Delete --
+   ------------
+
+   procedure Delete (Self : in out Vector'Class; Index : Index_Type) is
+      Idx : constant Count_Type := To_Count (Index);
+   begin
+      Nodes.Release_Element (Self, Idx);
+      Nodes.Copy
+        (Self, Source => Self,
+         Source_From  => Idx + 1,
+         Source_To    => Self.Last,
+         Self_From    => Idx);
+      Self.Last := Self.Last - 1;
+   end Delete;
+
    -----------------
    -- Delete_Last --
    -----------------
@@ -187,7 +192,9 @@ package body Conts.Vectors.Generics is
    -----------------
 
    function Has_Element
-     (Self : Vector'Class; Position : Cursor) return Boolean is
+     (Self : Vector'Class; Position : Cursor) return Boolean
+   is
+      pragma Unreferenced (Self);
    begin
       return Position /= No_Element;
    end Has_Element;

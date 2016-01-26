@@ -34,6 +34,13 @@ package body Conts.Vectors.Nodes.Unbounded is
         (System.Address, Nodes_Array_Access);
       pragma Warnings (On);
 
+      procedure Internal_Copy
+        (Self                   : Nodes_Array_Access;
+         Source                 : Nodes_Array_Access;
+         Source_From, Source_To : Count_Type;
+         Self_From              : Count_Type) with Inline;
+      --  Internal version of Copy, directly applying on an array
+
       ---------------------
       -- Release_Element --
       ---------------------
@@ -56,35 +63,62 @@ package body Conts.Vectors.Nodes.Unbounded is
          Self.Nodes (Index) := Element;
       end Set_Element;
 
+      -------------------
+      -- Internal_Copy --
+      -------------------
+
+      procedure Internal_Copy
+        (Self                   : Nodes_Array_Access;
+         Source                 : Nodes_Array_Access;
+         Source_From, Source_To : Count_Type;
+         Self_From              : Count_Type) is
+      begin
+         if Elements.Copyable then
+            Self (Self_From .. Self_From + Source_To - Source_From) :=
+              Source (Source_From .. Source_To);
+         else
+            for J in Source_From .. Source_To loop
+               Self (Self_From + J - Source_From) :=
+                 Elements.Copy (Source (J));
+            end loop;
+         end if;
+      end Internal_Copy;
+
       ------------
       -- Assign --
       ------------
 
       procedure Assign
-        (Self     : in out Container'Class;
-         Source   : Container'Class;
-         Last     : Count_Type)
+        (Self                : in out Container'Class;
+         Source              : Container'Class;
+         Last                : Count_Type)
       is
-         S : constant size_t := size_t
-           (Source.Capacity * Source.Nodes'Component_Size
+         S   : constant size_t := size_t
+           (Source.Capacity * Big_Nodes_Array'Component_Size
             / System.Storage_Unit);
 
          --  Use a temporary vector in case Self is the same as Source
          Tmp : Nodes_Array_Access;
       begin
          Tmp := Convert (System.Memory.Alloc (S));
-
-         if Elements.Copyable then
-            Tmp (Min_Index .. Last) := Source.Nodes (Min_Index .. Last);
-         else
-            for J in Min_Index .. Last loop
-               Tmp (J) := Elements.Copy (Source.Nodes (J));
-            end loop;
-         end if;
-
+         Internal_Copy (Tmp, Source.Nodes, Min_Index, Last, Min_Index);
          Self.Nodes := Tmp;
          Self.Capacity := Source.Capacity;
       end Assign;
+
+      ----------
+      -- Copy --
+      ----------
+
+      procedure Copy
+        (Self                   : in out Container'Class;
+         Source                 : Container'Class;
+         Source_From, Source_To : Count_Type;
+         Self_From              : Count_Type) is
+      begin
+         Internal_Copy
+           (Self.Nodes, Source.Nodes, Source_From, Source_To, Self_From);
+      end Copy;
 
       ------------
       -- Resize --
@@ -116,7 +150,7 @@ package body Conts.Vectors.Nodes.Unbounded is
                Self.Nodes := null;
             else
                S := size_t
-                 (Size * Self.Nodes'Component_Size / System.Storage_Unit);
+                 (Size * Big_Nodes_Array'Component_Size / System.Storage_Unit);
 
                if Self.Nodes = null then
                   Self.Nodes := Convert (System.Memory.Alloc (S));

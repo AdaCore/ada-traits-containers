@@ -49,9 +49,14 @@ package Conts.Vectors.Nodes.Bounded with SPARK_Mode is
         (Self  : Container'Class;
          Index : Count_Type) return Elements.Stored_Type with Inline;
       procedure Assign
-        (Self     : in out Container'Class;
-         Source   : Container'Class;
-         Last     : Count_Type);
+        (Self                : in out Container'Class;
+         Source              : Container'Class;
+         Last                : Count_Type);
+      procedure Copy
+        (Self                   : in out Container'Class;
+         Source                 : Container'Class;
+         Source_From, Source_To : Count_Type;
+         Self_From              : Count_Type) with Inline;
 
    private
       type Elem_Array is array (Count_Type range <>) of Elements.Stored_Type;
@@ -75,6 +80,7 @@ package Conts.Vectors.Nodes.Bounded with SPARK_Mode is
       Release_Element  => Impl.Release_Element,
       Set_Element      => Impl.Set_Element,
       Get_Element      => Impl.Get_Element,
-      Assign           => Impl.Assign);
+      Assign           => Impl.Assign,
+      Copy             => Impl.Copy);
 
 end Conts.Vectors.Nodes.Bounded;

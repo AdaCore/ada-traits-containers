@@ -48,11 +48,15 @@ package Conts.Vectors.Nodes.Unbounded with SPARK_Mode is
         (Self    : in out Container'Class;
          Index   : Count_Type;
          Element : Elements.Stored_Type) with Inline;
+      procedure Copy
+        (Self                   : in out Container'Class;
+         Source                 : Container'Class;
+         Source_From, Source_To : Count_Type;
+         Self_From              : Count_Type) with Inline;
       procedure Assign
-        (Self     : in out Container'Class;
-         Source   : Container'Class;
-         Last     : Count_Type);
-
+        (Self                : in out Container'Class;
+         Source              : Container'Class;
+         Last                : Count_Type);
       procedure Resize
         (Self     : in out Container'Class;
          New_Size : Count_Type;
@@ -95,6 +99,7 @@ package Conts.Vectors.Nodes.Unbounded with SPARK_Mode is
       Release          => Impl.Release,
       Set_Element      => Impl.Set_Element,
       Get_Element      => Impl.Get_Element,
-      Assign           => Impl.Assign);
+      Assign           => Impl.Assign,
+      Copy             => Impl.Copy);
 
 end Conts.Vectors.Nodes.Unbounded;

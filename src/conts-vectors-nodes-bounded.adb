@@ -20,7 +20,6 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-with System;       use System;
 
 package body Conts.Vectors.Nodes.Bounded with SPARK_Mode is
 
@@ -57,23 +56,33 @@ package body Conts.Vectors.Nodes.Bounded with SPARK_Mode is
       ------------
 
       procedure Assign
-        (Self     : in out Container'Class;
-         Source   : Container'Class;
-         Last     : Count_Type)
-      is
+        (Self                : in out Container'Class;
+         Source              : Container'Class;
+         Last                : Count_Type) is
+      begin
+         Copy (Self, Source, Min_Index, Last, Min_Index);
+      end Assign;
+
+      ----------
+      -- Copy --
+      ----------
+
+      procedure Copy
+        (Self                   : in out Container'Class;
+         Source                 : Container'Class;
+         Source_From, Source_To : Count_Type;
+         Self_From              : Count_Type) is
       begin
          if Elements.Copyable then
-            --  We might have nothing to do
-            if Self'Address /= Source'Address then
-               Self.Nodes (Min_Index .. Last) :=
-                 Source.Nodes (Min_Index .. Last);
-            end if;
+            Self.Nodes (Self_From .. Self_From + Source_To - Source_From) :=
+              Source.Nodes (Source_From .. Source_To);
          else
-            for J in Min_Index .. Last loop
-               Self.Nodes (J) := Elements.Copy (Source.Nodes (J));
+            for J in Source_From .. Source_To loop
+               Self.Nodes (Self_From + J - Source_From) :=
+                 Elements.Copy (Source.Nodes (J));
             end loop;
          end if;
-      end Assign;
+      end Copy;
    end Impl;
 
 end Conts.Vectors.Nodes.Bounded;

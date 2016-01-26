@@ -99,13 +99,25 @@ package Conts.Vectors.Nodes with SPARK_Mode is
       --  Pos will always be a valid position within Self.
 
       with procedure Assign
-         (Self     : in out Container'Class;
-          Source   : Container'Class;
-          Last     : Count_Type) is <>;
+        (Self                : in out Container'Class;
+         Source              : Container'Class;
+         Last                : Count_Type) is <>;
       --  Replace all nodes Min_Index..Last in Nodes with a copy
       --  of the nodes in Source. The elements themselves are copied (via
       --  Elements.Copy).
-      --  Self might be the same as Source, this neesd to be handled correctly
+      --  Self might be the same as Source, this needs to be handled correctly
+      --  since this is used when calling Adjust for controlled containers.
+
+      with procedure Copy
+        (Self                   : in out Container'Class;
+         Source                 : Container'Class;
+         Source_From, Source_To : Count_Type;
+         Self_From              : Count_Type) is <>;
+      --  Copy elements from Source (Source_From..Source_To) to
+      --  Self (Self_From .. *).
+      --  Copying might be optimized depending on the element traits
+      --  attributes. This procedure assumes that Self is large enough to
+      --  contain the elements.
 
    package Traits with SPARK_Mode is
    end Traits;

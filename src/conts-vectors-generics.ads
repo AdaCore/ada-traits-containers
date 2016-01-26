@@ -40,6 +40,10 @@ package Conts.Vectors.Generics with SPARK_Mode is
    type Cursor is private;
    No_Element : constant Cursor;
 
+   function To_Count (Idx : Index_Type) return Count_Type with Inline;
+   --  Converts from an index type to an index into the actual underlying
+   --  array.
+
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type);
    --  Make sure the vector is at least big enough to contain Capacity items
@@ -87,6 +91,13 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    procedure Clear (Self : in out Vector'Class);
    --  Remove all contents from the vector.
+
+   procedure Delete (Self : in out Vector'Class; Index : Index_Type)
+     with Pre => Self.Length >= To_Count (Index);
+   --  Remove an element from the vector.
+   --  Unless you are removing the last element (see Delete_Last), this is an
+   --  inefficient operation since it needs to copy all the elements after
+   --  the one being removed.
 
    procedure Delete_Last (Self : in out Vector'Class)
      with Global => null, Pre => not Self.Is_Empty;
@@ -156,6 +167,12 @@ private
    procedure Finalize (Self : in out Vector);
    --  In case the list is a controlled type, but irrelevant when Self
    --  is not controlled.
+
+   function To_Count (Idx : Index_Type) return Count_Type
+   is (Count_Type
+       (Conts.Vectors.Nodes.Min_Index
+        + Count_Type'Base (Idx)
+        - Count_Type'Base (Index_Type'First)));
 
    type Cursor is record
       Index   : Count_Type;
