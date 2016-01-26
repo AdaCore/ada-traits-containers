@@ -1,0 +1,176 @@
+TODO -*- mode: org -*-
+#+TAGS: PERFORMANCE(p) SPARK(s)
+#+TODO: TODO MAYBE DONE
+
+This is a TODO list for the containers library. Not all ideas will be
+implemented, most likely, but this is a good list of candidates.
+Open with Emacs to use the org-mode for easier editing, although this
+can be edited with any text editor.
+
+* General organization of packages
+
+** TODO Decide on whether to use /Traits/ or /Policy/ for the name of packages
+   'Policy' templates is the term used in C++ (see
+    https://en.wikipedia.org/wiki/Policy-based_design), and that seems closest
+    to what we are doing here in practice. A policy is used to inject behavior
+    in a parent class, typically through inheritance.  Any time some design
+    choice has to be made when implementing an algorithm, then that choice
+    should be abstracted in its own policy template. Then the algorithm can be
+    used with any version of the policy template, so that it can be used with
+    all possible design choices (eventually).
+
+** MAYBE Merge packages (=conts.vectors= and =conts.vectors.nodes= for instance)
+   Would limit the number of with clauses in user code.
+
+** MAYBE Use expression functions in private part rather than in the body
+   Would this help the compiler inline functions ?
+
+** TODO Replace storage_pools package with higher-level package
+   For unbounded vectors, for instance, we want to use directly =System.Memory=
+   so that we can also use =realloc=. This is not compatible with storage
+   pools, so it would be more convenient to have another traits package, for
+   which one of the implementations would be storage pools.
+   However, storage pools are used because then we can use the "new" operator
+   directly.
+
+** TODO Implement =Checks_Policy= package to add extra checks
+   This could also be used to match the semantics of the Ada2012 containers.
+
+** TODO reference-counted containers
+   These would support copy-on-write, and would be efficient by avoiding a
+   number of copies. They also avoid the limitation of the standard Ada
+   containers (see M124-015 below).
+   QT provides copy-on-write: when a type is movable, they use realloc,
+   by increments of page size (4096 bytes), since modern operating systems will
+   not copy the memory in such case, but simply reorder the pages and only the
+   first and last page are copied.
+
+** TODO Test that the package work well when not using =use= clauses
+** TODO Implement the standard Ada containers on top of these
+   We will likely need a =Check_Policy= formal parameter.
+
+** TODO use =Variable_Indexing= aspect on containers
+   So that we can use =Vec(2)= directly
+
+
+* Algorithms
+
+** TODO =Shuffle=
+   Random permutation of random-access data structures
+
+** TODO =Contains=
+   Check whether a container contains a specific item
+
+** MAYBE Should we have a version of the algorithms with two cursors as input ?
+   This should allow working on a subset of a container. The second cursor
+   might be, as in C++, past the last element of the sequence, to simplify the
+   handling of containers like forward-lists.
+
+
+* Lists
+
+** TODO Implement single-linked lists
+   They are much more efficient when they satisfy the user need, as experiments
+   showed.
+
+** TODO Implement =Conts.List.Nodes.Unbounded_SPARK= as a vector
+   This would avoid code duplication
+
+** MAYBE Implement a version of =Nodes= that perform database queries ?
+   This would let users manipulate a database as if they were manipulating
+   a list
+
+
+* Queues
+
+** TODO Implement,as  restricted version of =Vector=
+
+* Stacks
+
+** TODO Implement, circular and restricted version of =Vector=
+
+* Vectors
+
+** TODO circular buffer with Prepend operation
+
+* Maps
+
+** MAYBE QT uses skip-lists instead of red-black-trees
+   The former results in less code and uses less memory per node.
+
+
+* Graphs
+
+** MAYBE Make color map part of Incidence_Graph_Traits
+   This might avoid passing it separately to DFS, avoid repetition when users
+   need to instantiate multiple algorithms, and perhaps allow us to merge the
+   two versions of DFS together.
+** TODO Implement graph data structures
+** MAYBE Graph layout algorithms (see the one in =Gtkada.Canvas_View=)
+** TODO Remove or replace =Glib.Graphs= with our generic implementation
+
+** TODO Remove recursive dfs. Is only used for performance testing
+
+* Priority queues
+
+* Other data structures
+
+** Perhaps a state machine ? (see the one in XML/Ada)
+
+** Perhaps a strings package (so that we can use the algorithms on strings)
+   This package would be a wrapper for the various subprograms we have all
+   other the place for strings. Supports unicode.
+
+* Testing
+
+** TODO Check that =Copy= works fine in particular for lists
+
+* Documentation
+
+** TODO Document property maps
+
+** TODO Document missing default values for generic formal packages
+   Since it is not possible to provide default values for formal packages, we
+   have to limit their number when possible.
+
+* Limitations of standard Ada containers
+** Dangling cursors (M124-015)
+      declare
+         C : Cursor := My_Function.First;
+      begin
+         ... C references deallocated memory since My_Function's result
+         ... has been finalized
+
+
+* Links to other libraries
+** Stephe's Ada Library
+http://www.sigada.org/ada_letters/sept2004/sal_ada_letters_2004.pdf
+
+** Ada Standard Generic Library
+http://www1.cs.columbia.edu/dcc/nestor/presentations/SGL/akonstan-SGL.pdf
+
+** Dynamic arrays (with gaps)
+http://en.m.wikipedia.org/wiki/Dynamic_array
+http://java.dzone.com/articles/gaplist-%E2%80%93-lightning-fast-list
+
+** Stree
+http://www.codeproject.com/Articles/27799/Stree-A-fast-std-map-and-std-set-replacement
+
+** CGAL
+http://doc.cgal.org/latest/Manual/packages.html
+
+** Unrolled linked lists
+http://en.m.wikipedia.org/wiki/Unrolled_linked_list
+
+** Smart Pointers
+http://ootips.org/yonat/4dev/smart-pointers.html
+
+* org-mode help
+  *bold* /italic/ _underlined_  =code= ~verbatim~
+  See http://orgmode.org/worg/org-tutorials/org4beginners.html
+
+#+BEGIN_SRC python
+   def foo:
+      if a:
+         pass
+#END_SRC
