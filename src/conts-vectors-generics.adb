@@ -46,6 +46,29 @@ package body Conts.Vectors.Generics is
    end Shrink_To_Fit;
 
    ------------
+   -- Resize --
+   ------------
+
+   procedure Resize
+     (Self    : in out Vector'Class;
+      Length  : Index_Type;
+      Element : Nodes.Elements.Element_Type)
+   is
+      Old_L : constant Count_Type := Self.Length;
+      L     : constant Count_Type := To_Count (Length);
+   begin
+      if L < Old_L then
+         for J in L + 1 .. Old_L loop
+            Nodes.Release_Element (Self, J);
+         end loop;
+         Self.Last := L;
+
+      elsif L > Old_L then
+         Self.Append (Element, Count => L - Old_L);
+      end if;
+   end Resize;
+
+   ------------
    -- Length --
    ------------
 
@@ -76,12 +99,8 @@ package body Conts.Vectors.Generics is
    is
       Pos : constant Count_Type := To_Count (Index);
    begin
-      --  ??? This extra check is only necessary for safety, can we move it to
-      --  a Check_Policy package ?
-      if Pos < Self.Last then
-         Nodes.Release_Element (Self, Pos);
-         Nodes.Set_Element (Self, Pos, Nodes.Elements.To_Stored (New_Item));
-      end if;
+      Nodes.Release_Element (Self, Pos);
+      Nodes.Set_Element (Self, Pos, Nodes.Elements.To_Stored (New_Item));
    end Replace_Element;
 
    ------------
@@ -171,10 +190,23 @@ package body Conts.Vectors.Generics is
    -----------
 
    function First (Self : Vector'Class) return Cursor is
-      pragma Unreferenced (Self);
    begin
-      return (Index => Min_Index);
+      if Self.Last = No_Element.Index then
+         return No_Element;
+      else
+         return (Index => Min_Index);
+      end if;
    end First;
+
+   -----------
+   -- Index --
+   -----------
+
+   function Index (Position : Cursor) return Index_Type is
+   begin
+      return Index_Type
+        (Position.Index - Min_Index + Count_Type (Index_Type'First));
+   end Index;
 
    -------------
    -- Element --

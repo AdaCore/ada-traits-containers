@@ -52,6 +52,11 @@ can be edited with any text editor.
 ** TODO use =Variable_Indexing= aspect on containers
    So that we can use =Vec(2)= directly
 
+** TODO Storage pools: can we pass a subprogram instead
+   Is there a way we could pass storage pools as a factory function as formal
+   parameter to other packages, rather than as a package ? This would allow
+   giving a default value, and would let users override this for their whole
+   application.
 
 * Algorithms
 
@@ -80,6 +85,7 @@ can be edited with any text editor.
    This would let users manipulate a database as if they were manipulating
    a list
 
+** TODO pass a storage_pool in parameter to =Unbounded_Spark= nodes
 
 * Queues
 
@@ -92,6 +98,11 @@ can be edited with any text editor.
 * Vectors
 
 ** TODO circular buffer with Prepend operation
+** TODO pass a storage_pool in parameter to =Unbounded= nodes
+** TODO can a cursor be implemented as an Index_Type directly ?
+   That would be more logical (removing one layer of abstraction), but
+   there is no convenient way to define =No_Element=, and =Next= will
+   raise an exception when moving past the current element.
 
 * Maps
 
@@ -110,6 +121,7 @@ can be edited with any text editor.
 ** TODO Remove or replace =Glib.Graphs= with our generic implementation
 
 ** TODO Remove recursive dfs. Is only used for performance testing
+** TODO =Property_Maps= should come with a =Clear= operation.
 
 * Priority queues
 

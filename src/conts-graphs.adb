@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2016, AdaCore                          --
+--                     Copyright (C) 2016-2016, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -21,43 +21,48 @@
 
 pragma Ada_2012;
 
-package body Conts.Vectors is
+package body Conts.Graphs is
 
-   --------------
-   -- Grow_1_5 --
-   --------------
+   package body Property_Maps is
 
-   function Grow_1_5
-     (Current_Size, Min_Expected : Count_Type) return Count_Type is
-   begin
-      if Current_Size < Min_Expected then
-         return Count_Type'Max
-           (Min_Expected, Count_Type'Max (4, Current_Size * 3 / 2));
-      else
-         return Current_Size;
-      end if;
-   end Grow_1_5;
+      package body Property_Maps_From_Index is
+         use Value_Vectors;
 
-   ----------------
-   -- Shrink_1_5 --
-   ----------------
+         ---------
+         -- Get --
+         ---------
 
-   function Shrink_1_5
-     (Current_Size, Min_Expected : Count_Type) return Count_Type
-   is
-      Tmp, Result : Count_Type;
-   begin
-      if Min_Expected = 0 then
-         return 0;
-      else
-         Tmp    := Count_Type (Current_Size * 2 / 3);
-         Result := Current_Size;
-         while Tmp >= Min_Expected loop
-            Result := Tmp;
-            Tmp := Count_Type (Result * 2 / 3);
-         end loop;
-         return Result;
-      end if;
-   end Shrink_1_5;
+         function Get (M : Map; K : Key) return Value is
+         begin
+            return M.Values.Element (Get_Index (K));
+         end Get;
 
-end Conts.Vectors;
+         ---------
+         -- Set --
+         ---------
+
+         procedure Set (M : in out Map; K : Key; Val : Value) is
+            Idx : constant Index_Type := Get_Index (K);
+         begin
+            if not (Idx <= M.Values.Length) then
+               M.Values.Resize (Idx, Element => Default_Value);
+            end if;
+
+            M.Values.Replace_Element (Idx, Val);
+         end Set;
+
+         ----------------
+         -- Create_Map --
+         ----------------
+
+         function Create_Map (G : Graph) return Map is
+         begin
+            return M : Map do
+               M.Values.Reserve_Capacity (Length (G));
+            end return;
+         end Create_Map;
+
+      end Property_Maps_From_Index;
+   end Property_Maps;
+
+end Conts.Graphs;

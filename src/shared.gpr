@@ -36,13 +36,23 @@ abstract project Shared is
             for Switches ("Ada") use Common_Ada_Switches &
                ("-O3", "-gnatp", "-gnatn", "-gnato3"
 
-                --  See assembly
+                --  Warnings when a subprogram cannot be inlined. This needs
+                --  to be checked regularly, but raises a few warnings for
+                --  some subprograms created by GNAT (*_IP) in gnatcoll.
+                --  , "-Winline"
+
+                --  See generated assembly
                 --  , "-save-temps"
                );
             for Switches ("C++") use ("-O3", "-finline", "-std=c++11");
 
          when "Debug" =>
-            for Switches ("Ada") use Common_Ada_Switches & ("-O0");
+            for Switches ("Ada") use Common_Ada_Switches
+               & ("-O0", "-gnata"
+
+                  --  Add extra checks for stack
+                  --  ,  "-fstack-check"
+                 );
             for Switches ("C++") use ("-std=c++11", "-O0", "-g");
       end case;
    end Compiler;

@@ -22,7 +22,6 @@
 --  Unbounded Vectors of unconstrained elements
 
 pragma Ada_2012;
-with Ada.Finalization;
 with Conts.Cursors;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Vectors.Generics;
@@ -32,13 +31,15 @@ with Conts.Vectors.Nodes.Unbounded;
 generic
    type Index_Type is range <>;
    type Element_Type (<>) is private;
+   type Base_Type is abstract tagged limited private;
+   with procedure Free (E : in out Element_Type) is null;
 package Conts.Vectors.Indefinite_Unbounded_Ref is
 
    package Elements is new Conts.Elements.Indefinite_Ref
-      (Element_Type, Pool => Conts.Global_Pool);
+      (Element_Type, Free => Free, Pool => Conts.Global_Pool);
    package Nodes is new Conts.Vectors.Nodes.Unbounded
       (Elements      => Elements.Traits,
-       Base_Type     => Ada.Finalization.Controlled,
+       Base_Type     => Base_Type,
        Resize_Policy => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
@@ -48,6 +49,9 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
+
+   function Index (Position : Vectors.Cursor) return Index_Type
+                   renames Vectors.Index;
 
    --  ??? Should we provide a Copy function ?
    --  This cannot be provided in the generic package, since the type could

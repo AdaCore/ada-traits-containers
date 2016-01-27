@@ -19,36 +19,28 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Bounded Vectors of constrained elements
+--  A special kind of elements that store nothing.
+--  This is only useful to instantiate some containers, for instance a graph,
+--  when no extra information needs to be added to the vertices.
 
 pragma Ada_2012;
-with Conts.Elements.Definite;
-with Conts.Vectors.Cursors;
-with Conts.Vectors.Generics;
-with Conts.Vectors.Nodes.Bounded;
 
-generic
-   type Index_Type is range <>;
-   type Element_Type is private;
-package Conts.Vectors.Definite_Bounded_Limited is
+package Conts.Elements.Null_Elements is
 
-   package Elements is new Conts.Elements.Definite (Element_Type);
-   package Nodes is new Conts.Vectors.Nodes.Bounded
-      (Elements  => Elements.Traits,
-       Base_Type => Limited_Base);
-   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
+   type Null_Element is null record;
 
-   subtype Cursor is Vectors.Cursor;
-   type Vector (Capacity : Count_Type) is
-      new Vectors.Vector (Capacity) with null record
-      with Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   No_Element : constant Null_Element := (others => <>);
 
-   function Copy (Self : Vector'Class) return Vector'Class;
-   --  Return a deep copy of Self
-   --  Complexity: O(n)
+   function Identity (E : Null_Element) return Null_Element is (E) with Inline;
+   package Traits is new Conts.Elements.Traits
+      (Element_Type  => Null_Element,
+       Stored_Type   => Null_Element,
+       Return_Type   => Null_Element,
+       Copyable      => True,
+       Movable       => True,
+       To_Stored     => Identity,
+       To_Return     => Identity,
+       To_Element    => Identity,
+       Copy          => Identity);
 
-   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
-end Conts.Vectors.Definite_Bounded_Limited;
+end Conts.Elements.Null_Elements;

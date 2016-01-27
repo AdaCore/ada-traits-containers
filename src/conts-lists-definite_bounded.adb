@@ -19,7 +19,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body Conts.Lists.Definite_Bounded_Limited is
+package body Conts.Lists.Definite_Bounded is
 
    ----------
    -- Copy --
@@ -32,4 +32,4 @@ package body Conts.Lists.Definite_Bounded_Limited is
       end return;
    end Copy;
 
-end Conts.Lists.Definite_Bounded_Limited;
+end Conts.Lists.Definite_Bounded;

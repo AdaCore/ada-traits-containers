@@ -24,7 +24,6 @@
 --  allocations, so much more efficient in general.
 
 pragma Ada_2012;
-with Ada.Finalization;
 with Conts.Elements.Definite;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Cursors;
@@ -33,12 +32,15 @@ with Conts.Vectors.Nodes.Unbounded;
 generic
    type Index_Type is range <>;
    type Element_Type is private;
+   type Base_Type is abstract tagged limited private;
+   with procedure Free (E : in out Element_Type) is null;
 package Conts.Vectors.Definite_Unbounded is
 
-   package Elements is new Conts.Elements.Definite (Element_Type);
+   package Elements is new Conts.Elements.Definite
+     (Element_Type, Free => Free);
    package Nodes is new Conts.Vectors.Nodes.Unbounded
       (Elements      => Elements.Traits,
-       Base_Type     => Ada.Finalization.Controlled,
+       Base_Type     => Base_Type,
        Resize_Policy => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
@@ -50,4 +52,8 @@ package Conts.Vectors.Definite_Unbounded is
                         Element     => Element_Primitive);
 
    package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
+
+   function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
+                  renames Vectors."<=";
+
 end Conts.Vectors.Definite_Unbounded;

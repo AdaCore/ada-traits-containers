@@ -52,4 +52,17 @@ package Conts.Vectors with SPARK_Mode => On is
    --  A package that multiplies the size by 1.5 every time some more space
    --  is needed.
 
+private
+
+   function Grow_1_5
+     (Current_Size, Min_Expected : Count_Type) return Count_Type
+   is (if Current_Size < Min_Expected
+       then  Count_Type'Max
+         (Min_Expected, Count_Type'Max (4, Current_Size * 3 / 2))
+       else Current_Size);
+
+   function Shrink_1_5
+     (Current_Size, Min_Expected : Count_Type) return Count_Type
+   is (Min_Expected);
+
 end Conts.Vectors;

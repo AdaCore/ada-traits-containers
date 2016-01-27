@@ -22,7 +22,6 @@
 --  Bounded lists of constrained elements
 
 pragma Ada_2012;
-with Ada.Finalization;
 with Conts.Elements.Definite;
 with Conts.Lists.Cursors;
 with Conts.Lists.Generics;
@@ -30,12 +29,15 @@ with Conts.Lists.Nodes.Bounded;
 
 generic
    type Element_Type is private;
+   type Base_Type is abstract tagged limited private;
+   with procedure Free (E : in out Element_Type) is null;
 package Conts.Lists.Definite_Bounded is
 
-   package Elements is new Conts.Elements.Definite (Element_Type);
+   package Elements is new Conts.Elements.Definite
+     (Element_Type, Free => Free);
    package Nodes is new Conts.Lists.Nodes.Bounded
       (Elements  => Elements.Traits,
-       Base_Type => Ada.Finalization.Controlled);
+       Base_Type => Base_Type);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
    subtype Cursor is Lists.Cursor;
@@ -45,6 +47,10 @@ package Conts.Lists.Definite_Bounded is
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
+
+   function Copy (Self : List'Class) return List'Class;
+   --  Return a deep copy of Self
+   --  Complexity: O(n)
 
    package Cursors is new Conts.Lists.Cursors (Lists, List);
 end Conts.Lists.Definite_Bounded;

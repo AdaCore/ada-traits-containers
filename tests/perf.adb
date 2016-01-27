@@ -48,7 +48,7 @@ with List_Ada12_No_Checks_Indef_Unbounded_String;
 with List_Controlled_Indef_Unbounded_String;
 with List_Controlled_Indef_Unbounded_Ref_String;
 with List_Controlled_Def_Unbounded_Unbounded_String;
-with List_Controlled_Arrays_Unbounded_String;
+with List_Controlled_Strings_Specific_Unbounded_String;
 
 --  Integer vectors
 
@@ -151,8 +151,12 @@ begin
              List_Controlled_Indef_Unbounded_Ref_String'Access);
    Run_Test ("str_list_controlled_def_unbounded_ustr",
              List_Controlled_Def_Unbounded_Unbounded_String'Access);
-   Run_Test ("str_list_controlled_arrays_ustr",
-             List_Controlled_Arrays_Unbounded_String'Access);
+
+   if False then
+      --  Valgrind errors
+      Run_Test ("str_list_controlled_strings_specific_ustr",
+                List_Controlled_Strings_Specific_Unbounded_String'Access);
+   end if;
 
    Run_Test ("int_vector_c++", Test_Cpp_Int_Vector'Access);
    Run_Test ("int_vector_ada_arrays", Test_Arrays_Int'Access);
@@ -192,7 +196,9 @@ begin
              Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr'Access);
 
    Run_Test ("graph_c++", Test_Cpp_Graph'Access);
-   Run_Test ("graph_ada_custom", Custom_Graph.Test'Access);
+   Run_Test ("graph_ada_custom", Custom_Graph.Test_Custom'Access);
+   Run_Test ("graph_ada_adjacency_list",
+             Custom_Graph.Test_Adjacency_List'Access);
 
    Test_QGen;
 

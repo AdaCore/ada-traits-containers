@@ -19,7 +19,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body Conts.Vectors.Definite_Bounded_Limited is
+package body Conts.Vectors.Definite_Bounded is
 
    ----------
    -- Copy --
@@ -32,4 +32,4 @@ package body Conts.Vectors.Definite_Bounded_Limited is
       end return;
    end Copy;
 
-end Conts.Vectors.Definite_Bounded_Limited;
+end Conts.Vectors.Definite_Bounded;

@@ -109,6 +109,7 @@ procedure {test_name}
 pragma Style_Checks (Off);
 pragma Warnings (Off, "unit * is not referenced");
 with Perf_Support;  use Perf_Support;
+with Ada.Finalization;
 with Conts.Algorithms;
 with Conts.Cursors.Adaptors;
 pragma Warnings (On, "unit * is not referenced");
@@ -198,12 +199,12 @@ end {test_name};
         # When using reference types
         if use_cursor_convert:
             self.args['adaptors'] = ("""
-       function Count_If is new Conts.Algorithms.Count_If_Convert
-          (Container.Cursors_Forward_Convert);""").format(**self.args)
+   function Count_If is new Conts.Algorithms.Count_If_Convert
+      (Container.Cursors_Forward_Convert);""").format(**self.args)
         else:
             self.args['adaptors'] = ("""
-       function Count_If is new Conts.Algorithms.Count_If
-          (Container.Cursors.Constant_Forward);""").format(**self.args)
+   function Count_If is new Conts.Algorithms.Count_If
+      (Container.Cursors.Constant_Forward);""").format(**self.args)
 
         self.__common()
 
@@ -218,19 +219,19 @@ end {test_name};
         if use_cursor_convert:
             self.args['adaptors'] = (
             """
-       package Adaptors is new Conts.Cursors.Adaptors.""" +
+   package Adaptors is new Conts.Cursors.Adaptors.""" +
             adaptors + """ (Container);
-       function Count_If is new Conts.Algorithms.Count_If_Convert
-          (Adaptors.Cursors_Forward_Convert);
+   function Count_If is new Conts.Algorithms.Count_If_Convert
+      (Adaptors.Cursors_Forward_Convert);
 """).format(**self.args)
 
         else:
             self.args['adaptors'] = (
             """
-       package Adaptors is new Conts.Cursors.Adaptors.""" +
+   package Adaptors is new Conts.Cursors.Adaptors.""" +
             adaptors + """ (Container);
-       function Count_If is new Conts.Algorithms.Count_If
-          (Adaptors.Cursors.Constant_Forward);
+   function Count_If is new Conts.Algorithms.Count_If
+      (Adaptors.Cursors.Constant_Forward);
 """).format(**self.args)
 
 
@@ -308,6 +309,7 @@ procedure {test_name}
 pragma Style_Checks (Off);
 pragma Warnings (Off, "unit * is not referenced");
 with Perf_Support;  use Perf_Support;
+with Ada.Finalization;
 with Conts.Algorithms;
 with Conts.Cursors.Adaptors;
 pragma Warnings (On, "unit * is not referenced");
@@ -424,12 +426,19 @@ class Vector (List):
 
 # Integer lists
 
+i = " (Integer);"
+ci = " (Integer, Ada.Finalization.Controlled);"
+li = " (Integer, Conts.Limited_Base);"
+s = " (String);"
+cs = " (String, Ada.Finalization.Controlled);"
+ls = " (String, Conts.Limited_Base);" 
+
 List("Integer", "Ada12", "Def", "Bounded",
-     "package Container is new Ada.Containers.Bounded_Doubly_Linked_Lists (Integer);",
+     "package Container is new Ada.Containers.Bounded_Doubly_Linked_Lists" + i,
      "with Ada.Containers.Bounded_Doubly_Linked_Lists;").gen_ada2012(
         adaptors='Bounded_List_Adaptors')
 List("Integer", "Ada12", "Def", "Unbounded",
-     "package Container is new Ada.Containers.Doubly_Linked_Lists (Integer);",
+     "package Container is new Ada.Containers.Doubly_Linked_Lists" + i,
      "with Ada.Containers.Doubly_Linked_Lists;").gen_ada2012()
 List("Integer", "Ada12", "Indef", "Unbounded",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
@@ -438,63 +447,63 @@ List("Integer", "Ada12", "Indef", "Unbounded",
          use_cursor_convert=True,
          adaptors='Indefinite_List_Adaptors')
 List("Integer", "Ada12_No_Checks", "Def", "Unbounded",
-     "package Container is new Ada.Containers.Doubly_Linked_Lists (Integer);",
+     "package Container is new Ada.Containers.Doubly_Linked_Lists" + i,
      "with Ada.Containers.Doubly_Linked_Lists;",
      favorite=True).gen_ada2012(disable_checks=True)
 List("Integer", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Lists.Indefinite_Unbounded (Integer);",
+     "package Container is new Conts.Lists.Indefinite_Unbounded" + ci,
      "with Conts.Lists.Indefinite_Unbounded;").gen()
 List("Integer", "Controlled", "Def", "Unbounded",
-     "package Container is new Conts.Lists.Definite_Unbounded (Integer);",
+     "package Container is new Conts.Lists.Definite_Unbounded" + ci,
      "with Conts.Lists.Definite_Unbounded;",
      favorite=True,
      comments=Comments(forofloop=
           "Because of dynamic dispatching -- When avoided, we gain 40%")
     ).gen()
 List("Integer", "Controlled", "Def", "Bounded",
-     "package Container is new Conts.Lists.Definite_Bounded (Integer);",
+     "package Container is new Conts.Lists.Definite_Bounded" + ci,
      "with Conts.Lists.Definite_Bounded;").gen()
 List("Integer", "Limited", "Def", "Bounded",
-     "package Container is new Conts.Lists.Definite_Bounded_Limited (Integer);",
-     "with Conts.Lists.Definite_Bounded_Limited;").gen()
+     "package Container is new Conts.Lists.Definite_Bounded" + li,
+     "with Conts.Lists.Definite_Bounded;").gen()
 List("Integer", "Limited", "Indef_Spark", "Unbounded_Spark",
-     "package Container is new Conts.Lists.Indefinite_Unbounded_SPARK (Integer);",
+     "package Container is new Conts.Lists.Indefinite_Unbounded_SPARK" + i,
      "with Conts.Lists.Indefinite_Unbounded_SPARK;").gen()
 
 # String lists
 
 List("String", "Ada12", "Indef", "Unbounded",
-     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
-     " (String);",
+     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s,
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
      favorite=False).gen_ada2012(
          use_cursor_convert=True,
          adaptors='Indefinite_List_Adaptors')
 List("String", "Ada12_No_Checks", "Indef", "Unbounded",
-     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);",
+     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s,
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
      favorite=True).gen_ada2012(
          use_cursor_convert=True,
          adaptors='Indefinite_List_Adaptors',
          disable_checks=True)
 List("String", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Lists.Indefinite_Unbounded (String);",
+     "package Container is new Conts.Lists.Indefinite_Unbounded" + cs,
      "with Conts.Lists.Indefinite_Unbounded;",
      comments=Comments(cursorloop="Cost if for copying the string")).gen()
 List("String", "Controlled", "Indef", "Unbounded_Ref",
-     "package Container is new Conts.Lists.Indefinite_Unbounded_Ref (String);",
+     "package Container is new Conts.Lists.Indefinite_Unbounded_Ref" + cs,
      "with Conts.Lists.Indefinite_Unbounded_Ref;",
      comments=Comments(
          countif="Conversion from Reference_Type to Element_Type"),
      favorite=True).gen(use_cursor_convert=True)
 List("Unbounded_String", "Controlled", "Def", "Unbounded",
-     "package Container is new Conts.Lists.Definite_Unbounded (Unbounded_String);",
+     "package Container is new Conts.Lists.Definite_Unbounded"
+       + "(Unbounded_String, Ada.Finalization.Controlled);",
      "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
      "with Conts.Lists.Definite_Unbounded;",
      comments=Comments(
          cursorloop="Maybe because of the atomic counters or controlled elements")
     ).gen()
-List("String", "Controlled", "Arrays", "Unbounded",
+List("String", "Controlled", "Strings_Specific", "Unbounded",
      "package Container renames Conts.Lists.Strings;",
      "with Conts.Lists.Strings;",
      comments=Comments(
@@ -506,6 +515,8 @@ List("String", "Controlled", "Arrays", "Unbounded",
 # Integer vectors
 
 p = " (Natural, Integer);"
+cp = " (Natural, Integer, Ada.Finalization.Controlled);"
+lp = " (Natural, Integer, Conts.Limited_Base);"
 
 Vector("Integer", "Ada12", "Def", "Bounded",
      "package Container is new Ada.Containers.Bounded_Vectors" + p,
@@ -524,24 +535,25 @@ Vector("Integer", "Ada12_No_Checks", "Def", "Unbounded",
      "with Ada.Containers.Vectors;",
      favorite=True).gen_ada2012(disable_checks=True)
 Vector("Integer", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp,
      "with Conts.Vectors.Indefinite_Unbounded;").gen()
 Vector("Integer", "Controlled", "Def", "Unbounded",
-     "package Container is new Conts.Vectors.Definite_Unbounded" + p,
+     "package Container is new Conts.Vectors.Definite_Unbounded" + cp,
      "with Conts.Vectors.Definite_Unbounded;",
        comments=Comments(
            cursorloop='test in Next to see if we reached end of loop'),
      favorite=True).gen()
 Vector("Integer", "Controlled", "Def", "Bounded",
-     "package Container is new Conts.Vectors.Definite_Bounded" + p,
+     "package Container is new Conts.Vectors.Definite_Bounded" + cp,
      "with Conts.Vectors.Definite_Bounded;").gen()
 Vector("Integer", "Limited", "Def", "Bounded",
-     "package Container is new Conts.Vectors.Definite_Bounded_Limited" + p,
-     "with Conts.Vectors.Definite_Bounded_Limited;").gen()
+     "package Container is new Conts.Vectors.Definite_Bounded" + lp,
+     "with Conts.Vectors.Definite_Bounded;").gen()
 
 # String vectors
 
 p = " (Natural, String);"
+cp = " (Natural, String, Ada.Finalization.Controlled);"
 
 Vector("String", "Ada12", "Indef", "Unbounded",
      "package Container is new Ada.Containers.Indefinite_Vectors" + p,
@@ -556,10 +568,10 @@ Vector("String", "Ada12_No_Checks", "Indef", "Unbounded",
          adaptors='Indefinite_Vector_Adaptors',
          disable_checks=True)
 Vector("String", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp,
      "with Conts.Vectors.Indefinite_Unbounded;").gen()
 Vector("String", "Controlled", "Indef", "Unbounded_Ref",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded_Ref" + p,
+     "package Container is new Conts.Vectors.Indefinite_Unbounded_Ref" + cp,
      "with Conts.Vectors.Indefinite_Unbounded_Ref;", favorite=True).gen(
          use_cursor_convert=True)
 

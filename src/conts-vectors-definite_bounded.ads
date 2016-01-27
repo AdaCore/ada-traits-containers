@@ -22,7 +22,6 @@
 --  Bounded vectors of constrained elements
 
 pragma Ada_2012;
-with Ada.Finalization;
 with Conts.Elements.Definite;
 with Conts.Vectors.Cursors;
 with Conts.Vectors.Generics;
@@ -31,12 +30,13 @@ with Conts.Vectors.Nodes.Bounded;
 generic
    type Index_Type is range <>;
    type Element_Type is private;
+   type Base_Type is abstract tagged limited private;
 package Conts.Vectors.Definite_Bounded is
 
    package Elements is new Conts.Elements.Definite (Element_Type);
    package Nodes is new Conts.Vectors.Nodes.Bounded
       (Elements  => Elements.Traits,
-       Base_Type => Ada.Finalization.Controlled);
+       Base_Type => Base_Type);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
    subtype Cursor is Vectors.Cursor;
@@ -46,6 +46,10 @@ package Conts.Vectors.Definite_Bounded is
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
+
+   function Copy (Self : Vector'Class) return Vector'Class;
+   --  Return a deep copy of Self
+   --  Complexity: O(n)
 
    package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
 end Conts.Vectors.Definite_Bounded;

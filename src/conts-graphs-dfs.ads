@@ -49,70 +49,92 @@ pragma Ada_2012;
 
 package Conts.Graphs.DFS is
 
+   --  Depth-First-Search with exterior color maps
+
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
       with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
-      with function Terminator
-         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
-         is Graphs.Graphs.Never_Stop;
-   procedure Search_With_Map
-      (G     : Graphs.Graphs.Graph;
-       Visit : in out Visitor;
-       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
-   --  Depth-First-Search
-   --  This version stores the vertices colors in an external map.
-   --  It starts with vertex V (if specified), or with any vertex
-   --  otherwise.
+      with function Create_Map (G : Graphs.Graphs.Graph) return Maps.Map;
+   package Exterior is
 
-   generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
-      with function Terminator
-         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
-         is Graphs.Graphs.Never_Stop;
-   procedure Recursive_Search
-      (G     : in out Graphs.Graphs.Graph;
-       Visit : in out Visitor;
-       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
-      with Inline;
+      generic
+         type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      procedure Search
+        (G     : Graphs.Graphs.Graph;
+         Visit : in out Visitor;
+         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
+      --  This version stores the vertices colors in an external map.
+      --  It starts with vertex V (if specified), or with any vertex
+      --  otherwise.
+      --  Stops iterating when Visit.Should_Stop returns True
 
-   generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
-      with function Terminator
-         (G : Graphs.Graphs.Graph; V : Graphs.Graphs.Vertex) return Boolean
-         is Graphs.Graphs.Never_Stop;
-   procedure Search
-      (G     : in out Graphs.Graphs.Graph;
-       Visit : in out Visitor;
-       V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
-      with Inline;
+      function Is_Acyclic (G : Graphs.Graphs.Graph) return Boolean;
+      --  Whether the graph has no cycles
+
+   end Exterior;
+
    --  Depth-First-Search
    --  This version stores the vertices colors in the graph itself.
-   --  It starts with vertex V.
-
-   generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
-   package Is_Acyclic_With_Map is
-      function Is_Acyclic (G : Graphs.Graphs.Graph) return Boolean;
-   end Is_Acyclic_With_Map;
-   --  Sets Acyclic to True if the graph has no cycles, i.e. if there is no
-   --  vertex that can be reached from any path in the graph.
-   --
-   --  We use a package here, so that this can be used in formal parts of
-   --  other package, since there is no way in Ada to specify that a formal
-   --  subprogram is an instance of a specific generic subprogram.
+   --  This version will not, in general, permit simultaneous runs of the
+   --  algorithms, since they would interfer in the color map.
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
       with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
-   function Is_Acyclic
-      (G : in out Graphs.Graphs.Graph) return Boolean;
-   --  Sets Acyclic to True if the graph has no cycles, i.e. if there is no
-   --  vertex that can be reached from any path in the graph.
+   package Interior is
+
+      generic
+         type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      procedure Search
+        (G     : in out Graphs.Graphs.Graph;
+         Visit : in out Visitor;
+         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
+
+      generic
+         type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      procedure Search_Recursive
+        (G     : in out Graphs.Graphs.Graph;
+         Visit : in out Visitor;
+         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
+      --  A recursive version of the DFS algorithm.
+      --  It is fractionally faster on small graph, and is not compatible with
+      --  large graphs (since the depth of recursion with blow the stack).
+
+      function Is_Acyclic (G : in out Graphs.Graphs.Graph) return Boolean;
+
+   end Interior;
+
+   --  Depth-First-Search
+   --  The map is given explicitly as a parameter, so that we do not need the
+   --  Create_Map function and can use this for both interior and exterior
+   --  maps, or with types of maps that cannot easily be returned from a
+   --  function.
+
+   generic
+      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
+      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+   package With_Map is
+
+      generic
+         type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      procedure Search
+        (G     : Graphs.Graphs.Graph;
+         Visit : in out Visitor;
+         Map   : in out Maps.Map;
+         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
+
+      generic
+         type Visitor (<>) is new Graphs.Graphs.DFS_Visitor with private;
+      procedure Search_Recursive
+        (G     : Graphs.Graphs.Graph;
+         Visit : in out Visitor;
+         Map   : in out Maps.Map;
+         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex);
+
+      procedure Is_Acyclic
+        (G       : Graphs.Graphs.Graph;
+         Map     : in out Maps.Map;
+         Acyclic : out Boolean);
+   end With_Map;
 
 end Conts.Graphs.DFS;

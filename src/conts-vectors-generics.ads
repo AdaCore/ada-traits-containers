@@ -44,6 +44,13 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Converts from an index type to an index into the actual underlying
    --  array.
 
+   function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
+     is (To_Count (Idx) <= Count) with Inline;
+
+   function Index (Position : Cursor) return Index_Type
+     with Inline, Global => null;
+   --  Return the index corresponding to the cursor.
+
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type);
    --  Make sure the vector is at least big enough to contain Capacity items
@@ -57,7 +64,19 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    procedure Shrink_To_Fit (Self : in out Vector'Class);
    --  Resize the vector to fit its number of elements. This might free
-   --  memory.
+   --  memory. This changes the capacity, but not the length of the vector.
+
+   procedure Resize
+     (Self    : in out Vector'Class;
+      Length  : Index_Type;
+      Element : Nodes.Elements.Element_Type);
+   --  Resize the container so that it contains Length elements.
+   --  If Length is smaller than the current container length, Self is
+   --     reduced to its first Length elements, destroying the other elements.
+   --     This does not change the capacity of the vector.
+   --  If Length is greater than the current container length, new elements
+   --     are added as needed, as copied of Element. This might also extend
+   --     the capacity of the vector if needed.
 
    function Length (Self : Vector'Class) return Count_Type
      with Inline => True, Global => null;
@@ -68,15 +87,15 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Whether the vector is empty
 
    function Element
-     (Self : Vector'Class; Position : Index_Type) return Return_Type;
+     (Self : Vector'Class; Position : Index_Type) return Return_Type
+     with Inline;
 
    procedure Replace_Element
      (Self     : in out Vector'Class;
       Index    : Index_Type;
       New_Item : Element_Type)
      with Global => null,
-          Pre    => Count_Type (Index) - Conts.Vectors.Nodes.Min_Index + 1
-                    <= Length (Self);
+          Pre    => Index <= Length (Self);
    --  Replace the element at the given position.
    --  Nothing is done if Index is not a valid index in the container.
 
@@ -93,7 +112,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Remove all contents from the vector.
 
    procedure Delete (Self : in out Vector'Class; Index : Index_Type)
-     with Pre => Self.Length >= To_Count (Index);
+     with Pre => Index <= Self.Length;
    --  Remove an element from the vector.
    --  Unless you are removing the last element (see Delete_Last), this is an
    --  inefficient operation since it needs to copy all the elements after
@@ -115,8 +134,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Self := Source.
 
    function First (Self : Vector'Class) return Cursor
-      with Inline,
-           Global => null;
+      with Inline, Global => null;
    function Element
       (Self : Vector'Class; Position : Cursor) return Return_Type
       with Inline,

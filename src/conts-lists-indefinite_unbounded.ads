@@ -22,7 +22,6 @@
 --  Unbounded lists of unconstrained elements
 
 pragma Ada_2012;
-with Ada.Finalization;
 with Conts.Elements.Indefinite;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
@@ -30,13 +29,14 @@ with Conts.Lists.Nodes.Unbounded;
 
 generic
    type Element_Type (<>) is private;
+   type Base_Type is abstract tagged limited private;
 package Conts.Lists.Indefinite_Unbounded is
 
    package Elements is new Conts.Elements.Indefinite
       (Element_Type, Pool => Conts.Global_Pool);
    package Nodes is new Conts.Lists.Nodes.Unbounded
       (Elements  => Elements.Traits,
-       Base_Type => Ada.Finalization.Controlled,
+       Base_Type => Base_Type,
        Pool      => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 

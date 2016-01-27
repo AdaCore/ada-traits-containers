@@ -38,11 +38,12 @@ package Conts.Graphs.Connected_Components is
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
       with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
-      with package Is_Acyclic is
-         new Conts.Graphs.DFS.Is_Acyclic_With_Map (Graphs, Maps);
+      with function Create_Map (G : Graphs.Graphs.Graph) return Maps.Map;
+      with package DFS is
+         new Conts.Graphs.DFS.Exterior (Graphs, Maps, Create_Map);
    procedure Connected_Components_With_Pre
       (G     : Graphs.Graphs.Graph)
-       with Pre => (Is_Acyclic.Is_Acyclic (G));
+       with Pre => (DFS.Is_Acyclic (G));
    --  Same as above, but with preconditions.
    --  To provide these preconditions, we need to be able to execute a generic
    --  algorith. Since we cannot do the instantiation in the precondition

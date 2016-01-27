@@ -20,23 +20,93 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-with Graph1_Support;     use Graph1_Support;
-with Conts.Graphs.DFS;
-with Report;             use Report;
+with Ada.Finalization;
+with Graph1_Support;                use Graph1_Support;
+with Conts.Elements.Null_Elements;  use Conts.Elements.Null_Elements;
+with Conts.Graphs.Adjacency_List;
+with Report;                        use Report;
 with Perf_Support;
+with Ada.Text_IO;                   use Ada.Text_IO;
 
 package body Custom_Graph is
-   procedure Test (Stdout : not null access Output'Class) is
-      procedure DFS is new Conts.Graphs.DFS.Search
-         (Custom_Graphs, My_Visitor, Color_Maps);
 
-      procedure Recursive_DFS is new Conts.Graphs.DFS.Recursive_Search
-         (Custom_Graphs, My_Visitor2, Color_Maps);
-      procedure DFS is new Conts.Graphs.DFS.Search
-         (Custom_Graphs, My_Visitor2, Color_Maps);
+   Debug : constant Boolean := False;
 
-      V      : My_Visitor;
-      V2     : My_Visitor2;
+   -------------------------
+   -- Test_Adjacency_List --
+   -------------------------
+
+   procedure Test_Adjacency_List (Stdout : not null access Output'Class) is
+      package Graphs is new Conts.Graphs.Adjacency_List
+        (Vertex_Properties => Conts.Elements.Null_Elements.Traits,
+         Edge_Properties   => Conts.Elements.Null_Elements.Traits,
+         Base_Type         => Ada.Finalization.Controlled);
+      use Graphs;
+
+      type My_Visitor is new Graphs.Traits.DFS_Visitor with null record;
+      overriding procedure Finish_Vertex
+        (Self : in out My_Visitor; G : Graphs.Graph; V : Graphs.Vertex);
+
+      overriding procedure Finish_Vertex
+        (Self : in out My_Visitor; G : Graphs.Graph; V : Graphs.Vertex)
+      is
+         pragma Unreferenced (Self, G);
+      begin
+         if Debug then
+            Put_Line ("MANU Finish vertex " & V'Img);
+         end if;
+      end Finish_Vertex;
+
+      procedure DFS is new Graphs.DFS.Search (My_Visitor);
+
+      subtype Vertex is Graphs.Vertex;
+      use type Vertex;
+
+   begin
+      Stdout.Start_Container_Test
+        (Base     => "adjacency list",
+         Elements => "",
+         Nodes    => "",
+         Category => "Graph");
+
+      for C in 1 .. Perf_Support.Repeat_Count loop
+         declare
+            G     : Graphs.Graph;
+            Vis   : My_Visitor;
+         begin
+            Stdout.Save_Container_Size (G'Size / 8);
+
+            Stdout.Start_Test ("fill", Start_Group => True);
+            G.Add_Vertices (No_Element, Count => Perf_Support.Items_Count);
+
+            for V in Vertex'First
+              .. Vertex'First + Vertex (Perf_Support.Items_Count) - 2
+            loop
+               G.Add_Edge (V, V + 1, No_Element);
+            end loop;
+            Stdout.End_Test;
+
+            Stdout.Start_Test ("dfs, no visitor", Start_Group => True);
+            DFS (G, Vis);
+            Stdout.End_Test;
+
+            G.Clear;
+         end;
+      end loop;
+
+      Stdout.End_Container_Test;
+   end Test_Adjacency_List;
+
+   -----------------
+   -- Test_Custom --
+   -----------------
+
+   procedure Test_Custom (Stdout : not null access Output'Class) is
+      procedure Search is new Graph1_Support.DFS.Search (My_Visitor);
+      procedure Search is new Graph1_Support.DFS.Search (My_Visitor2);
+      procedure Recursive is
+        new Graph1_Support.DFS.Search_Recursive (My_Visitor2);
+
    begin
       Stdout.Start_Container_Test
          (Base     => "custom graph",
@@ -47,22 +117,26 @@ package body Custom_Graph is
       for C in 1 .. Perf_Support.Repeat_Count loop
          declare
             G     : Graph;
+            V     : My_Visitor;
+            V2    : My_Visitor2;
          begin
             Stdout.Save_Container_Size (G'Size / 8);
+
             Stdout.Start_Test ("dfs, no visitor", Start_Group => True);
-            DFS (G, V, 3);
+            Search (G, V);
             Stdout.End_Test;
 
             Stdout.Start_Test ("dfs, visitor");
-            DFS (G, V2);
+            Search (G, V2);
             Stdout.End_Test;
 
             Stdout.Start_Test ("dfs-recursive, visitor");
-            Recursive_DFS (G, V2);
+            Recursive (G, V2);
             Stdout.End_Test;
          end;
       end loop;
 
       Stdout.End_Container_Test;
-   end Test;
+   end Test_Custom;
+
 end Custom_Graph;

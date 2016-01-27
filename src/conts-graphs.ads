@@ -21,13 +21,25 @@
 
 pragma Ada_2012;
 
+with Ada.Finalization;
 with Conts.Cursors;
 with Conts.Elements;
+with Conts.Vectors.Definite_Unbounded;
 
 package Conts.Graphs is
 
    type Color is (White, Gray, Black);
    --  Used to mark vertices during several algorithms.
+
+   type Graph_Kind is (Directed, Undirected, Bidirectional);
+   --  Describes the kind of the graph data structure.
+   --  This is generally useless for algorithms, which simply specify the
+   --  operations they need, but is used when creating graph data structures.
+   --  - Directed: edges go from one vertex to another, in one direction
+   --  - Undirected: edges can be traversed in either direction.
+   --  - Bidirectional: the graph provides fast access to compute the list of
+   --    in-edges for a node, in addition to the list of out-edges already
+   --     provided by Directed and Undirected graphs.
 
    -------------------
    -- Property Maps --
@@ -47,22 +59,23 @@ package Conts.Graphs is
    --  either one of the two types of maps (implementations are shared).
 
    generic
-      type Graph (<>) is private;
+      type Graph (<>) is limited private;
       type Key (<>) is private;
-      type Value (<>) is private;
+      type Value is private;
+      Default_Value : Value;
    package Property_Maps is
-      function Identity (G : Graph) return Graph is (G) with Inline_Always;
-      --  Help to instantiate some of the generic property maps
+      pragma Warnings (Off, "* is not referenced");
+      --  The compiler complains, sometimes, about unusued formal parameters
 
       generic
-         type Map (<>) is private;
+         type Map (<>) is limited private;
          with procedure Set (M : in out Map; K : Key; V : Value) is <>;
          with function Get (M : Map; K : Key) return Value is <>;
-
-         with function Get_Map (G : Graph) return Map is <>;
-         --  Create an uninitialized Map from the graph.
-         --  This is used to create temporary variables for algorithms.
       package Exterior is
+         subtype Property_Map is Map;
+         --  Sometimes needed because Map is not visible to all the code that
+         --  manipulates an Exterior instance.
+
       end Exterior;
 
       generic
@@ -70,12 +83,44 @@ package Conts.Graphs is
          with function Get (G : Graph; K : Key) return Value is <>;
       package Interior is
 
-         package As_Exterior is new Exterior (Graph, Set, Get, Identity);
+         package As_Exterior is new Exterior (Graph, Set, Get);
          --  An adaptor for algorithms. This way, algorithms can be
          --  written only for external maps, and the version with interior
          --  maps can easily call that version.
 
       end Interior;
+
+      generic
+         type Index_Type is range <>;
+         with function Get_Index (K : Key) return Index_Type is <>;
+
+         with function Length (G : Graph) return Count_Type is <>;
+         --  Use to reserve the initial capacity for the vector. This can
+         --  safely return 0 or any values, since the vector is unbounded.
+
+      package Property_Maps_From_Index is
+         --  An implementation of property maps that can be used when the key
+         --  maps to indexes. These are implemented as vectors, rather than
+         --  arrays, so that they can be used without necessarily knowing the
+         --  required size in advance, and because a very large array for a
+         --  very large graph could blow the stack.
+         --  The map is also set as a limited type to limit the number of
+         --  copies, even though it is also set as a controlled type to
+         --  reclaim memory. This also ensures that Create_Map builds the map
+         --  in place.
+
+         package Value_Vectors is new Conts.Vectors.Definite_Unbounded
+           (Index_Type, Value, Base_Type => Ada.Finalization.Controlled);
+         type Map is limited record
+            Values : Value_Vectors.Vector;
+         end record;
+
+         function Get (M : Map; K : Key) return Value;
+         procedure Set (M : in out Map; K : Key; Val : Value);
+         function Create_Map (G : Graph) return Map;
+
+         package As_Exterior is new Exterior (Map, Set, Get);
+      end Property_Maps_From_Index;
    end Property_Maps;
 
    ------------
@@ -86,7 +131,7 @@ package Conts.Graphs is
    --  algorithms.
 
    generic
-      type Graph (<>) is private;
+      type Graph (<>) is limited private;
       with package Vertices is new Conts.Elements.Traits (<>);
       type Edge (<>) is private;
       Null_Vertex : Vertices.Element_Type;
@@ -96,15 +141,11 @@ package Conts.Graphs is
       --  Return the target of the edge.
 
    package Traits is
+      subtype Graph_Type is Graph;
       subtype Vertex is Vertices.Element_Type;
 
-      package Color_Property_Maps is new Property_Maps (Graph, Vertex, Color);
-
-      function Never_Stop (G : Graph; V : Vertex) return Boolean
-         is (False) with Inline_Always;
-      --  A function used to indicate that an algorithm should run until
-      --  completion. Various algorithms have a callback that can be used
-      --  to stop them before the end.
+      package Color_Property_Maps is new Property_Maps
+        (Graph, Vertex, Color, Default_Value => White);
 
       generic
          type Cursor is private;
@@ -113,7 +154,21 @@ package Conts.Graphs is
          with function Has_Element
             (G : Graph; C : Cursor) return Boolean is <>;
          with function Next (G : Graph; C : Cursor) return Cursor is <>;
+
       package Vertex_Cursors is
+         subtype Cursor_Type is Cursor;
+
+         package Cursors is new Conts.Cursors.Constant_Forward_Traits
+           (Container   => Graph,
+            Cursor      => Cursor,
+            Return_Type => Vertex,
+            First       => First,
+            Next        => Next,
+            Has_Element => Has_Element,
+            Element     => Element);
+         --  A cursor traits package, that can be used with non-graph specific
+         --  algorithms. It iterates over vertices.
+
       end Vertex_Cursors;
       --  Iterates over all vertices in the graph
 
@@ -135,6 +190,13 @@ package Conts.Graphs is
       type DFS_Visitor is interface;
       --  Used to insert actions at various points in the execution of the
       --  Depth-First-Search algorithm.
+
+      procedure Should_Stop
+        (Self : DFS_Visitor; G : Graph; V : Vertex;
+         Stop : in out Boolean) is null;
+      --  Whether to stop iterating after discovering vertex V.
+      --  If iteration should stop, this procedure should set Stop to True (its
+      --  initial value is always False).
 
       procedure Initialize_Vertex
          (Self : in out DFS_Visitor; G : Graph; V : Vertex) is null;
@@ -194,16 +256,11 @@ package Conts.Graphs is
       with package Out_Edges is new Graphs.Edge_Cursors (<>);
    package Incidence_Graph_Traits is
 
-      package Cursors is new Conts.Cursors.Constant_Forward_Traits
-         (Container   => Graphs.Graph,
-          Cursor      => Vertices.Cursor,
-          Return_Type => Graphs.Vertex,
-          First       => Vertices.First,
-          Next        => Vertices.Next,
-          Has_Element => Vertices.Has_Element,
-          Element     => Vertices.Element);
-      --  A cursor traits package, that can be used with non-graph specific
-      --  algorithms. It iterates over vertices.
+      subtype Graph is Graphs.Graph;
+      subtype Vertex is Graphs.Vertex;
+      subtype Edge is Graphs.Edge;
+
+      package Cursors renames Vertices.Cursors;
 
    end Incidence_Graph_Traits;
 

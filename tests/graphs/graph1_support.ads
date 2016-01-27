@@ -22,6 +22,7 @@
 pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Graphs;      use Conts.Graphs;
+with Conts.Graphs.DFS;
 with Perf_Support;
 
 package Graph1_Support is
@@ -68,7 +69,8 @@ package Graph1_Support is
    function Next
       (G : Graph; C : Vertex_Cursor) return Vertex_Cursor with Inline;
 
-   package Custom_Vertices is new Base_Graphs.Vertex_Cursors (Vertex_Cursor);
+   package Custom_Vertices is new Base_Graphs.Vertex_Cursors
+     (Vertex_Cursor);
 
    ------------------
    -- Edge_Cursors --
@@ -91,7 +93,11 @@ package Graph1_Support is
    ----------------------
 
    package Custom_Graphs is new Incidence_Graph_Traits
-      (Base_Graphs, Custom_Vertices, Custom_Edges);
+     (Base_Graphs, Custom_Vertices, Custom_Edges);
+
+   package DFS is new Conts.Graphs.DFS.Interior
+     (Graphs => Custom_Graphs,
+      Maps   => Color_Maps);
 
    ----------------
    -- Algorithms --
