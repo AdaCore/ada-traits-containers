@@ -209,6 +209,40 @@ container inside the cursor, which could be unsafe.
 In practice, this makes the implementation cleaner and even faster since
 the cursor are lighter weight.
 
+Default values
+--------------
+
+In Ada, it is possible to provide default values for formal subprogram
+parameter in generics, as in::
+
+   procedure Bar;
+
+   generic
+      with procedure Foo is Bar;
+   package Pkg is
+   end Pkg;
+
+Unfortunately, the same doesn't exist for formal package parameters, which
+makes the instantiation of our various packages more difficult for the end
+user. For instance, a number of packages that need memory allocations take
+a `Storage_Pool` package to control how the allocations are performed.
+Since we cannot set a default value for these, the user will always have
+to specify `Conts.Global_Pool` explicitly.
+
+We could also simplify the library a code a bit if the default value for
+formal subprograms could be defined as an expression function, rather than
+be the name of an explicit subprogram, as in::
+
+    generic
+       type Element is private;
+       with function Copy (E : Element) return Element is (E);
+    package Pkg is
+    end Pkg;
+
+and we do not have to write an `Identity` function as done in several
+places in this library.
+
+
 Tasking
 -------
 
