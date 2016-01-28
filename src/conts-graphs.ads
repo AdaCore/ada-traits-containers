@@ -71,6 +71,10 @@ package Conts.Graphs is
          type Map (<>) is limited private;
          with procedure Set (M : in out Map; K : Key; V : Value) is <>;
          with function Get (M : Map; K : Key) return Value is <>;
+
+         with procedure Clear (M : in out Map) is null;
+         --  Free the memory occupied by M
+
       package Exterior is
          subtype Property_Map is Map;
          --  Sometimes needed because Map is not visible to all the code that
@@ -105,21 +109,20 @@ package Conts.Graphs is
          --  required size in advance, and because a very large array for a
          --  very large graph could blow the stack.
          --  The map is also set as a limited type to limit the number of
-         --  copies, even though it is also set as a controlled type to
-         --  reclaim memory. This also ensures that Create_Map builds the map
-         --  in place.
+         --  copies. This ensures that Create_Map builds the map in place.
 
          package Value_Vectors is new Conts.Vectors.Definite_Unbounded
-           (Index_Type, Value, Base_Type => Ada.Finalization.Controlled);
+           (Index_Type, Value, Base_Type => Conts.Limited_Base);
          type Map is limited record
             Values : Value_Vectors.Vector;
          end record;
 
          function Get (M : Map; K : Key) return Value;
          procedure Set (M : in out Map; K : Key; Val : Value);
+         procedure Clear (M : in out Map);
          function Create_Map (G : Graph) return Map;
 
-         package As_Exterior is new Exterior (Map, Set, Get);
+         package As_Exterior is new Exterior (Map, Set, Get, Clear);
       end Property_Maps_From_Index;
    end Property_Maps;
 

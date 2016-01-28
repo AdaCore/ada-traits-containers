@@ -109,21 +109,30 @@ can be edited with any text editor.
 ** MAYBE QT uses skip-lists instead of red-black-trees
    The former results in less code and uses less memory per node.
 
-
 * Graphs
 
-** MAYBE Make color map part of Incidence_Graph_Traits
-   This might avoid passing it separately to DFS, avoid repetition when users
-   need to instantiate multiple algorithms, and perhaps allow us to merge the
-   two versions of DFS together.
-** TODO Implement graph data structures
 ** MAYBE Graph layout algorithms (see the one in =Gtkada.Canvas_View=)
 ** TODO Remove or replace =Glib.Graphs= with our generic implementation
 
 ** TODO Remove recursive dfs. Is only used for performance testing
-** TODO =Property_Maps= should come with a =Clear= operation.
+** TODO DFS use a queue for the stack, rather than a vector
+   This won't change much, but is slightly better at clarifying the
+   intent.
+** TODO Implement Adjacency_Matrix data structure
+** TODO Implement Linked_Edge representation
+   (all edges stored in a single vector, and vertices point into it)
+
+** Adjacency lists
+*** Add Controlled and Limited versions
+    Like we do for other containers. This might need adding a notion
+    of graph nodes, and a graph generics package, which would provide
+    all the instances for the =Incidence_Graph_Traits=, =DFS=, ...
 
 * Priority queues
+
+* Property Maps
+** TODO move them from =conts.graphs= to their own package
+** MAYBE should they receive an elements traits rather than =Value=
 
 * Other data structures
 

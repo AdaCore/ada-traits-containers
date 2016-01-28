@@ -28,6 +28,15 @@ package body Conts.Graphs is
       package body Property_Maps_From_Index is
          use Value_Vectors;
 
+         -----------
+         -- Clear --
+         -----------
+
+         procedure Clear (M : in out Map) is
+         begin
+            M.Values.Clear;
+         end Clear;
+
          ---------
          -- Get --
          ---------

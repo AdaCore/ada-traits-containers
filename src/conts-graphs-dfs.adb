@@ -339,6 +339,7 @@ package body Conts.Graphs.DFS is
          Map     : Maps.Map := Create_Map (G);   --  uninitialized map
       begin
          Internal.Is_Acyclic (G, Map, Acyclic);
+         Maps.Clear (Map);
          return Acyclic;
       end Is_Acyclic;
 
@@ -355,6 +356,7 @@ package body Conts.Graphs.DFS is
          Map : Maps.Map := Create_Map (G);   --  uninitialized map
       begin
          Internal_Search (G, Visit, Map, V);
+         Maps.Clear (Map);
       end Search;
 
    end Exterior;
