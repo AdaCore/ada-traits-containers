@@ -21,7 +21,6 @@
 
 pragma Ada_2012;
 
-with Ada.Finalization;
 with Conts.Cursors;
 with Conts.Elements;
 with Conts.Vectors.Definite_Unbounded;
@@ -262,6 +261,8 @@ package Conts.Graphs is
       subtype Graph is Graphs.Graph;
       subtype Vertex is Graphs.Vertex;
       subtype Edge is Graphs.Edge;
+      subtype DFS_Visitor is Graphs.DFS_Visitor;
+      Null_Vertex : constant Vertex := Graphs.Null_Vertex;
 
       package Cursors renames Vertices.Cursors;
 

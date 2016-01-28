@@ -66,6 +66,8 @@ can be edited with any text editor.
 ** TODO =Contains=
    Check whether a container contains a specific item
 
+** TODO =Sort=
+
 ** MAYBE Should we have a version of the algorithms with two cursors as input ?
    This should allow working on a subset of a container. The second cursor
    might be, as in C++, past the last element of the sequence, to simplify the
@@ -99,7 +101,7 @@ can be edited with any text editor.
 
 ** TODO circular buffer with Prepend operation
 ** TODO pass a storage_pool in parameter to =Unbounded= nodes
-** TODO can a cursor be implemented as an Index_Type directly ?
+** TODO can a cursor be implemented as an =Index_Type= directly ?
    That would be more logical (removing one layer of abstraction), but
    there is no convenient way to define =No_Element=, and =Next= will
    raise an exception when moving past the current element.
@@ -122,11 +124,21 @@ can be edited with any text editor.
 ** TODO Implement Linked_Edge representation
    (all edges stored in a single vector, and vertices point into it)
 
+** Algorithms
+*** TODO Implement Strongly Connected Components
+*** TODO Implement Breadth-First-Search
+*** TODO Implement A* algorithm (need priority queue first)
+
 ** Adjacency lists
-*** Add Controlled and Limited versions
+*** TODO Add Controlled and Limited versions
     Like we do for other containers. This might need adding a notion
     of graph nodes, and a graph generics package, which would provide
     all the instances for the =Incidence_Graph_Traits=, =DFS=, ...
+*** TODO Version for undirected graph
+*** TODO Version for bidirectional graph
+    We can access In_Edges in addition to Out_Edges.
+    We can provide a =Revert_Graph= wrapper that reverses the direction
+    of edges, which is useful for some algorithms
 
 * Priority queues
 

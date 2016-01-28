@@ -72,10 +72,10 @@ package body Conts.Graphs.DFS is
       ------------
 
       procedure Search
-        (G     : Graphs.Graphs.Graph;
+        (G     : Graphs.Graph;
          Visit : in out Visitor;
          Map   : in out Maps.Map;
-         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+         V     : Graphs.Vertex := Graphs.Null_Vertex)
       is
          use Graphs.Graphs;
 
@@ -227,10 +227,10 @@ package body Conts.Graphs.DFS is
       ----------------------
 
       procedure Search_Recursive
-        (G     : Graphs.Graphs.Graph;
+        (G     : Graphs.Graph;
          Visit : in out Visitor;
          Map   : in out Maps.Map;
-         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+         V     : Graphs.Vertex := Graphs.Null_Vertex)
       is
          use Graphs.Graphs;
 
@@ -308,18 +308,55 @@ package body Conts.Graphs.DFS is
       -- Is_Acyclic --
       ----------------
 
-      procedure Is_Acyclic
+      function Is_Acyclic
         (G       : Graphs.Graphs.Graph;
-         Map     : in out Maps.Map;
-         Acyclic : out Boolean)
+         Map     : in out Maps.Map) return Boolean
       is
          use Graphs.Graphs;
          procedure DFS is new Search (Acyclic_Visitor);
          V   : Acyclic_Visitor;
       begin
          DFS (G, V, Map);
-         Acyclic := not V.Has_Cycle;
+         return not V.Has_Cycle;
       end Is_Acyclic;
+
+      ------------------------------
+      -- Reverse_Topological_Sort --
+      ------------------------------
+
+      procedure Reverse_Topological_Sort
+        (G   : Graphs.Graph;
+         Map : in out Maps.Map)
+      is
+         type TS_Visitor is new Graphs.Graphs.DFS_Visitor with null record;
+         overriding procedure Back_Edge
+           (Self : in out TS_Visitor; G : Graph; E : Edge) with Inline;
+         overriding procedure Finish_Vertex
+           (Self : in out TS_Visitor; G : Graphs.Graph; V : Graphs.Vertex)
+           with Inline;
+
+         procedure DFS is new Search (TS_Visitor);
+
+         overriding procedure Back_Edge
+           (Self : in out TS_Visitor; G : Graph; E : Edge)
+         is
+            pragma Unreferenced (Self, G, E);
+         begin
+            raise Program_Error with "Graph is not acyclic";
+         end Back_Edge;
+
+         overriding procedure Finish_Vertex
+           (Self : in out TS_Visitor; G : Graph; V : Vertex)
+         is
+            pragma Unreferenced (Self, G);
+         begin
+            Callback (V);
+         end Finish_Vertex;
+
+         V : TS_Visitor;
+      begin
+         DFS (G, V, Map);
+      end Reverse_Topological_Sort;
 
    end With_Map;
 
@@ -334,11 +371,11 @@ package body Conts.Graphs.DFS is
       -- Is_Acyclic --
       ----------------
 
-      function Is_Acyclic (G : Graphs.Graphs.Graph) return Boolean is
+      function Is_Acyclic (G : Graphs.Graph) return Boolean is
          Acyclic : Boolean;
          Map     : Maps.Map := Create_Map (G);   --  uninitialized map
       begin
-         Internal.Is_Acyclic (G, Map, Acyclic);
+         Acyclic := Internal.Is_Acyclic (G, Map);
          Maps.Clear (Map);
          return Acyclic;
       end Is_Acyclic;
@@ -348,9 +385,9 @@ package body Conts.Graphs.DFS is
       ------------
 
       procedure Search
-        (G     : Graphs.Graphs.Graph;
+        (G     : Graphs.Graph;
          Visit : in out Visitor;
-         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+         V     : Graphs.Vertex := Graphs.Null_Vertex)
       is
          procedure Internal_Search is new Internal.Search (Visitor);
          Map : Maps.Map := Create_Map (G);   --  uninitialized map
@@ -358,6 +395,19 @@ package body Conts.Graphs.DFS is
          Internal_Search (G, Visit, Map, V);
          Maps.Clear (Map);
       end Search;
+
+      ------------------------------
+      -- Reverse_Topological_Sort --
+      ------------------------------
+
+      procedure Reverse_Topological_Sort (G : Graphs.Graph) is
+         procedure Internal_Sort is
+           new Internal.Reverse_Topological_Sort (Callback);
+         Map : Maps.Map := Create_Map (G);
+      begin
+         Internal_Sort (G, Map);
+         Maps.Clear (Map);
+      end Reverse_Topological_Sort;
 
    end Exterior;
 
@@ -374,10 +424,8 @@ package body Conts.Graphs.DFS is
       ----------------
 
       function Is_Acyclic (G : in out Graphs.Graphs.Graph) return Boolean is
-         Acyclic : Boolean;
       begin
-         Internal.Is_Acyclic (G, G, Acyclic);
-         return Acyclic;
+         return Internal.Is_Acyclic (G, G);
       end Is_Acyclic;
 
       ------------
@@ -385,9 +433,9 @@ package body Conts.Graphs.DFS is
       ------------
 
       procedure Search
-        (G     : in out Graphs.Graphs.Graph;
+        (G     : in out Graphs.Graph;
          Visit : in out Visitor;
-         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+         V     : Graphs.Vertex := Graphs.Null_Vertex)
       is
          procedure Internal_Search is new Internal.Search (Visitor);
       begin
@@ -399,14 +447,25 @@ package body Conts.Graphs.DFS is
       ----------------------
 
       procedure Search_Recursive
-        (G     : in out Graphs.Graphs.Graph;
+        (G     : in out Graphs.Graph;
          Visit : in out Visitor;
-         V     : Graphs.Graphs.Vertex := Graphs.Graphs.Null_Vertex)
+         V     : Graphs.Vertex := Graphs.Null_Vertex)
       is
          procedure Internal_Search is new Internal.Search_Recursive (Visitor);
       begin
          Internal_Search (G, Visit, G, V);
       end Search_Recursive;
+
+      ------------------------------
+      -- Reverse_Topological_Sort --
+      ------------------------------
+
+      procedure Reverse_Topological_Sort (G : in out Graphs.Graph) is
+         procedure Internal_Sort is
+           new Internal.Reverse_Topological_Sort (Callback);
+      begin
+         Internal_Sort (G, G);
+      end Reverse_Topological_Sort;
 
    end Interior;
 
