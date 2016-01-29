@@ -180,6 +180,11 @@ package Conts.Graphs.Adjacency_List is
        (Impl.Vertex, Impl.Identity, Impl.Length);
    package Color_Maps renames Impl_Color_Maps.As_Exterior;
 
+   package Impl_Integer_Maps is
+     new Traits.Integer_Property_Maps.Property_Maps_From_Index
+       (Impl.Vertex, Impl.Identity, Impl.Length);
+   package Integer_Maps renames Impl_Integer_Maps.As_Exterior;
+
    package DFS is new Conts.Graphs.DFS.Exterior
      (Incidence_Traits, Color_Maps,
       Create_Map => Impl_Color_Maps.Create_Map);

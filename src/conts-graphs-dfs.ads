@@ -38,16 +38,17 @@ package Conts.Graphs.DFS is
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+      with package Color_Maps is
+        new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
    package With_Map is
 
       generic
          type Visitor (<>) is new Graphs.DFS_Visitor with private;
       procedure Search
-        (G     : Graphs.Graph;
-         Visit : in out Visitor;
-         Map   : in out Maps.Map;
-         V     : Graphs.Vertex := Graphs.Null_Vertex);
+        (G      : Graphs.Graph;
+         Visit  : in out Visitor;
+         Colors : out Color_Maps.Map;
+         V      : Graphs.Vertex := Graphs.Null_Vertex);
       --  A depth first search is a traversal of the graph that always chooses
       --  to go deeper in the graph when possible, by looking at the next
       --  adjacent undiscovered vertex until reaching a vertex that has no
@@ -76,24 +77,25 @@ package Conts.Graphs.DFS is
       generic
          type Visitor (<>) is new Graphs.DFS_Visitor with private;
       procedure Search_Recursive
-        (G     : Graphs.Graph;
-         Visit : in out Visitor;
-         Map   : in out Maps.Map;
-         V     : Graphs.Vertex := Graphs.Null_Vertex);
+        (G      : Graphs.Graph;
+         Visit  : in out Visitor;
+         Colors : out Color_Maps.Map;
+         V      : Graphs.Vertex := Graphs.Null_Vertex);
       --  A recursive version of the DFS algorithm.
       --  It is fractionally faster on small graph, and is not compatible with
       --  large graphs (since the depth of recursion with blow the stack).
 
       function Is_Acyclic
-        (G : Graphs.Graph; Map : in out Maps.Map) return Boolean;
+        (G      : Graphs.Graph;
+         Colors : out Color_Maps.Map) return Boolean;
       --  Whether the graph has no cycles
 
       generic
          with procedure Callback (V : Graphs.Vertex);
       procedure Reverse_Topological_Sort
-        (G   : Graphs.Graph;
-         Map : in out Maps.Map)
-        with Pre => Is_Acyclic (G, Map);
+        (G     : Graphs.Graph;
+         Colors : out Color_Maps.Map)
+        with Pre => Is_Acyclic (G, Colors);
       --  Return the vertices in reverse topological order.
       --
       --  Topological order:
@@ -110,8 +112,9 @@ package Conts.Graphs.DFS is
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
-      with function Create_Map (G : Graphs.Graph) return Maps.Map;
+      with package Color_Maps is
+        new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+      with function Create_Map (G : Graphs.Graph) return Color_Maps.Map;
    package Exterior is
 
       generic
@@ -139,7 +142,8 @@ package Conts.Graphs.DFS is
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Interior (<>);
+      with package Color_Maps is
+        new Graphs.Graphs.Color_Property_Maps.Interior (<>);
    package Interior is
 
       generic

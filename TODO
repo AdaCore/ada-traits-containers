@@ -58,6 +58,21 @@ can be edited with any text editor.
    giving a default value, and would let users override this for their whole
    application.
 
+** TODO Support for standard Ada iterators, rather than =Iterable= aspect
+   Measure performance, which might be better since Iterable forces dynamic
+   dispatching.
+** MAYBE can we make use of partial list of parameters in formal part:
+   generic
+      with package Mapping_1 is new ...;
+      with package Mapping_2 is new Ordered_Maps
+         (Key_Type => Mapping_1.Element_Type,
+          others => <>);
+
+
+* Elements traits
+** TODO Review =Conts.Elements.Arrays=
+   It might be more efficient in some cases, but currently leads to a
+   =Storage_Error= since we are doing low-level manipulations.
 * Algorithms
 
 ** TODO =Shuffle=
@@ -128,6 +143,7 @@ can be edited with any text editor.
 *** TODO Implement Strongly Connected Components
 *** TODO Implement Breadth-First-Search
 *** TODO Implement A* algorithm (need priority queue first)
+*** MAYBE Iterative version of DFS
 
 ** Adjacency lists
 *** TODO Add Controlled and Limited versions
@@ -139,6 +155,8 @@ can be edited with any text editor.
     We can access In_Edges in addition to Out_Edges.
     We can provide a =Revert_Graph= wrapper that reverses the direction
     of edges, which is useful for some algorithms
+*** TODO specify the base type for vertex, instead of always =Integer=
+    Would be nice to be able to use enumerations.
 
 * Priority queues
 

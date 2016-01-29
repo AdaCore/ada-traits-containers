@@ -20,31 +20,191 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-
-with Conts.Graphs.DFS;
+with Conts.Vectors.Nodes.Unbounded;
+with Conts.Vectors.Generics;
 
 package body Conts.Graphs.Connected_Components is
 
-   --------------------------
-   -- Connected_Components --
-   --------------------------
-
-   procedure Connected_Components (G : Graphs.Graphs.Graph) is
-      pragma Unreferenced (G);
-   begin
-      null;
-   end Connected_Components;
+   package Roots_Vectors is new Conts.Vectors.Definite_Unbounded
+     (Index_Type   => Natural,
+      Element_Type => Integer,
+      Base_Type    => Conts.Limited_Base);
+   --  A stack of integers.
+   --  For the strongly-connected-components, these are the DFS numbers for
+   --  the roots of each SCC.
 
    -----------------------------------
-   -- Connected_Components_With_Pre --
+   -- Strongly_Connected_Components --
    -----------------------------------
 
-   procedure Connected_Components_With_Pre
-      (G     : Graphs.Graphs.Graph)
+   procedure Strongly_Connected_Components
+     (G                : Graphs.Graphs.Graph;
+      Components       : out Comp_Maps.Map;
+      Components_Count : out Positive)
    is
-      pragma Unreferenced (G);
+      use Graphs.Graphs;
+
+      --  This algorithm needs multiple pieces of information for each
+      --  vertex:
+      --     * Whether the node has been visited or not.
+      --        unvisited = white color,  visited = gray or black
+      --     * whether a node is closed
+      --        when it is given a component number, it is closed
+      --     * a DFS index (time at which the vertex was discovered)
+      --
+      --  We combine all of these into a single piece of information, to
+      --  make better use of memory cache.
+      --  The information is stored in the Components map, with the
+      --  following definitions:
+      --     * n = 0
+      --       The node has not been visited yet.
+      --       DFS index unknown, as well as lowlink
+      --       Component id unset
+      --     * n < 0
+      --       Node has been visited. The algorithm does not
+      --          need to distinguish gray and black (but then Back_Edge is
+      --          the same as Forward_Or_Cross_Edge).
+      --       Component id unset
+      --       n is the negated DFS index.
+      --     * n > 0
+      --       Node has been closed
+      --       n is the component id
+
+      package Vertex_Nodes is new Conts.Vectors.Nodes.Unbounded
+        (Elements      => Graphs.Graphs.Vertices,
+         Base_Type     => Conts.Limited_Base,
+         Resize_Policy => Conts.Vectors.Resize_1_5);
+      package Vertex_Vectors is new Conts.Vectors.Generics
+        (Natural, Vertex_Nodes.Traits);
+      --  A stack of vertices.
+
+      Roots : Roots_Vectors.Vector;
+      Roots_Top : Integer;
+      --  The roots of the SCC components (their DFS number is enough)
+
+      Open : Vertex_Vectors.Vector;
+
+      Comp  : Positive := 1;   --  current component
+      DFS_Index : Positive := 1;         --  current DFS index
+
+      --  A custom color map which stores integers instead
+      procedure Set
+        (M : in out Comp_Maps.Map; V : Vertex; C : Color);
+      function Get (M : Comp_Maps.Map; V : Vertex) return Color;
+
+      procedure Set
+        (M : in out Comp_Maps.Map; V : Vertex; C : Color) is
+      begin
+         case C is
+            when White =>
+               Comp_Maps.Set (M, V,  0);  --  unvisited
+
+            when Gray =>   --  Vertex is discovered
+               Roots_Top := -DFS_Index;
+               Comp_Maps.Set (M, V, Roots_Top);  --  visited
+               Roots.Append (Roots_Top);
+               Open.Append (V);
+               DFS_Index := DFS_Index + 1;
+
+            when Black =>   --  Vertex is finished
+               declare
+                  V_DFS_Index : constant Integer :=
+                    Comp_Maps.Get (Components, V);
+               begin
+                  if V_DFS_Index = Roots_Top then
+                     Roots.Delete_Last;
+                     Roots_Top := Roots.Last_Element;
+
+                     loop
+                        declare
+                           U : constant Vertex :=
+                             Graphs.Graphs.Vertices.To_Elem
+                               (Open.Last_Element);
+                           U_Index  : constant Integer :=
+                             Comp_Maps.Get (Components, U);
+                        begin
+                           Open.Delete_Last;
+                           Comp_Maps.Set (Components, U, Comp);
+                           exit when U_Index = V_DFS_Index;
+                        end;
+                     end loop;
+
+                     Comp := Comp + 1;
+                  end if;
+               end;
+         end case;
+      end Set;
+
+      function Get (M : Comp_Maps.Map; V : Vertex) return Color is
+      begin
+         if Comp_Maps.Get (M, V) = 0 then
+            return White;
+         else
+            return Gray;
+         end if;
+      end Get;
+
+      package Color_Maps is new Graphs.Graphs.Color_Property_Maps.Exterior
+        (Map => Comp_Maps.Map,
+         Set => Set,
+         Get => Get);
+      package Local_DFS is
+        new Conts.Graphs.DFS.With_Map (Graphs, Color_Maps);
+
+      type SCC_Visitor is new DFS_Visitor with null record;
+      overriding procedure Vertices_Initialized
+        (Self : in out SCC_Visitor;
+         G    : Graphs.Graph; Count : Count_Type);
+      overriding procedure Back_Edge
+        (Self : in out SCC_Visitor; G : Graphs.Graph; E : Graphs.Edge);
+      --  Some of the operations (discover and finish) are handled in the
+      --  color map.
+
+      overriding procedure Vertices_Initialized
+        (Self : in out SCC_Visitor; G : Graphs.Graph; Count : Count_Type)
+      is
+         pragma Unreferenced (Self, G);
+      begin
+         Roots.Reserve_Capacity (Count_Type'Min (300_000, Count));
+      end Vertices_Initialized;
+
+      overriding procedure Back_Edge
+        (Self : in out SCC_Visitor; G : Graphs.Graph; E : Graphs.Edge)
+      is
+         pragma Unreferenced (Self);
+         V           : constant Vertex :=
+           Graphs.Graphs_Formal.Get_Node_Target (G, E);
+         V_DFS_Index : constant Integer := Comp_Maps.Get (Components, V);
+      begin
+         --  If V is open
+         if V_DFS_Index < 0 then
+            while Roots_Top < V_DFS_Index loop
+               Roots.Delete_Last;
+               Roots_Top := Roots.Last_Element;
+            end loop;
+         end if;
+      end Back_Edge;
+
+      procedure DFS is new Local_DFS.Search (SCC_Visitor);
+
+      V : SCC_Visitor;
    begin
-      null;
-   end Connected_Components_With_Pre;
+      DFS (G, V, Components);
+      Components_Count := Comp;
+   end Strongly_Connected_Components;
+
+   --------------------------------------------
+   -- Strongly_Connected_Components_With_Pre --
+   --------------------------------------------
+
+   procedure Strongly_Connected_Components_With_Pre
+     (G                : Graphs.Graphs.Graph;
+      Components       : out Comp_Maps.Map;
+      Components_Count : out Positive)
+   is
+      procedure Int is new Strongly_Connected_Components (Graphs, Comp_Maps);
+   begin
+      Int (G, Components, Components_Count);
+   end Strongly_Connected_Components_With_Pre;
 
 end Conts.Graphs.Connected_Components;

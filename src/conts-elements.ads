@@ -76,6 +76,11 @@ package Conts.Elements with SPARK_Mode is
       --  original element is deleted.
 
    package Traits is
+
+      --  Some renamings to make the formal parameters visible in all places
+      --  (12.7 10/2 in the ARM)
+      function To_Elem (E : Return_Type) return Element_Type
+        renames To_Element;
    end Traits;
 
 end Conts.Elements;

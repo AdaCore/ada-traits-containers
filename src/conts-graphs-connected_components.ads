@@ -27,9 +27,25 @@ package Conts.Graphs.Connected_Components is
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-   procedure Connected_Components (G : Graphs.Graphs.Graph);
-   --  ??? Unimplemented yet.
-   --  This algorithm uses no Pre or Post conditions (see below)
+      with package Comp_Maps is
+        new Graphs.Graphs.Integer_Property_Maps.Exterior (<>);
+   procedure Strongly_Connected_Components
+     (G                : Graphs.Graphs.Graph;
+      Components       : out Comp_Maps.Map;
+      Components_Count : out Positive);
+   --  Compute the strongly components of the graph:
+   --  These are maximal sets of vertices such that for every pair of
+   --  vertices u and v in the set, there exists a path from u to v and
+   --  a path from v to u.
+   --  Each vertex belongs to one, and only one, such component. This
+   --  algorithm sets the index of that component in the Components map,
+   --  and returns the number of components that were found. In the
+   --  Components, the indexes are in the range 1 .. Components_Count.
+   --
+   --  Each vertex that is not part of a vertex forms its own component.
+   --
+   --  The implementation uses the Cheriyan-Mehlhorn-Gabow algorithm.
+   --  Complexity is O( |edges| + |vertices| )
 
    -------------------------------
    -- Algorithm with assertions --
@@ -37,13 +53,19 @@ package Conts.Graphs.Connected_Components is
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Maps is new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
-      with function Create_Map (G : Graphs.Graphs.Graph) return Maps.Map;
+      with package Comp_Maps is
+        new Graphs.Graphs.Integer_Property_Maps.Exterior (<>);
+
+      with package Color_Maps is
+        new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+      with function Create_Map (G : Graphs.Graphs.Graph) return Color_Maps.Map;
       with package DFS is
-         new Conts.Graphs.DFS.Exterior (Graphs, Maps, Create_Map);
-   procedure Connected_Components_With_Pre
-      (G     : Graphs.Graphs.Graph)
-       with Pre => (DFS.Is_Acyclic (G));
+         new Conts.Graphs.DFS.Exterior (Graphs, Color_Maps, Create_Map);
+   procedure Strongly_Connected_Components_With_Pre
+     (G                : Graphs.Graphs.Graph;
+      Components       : out Comp_Maps.Map;
+      Components_Count : out Positive)
+   with Pre => (DFS.Is_Acyclic (G));
    --  Same as above, but with preconditions.
    --  To provide these preconditions, we need to be able to execute a generic
    --  algorith. Since we cannot do the instantiation in the precondition

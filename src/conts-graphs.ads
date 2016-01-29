@@ -143,11 +143,17 @@ package Conts.Graphs is
       --  Return the target of the edge.
 
    package Traits is
+      --  Some renamings to make the formal parameters visible in all places
+      --  (12.7 10/2 in the ARM)
       subtype Graph_Type is Graph;
       subtype Vertex is Vertices.Element_Type;
+      function Get_Node_Target
+        (G : Graph; E : Edge) return Vertices.Element_Type renames Get_Target;
 
       package Color_Property_Maps is new Property_Maps
         (Graph, Vertex, Color, Default_Value => White);
+      package Integer_Property_Maps is new Property_Maps
+        (Graph, Vertex, Integer, Default_Value => 1);
 
       generic
          type Cursor is private;
@@ -199,6 +205,15 @@ package Conts.Graphs is
       --  Whether to stop iterating after discovering vertex V.
       --  If iteration should stop, this procedure should set Stop to True (its
       --  initial value is always False).
+
+      procedure Vertices_Initialized
+        (Self  : in out DFS_Visitor;
+         G     : Graph;
+         Count : Count_Type) is null;
+      --  Provide the number of vertices in the graph. This might be used to
+      --  reserve_capacity for some internal data for instance.
+      --  This is called after all vertices have been initialized via
+      --  Initialiez_Vertex.
 
       procedure Initialize_Vertex
          (Self : in out DFS_Visitor; G : Graph; V : Vertex) is null;
@@ -258,6 +273,9 @@ package Conts.Graphs is
       with package Out_Edges is new Graphs.Edge_Cursors (<>);
    package Incidence_Graph_Traits is
 
+      --  Some renamings to make the formal parameters visible in all places
+      --  (12.7 10/2 in the ARM)
+      package Graphs_Formal renames Graphs;
       subtype Graph is Graphs.Graph;
       subtype Vertex is Graphs.Vertex;
       subtype Edge is Graphs.Edge;

@@ -96,8 +96,8 @@ package Graph1_Support is
      (Base_Graphs, Custom_Vertices, Custom_Edges);
 
    package DFS is new Conts.Graphs.DFS.Interior
-     (Graphs => Custom_Graphs,
-      Maps   => Color_Maps);
+     (Graphs     => Custom_Graphs,
+      Color_Maps => Color_Maps);
 
    ----------------
    -- Algorithms --
