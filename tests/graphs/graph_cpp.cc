@@ -4,6 +4,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/strong_components.hpp>
 #include <creport.h>
 
 extern "C"
@@ -30,6 +31,19 @@ void test_cpp_graph(void* output) {
      start_test (output, "dfs, no visitor", START_GROUP);
      default_dfs_visitor vis;
      depth_first_search (g, visitor (vis));
+     mem_end_test (output);
+
+     add_edge(num_vertices / 10, 3, g);
+     add_edge(2 * num_vertices / 10, num_vertices - 1, g);
+
+     start_test (output, "dfs, visitor", SAME_GROUP);
+     start_test (output, "dfs-recursive, visitor", SAME_GROUP);
+
+     start_test (output, "scc", START_GROUP);
+     std::vector<int> c(num_vertices);
+     int num = strong_components(
+           g,
+           make_iterator_property_map(c.begin(), get(vertex_index, g)));
      mem_end_test (output);
   }
 

@@ -69,6 +69,9 @@ package body Conts.Graphs.Connected_Components is
       --     * n > 0
       --       Node has been closed
       --       n is the component id
+      --
+      --  See:
+      --    https://people.mpi-inf.mpg.de/~mehlhorn/ftp/EngineeringDFS.pdf
 
       package Vertex_Nodes is new Conts.Vectors.Nodes.Unbounded
         (Elements      => Graphs.Graphs.Vertices,
@@ -97,7 +100,7 @@ package body Conts.Graphs.Connected_Components is
       begin
          case C is
             when White =>
-               Comp_Maps.Set (M, V,  0);  --  unvisited
+               Comp_Maps.Set (M, V, 0);  --  unvisited
 
             when Gray =>   --  Vertex is discovered
                Roots_Top := -DFS_Index;
@@ -113,7 +116,9 @@ package body Conts.Graphs.Connected_Components is
                begin
                   if V_DFS_Index = Roots_Top then
                      Roots.Delete_Last;
-                     Roots_Top := Roots.Last_Element;
+                     if not Roots.Is_Empty then
+                        Roots_Top := Roots.Last_Element;
+                     end if;
 
                      loop
                         declare
@@ -166,6 +171,7 @@ package body Conts.Graphs.Connected_Components is
          pragma Unreferenced (Self, G);
       begin
          Roots.Reserve_Capacity (Count_Type'Min (300_000, Count));
+         Open.Reserve_Capacity (Count_Type'Min (300_000, Count));
       end Vertices_Initialized;
 
       overriding procedure Back_Edge
@@ -191,6 +197,8 @@ package body Conts.Graphs.Connected_Components is
    begin
       DFS (G, V, Components);
       Components_Count := Comp - 1;
+      Roots.Clear;
+      Open.Clear;
    end Strongly_Connected_Components;
 
    --------------------------------------------

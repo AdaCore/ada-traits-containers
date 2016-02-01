@@ -24,6 +24,7 @@ with Ada.Finalization;
 with Graph1_Support;                use Graph1_Support;
 with Conts.Elements.Null_Elements;  use Conts.Elements.Null_Elements;
 with Conts.Graphs.Adjacency_List;
+with Conts.Graphs.Connected_Components; use Conts.Graphs.Connected_Components;
 with Report;                        use Report;
 with Perf_Support;
 with Ada.Text_IO;                   use Ada.Text_IO;
@@ -58,6 +59,8 @@ package body Custom_Graph is
       end Finish_Vertex;
 
       procedure DFS is new Graphs.DFS.Search (My_Visitor);
+      procedure Strong is new Strongly_Connected_Components
+         (Graphs.Incidence_Traits, Graphs.Integer_Maps.As_Exterior);
 
       subtype Vertex is Graphs.Vertex;
       use type Vertex;
@@ -89,6 +92,21 @@ package body Custom_Graph is
             Stdout.Start_Test ("dfs, no visitor", Start_Group => True);
             DFS (G, Vis);
             Stdout.End_Test;
+
+            declare
+               M     : Graphs.Integer_Maps.Map :=
+                  Graphs.Integer_Maps.Create_Map (G);
+               Count : Integer;
+            begin
+               G.Add_Edge (Perf_Support.Items_Count / 10 + 1, 4, No_Element);
+               G.Add_Edge (2 * Perf_Support.Items_Count / 10 + 1,
+                           Perf_Support.Items_Count, No_Element);
+
+               Stdout.Start_Test ("scc", Start_Group => True);
+               --  M.Values.Reserve_Capacity (G.Length);
+               Strong (G, M, Components_Count => Count);
+               Stdout.End_Test;
+            end;
 
             G.Clear;
          end;

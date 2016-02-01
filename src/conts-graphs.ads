@@ -95,6 +95,8 @@ package Conts.Graphs is
 
       generic
          type Index_Type is range <>;
+         type Base_Type is abstract tagged limited private;
+
          with function Get_Index (K : Key) return Index_Type is <>;
 
          with function Length (G : Graph) return Count_Type is <>;
@@ -111,7 +113,7 @@ package Conts.Graphs is
          --  copies. This ensures that Create_Map builds the map in place.
 
          package Value_Vectors is new Conts.Vectors.Definite_Unbounded
-           (Index_Type, Value, Base_Type => Conts.Limited_Base);
+           (Index_Type, Value, Base_Type => Base_Type);
          type Map is limited record
             Values : Value_Vectors.Vector;
          end record;

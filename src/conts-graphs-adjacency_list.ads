@@ -175,15 +175,22 @@ package Conts.Graphs.Adjacency_List is
       Vertices    => Vertices_Cursors,
       Out_Edges   => Out_Edges_Cursors);
 
+   --  Color map is always limited, since this is mostly created automatically
+   --  by algorithms. If you create a color map yourself, you need to clear
+   --  it manually.
    package Impl_Color_Maps is
      new Traits.Color_Property_Maps.Property_Maps_From_Index
-       (Impl.Vertex, Impl.Identity, Impl.Length);
+       (Impl.Vertex, Conts.Limited_Base, Impl.Identity, Impl.Length);
    package Color_Maps renames Impl_Color_Maps.As_Exterior;
 
-   package Impl_Integer_Maps is
+   --  An integer map is mostly created by the application, since it holds the
+   --  results of strongly connected components for instance. So we make it
+   --  a controlled type (implicit Clear) if the graph itself is controlled,
+   --  so that it is compatible with SPARK when people want to, but on the
+   --  other hand it is in general cleared automatically when possible.
+   package Integer_Maps is
      new Traits.Integer_Property_Maps.Property_Maps_From_Index
-       (Impl.Vertex, Impl.Identity, Impl.Length);
-   package Integer_Maps renames Impl_Integer_Maps.As_Exterior;
+       (Impl.Vertex, Base_Type, Impl.Identity, Impl.Length);
 
    package DFS is new Conts.Graphs.DFS.Exterior
      (Incidence_Traits, Color_Maps,

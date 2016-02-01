@@ -35,10 +35,10 @@ procedure Test_Components is
    use Graphs;
 
    procedure Strong is new Strongly_Connected_Components
-      (Graphs.Incidence_Traits, Graphs.Integer_Maps);
+      (Graphs.Incidence_Traits, Graphs.Integer_Maps.As_Exterior);
 
    G : Graphs.Graph;
-   M : Graphs.Impl_Integer_Maps.Map;
+   M : Graphs.Integer_Maps.Map;
    Count : Positive;
 begin
    G.Add_Vertices (No_Element, Count => 8);
@@ -63,6 +63,6 @@ begin
 
    for V in Graphs.Vertex'(1) .. 8 loop
       Put_Line ("Component for" & V'Img
-         & " is" & Graphs.Impl_Integer_Maps.Get (M, V)'Img);
+         & " is" & Graphs.Integer_Maps.Get (M, V)'Img);
    end loop;
 end Test_Components;
