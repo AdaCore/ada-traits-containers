@@ -67,6 +67,9 @@ package Report is
    --  will belong to the same group, until a test that also sets Start_Group
    --  to True.
 
+   procedure End_Test_Not_Run (Self : not null access Output'Class);
+   --  Same as End_Test, but mark the test as "NOT RUN".
+
    procedure Display (Self : not null access Output'Class);
    --  Outputs the results to a JSON file
 

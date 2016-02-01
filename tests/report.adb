@@ -57,6 +57,8 @@ package body Report is
      (Self : System.Address;
       Allocated, Allocs_Count, Frees_Count : Natural)
       with Export, Convention => C, External_Name => "end_test";
+   procedure End_Test_Not_Run (Self : System.Address)
+      with Export, Convention => C, External_Name => "end_test_not_run";
 
    --------------------------
    -- Start_Container_Test --
@@ -166,6 +168,20 @@ package body Report is
       Memory.Unpause;
       Self.Start_Time := Clock;
    end Start_Test;
+
+   ----------------------
+   -- End_Test_Not_Run --
+   ----------------------
+
+   procedure End_Test_Not_Run (Self : not null access Output'Class) is
+   begin
+      if Self.Current_Test /= JSON_Null then
+         Memory.Pause;
+         Self.Current_Test.Set_Field ("duration", Empty_Array);
+         Self.Current_Test := JSON_Null;
+         Memory.Unpause;
+      end if;
+   end End_Test_Not_Run;
 
    --------------
    -- End_Test --
@@ -282,4 +298,12 @@ package body Report is
       End_Test (To_Output (Self));
    end End_Test;
 
+   ----------------------
+   -- End_Test_Not_Run --
+   ----------------------
+
+   procedure End_Test_Not_Run (Self : System.Address) is
+   begin
+      End_Test_Not_Run (To_Output (Self));
+   end End_Test_Not_Run;
 end Report;

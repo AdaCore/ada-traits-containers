@@ -31,6 +31,7 @@ extern "C" {
    extern void save_container_size (void* output, long int size);
    extern void start_test
       (void* output, const char* name, const int start_group);
+   extern void end_test_not_run (void* output);
 }
 
 void reset_mem();

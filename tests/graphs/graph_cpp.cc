@@ -37,7 +37,10 @@ void test_cpp_graph(void* output) {
      add_edge(2 * num_vertices / 10, num_vertices - 1, g);
 
      start_test (output, "dfs, visitor", SAME_GROUP);
+     end_test_not_run (output);
+
      start_test (output, "dfs-recursive, visitor", SAME_GROUP);
+     end_test_not_run (output);
 
      start_test (output, "scc", START_GROUP);
      std::vector<int> c(num_vertices);

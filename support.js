@@ -149,7 +149,7 @@ directive('ctDuration', function() {
       },
       controller: function($scope, Reftime, $rootScope) {
          $scope.test = $scope.container.tests[$scope.testname];
-         if ($scope.test) {
+         if ($scope.test && $scope.test.duration.length) {
             Reftime.compute_percent(
                $scope.testname,
                $scope.test,
@@ -160,11 +160,11 @@ directive('ctDuration', function() {
            ' ng-class="{worse:test.mean_percent>105, comment:test.comment}"' +
            ' title="{{test.comment}}">' +
 
-         '<span ng-if="$root.display==0"' +
+         '<span ng-if="$root.display==0 && test.duration.length"' +
               ' ng-class="{worse:test.mean_percent>105}">' +
               '{{test.mean_percent}}%</span>' +
 
-         '<span ng-if="$root.display==1"' +
+         '<span ng-if="$root.display==1 && test.duration.length"' +
               ' ng-class="{worse:test.mean_percent>105}">' +
               '{{test.mean_duration_str}}</span>' +
          '</span>'
