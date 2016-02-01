@@ -168,9 +168,6 @@ can be edited with any text editor.
     We can provide a =Revert_Graph= wrapper that reverses the direction
     of edges, which is useful for some algorithms
 
-*** TODO specify the base type for vertex, instead of always =Integer=
-    Would be nice to be able to use enumerations.
-
 * Priority queues
 
 * Property Maps

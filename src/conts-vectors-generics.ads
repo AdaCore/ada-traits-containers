@@ -25,7 +25,7 @@ pragma Ada_2012;
 with Conts.Vectors.Nodes;
 
 generic
-   type Index_Type is range <>;
+   type Index_Type is (<>);
    with package Nodes is new Conts.Vectors.Nodes.Traits (<>);
 package Conts.Vectors.Generics with SPARK_Mode is
 
@@ -189,8 +189,8 @@ private
    function To_Count (Idx : Index_Type) return Count_Type
    is (Count_Type
        (Conts.Vectors.Nodes.Min_Index
-        + Count_Type'Base (Idx)
-        - Count_Type'Base (Index_Type'First)));
+        + Count_Type'Base (Index_Type'Pos (Idx))
+        - Count_Type'Base (Index_Type'Pos (Index_Type'First))));
 
    type Cursor is record
       Index   : Count_Type;

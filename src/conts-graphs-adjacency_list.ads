@@ -31,6 +31,10 @@ with Conts.Vectors.Definite_Unbounded;
 with Conts.Graphs.DFS;
 
 generic
+   type Vertex_Type is (<>);
+   --  The type used to represent vertices. These are indices into an internal
+   --  vector of vertices, but could be any integer type, enumeration,...
+
    with package Vertex_Properties is new Conts.Elements.Traits (<>);
    with package Edge_Properties is new Conts.Elements.Traits (<>);
    --  The data associated with edges and properties
@@ -41,16 +45,18 @@ generic
 
 package Conts.Graphs.Adjacency_List is
 
+   subtype Vertex is Vertex_Type;
+   --  Make this type visible to all packages using instances.
+
    package Impl is
       type Graph is new Base_Type with private;
 
       function Length (Self : Graph) return Count_Type;
       --  Return the number of elements in the graph
 
-      type Vertex is new Positive;
       Null_Vertex : constant Vertex;
 
-      function Identity (V : Vertex) return Impl.Vertex is (V) with Inline;
+      function Identity (V : Vertex) return Vertex is (V) with Inline;
       --  Implements the traits package later
 
       type Edge is private;
@@ -81,8 +87,8 @@ package Conts.Graphs.Adjacency_List is
         (Self     : in out Graph;
          From, To : Vertex;
          Props    : Edge_Properties.Element_Type)
-        with Pre => From <= Vertex (Self.Length)
-                    and To <= Vertex (Self.Length);
+        with Pre => Vertex'Pos (From) <= Self.Length
+                    and Vertex'Pos (To) <= Self.Length;
       --  Add a new edge between two vertices
 
       procedure Clear (Self : in out Graph);
@@ -133,15 +139,14 @@ package Conts.Graphs.Adjacency_List is
    end Impl;
 
    subtype Graph is Impl.Graph;
-   subtype Vertex is Impl.Vertex;
    subtype Edge is Impl.Edge;
 
-   function Dummy_Copy (E : Impl.Vertex) return Impl.Vertex is (E) with Inline;
+   function Dummy_Copy (E : Vertex) return Vertex is (E) with Inline;
 
    package Vertices is new Conts.Elements.Traits
-     (Element_Type => Impl.Vertex,
-      Stored_Type  => Impl.Vertex,
-      Return_Type  => Impl.Vertex,
+     (Element_Type => Vertex,
+      Stored_Type  => Vertex,
+      Return_Type  => Vertex,
       To_Stored    => Impl.Identity,
       To_Return    => Impl.Identity,
       To_Element   => Impl.Identity,
@@ -180,7 +185,7 @@ package Conts.Graphs.Adjacency_List is
    --  it manually.
    package Impl_Color_Maps is
      new Traits.Color_Property_Maps.Property_Maps_From_Index
-       (Impl.Vertex, Conts.Limited_Base, Impl.Identity, Impl.Length);
+       (Vertex, Conts.Limited_Base, Impl.Identity, Impl.Length);
    package Color_Maps renames Impl_Color_Maps.As_Exterior;
 
    --  An integer map is mostly created by the application, since it holds the
@@ -190,7 +195,7 @@ package Conts.Graphs.Adjacency_List is
    --  other hand it is in general cleared automatically when possible.
    package Integer_Maps is
      new Traits.Integer_Property_Maps.Property_Maps_From_Index
-       (Impl.Vertex, Base_Type, Impl.Identity, Impl.Length);
+       (Vertex, Base_Type, Impl.Identity, Impl.Length);
 
    package DFS is new Conts.Graphs.DFS.Exterior
      (Incidence_Traits, Color_Maps,

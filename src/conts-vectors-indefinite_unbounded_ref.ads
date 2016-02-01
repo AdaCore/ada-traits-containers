@@ -29,7 +29,7 @@ with Conts.Vectors.Cursors;
 with Conts.Vectors.Nodes.Unbounded;
 
 generic
-   type Index_Type is range <>;
+   type Index_Type is (<>);
    type Element_Type (<>) is private;
    type Base_Type is abstract tagged limited private;
    with procedure Free (E : in out Element_Type) is null;

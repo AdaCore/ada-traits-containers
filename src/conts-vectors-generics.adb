@@ -204,8 +204,9 @@ package body Conts.Vectors.Generics is
 
    function Index (Position : Cursor) return Index_Type is
    begin
-      return Index_Type
-        (Position.Index - Min_Index + Count_Type (Index_Type'First));
+      return Index_Type'Val
+        (Position.Index - Min_Index
+         + Count_Type (Index_Type'Pos (Index_Type'First)));
    end Index;
 
    -------------

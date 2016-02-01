@@ -94,7 +94,7 @@ package Conts.Graphs is
       end Interior;
 
       generic
-         type Index_Type is range <>;
+         type Index_Type is (<>);
          type Base_Type is abstract tagged limited private;
 
          with function Get_Index (K : Key) return Index_Type is <>;
