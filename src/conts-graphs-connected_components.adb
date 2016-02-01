@@ -190,7 +190,7 @@ package body Conts.Graphs.Connected_Components is
       V : SCC_Visitor;
    begin
       DFS (G, V, Components);
-      Components_Count := Comp;
+      Components_Count := Comp - 1;
    end Strongly_Connected_Components;
 
    --------------------------------------------

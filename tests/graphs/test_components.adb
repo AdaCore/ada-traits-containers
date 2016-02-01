@@ -42,6 +42,7 @@ procedure Test_Components is
    Count : Positive;
 begin
    G.Add_Vertices (No_Element, Count => 8);
+
    G.Add_Edge (1, 2, No_Element);
    G.Add_Edge (2, 3, No_Element);
    G.Add_Edge (3, 1, No_Element);
