@@ -24,7 +24,7 @@ with Ada.Finalization;
 with Graph1_Support;                use Graph1_Support;
 with Conts.Elements.Null_Elements;  use Conts.Elements.Null_Elements;
 with Conts.Graphs.Adjacency_List;
-with Conts.Graphs.Connected_Components; use Conts.Graphs.Connected_Components;
+with Conts.Graphs.Components;       use Conts.Graphs.Components;
 with Report;                        use Report;
 with Perf_Support;
 with Ada.Text_IO;                   use Ada.Text_IO;

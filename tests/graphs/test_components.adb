@@ -23,8 +23,8 @@ pragma Ada_2012;
 with Ada.Finalization;
 with Conts.Elements.Null_Elements;  use Conts.Elements.Null_Elements;
 with Conts.Graphs.Adjacency_List;
-with Conts.Graphs.Connected_Components; use Conts.Graphs.Connected_Components;
-with Ada.Text_IO;                   use Ada.Text_IO;
+with Conts.Graphs.Components; use Conts.Graphs.Components;
+with Ada.Text_IO;             use Ada.Text_IO;
 
 procedure Test_Components is
 

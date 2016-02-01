@@ -23,7 +23,7 @@ pragma Ada_2012;
 with Conts.Vectors.Nodes.Unbounded;
 with Conts.Vectors.Generics;
 
-package body Conts.Graphs.Connected_Components is
+package body Conts.Graphs.Components is
 
    package Roots_Vectors is new Conts.Vectors.Definite_Unbounded
      (Index_Type   => Natural,
@@ -215,4 +215,4 @@ package body Conts.Graphs.Connected_Components is
       Int (G, Components, Components_Count);
    end Strongly_Connected_Components_With_Pre;
 
-end Conts.Graphs.Connected_Components;
+end Conts.Graphs.Components;

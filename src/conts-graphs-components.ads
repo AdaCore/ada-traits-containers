@@ -23,7 +23,7 @@ pragma Ada_2012;
 
 with Conts.Graphs.DFS;
 
-package Conts.Graphs.Connected_Components is
+package Conts.Graphs.Components is
 
    generic
       with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
@@ -72,4 +72,4 @@ package Conts.Graphs.Connected_Components is
    --  itself, we pass is explicitly as a formal parameter (along with any
    --  other parameter necessary for its instantiation).
 
-end Conts.Graphs.Connected_Components;
+end Conts.Graphs.Components;

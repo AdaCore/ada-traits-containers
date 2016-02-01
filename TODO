@@ -46,6 +46,7 @@ can be edited with any text editor.
    first and last page are copied.
 
 ** TODO Test that the package work well when not using =use= clauses
+
 ** TODO Implement the standard Ada containers on top of these
    We will likely need a =Check_Policy= formal parameter.
 
@@ -61,6 +62,7 @@ can be edited with any text editor.
 ** TODO Support for standard Ada iterators, rather than =Iterable= aspect
    Measure performance, which might be better since Iterable forces dynamic
    dispatching.
+
 ** MAYBE can we make use of partial list of parameters in formal part:
    generic
       with package Mapping_1 is new ...;
@@ -68,8 +70,8 @@ can be edited with any text editor.
          (Key_Type => Mapping_1.Element_Type,
           others => <>);
 
-
 * Elements traits
+
 ** TODO Review =Conts.Elements.Arrays=
    It might be more efficient in some cases, but currently leads to a
    =Storage_Error= since we are doing low-level manipulations.
@@ -87,7 +89,6 @@ can be edited with any text editor.
    This should allow working on a subset of a container. The second cursor
    might be, as in C++, past the last element of the sequence, to simplify the
    handling of containers like forward-lists.
-
 
 * Lists
 
@@ -115,7 +116,9 @@ can be edited with any text editor.
 * Vectors
 
 ** TODO circular buffer with Prepend operation
+
 ** TODO pass a storage_pool in parameter to =Unbounded= nodes
+
 ** TODO can a cursor be implemented as an =Index_Type= directly ?
    That would be more logical (removing one layer of abstraction), but
    there is no convenient way to define =No_Element=, and =Next= will
@@ -129,39 +132,51 @@ can be edited with any text editor.
 * Graphs
 
 ** MAYBE Graph layout algorithms (see the one in =Gtkada.Canvas_View=)
+
 ** TODO Remove or replace =Glib.Graphs= with our generic implementation
 
 ** TODO Remove recursive dfs. Is only used for performance testing
+
 ** TODO DFS use a queue for the stack, rather than a vector
    This won't change much, but is slightly better at clarifying the
    intent.
+
 ** TODO Implement Adjacency_Matrix data structure
+
 ** TODO Implement Linked_Edge representation
    (all edges stored in a single vector, and vertices point into it)
 
 ** Algorithms
-*** TODO Implement Strongly Connected Components
+
 *** TODO Implement Breadth-First-Search
+
 *** TODO Implement A* algorithm (need priority queue first)
+
 *** MAYBE Iterative version of DFS
 
 ** Adjacency lists
+
 *** TODO Add Controlled and Limited versions
     Like we do for other containers. This might need adding a notion
     of graph nodes, and a graph generics package, which would provide
     all the instances for the =Incidence_Graph_Traits=, =DFS=, ...
+
 *** TODO Version for undirected graph
+
 *** TODO Version for bidirectional graph
     We can access In_Edges in addition to Out_Edges.
     We can provide a =Revert_Graph= wrapper that reverses the direction
     of edges, which is useful for some algorithms
+
 *** TODO specify the base type for vertex, instead of always =Integer=
     Would be nice to be able to use enumerations.
 
 * Priority queues
 
 * Property Maps
+
 ** TODO move them from =conts.graphs= to their own package
+
 ** MAYBE should they receive an elements traits rather than =Value=
 
 * Other data structures
@@ -185,6 +200,7 @@ can be edited with any text editor.
    have to limit their number when possible.
 
 * Limitations of standard Ada containers
+
 ** Dangling cursors (M124-015)
       declare
          C : Cursor := My_Function.First;
