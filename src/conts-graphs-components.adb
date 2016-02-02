@@ -22,6 +22,7 @@
 pragma Ada_2012;
 with Conts.Vectors.Nodes.Unbounded;
 with Conts.Vectors.Generics;
+with Conts.Vectors.Definite_Unbounded;
 
 package body Conts.Graphs.Components is
 
@@ -38,11 +39,11 @@ package body Conts.Graphs.Components is
    -----------------------------------
 
    procedure Strongly_Connected_Components
-     (G                : Graphs.Graphs.Graph;
-      Components       : out Comp_Maps.Map;
+     (G                : Graphs.Graph;
+      Components       : out Component_Maps.Map;
       Components_Count : out Positive)
    is
-      use Graphs.Graphs;
+      use Graphs;
 
       --  This algorithm needs multiple pieces of information for each
       --  vertex:
@@ -74,7 +75,7 @@ package body Conts.Graphs.Components is
       --    https://people.mpi-inf.mpg.de/~mehlhorn/ftp/EngineeringDFS.pdf
 
       package Vertex_Nodes is new Conts.Vectors.Nodes.Unbounded
-        (Elements      => Graphs.Graphs.Vertices,
+        (Elements      => Graphs.Vertices,
          Base_Type     => Conts.Limited_Base,
          Resize_Policy => Conts.Vectors.Resize_1_5);
       package Vertex_Vectors is new Conts.Vectors.Generics
@@ -92,19 +93,19 @@ package body Conts.Graphs.Components is
 
       --  A custom color map which stores integers instead
       procedure Set
-        (M : in out Comp_Maps.Map; V : Vertex; C : Color);
-      function Get (M : Comp_Maps.Map; V : Vertex) return Color;
+        (M : in out Component_Maps.Map; V : Vertex; C : Color);
+      function Get (M : Component_Maps.Map; V : Vertex) return Color;
 
       procedure Set
-        (M : in out Comp_Maps.Map; V : Vertex; C : Color) is
+        (M : in out Component_Maps.Map; V : Vertex; C : Color) is
       begin
          case C is
             when White =>
-               Comp_Maps.Set (M, V, 0);  --  unvisited
+               Component_Maps.Set (M, V, 0);  --  unvisited
 
             when Gray =>   --  Vertex is discovered
                Roots_Top := -DFS_Index;
-               Comp_Maps.Set (M, V, Roots_Top);  --  visited
+               Component_Maps.Set (M, V, Roots_Top);  --  visited
                Roots.Append (Roots_Top);
                Open.Append (V);
                DFS_Index := DFS_Index + 1;
@@ -112,7 +113,7 @@ package body Conts.Graphs.Components is
             when Black =>   --  Vertex is finished
                declare
                   V_DFS_Index : constant Integer :=
-                    Comp_Maps.Get (Components, V);
+                    Component_Maps.Get (Components, V);
                begin
                   if V_DFS_Index = Roots_Top then
                      Roots.Delete_Last;
@@ -123,13 +124,12 @@ package body Conts.Graphs.Components is
                      loop
                         declare
                            U : constant Vertex :=
-                             Graphs.Graphs.Vertices.To_Elem
-                               (Open.Last_Element);
+                             Graphs.Vertices.To_Elem (Open.Last_Element);
                            U_Index  : constant Integer :=
-                             Comp_Maps.Get (Components, U);
+                             Component_Maps.Get (Components, U);
                         begin
                            Open.Delete_Last;
-                           Comp_Maps.Set (Components, U, Comp);
+                           Component_Maps.Set (Components, U, Comp);
                            exit when U_Index = V_DFS_Index;
                         end;
                      end loop;
@@ -140,21 +140,22 @@ package body Conts.Graphs.Components is
          end case;
       end Set;
 
-      function Get (M : Comp_Maps.Map; V : Vertex) return Color is
+      function Get (M : Component_Maps.Map; V : Vertex) return Color is
       begin
-         if Comp_Maps.Get (M, V) = 0 then
+         if Component_Maps.Get (M, V) = 0 then
             return White;
          else
             return Gray;
          end if;
       end Get;
 
-      package Color_Maps is new Graphs.Graphs.Color_Property_Maps.Exterior
-        (Map => Comp_Maps.Map,
-         Set => Set,
-         Get => Get);
-      package Local_DFS is
-        new Conts.Graphs.DFS.With_Map (Graphs, Color_Maps);
+      package Color_Maps is new Conts.Properties.Maps
+        (Key   => Vertex,
+         Value => Color,
+         Map   => Component_Maps.Map,
+         Set   => Set,
+         Get   => Get);
+      package Local_DFS is new Conts.Graphs.DFS.With_Map (Graphs, Color_Maps);
 
       type SCC_Visitor is new DFS_Visitor with null record;
       overriding procedure Vertices_Initialized
@@ -178,9 +179,8 @@ package body Conts.Graphs.Components is
         (Self : in out SCC_Visitor; G : Graphs.Graph; E : Graphs.Edge)
       is
          pragma Unreferenced (Self);
-         V           : constant Vertex :=
-           Graphs.Graphs_Formal.Get_Node_Target (G, E);
-         V_DFS_Index : constant Integer := Comp_Maps.Get (Components, V);
+         V           : constant Vertex := Graphs.Get_Edge_Target (G, E);
+         V_DFS_Index : constant Integer := Component_Maps.Get (Components, V);
       begin
          --  If V is open
          if V_DFS_Index < 0 then
@@ -206,11 +206,12 @@ package body Conts.Graphs.Components is
    --------------------------------------------
 
    procedure Strongly_Connected_Components_With_Pre
-     (G                : Graphs.Graphs.Graph;
-      Components       : out Comp_Maps.Map;
+     (G                : Graphs.Graph;
+      Components       : out Component_Maps.Map;
       Components_Count : out Positive)
    is
-      procedure Int is new Strongly_Connected_Components (Graphs, Comp_Maps);
+      procedure Int is new Strongly_Connected_Components
+        (Graphs, Component_Maps);
    begin
       Int (G, Components, Components_Count);
    end Strongly_Connected_Components_With_Pre;

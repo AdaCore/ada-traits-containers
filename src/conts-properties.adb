@@ -21,57 +21,54 @@
 
 pragma Ada_2012;
 
-package body Conts.Graphs is
+package body Conts.Properties is
 
-   package body Property_Maps is
+   package body Indexed_Maps is
+      use Value_Vectors;
 
-      package body Property_Maps_From_Index is
-         use Value_Vectors;
+      -----------
+      -- Clear --
+      -----------
 
-         -----------
-         -- Clear --
-         -----------
+      procedure Clear (M : in out Map) is
+      begin
+         M.Values.Clear;
+      end Clear;
 
-         procedure Clear (M : in out Map) is
-         begin
-            M.Values.Clear;
-         end Clear;
+      ---------
+      -- Get --
+      ---------
 
-         ---------
-         -- Get --
-         ---------
+      function Get (M : Map; K : Key) return Value is
+      begin
+         return M.Values.Element (Get_Index (K));
+      end Get;
 
-         function Get (M : Map; K : Key) return Value is
-         begin
-            return M.Values.Element (Get_Index (K));
-         end Get;
+      ---------
+      -- Set --
+      ---------
 
-         ---------
-         -- Set --
-         ---------
+      procedure Set (M : in out Map; K : Key; Val : Value) is
+         Idx : constant Index_Type := Get_Index (K);
+      begin
+         if not (Idx <= M.Values.Length) then
+            M.Values.Resize (Idx, Element => Default_Value);
+         end if;
 
-         procedure Set (M : in out Map; K : Key; Val : Value) is
-            Idx : constant Index_Type := Get_Index (K);
-         begin
-            if not (Idx <= M.Values.Length) then
-               M.Values.Resize (Idx, Element => Default_Value);
-            end if;
+         M.Values.Replace_Element (Idx, Val);
+      end Set;
 
-            M.Values.Replace_Element (Idx, Val);
-         end Set;
+      ----------------
+      -- Create_Map --
+      ----------------
 
-         ----------------
-         -- Create_Map --
-         ----------------
+      function Create_Map (G : Container) return Map is
+      begin
+         return M : Map do
+            M.Values.Reserve_Capacity (Length (G));
+         end return;
+      end Create_Map;
 
-         function Create_Map (G : Graph) return Map is
-         begin
-            return M : Map do
-               M.Values.Reserve_Capacity (Length (G));
-            end return;
-         end Create_Map;
+   end Indexed_Maps;
 
-      end Property_Maps_From_Index;
-   end Property_Maps;
-
-end Conts.Graphs;
+end Conts.Properties;

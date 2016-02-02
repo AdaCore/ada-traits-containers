@@ -38,7 +38,7 @@ procedure Test_Components is
    use Graphs;
 
    procedure Strong is new Strongly_Connected_Components
-      (Graphs.Incidence_Traits, Graphs.Integer_Maps.As_Exterior);
+      (Graphs.Traits, Graphs.Integer_Maps.As_Map);
 
    Gr  : Graphs.Graph;
    Map : Graphs.Integer_Maps.Map;

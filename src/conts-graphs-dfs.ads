@@ -27,6 +27,7 @@
 --  package is fully documented.
 
 pragma Ada_2012;
+with Conts.Properties;
 
 package Conts.Graphs.DFS is
 
@@ -37,9 +38,9 @@ package Conts.Graphs.DFS is
    --  function.
 
    generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Color_Maps is
-        new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+      with package Graphs is new Conts.Graphs.Traits (<>);
+      with package Color_Maps is new Conts.Properties.Maps
+        (Key => Graphs.Vertex, Value => Color, others => <>);
    package With_Map is
 
       generic
@@ -108,12 +109,13 @@ package Conts.Graphs.DFS is
    -------------------
    -- Exterior maps --
    -------------------
-   --  Depth-First-Search with exterior color maps
+   --  Depth-First-Search with exterior color maps.
+   --  The map is automatically created and cleared by the algorithm.
 
    generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Color_Maps is
-        new Graphs.Graphs.Color_Property_Maps.Exterior (<>);
+      with package Graphs is new Conts.Graphs.Traits (<>);
+      with package Color_Maps is new Conts.Properties.Maps
+        (Key => Graphs.Vertex, Value => Color, others => <>);
       with function Create_Map (G : Graphs.Graph) return Color_Maps.Map;
    package Exterior is
 
@@ -141,9 +143,10 @@ package Conts.Graphs.DFS is
    --  algorithms, since they would interfer in the color map.
 
    generic
-      with package Graphs is new Conts.Graphs.Incidence_Graph_Traits (<>);
-      with package Color_Maps is
-        new Graphs.Graphs.Color_Property_Maps.Interior (<>);
+      with package Graphs is new Conts.Graphs.Traits (<>);
+      with package Color_Maps is new Conts.Properties.Maps
+        (Map => Graphs.Graph, Key => Graphs.Vertex, Value => Color,
+         others => <>);
    package Interior is
 
       generic

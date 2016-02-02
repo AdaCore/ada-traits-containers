@@ -55,13 +55,13 @@ package body Custom_Graph is
          pragma Unreferenced (Self, G);
       begin
          if Debug then
-            Put_Line ("MANU Finish vertex " & V'Img);
+            Put_Line ("Finish vertex " & V'Img);
          end if;
       end Finish_Vertex;
 
       procedure DFS is new Graphs.DFS.Search (My_Visitor);
       procedure Strong is new Strongly_Connected_Components
-         (Graphs.Incidence_Traits, Graphs.Integer_Maps.As_Exterior);
+         (Graphs.Traits, Graphs.Integer_Maps.As_Map);
 
       subtype Vertex is Graphs.Vertex;
       use type Vertex;

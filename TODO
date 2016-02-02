@@ -63,13 +63,6 @@ can be edited with any text editor.
    Measure performance, which might be better since Iterable forces dynamic
    dispatching.
 
-** MAYBE can we make use of partial list of parameters in formal part:
-   generic
-      with package Mapping_1 is new ...;
-      with package Mapping_2 is new Ordered_Maps
-         (Key_Type => Mapping_1.Element_Type,
-          others => <>);
-
 * Elements traits
 
 ** TODO Review =Conts.Elements.Arrays=
@@ -156,11 +149,6 @@ can be edited with any text editor.
 
 ** Adjacency lists
 
-*** TODO Add Controlled and Limited versions
-    Like we do for other containers. This might need adding a notion
-    of graph nodes, and a graph generics package, which would provide
-    all the instances for the =Incidence_Graph_Traits=, =DFS=, ...
-
 *** TODO Version for undirected graph
 
 *** TODO Version for bidirectional graph
@@ -171,8 +159,6 @@ can be edited with any text editor.
 * Priority queues
 
 * Property Maps
-
-** TODO move them from =conts.graphs= to their own package
 
 ** MAYBE should they receive an elements traits rather than =Value=
 

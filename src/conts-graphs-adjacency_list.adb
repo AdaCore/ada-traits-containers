@@ -50,7 +50,7 @@ package body Conts.Graphs.Adjacency_List is
       procedure Add_Vertices
         (Self  : in out Graph;
          Props : Vertex_Properties.Element_Type;
-         Count : Count_Type) is
+         Count : Count_Type := 1) is
       begin
          Self.Vertices.Append
            (Element =>

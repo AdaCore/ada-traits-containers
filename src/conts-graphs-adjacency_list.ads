@@ -26,6 +26,8 @@
 
 pragma Ada_2012;
 
+with Conts.Cursors;
+with Conts.Properties;
 with Conts.Vectors.Indefinite_Unbounded_Ref;
 with Conts.Vectors.Definite_Unbounded;
 with Conts.Graphs.DFS;
@@ -56,9 +58,6 @@ package Conts.Graphs.Adjacency_List is
 
       Null_Vertex : constant Vertex;
 
-      function Identity (V : Vertex) return Vertex is (V) with Inline;
-      --  Implements the traits package later
-
       type Edge is private;
 
       function Get_Target
@@ -79,7 +78,7 @@ package Conts.Graphs.Adjacency_List is
       procedure Add_Vertices
         (Self  : in out Graph;
          Props : Vertex_Properties.Element_Type;
-         Count : Count_Type);
+         Count : Count_Type := 1);
       --  Add Count vertices to the graph.
       --  Each node gets a copy of Props
 
@@ -141,63 +140,75 @@ package Conts.Graphs.Adjacency_List is
    subtype Graph is Impl.Graph;
    subtype Edge is Impl.Edge;
 
-   function Dummy_Copy (E : Vertex) return Vertex is (E) with Inline;
+   function Identity (V : Vertex) return Vertex is (V) with Inline;
 
    package Vertices is new Conts.Elements.Traits
      (Element_Type => Vertex,
       Stored_Type  => Vertex,
       Return_Type  => Vertex,
-      To_Stored    => Impl.Identity,
-      To_Return    => Impl.Identity,
-      To_Element   => Impl.Identity,
-      Copy         => Dummy_Copy,   --  Unused since Copyable is True
+      To_Stored    => Identity,
+      To_Return    => Identity,
+      To_Element   => Identity,
+      Copy         => Identity,   --  Unused since Copyable is True
       Copyable     => True,
       Movable      => True);
 
-   package Traits is new Conts.Graphs.Traits
-     (Graph       => Impl.Graph,
-      Vertices    => Vertices,
-      Edge        => Impl.Edge,
-      Null_Vertex => Impl.Null_Vertex,
-      Get_Target  => Impl.Get_Target);
-
-   package Vertices_Cursors is new Traits.Vertex_Cursors
-     (Cursor      => Impl.Vertex_Cursor,
+   package Vertices_Cursors is new Conts.Cursors.Constant_Forward_Traits
+     (Container   => Graph,
+      Cursor      => Impl.Vertex_Cursor,
+      Return_Type => Vertex,
       First       => Impl.First,
       Element     => Impl.Element,
       Has_Element => Impl.Has_Element,
       Next        => Impl.Next);
 
-   package Out_Edges_Cursors is new Traits.Edge_Cursors
-     (Cursor      => Impl.Edges_Cursor,
+   package Out_Edges_Cursors is new Conts.Graphs.Edge_Cursors
+     (Container   => Graph,
+      Vertices    => Vertices,
+      Edge        => Edge,
+      Cursor      => Impl.Edges_Cursor,
       First       => Impl.Out_Edges,
       Element     => Impl.Element,
       Has_Element => Impl.Has_Element,
       Next        => Impl.Next);
 
-   package Incidence_Traits is new Conts.Graphs.Incidence_Graph_Traits
-     (Graphs      => Traits,
-      Vertices    => Vertices_Cursors,
-      Out_Edges   => Out_Edges_Cursors);
+   package Traits is new Conts.Graphs.Traits
+     (Graph_Type        => Impl.Graph,
+      Vertices          => Vertices,
+      Edge_Type         => Impl.Edge,
+      Null_Vertex       => Impl.Null_Vertex,
+      Get_Target        => Impl.Get_Target,
+      Vertex_Cursors    => Vertices_Cursors,
+      Out_Edges_Cursors => Out_Edges_Cursors);
 
    --  Color map is always limited, since this is mostly created automatically
    --  by algorithms. If you create a color map yourself, you need to clear
    --  it manually.
-   package Impl_Color_Maps is
-     new Traits.Color_Property_Maps.Property_Maps_From_Index
-       (Vertex, Conts.Limited_Base, Impl.Identity, Impl.Length);
-   package Color_Maps renames Impl_Color_Maps.As_Exterior;
+   package Color_Maps is new Conts.Properties.Indexed_Maps
+     (Container     => Graph,
+      Key           => Vertex,
+      Value         => Color,
+      Default_Value => White,
+      Index_Type    => Vertex,
+      Base_Type     => Conts.Limited_Base,
+      Get_Index     => Identity,
+      Length        => Impl.Length);
 
    --  An integer map is mostly created by the application, since it holds the
    --  results of strongly connected components for instance. So we make it
    --  a controlled type (implicit Clear) if the graph itself is controlled,
    --  so that it is compatible with SPARK when people want to, but on the
    --  other hand it is in general cleared automatically when possible.
-   package Integer_Maps is
-     new Traits.Integer_Property_Maps.Property_Maps_From_Index
-       (Vertex, Base_Type, Impl.Identity, Impl.Length);
+   package Integer_Maps is new Conts.Properties.Indexed_Maps
+     (Container     => Graph,
+      Key           => Vertex,
+      Value         => Integer,
+      Default_Value => -1,
+      Index_Type    => Vertex,
+      Base_Type     => Base_Type,
+      Get_Index     => Identity,
+      Length        => Impl.Length);
 
    package DFS is new Conts.Graphs.DFS.Exterior
-     (Incidence_Traits, Color_Maps,
-      Create_Map => Impl_Color_Maps.Create_Map);
+     (Traits, Color_Maps.As_Map, Create_Map => Color_Maps.Create_Map);
 end Conts.Graphs.Adjacency_List;
