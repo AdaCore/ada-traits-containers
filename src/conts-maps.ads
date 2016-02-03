@@ -85,15 +85,19 @@ package Conts.Maps is
       --    * full: the node is currently in use.
 
       type Slot is record
+         Key   : Keys.Stored_Type;
+         Value : Elements.Stored_Type;
          Hash  : Hash_Type;
          --  Cached value for the hash, to speed lookups in the table
          --  (before we do more extensive comparison of the key), and
          --  also to speed up the resizing.
-
-         Key   : Keys.Stored_Type;
-         Value : Elements.Stored_Type;
          Kind  : Slot_Kind := Empty;
       end record;
+      pragma Pack (Slot);
+      --  The order of fields is important here to achieve a compact structure
+      --  and save memory.
+      --  On our example with 250000 items stored in the table, we end up
+      --  allocating/reallocating 15900kb instead of 19500kb.
 
       type Slot_Table is array (Hash_Type range <>) of Slot;
       type Slot_Table_Access is access Slot_Table;
