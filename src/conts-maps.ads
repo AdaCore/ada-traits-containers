@@ -65,9 +65,9 @@ package Conts.Maps is
      (Self : in out Linear_Probing; Previous : Hash_Type) return Hash_Type
      is (Previous + 1) with Inline;
 
-   --------------------------
-   --  Pertubation_Probing --
-   --------------------------
+   -------------------------
+   -- Pertubation_Probing --
+   -------------------------
    --  Similar to linear probing, but more efficient since it will try various
    --  places in the array.
 
@@ -80,6 +80,26 @@ package Conts.Maps is
      (Self     : in out Perturbation_Probing;
       Previous : Hash_Type) return Hash_Type
      with Inline;
+
+   ---------------------
+   -- Resize strategy --
+   ---------------------
+
+   function Resize_2_3
+     (Used     : Hash_Type;
+      Fill     : Count_Type;
+      Capacity : Count_Type) return Hash_Type
+     is (if Fill * 3 > Capacity * 2
+         then (if Used > 100_000 then Used * 2 else Used * 4)
+         else 0)
+     with Inline;
+   --  This strategy attempts to keep the table at most 2/3. If this isn't the
+   --  case, the size of the table is multiplied by 4 (which trades memory for
+   --  efficiency by limiting the number of mallocs). However, when the table
+   --  is already large, we only double the size.
+   --
+   --  If memory is more important than pure speed for you, you could modify
+   --  this strategy.
 
    ----------
    -- Maps --
@@ -97,6 +117,22 @@ package Conts.Maps is
       with function "="
         (Left  : Keys.Element_Type;
          Right : Keys.Stored_Type) return Boolean is <>;
+
+      with function Resize_Strategy
+        (Used     : Hash_Type;
+         Fill     : Count_Type;
+         Capacity : Count_Type) return Hash_Type is Resize_2_3;
+      --  This function decides whether the hash-table needs to be resized.
+      --  Resizing is a costly operation, so should be performed as rarely
+      --  as possible. On the other hand, a table should have plenty of empty
+      --  slots to make inserting efficient.
+      --  If this function returns 0, no resizing takes place and the current
+      --  capacity is preserved. Otherwise, it returns the new desired size
+      --
+      --  Used is the number of slots used to store elements.
+      --  Fill is the number of slots used to store elements or previously
+      --  used for now-deleted elements.
+      --  Capacity is the maximum number of elements that can be stored.
 
    package Maps is
 

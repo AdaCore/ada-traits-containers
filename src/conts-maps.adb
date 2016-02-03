@@ -252,20 +252,14 @@ package body Conts.Maps is
 
          --  We might need to resize if we just added a key
 
-         if Self.Used > Used
-           and then Self.Fill * 3 >= Self.Capacity * 2
-         then
-            --  Quadruple the size in general which improves sparseness and
-            --  reduces the number of resize operations, which are costly.
-            --  However, large dictionaries are only doubled
-
-            if Self.Used > 100_000 then
-               New_Size := Self.Used * 2;
-            else
-               New_Size := Self.Used * 4;
+         if Self.Used > Used then
+            New_Size := Resize_Strategy
+              (Used     => Self.Used,
+               Fill     => Self.Fill,
+               Capacity => Self.Capacity);
+            if New_Size /= 0 then
+               Resize (Self, New_Size);
             end if;
-
-            Resize (Self, New_Size);
          end if;
       end Set;
 
