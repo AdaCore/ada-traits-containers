@@ -25,14 +25,24 @@ with Conts.Cursors.Adaptors;     use Conts.Cursors.Adaptors;
 
 package body Perf_Support is
 
+   -----------
+   -- Image --
+   -----------
+
+   function Image (P : Integer) return String is
+      Img : constant String := P'Img;
+   begin
+      return Img (Img'First + 1 .. Img'Last);
+   end Image;
+
    ------------
    -- Assert --
    ------------
 
-   procedure Assert (Count, Expected : Natural) is
+   procedure Assert (Count, Expected : Natural; Reason : String := "") is
    begin
       if Count /= Expected then
-         raise Program_Error with "Wrong count: got"
+         raise Program_Error with "Wrong count (" & Reason & "): got"
             & Count'Img & " expected" & Expected'Img;
       end if;
    end Assert;

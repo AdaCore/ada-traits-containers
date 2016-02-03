@@ -21,8 +21,6 @@
 
 --  A graph data structure implemented as an adjacency list.
 --  It stores a sequence of out-edges for each vertex.
---  This package lets users decide whether to use lists, vectors, or other
---  types of sequences for vertices and their edges.
 
 pragma Ada_2012;
 

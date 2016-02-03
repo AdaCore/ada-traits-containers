@@ -28,6 +28,7 @@
 #include "creport.h"
 
 bool IsLessEqual2 (int i) { return i <= 2; }
+bool valueIsLessEqual2 (const std::pair<int, int> val) { return val.second <= 2;}
 bool IsEqualItemsCount (int i) { return i == items_count; }
 bool startsWithB (const std::string& s) { return s[0] == 'b'; };
 bool startsWithStr (const std::string& s) { return s[0] == 'f'; }
@@ -314,6 +315,153 @@ void test_cpp_str_vector (void * output) {
 }
 
 /**
+ * test_cpp_int_int_map
+ */
+
+extern "C"
+void test_cpp_int_int_map (void * output) {
+   typedef std::map<int, int> int_int_map;
+
+   reset_mem();
+
+   start_container_test
+      (output, "C++", "ordered", "", "IntInt Map", 1);
+   save_container_size (output, sizeof(int_int_map));
+
+   for (int r = 0; r < repeat_count; r++) {
+      int_int_map v;
+
+      start_test (output, "fill", START_GROUP);
+      for (int c = 1; c <= items_count; c++) {
+	      v[c] = c;
+      }
+      mem_end_test (output);
+
+      start_test (output, "copy", SAME_GROUP);
+      {
+	      int_int_map v_copy (v);
+	      mem_end_test (output);
+      }
+
+      int count = 0;
+      start_test (output, "cursor loop", START_GROUP);
+      for (auto it = v.begin(), __end=v.end(); it != __end; ++it) {
+	 //  ??? Using valueStartsWithStr(*it) is twice as slow...
+	 if (IsLessEqual2(it->second)) {  // value
+	    count ++;
+	 }
+      }
+      mem_end_test (output);
+      if (count != 2) {
+	 std::cout << "C++ error while counting" << count << std::endl;
+      }
+
+      count = 0;
+      start_test (output, "for-of loop", SAME_GROUP);
+      for (auto& e : v) {
+	 if (IsLessEqual2(e.second)) { // value
+	    count ++;
+	 }
+      }
+      mem_end_test (output);
+      if (count != 2) {
+	 std::cout << "C++ error while counting" << count << std::endl;
+      }
+
+      start_test (output, "count_if", SAME_GROUP);
+      count = std::count_if (v.begin(), v.end(), valueIsLessEqual2);
+      mem_end_test (output);
+      if (count != 2) {
+	 std::cout << "C++ error while counting" << std::endl;
+      }
+
+      start_test (output, "find", START_GROUP);
+      for (int c = 1; c <= items_count; c++) {
+         if (IsLessEqual2(v[c])) {
+            count++;
+         }
+      }
+      mem_end_test (output);
+   }
+
+   mem_end_container_test (output);
+}
+
+/**
+ * test_cpp_int_int_unordered_map
+ */
+
+extern "C"
+void test_cpp_int_int_unordered_map (void * output) {
+   typedef std::unordered_map<int, int> int_int_unordered_map;
+
+   reset_mem();
+
+   start_container_test
+      (output, "C++", "unordered", "", "IntInt Map", 1);
+   save_container_size (output, sizeof(int_int_unordered_map));
+
+   for (int r = 0; r < repeat_count; r++) {
+      int_int_unordered_map v;
+
+      start_test (output, "fill", START_GROUP);
+      for (int c = 1; c <= items_count; c++) {
+	      v[c] = c;
+      }
+      mem_end_test (output);
+
+      start_test (output, "copy", SAME_GROUP);
+      {
+	      int_int_unordered_map v_copy (v);
+	      mem_end_test (output);
+      }
+
+      int count = 0;
+      start_test (output, "cursor loop", START_GROUP);
+      for (auto it = v.begin(), __end=v.end(); it != __end; ++it) {
+         //  ??? Using valueStartsWithStr(*it) is twice as slow...
+         if (IsLessEqual2(it->second)) {  // value
+            count ++;
+         }
+      }
+      mem_end_test (output);
+      if (count != 2) {
+         std::cout << "C++ error while counting" << count << std::endl;
+      }
+
+      count = 0;
+      start_test (output, "for-of loop", SAME_GROUP);
+      for (auto& e : v) {
+         if (IsLessEqual2(e.second)) { // value
+            count ++;
+         }
+      }
+      mem_end_test (output);
+      if (count != 2) {
+         std::cout << "C++ error while counting" << count << std::endl;
+      }
+
+      start_test (output, "count_if", SAME_GROUP);
+      count = std::count_if (v.begin(), v.end(), valueIsLessEqual2);
+      mem_end_test (output);
+      if (count != 2) {
+         std::cout << "C++ error while counting" << std::endl;
+      }
+
+      count = 0;
+      start_test (output, "find", START_GROUP);
+      for (int c = 1; c <= items_count; c++) {
+         if (IsLessEqual2(v[c])) {
+            count++;
+         }
+      }
+      mem_end_test (output);
+   }
+
+   mem_end_container_test (output);
+}
+
+/**
  * test_cpp_str_str_map
  */
 
@@ -376,7 +524,9 @@ void test_cpp_str_str_map (void * output) {
 
       start_test (output, "find", START_GROUP);
       for (int c = 1; c <= items_count; c++) {
-	 auto found = v["1"];
+         if (startsWithStr(v[std::to_string(c)])) {
+            count++;
+         }
       }
       mem_end_test (output);
    }
@@ -448,7 +598,7 @@ void test_cpp_str_str_unordered_map (void * output) {
       count = 0;
       start_test (output, "find", START_GROUP);
       for (int c = 1; c <= items_count; c++) {
-         if (startsWithStr(v[" 1"])) {
+         if (startsWithStr(v[std::to_string(c)])) {
             count++;
          }
       }

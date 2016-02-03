@@ -153,7 +153,7 @@ is
          It := {prefix}Next (It);
       end loop;
       Stdout.End_Test;
-      Assert (Co, {expected});
+      Assert (Co, {expected}, "cursor loop");
 
       Co := 0;
       Stdout.Start_Test ("for-of loop", "{comments.forofloop}",
@@ -164,13 +164,13 @@ is
          end if;
       end loop;
       Stdout.End_Test;
-      Assert (Co, {expected});
+      Assert (Co, {expected}, "for-of loop");
 
       Stdout.Start_Test ("count_if", "{comments.countif}",
                          Start_Group => False);
       Co := Count_If (V2, Predicate'Access);
       Stdout.End_Test;
-      Assert (Co, {expected});
+      Assert (Co, {expected}, "count_if");
    end Run;
 
 begin
@@ -254,18 +254,34 @@ class Map(object):
         instance,    # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
         comments=None, # instance of Comments
-        favorite=False # Whether this should be highlighted in the results
+        favorite=False, # Whether this should be highlighted in the results
+        ada2012=False
     ):
         type="Map"
         category = '%s %s' % (elem_type, type)
-        append = """
-        declare
-           S : constant String := C'Img;
-        begin
-           --   ??? Can't use V2 (V'Img) := "foo"
-           V2.Include (S (S'First + 1 .. S'Last), "foo");
-        end;
+
+        if elem_type.lower() == "strstr":
+            get_val = 'Image (C)'
+            expected = "Items_Count"
+            append = """
+        --   ??? Can't use V2 (V'Img) := "foo"
+        V2.{set} (Image (C), "foo");
 """
+
+        elif elem_type.lower() == "intint":
+            get_val = 'C'
+            expected = "2"
+            append = """
+        V2.{set} (C, C);
+"""
+
+        if ada2012:
+            set = "Include"
+            get = '.Element (%s)' % get_val
+        else:
+            set = "Set"
+            get = '.Get (%s)' % get_val
+
         self.args = dict(
             base=base,
             key=key,
@@ -276,7 +292,10 @@ class Map(object):
             elem_type=elem_type,
             instance=instance,
             withs=withs,
+            expected=expected,
             copy='',
+            get=get,
+            set=set,
             call_count_if='',
             discriminant='',
             favorite=favorite,
@@ -285,13 +304,13 @@ class Map(object):
             clear_copy='',  # Explicit clear the copy of the container
             prefix='',      # Prefix for Element, Next and Has_Element
             adaptors='',    # Creating adaptors for standard containers
-            append=append)
+            append=append.format(set=set))
 
         self.args['test_name'] = \
             "{type}_{base}_{key}_{value}_{nodes}_{elem_type}".format(
                 **self.args)
 
-    def __common(self):
+    def __common(self, countif=True):
         filename = self.args['test_name'].lower()
 
         ads = open("tests/generated/%s.ads" % filename, "w")
@@ -324,7 +343,14 @@ is
    --  a way to check we do not waste time there.
 
    procedure Run (V2 : in out Container.{type}'Class) is
+""".format(**self.args))
+
+        if countif:
+            adb.write("""
       It : Container.Cursor;
+""".format(**self.args))
+
+        adb.write("""
       Co : Natural;
    begin
       Stdout.Start_Test ("fill", "{comments.fill}",
@@ -343,7 +369,10 @@ is
          --  Measure the time before we destroy the copy
          Stdout.End_Test;{clear_copy}
       end;
+""".format(**self.args))
 
+        if countif:
+            adb.write("""
       Co := 0;
       Stdout.Start_Test ("cursor loop", "{comments.cursorloop}",
                          Start_Group => True);
@@ -355,7 +384,7 @@ is
          It := {prefix}Next (It);
       end loop;
       Stdout.End_Test;
-      Assert (Co, Items_Count);
+      Assert (Co, {expected}, "cursor loop");
 
       Co := 0;
       Stdout.Start_Test ("for-of loop", "{comments.forofloop}",
@@ -366,23 +395,26 @@ is
          end if;
       end loop;
       Stdout.End_Test;
-      Assert (Co, Items_Count);
+      Assert (Co, {expected}, "for-of loop");
 
       Stdout.Start_Test ("count_if", "{comments.countif}",
                          Start_Group => False);
       Co := Count_If (V2, Predicate'Access);
       Stdout.End_Test;
-      Assert (Co, Items_Count);
+      Assert (Co, {expected}, "count_if");
+""".format(**self.args))
 
+        adb.write("""
       Co := 0;
       Stdout.Start_Test ("find", "{comments.find}",
-                         Start_Group => False);
+                         Start_Group => True);
       for C in 1 .. Items_Count loop
-         if Predicate (V2 ("1")) then
+         if Predicate (V2{get}) then
             Co := Co + 1;
          end if;
       end loop;
-      Assert (Co, Items_Count);
+      Stdout.End_Test;
+      Assert (Co, {expected}, "find");
    end Run;
 
 begin
@@ -418,6 +450,22 @@ end {test_name};
        (Adaptors.Cursors_Forward_Convert);"""
 
         self.__common()
+
+    def gen(self, use_cursor_convert=False, use_cursors=True):
+        self.args['prefix'] = 'V2.'
+
+        # When using reference types
+        if use_cursors:
+            if use_cursor_convert:
+                self.args['adaptors'] = ("""
+   function Count_If is new Conts.Algorithms.Count_If_Convert
+      (Container.Cursors_Forward_Convert);""").format(**self.args)
+            else:
+                self.args['adaptors'] = ("""
+   function Count_If is new Conts.Algorithms.Count_If
+      (Container.Cursors.Constant_Forward);""").format(**self.args)
+
+        self.__common(countif=use_cursors)
 
 
 class Vector (List):
@@ -575,16 +623,56 @@ Vector("String", "Controlled", "Indef", "Unbounded_Ref",
      "with Conts.Vectors.Indefinite_Unbounded_Ref;", favorite=True).gen(
          use_cursor_convert=True)
 
-# String maps
+# Integer-Integer maps
+
+Map("IntInt", "Ada12_ordered", "Def", "Def", "Unbounded",
+     "package Container is new Ada.Containers.Ordered_Maps" +
+         " (Integer, Integer);",
+     "with Ada.Containers.Ordered_Maps;",
+     ada2012=True).gen_ada2012(
+         adaptors="Ordered_Maps")
+Map("IntInt", "Ada12_hashed", "Def", "Def", "Unbounded",
+    'function Hash (K : Integer) return Conts.Hash_Type is\n'
+     + '   (Conts.Hash_Type (K)) with Inline;\n'
+     + 'package Container is new Ada.Containers.Hashed_Maps'
+     + ' (Integer, Integer, Hash, "=");',
+     "with Ada.Containers.Hashed_Maps;",
+     ada2012=True).gen_ada2012(
+        adaptors="Hashed_Maps")
+Map("IntInt", "hashed", "Def", "Def", "Unbounded",
+    'function Hash (K : Integer) return Conts.Hash_Type is\n'
+     + '   (Conts.Hash_Type (K)) with Inline;\n'
+    + 'package Integers is new Conts.Elements.Definite\n'
+    + '   (Integer);\n'
+    + 'package Container is new Conts.Maps.Maps\n'
+    + '   (Integers.Traits, Integers.Traits, Ada.Finalization.Controlled,\n'
+    + '    Hash, "=");\n',
+    'with Conts.Elements.Definite, Conts.Maps;',
+    favorite=True).gen(use_cursors=False)
+
+# String-String maps
 
 Map("StrStr", "Ada12_ordered", "Indef", "Indef", "Unbounded",
      "package Container is new Ada.Containers.Indefinite_Ordered_Maps" +
          " (String, String);",
-     "with Ada.Containers.Indefinite_Ordered_Maps;").gen_ada2012(
+     "with Ada.Containers.Indefinite_Ordered_Maps;",
+     ada2012=True).gen_ada2012(
          adaptors="Indefinite_Ordered_Maps")
 Map("StrStr", "Ada12_hashed", "Indef", "Indef", "Unbounded",
      'package Container is new Ada.Containers.Indefinite_Hashed_Maps' +
          ' (String, String, Ada.Strings.Hash, "=");',
      "with Ada.Strings.Hash;\n" +
-     "with Ada.Containers.Indefinite_Hashed_Maps;").gen_ada2012(
+     "with Ada.Containers.Indefinite_Hashed_Maps;",
+     ada2012=True).gen_ada2012(
         adaptors="Indefinite_Hashed_Maps")
+Map("StrStr", "hashed", "Indef", "Indef", "Unbounded",
+    'package Strings is new Conts.Elements.Indefinite_Ref\n'
+    + '   (String, Pool => Conts.Global_Pool);\n'
+    + 'function "=" (L : String; R : Strings.Traits.Stored) return Boolean\n'
+    + '   is (L = R.all) with Inline;\n'
+    + 'package Container is new Conts.Maps.Maps\n'
+    + '   (Strings.Traits, Strings.Traits, Ada.Finalization.Controlled,\n'
+    + '    Ada.Strings.Hash, "=");\n',
+    'with Conts.Elements.Indefinite_Ref, Ada.Strings.Hash,'
+    + ' Conts.Maps;',
+    favorite=True).gen(use_cursors=False)

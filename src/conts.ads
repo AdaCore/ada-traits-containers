@@ -20,12 +20,14 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
+with Ada.Containers;
 with System.Storage_Pools;  use System.Storage_Pools;
 with System.Pool_Global;
 
 package Conts with SPARK_Mode is
 
    subtype Count_Type is Natural;
+   subtype Hash_Type is Ada.Containers.Hash_Type;
 
    type Limited_Base is abstract tagged limited null record;
    --  A type that can be used as the root of a container hierarchy when a

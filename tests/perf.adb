@@ -68,10 +68,17 @@ with Vector_Ada12_No_Checks_Indef_Unbounded_String;
 with Vector_Controlled_Indef_Unbounded_String;
 with Vector_Controlled_Indef_Unbounded_Ref_String;
 
---  String maps
+--  Integer-Integer maps
+
+with Map_Ada12_ordered_Def_Def_Unbounded_IntInt;
+with Map_Ada12_hashed_Def_Def_Unbounded_IntInt;
+with Map_hashed_Def_Def_Unbounded_IntInt;
+
+--  String-String maps
 
 with Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr;
 with Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr;
+with Map_hashed_Indef_Indef_Unbounded_StrStr;
 
 --  Graphs
 
@@ -187,13 +194,25 @@ begin
    Run_Test ("str_vector_controlled_indef_unbounded_ref",
              Vector_Controlled_Indef_Unbounded_Ref_String'Access);
 
-   Run_Test ("strstr_map_c++", Test_Cpp_Str_Str_Map'Access);
+   Run_Test ("intint_map_c++_unordered",
+             Test_Cpp_Int_Int_Unordered_Map'Access);
+   Run_Test ("intint_map_c++", Test_Cpp_Int_Int_Map'Access);
+   Run_Test ("intint_map_ada_ordered_indef_indef",
+             Map_Ada12_ordered_Def_Def_Unbounded_IntInt'Access);
+   Run_Test ("intint_map_ada_hashed_indef_indef",
+             Map_Ada12_hashed_Def_Def_Unbounded_IntInt'Access);
+   Run_Test ("intint_map_hashed_indef_indef",
+             Map_hashed_Def_Def_Unbounded_IntInt'Access);
+
    Run_Test ("strstr_map_c++_unordered",
              Test_Cpp_Str_Str_Unordered_Map'Access);
+   Run_Test ("strstr_map_c++", Test_Cpp_Str_Str_Map'Access);
    Run_Test ("strstr_map_ada_ordered_indef_indef",
              Map_Ada12_ordered_Indef_Indef_Unbounded_StrStr'Access);
    Run_Test ("strstr_map_ada_hashed_indef_indef",
              Map_Ada12_hashed_Indef_Indef_Unbounded_StrStr'Access);
+   Run_Test ("strstr_map_hashed_indef_indef",
+             Map_hashed_Indef_Indef_Unbounded_StrStr'Access);
 
    Run_Test ("graph_c++", Test_Cpp_Graph'Access);
    Run_Test ("graph_ada_custom", Custom_Graph.Test_Custom'Access);

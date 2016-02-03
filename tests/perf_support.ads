@@ -123,8 +123,10 @@ package Perf_Support is
    function Predicate (P : Unbounded_String) return Boolean is
       (Element (P, 1) = 'f')
       with Inline;
-   procedure Assert (Count, Expected : Natural)
+   procedure Assert (Count, Expected : Natural; Reason : String := "")
       with Inline;
+
+   function Image (P : Integer) return String with Inline;
 
    procedure Test_Cpp_Int_List (Stdout : System.Address)
       with Import, Convention => C, External_Name => "test_cpp_int_list";
@@ -139,6 +141,11 @@ package Perf_Support is
    procedure Test_Cpp_Str_Str_Unordered_Map (Stdout : System.Address)
      with Import, Convention => C,
           External_Name => "test_cpp_str_str_unordered_map";
+   procedure Test_Cpp_Int_Int_Map (Stdout : System.Address)
+     with Import, Convention => C, External_Name => "test_cpp_int_int_map";
+   procedure Test_Cpp_Int_Int_Unordered_Map (Stdout : System.Address)
+     with Import, Convention => C,
+          External_Name => "test_cpp_int_int_unordered_map";
    --  Perform C++ testing
 
    procedure Test_Arrays_Int (Stdout : not null access Output'Class);

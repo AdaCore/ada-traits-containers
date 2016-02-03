@@ -76,6 +76,9 @@ package Conts.Elements with SPARK_Mode is
       --  original element is deleted.
 
    package Traits is
+      subtype Element is Element_Type;
+      subtype Stored is Stored_Type;
+      subtype Returned is Return_Type;
 
       --  Some renamings to make the formal parameters visible in all places
       --  (12.7 10/2 in the ARM)
