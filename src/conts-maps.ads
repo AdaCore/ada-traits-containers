@@ -20,9 +20,70 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
+with Ada.Containers;   use Ada.Containers;
 with Conts.Elements;
 
 package Conts.Maps is
+
+   -------------
+   -- Probing --
+   -------------
+   --  The implementation of the hashed map stores all elements in a single
+   --  array. Preferably, the bucket used is the one corresponding to the hash
+   --  computed from the key. But in case there is already another element at
+   --  that position, other positions have to be tried. There are multiple
+   --  strategies for this.
+   --  We use a tagged record for this, since some strategies need to keep
+   --  data. A new instance of the object is created and initialized every time
+   --  we search for a new key.
+
+   type Probing_Strategy is interface;
+   --  An object whose goal is to compute the next candidate
+
+   procedure Initialize_Probing
+     (Self : in out Probing_Strategy;
+      Hash : Hash_Type;
+      Size : Hash_Type) is null;
+   --  Called once when a lookup starts
+
+   function Next_Probing
+     (Self     : in out Probing_Strategy;
+      Previous : Hash_Type) return Hash_Type is abstract;
+   --  Compute the next position to check, given we checked Previous and found
+   --  this position already in use.
+
+   --------------------
+   -- Linear probing --
+   --------------------
+   --  Simple probing: check the next place in the array. This is simple,
+   --  but not optimal in general when the keys are sequential integers for
+   --  instance, since we end up with blocks of filled slots, which slows the
+   --  lookup.
+
+   type Linear_Probing is new Probing_Strategy with null record;
+   overriding function Next_Probing
+     (Self : in out Linear_Probing; Previous : Hash_Type) return Hash_Type
+     is (Previous + 1) with Inline;
+
+   --------------------------
+   --  Pertubation_Probing --
+   --------------------------
+   --  Similar to linear probing, but more efficient since it will try various
+   --  places in the array.
+
+   type Perturbation_Probing is new Probing_Strategy with private;
+   overriding procedure Initialize_Probing
+     (Self : in out Perturbation_Probing;
+      Hash : Hash_Type;
+      Size : Hash_Type) with Inline;
+   overriding function Next_Probing
+     (Self     : in out Perturbation_Probing;
+      Previous : Hash_Type) return Hash_Type
+     with Inline;
+
+   ----------
+   -- Maps --
+   ----------
 
    generic
       with package Keys is new Conts.Elements.Traits (<>);
@@ -30,6 +91,9 @@ package Conts.Maps is
       type Base_Type is abstract tagged limited private;
 
       with function Hash (Key : Keys.Element_Type) return Hash_Type;
+
+      type Probing is new Probing_Strategy with private;
+
       with function "="
         (Left  : Keys.Element_Type;
          Right : Keys.Stored_Type) return Boolean is <>;
@@ -115,5 +179,11 @@ package Conts.Maps is
 
       end record;
    end Maps;
+
+private
+
+   type Perturbation_Probing is new Probing_Strategy with record
+      Pertub : Hash_Type;
+   end record;
 
 end Conts.Maps;

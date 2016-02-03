@@ -646,7 +646,17 @@ Map("IntInt", "hashed", "Def", "Def", "Unbounded",
     + '   (Integer);\n'
     + 'package Container is new Conts.Maps.Maps\n'
     + '   (Integers.Traits, Integers.Traits, Ada.Finalization.Controlled,\n'
-    + '    Hash, "=");\n',
+    + '    Hash, Conts.Maps.Perturbation_Probing, "=");\n',
+    'with Conts.Elements.Definite, Conts.Maps;',
+    favorite=True).gen(use_cursors=False)
+Map("IntInt", "hashed_linear_probing", "Def", "Def", "Unbounded",
+    'function Hash (K : Integer) return Conts.Hash_Type is\n'
+     + '   (Conts.Hash_Type (K)) with Inline;\n'
+    + 'package Integers is new Conts.Elements.Definite\n'
+    + '   (Integer);\n'
+    + 'package Container is new Conts.Maps.Maps\n'
+    + '   (Integers.Traits, Integers.Traits, Ada.Finalization.Controlled,\n'
+    + '    Hash, Conts.Maps.Linear_Probing, "=");\n',
     'with Conts.Elements.Definite, Conts.Maps;',
     favorite=True).gen(use_cursors=False)
 
@@ -672,7 +682,18 @@ Map("StrStr", "hashed", "Indef", "Indef", "Unbounded",
     + '   is (L = R.all) with Inline;\n'
     + 'package Container is new Conts.Maps.Maps\n'
     + '   (Strings.Traits, Strings.Traits, Ada.Finalization.Controlled,\n'
-    + '    Ada.Strings.Hash, "=");\n',
+    + '    Ada.Strings.Hash, Conts.Maps.Perturbation_Probing, "=");\n',
+    'with Conts.Elements.Indefinite_Ref, Ada.Strings.Hash,'
+    + ' Conts.Maps;',
+    favorite=True).gen(use_cursors=False)
+Map("StrStr", "hashed_linear_probing", "Indef", "Indef", "Unbounded",
+    'package Strings is new Conts.Elements.Indefinite_Ref\n'
+    + '   (String, Pool => Conts.Global_Pool);\n'
+    + 'function "=" (L : String; R : Strings.Traits.Stored) return Boolean\n'
+    + '   is (L = R.all) with Inline;\n'
+    + 'package Container is new Conts.Maps.Maps\n'
+    + '   (Strings.Traits, Strings.Traits, Ada.Finalization.Controlled,\n'
+    + '    Ada.Strings.Hash, Conts.Maps.Linear_Probing, "=");\n',
     'with Conts.Elements.Indefinite_Ref, Ada.Strings.Hash,'
     + ' Conts.Maps;',
     favorite=True).gen(use_cursors=False)

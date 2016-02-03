@@ -28,6 +28,39 @@ package body Conts.Maps is
    Min_Size : constant Hash_Type := 2 ** 3;
    --  Minimum size for maps. Must be a power of 2.
 
+   ------------------------
+   -- Initialize_Probing --
+   ------------------------
+
+   overriding procedure Initialize_Probing
+     (Self : in out Perturbation_Probing;
+      Hash : Hash_Type;
+      Size : Hash_Type)
+   is
+      pragma Unreferenced (Size);
+   begin
+      Self.Pertub := Hash;
+   end Initialize_Probing;
+
+   ------------------
+   -- Next_Probing --
+   ------------------
+
+   overriding function Next_Probing
+     (Self     : in out Perturbation_Probing;
+      Previous : Hash_Type) return Hash_Type
+   is
+      Candidate : constant Hash_Type :=
+        Previous * 4 + Previous + 1 + Self.Pertub;
+   begin
+      Self.Pertub := Self.Pertub / (2 ** 5);
+      return Candidate;
+   end Next_Probing;
+
+   ----------
+   -- Maps --
+   ----------
+
    package body Maps is
 
       procedure Unchecked_Free is new Ada.Unchecked_Deallocation
@@ -58,9 +91,11 @@ package body Conts.Maps is
       is
          Candidate   : Hash_Type := H and Self.Table'Last;
          First_Dummy : Hash_Type := Hash_Type'Last;
-         Pertub      : Hash_Type := H;
          S           : Slot;
+         Prob        : Probing;
       begin
+         Prob.Initialize_Probing (Hash => H, Size => Self.Table'Last);
+
          loop
             S := Self.Table (Candidate);
             case S.Kind is
@@ -79,14 +114,7 @@ package body Conts.Maps is
                   exit when S.Hash = H and then "=" (Key, S.Key);
             end case;
 
-            --  We use open addressing, so we need to search for the next
-            --  candidate slot. Linear probing (moving to the next slot) is
-            --  not really efficient when possible use integers are keys in
-            --  the table. So we use a more complicated pattern:
-
-            Candidate :=
-              (Candidate * 4 + Candidate + 1 + Pertub) and Self.Table'Last;
-            Pertub := Pertub / (2 ** 5);
+            Candidate := Prob.Next_Probing (Candidate) and Self.Table'Last;
          end loop;
 
          if First_Dummy /= Hash_Type'Last then
@@ -156,7 +184,7 @@ package body Conts.Maps is
          Size      : Hash_Type := Min_Size;
          Tmp       : Slot_Table_Access;
          Candidate : Hash_Type;
-         Pertub    : Hash_Type;
+         Prob      : Probing;
       begin
          --  Find smallest valid size greater than New_Size
 
@@ -176,8 +204,10 @@ package body Conts.Maps is
          if Tmp /= null then
             for E in Tmp'Range loop
                if Tmp (E).Kind = Full then
-                  Pertub := Tmp (E).Hash;
-                  Candidate := Pertub and Self.Table'Last;
+                  Prob.Initialize_Probing
+                    (Hash => Tmp (E).Hash, Size => Self.Table'Last);
+
+                  Candidate := Tmp (E).Hash and Self.Table'Last;
                   loop
                      if Self.Table (Candidate).Kind = Empty then
                         Self.Table (Candidate) :=
@@ -188,10 +218,8 @@ package body Conts.Maps is
                         exit;
                      end if;
 
-                     Candidate :=
-                       (Candidate * 4 + Candidate + 1 + Pertub)
+                     Candidate := Prob.Next_Probing (Candidate)
                        and Self.Table'Last;
-                     Pertub := Pertub / (2 ** 5);
                   end loop;
                end if;
             end loop;

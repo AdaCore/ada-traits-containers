@@ -42,6 +42,7 @@ procedure Test_Maps is
        Elements  => Values.Traits,
        Hash      => Ada.Strings.Hash,
        "="       => "=",
+       Probing   => Conts.Maps.Perturbation_Probing,
        Base_Type => Ada.Finalization.Controlled);
 
    M : Maps.Map;
