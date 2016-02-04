@@ -28,7 +28,7 @@ with Conts.Elements;
 generic
    with package Elements is new Conts.Elements.Traits (<>);
 
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
    --  The base type for these unbounded list.
 
    with package Pool is new Conts.Pools (<>);
@@ -36,7 +36,7 @@ generic
 
 package Conts.Lists.Nodes.Unbounded with SPARK_Mode => Off is
 
-   subtype Nodes_Container is Base_Type;
+   subtype Nodes_Container is Container_Base_Type;
    type Node;
    type Node_Access is access Node;
    for Node_Access'Storage_Pool use Pool.Pool.all;

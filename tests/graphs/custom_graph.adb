@@ -39,10 +39,10 @@ package body Custom_Graph is
 
    procedure Test_Adjacency_List (Stdout : not null access Output'Class) is
       package Graphs is new Conts.Graphs.Adjacency_List
-        (Vertex_Type       => Positive,
-         Vertex_Properties => Conts.Elements.Null_Elements.Traits,
-         Edge_Properties   => Conts.Elements.Null_Elements.Traits,
-         Base_Type         => Ada.Finalization.Controlled);
+        (Vertex_Type         => Positive,
+         Vertex_Properties   => Conts.Elements.Null_Elements.Traits,
+         Edge_Properties     => Conts.Elements.Null_Elements.Traits,
+         Container_Base_Type => Ada.Finalization.Controlled);
       use Graphs;
 
       type My_Visitor is new Graphs.Traits.DFS_Visitor with null record;

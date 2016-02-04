@@ -39,7 +39,7 @@ generic
    with package Edge_Properties is new Conts.Elements.Traits (<>);
    --  The data associated with edges and properties
 
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
    --  The base type for the graph.
    --  This is a way to make lists either controlled or limited.
 
@@ -49,7 +49,7 @@ package Conts.Graphs.Adjacency_List is
    --  Make this type visible to all packages using instances.
 
    package Impl is
-      type Graph is new Base_Type with private;
+      type Graph is new Container_Base_Type with private;
 
       function Length (Self : Graph) return Count_Type;
       --  Return the number of elements in the graph
@@ -104,10 +104,10 @@ package Conts.Graphs.Adjacency_List is
 
       type Dummy_Record is tagged null record;
       package Edge_Vectors is new Conts.Vectors.Definite_Unbounded
-        (Index_Type   => Edge_Index,
-         Element_Type => Edge,
-         Base_Type    => Dummy_Record,
-         Free         => Release);
+        (Index_Type          => Edge_Index,
+         Element_Type        => Edge,
+         Container_Base_Type => Dummy_Record,
+         Free                => Release);
 
       type Vertex_Record is record
          Props     : Vertex_Properties.Stored_Type;
@@ -116,12 +116,12 @@ package Conts.Graphs.Adjacency_List is
       procedure Release (V : in out Vertex_Record);
 
       package Vertex_Vectors is new Conts.Vectors.Indefinite_Unbounded_Ref
-        (Index_Type   => Vertex,
-         Element_Type => Vertex_Record,
-         Base_Type    => Dummy_Record,
-         Free         => Release);
+        (Index_Type          => Vertex,
+         Element_Type        => Vertex_Record,
+         Container_Base_Type => Dummy_Record,
+         Free                => Release);
 
-      type Graph is new Base_Type with record
+      type Graph is new Container_Base_Type with record
          Vertices : Vertex_Vectors.Vector;
       end record;
 
@@ -183,14 +183,14 @@ package Conts.Graphs.Adjacency_List is
    --  by algorithms. If you create a color map yourself, you need to clear
    --  it manually.
    package Color_Maps is new Conts.Properties.Indexed_Maps
-     (Container     => Graph,
-      Key           => Vertex,
-      Value         => Color,
-      Default_Value => White,
-      Index_Type    => Vertex,
-      Base_Type     => Conts.Limited_Base,
-      Get_Index     => Identity,
-      Length        => Impl.Length);
+     (Container           => Graph,
+      Key                 => Vertex,
+      Value               => Color,
+      Default_Value       => White,
+      Index_Type          => Vertex,
+      Container_Base_Type => Conts.Limited_Base,
+      Get_Index           => Identity,
+      Length              => Impl.Length);
 
    --  An integer map is mostly created by the application, since it holds the
    --  results of strongly connected components for instance. So we make it
@@ -198,14 +198,14 @@ package Conts.Graphs.Adjacency_List is
    --  so that it is compatible with SPARK when people want to, but on the
    --  other hand it is in general cleared automatically when possible.
    package Integer_Maps is new Conts.Properties.Indexed_Maps
-     (Container     => Graph,
-      Key           => Vertex,
-      Value         => Integer,
-      Default_Value => -1,
-      Index_Type    => Vertex,
-      Base_Type     => Base_Type,
-      Get_Index     => Identity,
-      Length        => Impl.Length);
+     (Container           => Graph,
+      Key                 => Vertex,
+      Value               => Integer,
+      Default_Value       => -1,
+      Index_Type          => Vertex,
+      Container_Base_Type => Container_Base_Type,
+      Get_Index           => Identity,
+      Length              => Impl.Length);
 
    package DFS is new Conts.Graphs.DFS.Exterior
      (Traits, Color_Maps.As_Map, Create_Map => Color_Maps.Create_Map);

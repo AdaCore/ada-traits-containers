@@ -48,8 +48,8 @@ package QGen is
       (EObject'Class, Pool => Conts.Global_Pool);
    package Nodes is new Conts.Lists.Nodes.Unbounded
       (Elements.Traits,
-       Base_Type => Ada.Finalization.Controlled,
-       Pool      => Conts.Global_Pool);
+       Container_Base_Type => Ada.Finalization.Controlled,
+       Pool                => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
    type EObject_List is new Lists.List with null record

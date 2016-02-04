@@ -20,8 +20,6 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-
-with Conts.Graphs.DFS;
 with Conts.Properties;
 
 package Conts.Graphs.Components is

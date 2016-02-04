@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2015-2016, AdaCore                     --
+--                     Copyright (C) 2016, AdaCore                          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -19,37 +19,50 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Bounded vectors of constrained elements
+--  Maps indexed by definite elements (integers for instance), containing
+--  definite elements (records for instance).
 
 pragma Ada_2012;
 with Conts.Elements.Definite;
-with Conts.Vectors.Cursors;
-with Conts.Vectors.Generics;
-with Conts.Vectors.Nodes.Bounded;
+with Conts.Maps.Generics;
+with Conts.Maps.Cursors;
 
 generic
-   type Index_Type is range <>;
+   type Key_Type is private;
    type Element_Type is private;
    type Container_Base_Type is abstract tagged limited private;
-package Conts.Vectors.Definite_Bounded is
+   with function Hash (Key : Key_Type) return Hash_Type;
+   with function "=" (Left, Right : Key_Type) return Boolean is <>;
+   with procedure Free (E : in out Key_Type) is null;
+   with procedure Free (E : in out Element_Type) is null;
+package Conts.Maps.Def_Def_Unbounded is
 
-   package Elements is new Conts.Elements.Definite (Element_Type);
-   package Nodes is new Conts.Vectors.Nodes.Bounded
-      (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type);
-   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
+   package Keys is new Conts.Elements.Definite
+     (Key_Type, Free => Free);
+   package Elements is new Conts.Elements.Definite
+     (Element_Type, Free => Free);
 
-   subtype Cursor is Vectors.Cursor;
-   type Vector (Capacity : Count_Type) is
-      new Vectors.Vector (Capacity) with null record
-      with Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   package Maps is new Conts.Maps.Generics
+     (Keys                => Keys.Traits,
+      Elements            => Elements.Traits,
+      Hash                => Hash,
+      "="                 => "=",
+      Probing             => Conts.Maps.Perturbation_Probing,
+      Pool                => Conts.Global_Pool,
+      Container_Base_Type => Container_Base_Type);
 
-   function Copy (Self : Vector'Class) return Vector'Class;
-   --  Return a deep copy of Self
-   --  Complexity: O(n)
+   subtype Cursor is Maps.Cursor;
 
-   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
-end Conts.Vectors.Definite_Bounded;
+   subtype Pair is Maps.Pair;
+   function Key (P : Pair) return Key_Type renames Maps.Key;
+   function Value (P : Pair) return Element_Type renames Maps.Value;
+
+   type Map is new Maps.Map with null record
+     with Iterable => (First       => First_Primitive,
+                       Next        => Next_Primitive,
+                       Has_Element => Has_Element_Primitive,
+                       Element     => Element_Primitive);
+
+   package Cursors is new Conts.Maps.Cursors (Maps, Map);
+
+end Conts.Maps.Def_Def_Unbounded;

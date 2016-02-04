@@ -20,6 +20,7 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
+with Conts.Graphs.DFS;
 with Conts.Vectors.Nodes.Unbounded;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Definite_Unbounded;
@@ -27,9 +28,9 @@ with Conts.Vectors.Definite_Unbounded;
 package body Conts.Graphs.Components is
 
    package Roots_Vectors is new Conts.Vectors.Definite_Unbounded
-     (Index_Type   => Natural,
-      Element_Type => Integer,
-      Base_Type    => Conts.Limited_Base);
+     (Index_Type          => Natural,
+      Element_Type        => Integer,
+      Container_Base_Type => Conts.Limited_Base);
    --  A stack of integers.
    --  For the strongly-connected-components, these are the DFS numbers for
    --  the roots of each SCC.
@@ -75,9 +76,9 @@ package body Conts.Graphs.Components is
       --    https://people.mpi-inf.mpg.de/~mehlhorn/ftp/EngineeringDFS.pdf
 
       package Vertex_Nodes is new Conts.Vectors.Nodes.Unbounded
-        (Elements      => Graphs.Vertices,
-         Base_Type     => Conts.Limited_Base,
-         Resize_Policy => Conts.Vectors.Resize_1_5);
+        (Elements            => Graphs.Vertices,
+         Container_Base_Type => Conts.Limited_Base,
+         Resize_Policy       => Conts.Vectors.Resize_1_5);
       package Vertex_Vectors is new Conts.Vectors.Generics
         (Natural, Vertex_Nodes.Traits);
       --  A stack of vertices.

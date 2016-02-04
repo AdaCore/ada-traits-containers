@@ -31,10 +31,10 @@ procedure Test_Components is
    type Vertex is (A, B, C, D, E, F, G, H);
 
    package Graphs is new Conts.Graphs.Adjacency_List
-     (Vertex_Type       => Vertex,
-      Vertex_Properties => Conts.Elements.Null_Elements.Traits,
-      Edge_Properties   => Conts.Elements.Null_Elements.Traits,
-      Base_Type         => Ada.Finalization.Controlled);
+     (Vertex_Type         => Vertex,
+      Vertex_Properties   => Conts.Elements.Null_Elements.Traits,
+      Edge_Properties     => Conts.Elements.Null_Elements.Traits,
+      Container_Base_Type => Ada.Finalization.Controlled);
    use Graphs;
 
    procedure Strong is new Strongly_Connected_Components

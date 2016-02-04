@@ -31,16 +31,16 @@ with Conts.Vectors.Nodes.Unbounded;
 generic
    type Index_Type is (<>);
    type Element_Type (<>) is private;
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Vectors.Indefinite_Unbounded_Ref is
 
    package Elements is new Conts.Elements.Indefinite_Ref
       (Element_Type, Free => Free, Pool => Conts.Global_Pool);
    package Nodes is new Conts.Vectors.Nodes.Unbounded
-      (Elements      => Elements.Traits,
-       Base_Type     => Base_Type,
-       Resize_Policy => Conts.Vectors.Resize_1_5);
+      (Elements            => Elements.Traits,
+       Container_Base_Type => Container_Base_Type,
+       Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
    subtype Cursor is Vectors.Cursor;

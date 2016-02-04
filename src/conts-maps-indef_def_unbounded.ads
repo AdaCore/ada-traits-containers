@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2015-2016, AdaCore                     --
+--                     Copyright (C) 2016, AdaCore                          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -19,41 +19,54 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Unbounded Vectors of constrained elements.
---  Compared with standard Ada containers, this is saving half of the memory
---  allocations, so much more efficient in general.
+--  Maps indexed by indefinite elements (strings for instance), containing
+--  definite elements (records for instance).
 
 pragma Ada_2012;
 with Conts.Elements.Definite;
-with Conts.Vectors.Generics;
-with Conts.Vectors.Cursors;
-with Conts.Vectors.Nodes.Unbounded;
+with Conts.Elements.Indefinite_Ref;
+with Conts.Maps.Generics;
+with Conts.Maps.Cursors;
 
 generic
-   type Index_Type is (<>);
+   type Key_Type (<>) is private;
    type Element_Type is private;
    type Container_Base_Type is abstract tagged limited private;
+   with function Hash (Key : Key_Type) return Hash_Type;
+   with function "=" (Left, Right : Key_Type) return Boolean is <>;
+   with procedure Free (E : in out Key_Type) is null;
    with procedure Free (E : in out Element_Type) is null;
-package Conts.Vectors.Definite_Unbounded is
+package Conts.Maps.Indef_Def_Unbounded is
 
+   package Keys is new Conts.Elements.Indefinite_Ref
+     (Key_Type, Pool => Conts.Global_Pool, Free => Free);
    package Elements is new Conts.Elements.Definite
      (Element_Type, Free => Free);
-   package Nodes is new Conts.Vectors.Nodes.Unbounded
-      (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type,
-       Resize_Policy       => Conts.Vectors.Resize_1_5);
-   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   subtype Cursor is Vectors.Cursor;
-   type Vector is new Vectors.Vector with null record
-      with Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   function "=" (Left : Key_Type; Right : Keys.Traits.Stored) return Boolean
+     is (Left = Right.all) with Inline;
 
-   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
+   package Maps is new Conts.Maps.Generics
+     (Keys                => Keys.Traits,
+      Elements            => Elements.Traits,
+      Hash                => Hash,
+      "="                 => "=",
+      Probing             => Conts.Maps.Perturbation_Probing,
+      Pool                => Conts.Global_Pool,
+      Container_Base_Type => Container_Base_Type);
 
-   function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
-                  renames Vectors."<=";
+   subtype Cursor is Maps.Cursor;
 
-end Conts.Vectors.Definite_Unbounded;
+   subtype Pair is Maps.Pair;
+   function Key (P : Pair) return Keys.Traits.Returned renames Maps.Key;
+   function Value (P : Pair) return Element_Type renames Maps.Value;
+
+   type Map is new Maps.Map with null record
+     with Iterable => (First       => First_Primitive,
+                       Next        => Next_Primitive,
+                       Has_Element => Has_Element_Primitive,
+                       Element     => Element_Primitive);
+
+   package Cursors is new Conts.Maps.Cursors (Maps, Map);
+
+end Conts.Maps.Indef_Def_Unbounded;

@@ -29,15 +29,15 @@ with Conts.Lists.Nodes.Bounded;
 
 generic
    type Element_Type is private;
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Lists.Definite_Bounded is
 
    package Elements is new Conts.Elements.Definite
      (Element_Type, Free => Free);
    package Nodes is new Conts.Lists.Nodes.Bounded
-      (Elements  => Elements.Traits,
-       Base_Type => Base_Type);
+      (Elements            => Elements.Traits,
+       Container_Base_Type => Container_Base_Type);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
    subtype Cursor is Lists.Cursor;

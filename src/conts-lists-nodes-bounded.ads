@@ -31,7 +31,7 @@ with Conts.Elements;
 generic
    with package Elements is new Conts.Elements.Traits (<>);
 
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
    --  The base type for the container of nodes.
    --  Since this type is eventually also used as the base type for the list
    --  itself, this is a way to make lists either controlled or limited.
@@ -42,7 +42,7 @@ package Conts.Lists.Nodes.Bounded with SPARK_Mode is
 
    package Impl is
       type Container (Capacity : Count_Type)
-         is abstract new Base_Type with private;
+         is abstract new Container_Base_Type with private;
       type Node_Access is new Count_Type;
       Null_Node_Access : constant Node_Access := 0;
 
@@ -86,7 +86,7 @@ package Conts.Lists.Nodes.Bounded with SPARK_Mode is
       type Nodes_Array is array (Count_Type range <>) of Node;
 
       type Container (Capacity : Count_Type) is
-         abstract new Base_Type
+         abstract new Container_Base_Type
       with record
          Free  : Integer := 0;   --  head of free nodes list
          --  For a negative value, its absolute value points to the first free

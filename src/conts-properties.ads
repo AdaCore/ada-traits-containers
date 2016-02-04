@@ -83,7 +83,7 @@ package Conts.Properties is
       --  when the vector is resized.
 
       type Index_Type is (<>);
-      type Base_Type is abstract tagged limited private;
+      type Container_Base_Type is abstract tagged limited private;
 
       with function Get_Index (K : Key) return Index_Type is <>;
       --  Maps the key to an index
@@ -96,7 +96,7 @@ package Conts.Properties is
    package Indexed_Maps is
 
       package Value_Vectors is new Conts.Vectors.Definite_Unbounded
-        (Index_Type, Value, Base_Type => Base_Type);
+        (Index_Type, Value, Container_Base_Type => Container_Base_Type);
       type Map is limited record
          Values : Value_Vectors.Vector;
       end record;

@@ -46,10 +46,10 @@ package body Conts.Graphs.DFS is
       end record;
       procedure Free (Self : in out Vertex_Info) with Inline;
       package Vertex_Info_Vectors is new Conts.Vectors.Definite_Unbounded
-        (Index_Type   => Natural,
-         Element_Type => Vertex_Info,
-         Base_Type    => Conts.Limited_Base,
-         Free         => Free);
+        (Index_Type          => Natural,
+         Element_Type        => Vertex_Info,
+         Container_Base_Type => Conts.Limited_Base,
+         Free                => Free);
 
       ----------
       -- Free --

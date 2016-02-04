@@ -31,7 +31,7 @@ with Conts.Elements;
 generic
    with package Elements is new Conts.Elements.Traits (<>);
 
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
    --  The base type for these unbounded lists
 
 package Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
@@ -46,7 +46,7 @@ package Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
    type Big_Nodes_Array is array (1 .. Count_Type'Last) of Node;
 
    package Private_Nodes_List with SPARK_Mode is
-      type Nodes_List is abstract new Base_Type with private;
+      type Nodes_List is abstract new Container_Base_Type with private;
 
       procedure Allocate
         (Self    : in out Nodes_List'Class;
@@ -84,7 +84,7 @@ package Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
       for Nodes_Array_Access'Storage_Size use 0;
       --  The nodes is a pointer so that we can use realloc
 
-      type Nodes_List is abstract new Base_Type with record
+      type Nodes_List is abstract new Container_Base_Type with record
          Nodes : Nodes_Array_Access := null;
          Last  : Count_Type := 0;  --  Last valid index in Nodes
          Free  : Integer := 0;     --  head of free nodes list

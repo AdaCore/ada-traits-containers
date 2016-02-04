@@ -28,12 +28,12 @@ with Conts.Elements;
 
 generic
    with package Elements is new Conts.Elements.Traits (<>);
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
    with package Resize_Policy is new Conts.Vectors.Resize_Strategy (<>);
 package Conts.Vectors.Nodes.Unbounded with SPARK_Mode is
 
    package Impl with SPARK_Mode is
-      type Container is abstract new Base_Type with private;
+      type Container is abstract new Container_Base_Type with private;
 
       function Max_Capacity (Self : Container'Class) return Count_Type
          is (Count_Type'Last - Min_Index + 1) with Inline;
@@ -73,7 +73,7 @@ package Conts.Vectors.Nodes.Unbounded with SPARK_Mode is
       for Nodes_Array_Access'Storage_Size use 0;
       --  The nodes is a C-compatible pointer so that we can use realloc
 
-      type Container is abstract new Base_Type with record
+      type Container is abstract new Container_Base_Type with record
          Nodes : Nodes_Array_Access;
 
          Capacity : Count_Type := 0;

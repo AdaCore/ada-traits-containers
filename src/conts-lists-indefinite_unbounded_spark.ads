@@ -40,8 +40,8 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
    package Elements is new Conts.Elements.Indefinite_SPARK
       (Element_Type, Pool => Conts.Global_Pool);
    package Nodes is new Conts.Lists.Nodes.Unbounded_SPARK
-      (Elements  => Elements.Traits,
-       Base_Type => Limited_Base);
+      (Elements            => Elements.Traits,
+       Container_Base_Type => Limited_Base);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
    subtype Cursor is Lists.Cursor;

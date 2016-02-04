@@ -31,14 +31,14 @@ with Conts.Lists.Nodes.Unbounded;
 
 generic
    type Element_Type is private;
-   type Base_Type is abstract tagged limited private;
+   type Container_Base_Type is abstract tagged limited private;
 package Conts.Lists.Definite_Unbounded is
 
    package Elements is new Conts.Elements.Definite (Element_Type);
    package Nodes is new Conts.Lists.Nodes.Unbounded
-      (Elements  => Elements.Traits,
-       Base_Type => Base_Type,
-       Pool      => Conts.Global_Pool);
+      (Elements            => Elements.Traits,
+       Container_Base_Type => Container_Base_Type,
+       Pool                => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
    subtype Cursor is Lists.Cursor;

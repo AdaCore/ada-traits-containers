@@ -21,30 +21,17 @@
 
 pragma Ada_2012;
 with Ada.Finalization;
-with Conts.Elements.Definite;
-with Conts.Elements.Indefinite_Ref;
-with Conts.Maps;
+with Conts.Maps.Indef_Def_Unbounded;
 with Ada.Strings.Hash;
 with Ada.Text_IO;          use Ada.Text_IO;
 
 procedure Test_Maps is
 
-   package Strings is
-      new Conts.Elements.Indefinite_Ref (String, Pool => Conts.Global_Pool);
-   package Values  is new Conts.Elements.Definite (Integer);
-
-   function "="
-     (Left : String; Right : Strings.Traits.Stored) return Boolean
-      is (Left = Right.all) with Inline;
-
-   package Maps is new Conts.Maps.Maps
-      (Keys      => Strings.Traits,
-       Elements  => Values.Traits,
-       Hash      => Ada.Strings.Hash,
-       "="       => "=",
-       Probing   => Conts.Maps.Perturbation_Probing,
-       Pool      => Conts.Global_Pool,
-       Base_Type => Ada.Finalization.Controlled);
+   package Maps is new Conts.Maps.Indef_Def_Unbounded
+     (Key_Type            => String,
+      Element_Type        => Integer,
+      Container_Base_Type => Ada.Finalization.Controlled,
+      Hash                => Ada.Strings.Hash);
 
    M : Maps.Map;
 

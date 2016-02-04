@@ -40,9 +40,9 @@ package Conts.Lists.Strings is
    package Elements is new Conts.Elements.Arrays
       (Positive, Character, String, Conts.Global_Pool);
    package Nodes is new Conts.Lists.Nodes.Unbounded
-      (Elements  => Elements.Traits,
-       Base_Type => Ada.Finalization.Controlled,
-       Pool      => Conts.Global_Pool);
+      (Elements            => Elements.Traits,
+       Container_Base_Type => Ada.Finalization.Controlled,
+       Pool                => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Nodes.Traits);
 
    subtype Cursor is Lists.Cursor;

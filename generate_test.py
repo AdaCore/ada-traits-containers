@@ -3,6 +3,9 @@
 This script is used to generate test for the various container combinations.
 """
 
+############
+# Comments #
+############
 
 class Comments(object):
     def __init__(self, **kwargs):
@@ -11,6 +14,9 @@ class Comments(object):
     def __getattr__(self, key):
         return self.comments.get(key, '')
 
+########
+# List #
+########
 
 class List(object):
     type = "List"
@@ -241,6 +247,9 @@ end {test_name};
 
         self.__common()
 
+#######
+# Map #
+#######
 
 class Map(object):
 
@@ -467,6 +476,9 @@ end {test_name};
 
         self.__common(countif=use_cursors)
 
+##########
+# Vector #
+##########
 
 class Vector (List):
     type = "Vector"
@@ -641,26 +653,22 @@ Map("IntInt", "Ada12_hashed", "Def", "Def", "Unbounded",
         adaptors="Hashed_Maps")
 Map("IntInt", "hashed", "Def", "Def", "Unbounded",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
-     + '   (Conts.Hash_Type (K)) with Inline;\n'
-    + 'package Integers is new Conts.Elements.Definite\n'
-    + '   (Integer);\n'
-    + 'package Container is new Conts.Maps.Maps\n'
-    + '   (Integers.Traits, Integers.Traits, Ada.Finalization.Controlled,\n'
-    + '    Hash, Conts.Maps.Perturbation_Probing,\n'
-    + '    Conts.Global_Pool, "=");\n',
-    'with Conts.Elements.Definite, Conts.Maps;',
-    favorite=True).gen(use_cursors=False)
+    + '   (Conts.Hash_Type (K)) with Inline;\n'
+    + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
+    + '   (Integer, Integer, Ada.Finalization.Controlled, Hash);'
+    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + '   is (Predicate (Container.Value (P))) with Inline;',
+    'with Conts.Maps.Def_Def_Unbounded;',
+    favorite=True).gen()
 Map("IntInt", "hashed_linear_probing", "Def", "Def", "Unbounded",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
      + '   (Conts.Hash_Type (K)) with Inline;\n'
-    + 'package Integers is new Conts.Elements.Definite\n'
-    + '   (Integer);\n'
-    + 'package Container is new Conts.Maps.Maps\n'
-    + '   (Integers.Traits, Integers.Traits, Ada.Finalization.Controlled,\n'
-    + '    Hash, Conts.Maps.Linear_Probing,\n'
-    + '    Conts.Global_Pool, "=");\n',
-    'with Conts.Elements.Definite, Conts.Maps;',
-    favorite=True).gen(use_cursors=False)
+    + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
+    + '   (Integer, Integer, Ada.Finalization.Controlled, Hash);'
+    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + '   is (Predicate (Container.Value (P))) with Inline;',
+    'with Conts.Maps.Def_Def_Unbounded;',
+    favorite=True).gen()
 
 # String-String maps
 
@@ -678,26 +686,16 @@ Map("StrStr", "Ada12_hashed", "Indef", "Indef", "Unbounded",
      ada2012=True).gen_ada2012(
         adaptors="Indefinite_Hashed_Maps")
 Map("StrStr", "hashed", "Indef", "Indef", "Unbounded",
-    'package Strings is new Conts.Elements.Indefinite_Ref\n'
-    + '   (String, Pool => Conts.Global_Pool);\n'
-    + 'function "=" (L : String; R : Strings.Traits.Stored) return Boolean\n'
-    + '   is (L = R.all) with Inline;\n'
-    + 'package Container is new Conts.Maps.Maps\n'
-    + '   (Strings.Traits, Strings.Traits, Ada.Finalization.Controlled,\n'
-    + '    Ada.Strings.Hash, Conts.Maps.Perturbation_Probing,\n'
-    + '    Conts.Global_Pool, "=");\n',
-    'with Conts.Elements.Indefinite_Ref, Ada.Strings.Hash,'
-    + ' Conts.Maps;',
-    favorite=True).gen(use_cursors=False)
+    'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
+    + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
+    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + '   is (Predicate (Container.Value (P))) with Inline;',
+    'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
+    favorite=True).gen()
 Map("StrStr", "hashed_linear_probing", "Indef", "Indef", "Unbounded",
-    'package Strings is new Conts.Elements.Indefinite_Ref\n'
-    + '   (String, Pool => Conts.Global_Pool);\n'
-    + 'function "=" (L : String; R : Strings.Traits.Stored) return Boolean\n'
-    + '   is (L = R.all) with Inline;\n'
-    + 'package Container is new Conts.Maps.Maps\n'
-    + '   (Strings.Traits, Strings.Traits, Ada.Finalization.Controlled,\n'
-    + '    Ada.Strings.Hash, Conts.Maps.Linear_Probing,\n'
-    + '    Conts.Global_Pool, "=");\n',
-    'with Conts.Elements.Indefinite_Ref, Ada.Strings.Hash,'
-    + ' Conts.Maps;',
-    favorite=True).gen(use_cursors=False)
+    'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
+    + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
+    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + '   is (Predicate (Container.Value (P))) with Inline;',
+    'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
+    favorite=True).gen()
