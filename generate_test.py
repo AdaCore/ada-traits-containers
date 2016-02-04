@@ -646,7 +646,8 @@ Map("IntInt", "hashed", "Def", "Def", "Unbounded",
     + '   (Integer);\n'
     + 'package Container is new Conts.Maps.Maps\n'
     + '   (Integers.Traits, Integers.Traits, Ada.Finalization.Controlled,\n'
-    + '    Hash, Conts.Maps.Perturbation_Probing, "=");\n',
+    + '    Hash, Conts.Maps.Perturbation_Probing,\n'
+    + '    Conts.Global_Pool, "=");\n',
     'with Conts.Elements.Definite, Conts.Maps;',
     favorite=True).gen(use_cursors=False)
 Map("IntInt", "hashed_linear_probing", "Def", "Def", "Unbounded",
@@ -656,7 +657,8 @@ Map("IntInt", "hashed_linear_probing", "Def", "Def", "Unbounded",
     + '   (Integer);\n'
     + 'package Container is new Conts.Maps.Maps\n'
     + '   (Integers.Traits, Integers.Traits, Ada.Finalization.Controlled,\n'
-    + '    Hash, Conts.Maps.Linear_Probing, "=");\n',
+    + '    Hash, Conts.Maps.Linear_Probing,\n'
+    + '    Conts.Global_Pool, "=");\n',
     'with Conts.Elements.Definite, Conts.Maps;',
     favorite=True).gen(use_cursors=False)
 
@@ -682,7 +684,8 @@ Map("StrStr", "hashed", "Indef", "Indef", "Unbounded",
     + '   is (L = R.all) with Inline;\n'
     + 'package Container is new Conts.Maps.Maps\n'
     + '   (Strings.Traits, Strings.Traits, Ada.Finalization.Controlled,\n'
-    + '    Ada.Strings.Hash, Conts.Maps.Perturbation_Probing, "=");\n',
+    + '    Ada.Strings.Hash, Conts.Maps.Perturbation_Probing,\n'
+    + '    Conts.Global_Pool, "=");\n',
     'with Conts.Elements.Indefinite_Ref, Ada.Strings.Hash,'
     + ' Conts.Maps;',
     favorite=True).gen(use_cursors=False)
@@ -693,7 +696,8 @@ Map("StrStr", "hashed_linear_probing", "Indef", "Indef", "Unbounded",
     + '   is (L = R.all) with Inline;\n'
     + 'package Container is new Conts.Maps.Maps\n'
     + '   (Strings.Traits, Strings.Traits, Ada.Finalization.Controlled,\n'
-    + '    Ada.Strings.Hash, Conts.Maps.Linear_Probing, "=");\n',
+    + '    Ada.Strings.Hash, Conts.Maps.Linear_Probing,\n'
+    + '    Conts.Global_Pool, "=");\n',
     'with Conts.Elements.Indefinite_Ref, Ada.Strings.Hash,'
     + ' Conts.Maps;',
     favorite=True).gen(use_cursors=False)

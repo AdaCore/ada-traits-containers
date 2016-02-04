@@ -100,6 +100,9 @@ package Conts.Maps is
    --
    --  If memory is more important than pure speed for you, you could modify
    --  this strategy.
+   --
+   --  The actual size allocated for the table will be the nearest power of 2
+   --  greater than the returned value.
 
    ----------
    -- Maps --
@@ -114,9 +117,16 @@ package Conts.Maps is
 
       type Probing is new Probing_Strategy with private;
 
+      with package Pool is new Conts.Pools (<>);
+      --  The storage pool used to allocate the buckets
+
       with function "="
         (Left  : Keys.Element_Type;
          Right : Keys.Stored_Type) return Boolean is <>;
+      --  Compares a key given by the user with a stored key. For efficiency
+      --  reasons, we do not convert Right back to Keys.Element_Type, although
+      --  of course your function could do it with Keys.To_Return and
+      --  Keys.To_Element.
 
       with function Resize_Strategy
         (Used     : Hash_Type;
@@ -201,6 +211,7 @@ package Conts.Maps is
 
       type Slot_Table is array (Hash_Type range <>) of Slot;
       type Slot_Table_Access is access Slot_Table;
+      for Slot_Table_Access'Storage_Pool use Pool.Pool.all;
 
       type Map is new Base_Type with record
          Used   : Hash_Type := 0;
