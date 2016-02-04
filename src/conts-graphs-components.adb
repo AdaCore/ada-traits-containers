@@ -201,19 +201,4 @@ package body Conts.Graphs.Components is
       Open.Clear;
    end Strongly_Connected_Components;
 
-   --------------------------------------------
-   -- Strongly_Connected_Components_With_Pre --
-   --------------------------------------------
-
-   procedure Strongly_Connected_Components_With_Pre
-     (G                : Graphs.Graph;
-      Components       : out Component_Maps.Map;
-      Components_Count : out Positive)
-   is
-      procedure Int is new Strongly_Connected_Components
-        (Graphs, Component_Maps);
-   begin
-      Int (G, Components, Components_Count);
-   end Strongly_Connected_Components_With_Pre;
-
 end Conts.Graphs.Components;
