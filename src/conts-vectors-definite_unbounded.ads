@@ -46,10 +46,15 @@ package Conts.Vectors.Definite_Unbounded is
 
    subtype Cursor is Vectors.Cursor;
    type Vector is new Vectors.Vector with null record
-      with Iterable => (First       => First_Primitive,
+      with Constant_Indexing => Constant_Reference,
+           Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
+
+   function Constant_Reference
+     (Self : Vector; Position : Index_Type) return Element_Type
+   is (Vectors.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
 

@@ -50,9 +50,6 @@ can be edited with any text editor.
 ** TODO Implement the standard Ada containers on top of these
    We will likely need a =Check_Policy= formal parameter.
 
-** TODO use =Variable_Indexing= aspect on containers
-   So that we can use =Vec(2)= directly
-
 ** TODO Storage pools: can we pass a subprogram instead
    Is there a way we could pass storage pools as a factory function as formal
    parameter to other packages, rather than as a package ? This would allow

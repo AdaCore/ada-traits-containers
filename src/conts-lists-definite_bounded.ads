@@ -43,10 +43,15 @@ package Conts.Lists.Definite_Bounded is
    subtype Cursor is Lists.Cursor;
    type List (Capacity : Count_Type) is
       new Lists.List (Capacity) with null record
-      with Iterable => (First       => First_Primitive,
+       with Constant_Indexing => Constant_Reference,
+            Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
+
+   function Constant_Reference
+     (Self : List; Position : Cursor) return Element_Type
+     is (Lists.Element (Self, Position)) with Inline;
 
    function Copy (Self : List'Class) return List'Class;
    --  Return a deep copy of Self

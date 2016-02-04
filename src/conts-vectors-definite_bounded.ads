@@ -42,7 +42,8 @@ package Conts.Vectors.Definite_Bounded is
    subtype Cursor is Vectors.Cursor;
    type Vector (Capacity : Count_Type) is
       new Vectors.Vector (Capacity) with null record
-      with Iterable => (First       => First_Primitive,
+      with Constant_Indexing => Constant_Reference,
+           Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
@@ -50,6 +51,10 @@ package Conts.Vectors.Definite_Bounded is
    function Copy (Self : Vector'Class) return Vector'Class;
    --  Return a deep copy of Self
    --  Complexity: O(n)
+
+   function Constant_Reference
+     (Self : Vector; Position : Index_Type) return Element_Type
+     is (Vectors.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
 end Conts.Vectors.Definite_Bounded;

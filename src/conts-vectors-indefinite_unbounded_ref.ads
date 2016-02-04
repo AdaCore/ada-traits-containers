@@ -45,7 +45,8 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
 
    subtype Cursor is Vectors.Cursor;
    type Vector is new Vectors.Vector with null record
-      with Iterable => (First       => First_Primitive,
+      with Constant_Indexing => Constant_Reference,
+           Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
@@ -58,6 +59,10 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
    --  be constrained and/or limited, so it has to be provided in all child
    --  packages. However, when the type is controlled it is much easier to
    --  just use the standard assignment operator.
+
+   function Constant_Reference
+     (Self : Vector; Position : Index_Type) return Element_Type
+   is (Vectors.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
 

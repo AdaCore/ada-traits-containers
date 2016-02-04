@@ -56,7 +56,7 @@ begin
    M.Set ("ten", 10);
 
    Put_Line ("Value for one is " & M.Get ("one")'Img);
-   Put_Line ("Value for four is " & M.Get ("four")'Img);
+   Put_Line ("Value for four is " & M ("four")'Img);
 
    M.Delete ("one");
    M.Delete ("two");
@@ -65,10 +65,10 @@ begin
    M.Delete ("five");
    M.Delete ("six");
 
-   Put_Line ("Value for seven is " & M.Get ("seven")'Img);
+   Put_Line ("Value for seven is " & M ("seven")'Img);
 
    begin
-      Put_Line ("Value for three is " & M.Get ("three")'Img);
+      Put_Line ("Value for three is " & M ("three")'Img);
       Put_Line ("Error, three should have been removed");
    exception
       when Constraint_Error =>

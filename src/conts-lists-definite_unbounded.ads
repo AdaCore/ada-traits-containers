@@ -43,10 +43,15 @@ package Conts.Lists.Definite_Unbounded is
 
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record
-      with Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+     with Constant_Indexing => Constant_Reference,
+          Iterable          => (First       => First_Primitive,
+                                Next        => Next_Primitive,
+                                Has_Element => Has_Element_Primitive,
+                                Element     => Element_Primitive);
+
+   function Constant_Reference
+     (Self : List; Position : Cursor) return Element_Type
+     is (Lists.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Lists.Cursors (Lists, List);
 end Conts.Lists.Definite_Unbounded;

@@ -46,7 +46,8 @@ package Conts.Lists.Indefinite_Unbounded_Ref is
    subtype Ref_Type is Elements.Ref_Type;
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record
-      with Iterable => (First       => First_Primitive,
+     with Constant_Indexing => Constant_Reference,
+          Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
@@ -56,6 +57,10 @@ package Conts.Lists.Indefinite_Unbounded_Ref is
    --  be constrained and/or limited, so it has to be provided in all child
    --  packages. However, when the type is controlled it is much easier to
    --  just use the standard assignment operator.
+
+   function Constant_Reference
+     (Self : List; Position : Cursor) return Element_Type
+     is (Lists.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Lists.Cursors (Lists, List);
    --  These cursors return reference types for efficiency.

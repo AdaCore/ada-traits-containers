@@ -58,10 +58,15 @@ package Conts.Maps.Def_Def_Unbounded is
    function Value (P : Pair) return Element_Type renames Maps.Value;
 
    type Map is new Maps.Map with null record
-     with Iterable => (First       => First_Primitive,
+     with Constant_Indexing => Constant_Reference,
+          Iterable => (First       => First_Primitive,
                        Next        => Next_Primitive,
                        Has_Element => Has_Element_Primitive,
                        Element     => Element_Primitive);
+
+   function Constant_Reference
+     (Self : Map; Position : Key_Type) return Element_Type
+     is (Maps.Get (Self, Position)) with Inline;
 
    package Cursors is new Conts.Maps.Cursors (Maps, Map);
 
