@@ -9,21 +9,8 @@ can be edited with any text editor.
 
 * General organization of packages
 
-** TODO Decide on whether to use /Traits/ or /Policy/ for the name of packages
-   'Policy' templates is the term used in C++ (see
-    https://en.wikipedia.org/wiki/Policy-based_design), and that seems closest
-    to what we are doing here in practice. A policy is used to inject behavior
-    in a parent class, typically through inheritance.  Any time some design
-    choice has to be made when implementing an algorithm, then that choice
-    should be abstracted in its own policy template. Then the algorithm can be
-    used with any version of the policy template, so that it can be used with
-    all possible design choices (eventually).
-
 ** MAYBE Merge packages (=conts.vectors= and =conts.vectors.nodes= for instance)
    Would limit the number of with clauses in user code.
-
-** MAYBE Use expression functions in private part rather than in the body
-   Would this help the compiler inline functions ?
 
 ** TODO Replace storage_pools package with higher-level package
    For unbounded vectors, for instance, we want to use directly =System.Memory=
@@ -65,6 +52,10 @@ can be edited with any text editor.
 ** TODO Review =Conts.Elements.Arrays=
    It might be more efficient in some cases, but currently leads to a
    =Storage_Error= since we are doing low-level manipulations.
+
+** MAYBE merge conts-elements-indefinite and indefinite_spark
+   The access type should never be shown in fact.
+
 * Algorithms
 
 ** TODO =Shuffle=
@@ -155,10 +146,6 @@ can be edited with any text editor.
 
 * Priority queues
 
-* Property Maps
-
-** MAYBE should they receive an elements traits rather than =Value=
-
 * Other data structures
 
 ** Perhaps a state machine ? (see the one in XML/Ada)
@@ -175,9 +162,6 @@ can be edited with any text editor.
 
 ** TODO Document property maps
 
-** TODO Document missing default values for generic formal packages
-   Since it is not possible to provide default values for formal packages, we
-   have to limit their number when possible.
 
 * Limitations of standard Ada containers
 

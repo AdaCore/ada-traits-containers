@@ -28,6 +28,10 @@ pragma Ada_2012;
 
 generic
    type Element_Type is private;
+   --  Must be a copyable type (as defined in conts-elements.ads), and
+   --  therefore not a pointer type. In such a case, use
+   --  conts-elements-indefinite.ads instead, and let it do the allocations
+   --  itself.
 
    with procedure Free (E : in out Element_Type) is null;
    --  Free is called when the element is no longer used (removed from
@@ -35,7 +39,6 @@ generic
    --  nothing, but this procedure is useful if the Element_Type is an
    --  access type that you want to deallocate.
 
-   Copyable : Boolean := False;   --  should be False for access types
    Movable  : Boolean := True;    --  should be False for controlled types
 
 package Conts.Elements.Definite with SPARK_Mode is
@@ -46,7 +49,7 @@ package Conts.Elements.Definite with SPARK_Mode is
       (Element_Type  => Element_Type,
        Stored_Type   => Element_Type,
        Returned_Type   => Element_Type,
-       Copyable      => Copyable,
+       Copyable      => True,
        Movable       => Movable,
        Release       => Free,
        To_Stored     => Identity,

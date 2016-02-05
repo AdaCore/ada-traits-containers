@@ -14,6 +14,7 @@ Contents:
    intro
    making_of
    conventions
+   elements
    vectors
    lists
    graphs
