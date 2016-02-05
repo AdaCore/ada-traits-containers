@@ -72,3 +72,20 @@ consistency.
 
      There doesn't seem to be a benefit, performance-wise, but this keeps the
      code slightly shorter so has been adopted as a convention.
+
+.. _tagged_and_controlled_types:
+
+  Tagged and controlled types
+
+     All containers provided in this package are implemented as tagged types.
+     One of the reasons to do so is to be able to use the dot notation to call
+     primitive operations (as in ``Vec.Append`` for instance.
+
+     The more important reason is that most applications will want those
+     containers to be controlled types, so that memory is automatically
+     released when the container is no longer used.
+
+     Containers are not systematically controlled though, since this is not
+     supported for the SPARK language. In such a case, the containers will
+     instead extend the ``Conts.Limited_Base``, which makes them limited
+     types.

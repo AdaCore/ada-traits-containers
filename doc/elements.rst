@@ -1,3 +1,5 @@
+.. _element_traits:
+
 Element Traits
 ==============
 

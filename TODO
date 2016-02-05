@@ -47,6 +47,10 @@ can be edited with any text editor.
    Measure performance, which might be better since Iterable forces dynamic
    dispatching.
 
+** MAYBE persistent data structures
+   By implementing specific storage pools or node packages, we could have
+   data structures directly mapped to files (perhaps via mmap) ?
+
 * Elements traits
 
 ** TODO Review =Conts.Elements.Arrays=
@@ -157,6 +161,10 @@ can be edited with any text editor.
 * Testing
 
 ** TODO Check that =Copy= works fine in particular for lists
+** TODO Check that all simple containers provide the same ops
+   In particular, they should all redefine the iterable aspect,
+   as well as the copy function, and perhaps various operators.
+   These tests should be generated automatically.
 
 * Documentation
 
