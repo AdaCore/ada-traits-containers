@@ -235,7 +235,7 @@ package body Conts.Maps.Generics is
    function Get
      (Self     : Map'Class;
       Key      : Keys.Element_Type)
-         return Elements.Return_Type is
+         return Elements.Returned_Type is
    begin
       if Self.Table /= null then
          declare

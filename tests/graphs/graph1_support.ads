@@ -62,9 +62,9 @@ package Graph1_Support is
      (G : Graph; C : Vertex_Cursor) return Vertex_Cursor with Inline;
 
    package Custom_Vertices is new Conts.Cursors.Constant_Forward_Traits
-     (Container   => Graph,
-      Return_Type => Vertex,
-      Cursor      => Vertex_Cursor);
+     (Container_Type => Graph,
+      Returned_Type  => Vertex,
+      Cursor_Type    => Vertex_Cursor);
 
    ------------------
    -- Edge_Cursors --
@@ -81,10 +81,10 @@ package Graph1_Support is
      (G : Graph; C : Edge_Cursor) return Edge_Cursor with Inline;
 
    package Custom_Edges is new Edge_Cursors
-     (Container => Graph,
-      Vertices  => Vertices.Traits,
-      Edge      => Edge,
-      Cursor    => Edge_Cursor);
+     (Container_Type => Graph,
+      Vertices       => Vertices.Traits,
+      Edge_Type      => Edge,
+      Cursor_Type    => Edge_Cursor);
 
    -----------
    -- Graph --

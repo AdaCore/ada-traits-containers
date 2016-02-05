@@ -37,7 +37,7 @@ with Conts.Vectors.Generics;
 
 generic
    with package Vectors is new Conts.Vectors.Generics (<>);
-   type Vector (<>) is new Vectors.Vector with private;
+   type Vector_Type (<>) is new Vectors.Vector with private;
 package Conts.Vectors.Cursors with SPARK_Mode is
    --  Convenient package for creating the cursors traits for a Vector.
    --  These cursor traits cannot be instantiated in Generic_Vectors itself,
@@ -46,14 +46,15 @@ package Conts.Vectors.Cursors with SPARK_Mode is
    --  same type directly, so we need to have proxies for the cursor
    --  subprograms
 
-   subtype Cursor is Vectors.Cursor;
-   subtype Element_Type is Vectors.Nodes.Elements.Element_Type;
-   subtype Return_Type is Vectors.Nodes.Elements.Return_Type;
+   subtype Vector   is Vector_Type;
+   subtype Cursor   is Vectors.Cursor;
+   subtype Element  is Vectors.Nodes.Elements.Element;
+   subtype Returned is Vectors.Nodes.Elements.Returned;
 
    function Cursors_First (Self : Vector'Class) return Cursor
       is (Vectors.First (Self)) with Inline;
    function Cursors_Element
-      (Self : Vector'Class; Position : Cursor) return Return_Type
+      (Self : Vector'Class; Position : Cursor) return Returned
       is (Vectors.Element (Self, Position))
       with Pre => Vectors.Has_Element (Self, Position),
            Inline => True;
@@ -74,14 +75,14 @@ package Conts.Vectors.Cursors with SPARK_Mode is
 
    package Constant_Bidirectional is
       new Conts.Cursors.Constant_Bidirectional_Traits
-         (Container    => Vector'Class,
-          Cursor       => Cursor,
-          Return_Type  => Return_Type,
-          First        => Cursors_First,
-          Next         => Cursors_Next,
-          Has_Element  => Cursors_Has_Element,
-          Element      => Cursors_Element,
-          Previous     => Cursors_Previous);
+         (Container_Type => Vector'Class,
+          Cursor_Type    => Cursor,
+          Returned_Type  => Returned,
+          First          => Cursors_First,
+          Next           => Cursors_Next,
+          Has_Element    => Cursors_Has_Element,
+          Element        => Cursors_Element,
+          Previous       => Cursors_Previous);
    package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
 
 end Conts.Vectors.Cursors;

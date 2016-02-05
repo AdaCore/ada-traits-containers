@@ -57,7 +57,7 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
    package Traits is new Conts.Elements.Traits
       (Element_Type        => Element_Type,
        Stored_Type         => Impl.Element_Access,
-       Return_Type         => Element_Type,
+       Returned_Type         => Element_Type,
        To_Stored           => Impl.To_Element_Access,
        To_Return           => Impl.To_Element_Type,
        To_Element          => Impl.Identity,

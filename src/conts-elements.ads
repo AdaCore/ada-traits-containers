@@ -36,7 +36,7 @@ package Conts.Elements with SPARK_Mode is
       type Stored_Type is private;
       --  The type of elements stored internally. This must be unconstrained.
 
-      type Return_Type (<>) is private;
+      type Returned_Type (<>) is private;
       --  The type of elements returned by getters. Various possibilities exit:
       --  you could return an Element_Type (which might be big and thus slow),
       --  a Stored_Type (which might be an access type, and thus unsafe), or a
@@ -44,8 +44,8 @@ package Conts.Elements with SPARK_Mode is
       --  course possible.
 
       with function To_Stored (E : Element_Type) return Stored_Type;
-      with function To_Return (E : Stored_Type) return Return_Type;
-      with function To_Element (E : Return_Type) return Element_Type;
+      with function To_Return (E : Stored_Type) return Returned_Type;
+      with function To_Element (E : Returned_Type) return Element_Type;
       --  Converting between the types
 
       with procedure Release (E : in out Stored_Type) is null;
@@ -78,11 +78,9 @@ package Conts.Elements with SPARK_Mode is
    package Traits is
       subtype Element is Element_Type;
       subtype Stored is Stored_Type;
-      subtype Returned is Return_Type;
+      subtype Returned is Returned_Type;
 
-      --  Some renamings to make the formal parameters visible in all places
-      --  (12.7 10/2 in the ARM)
-      function To_Elem (E : Return_Type) return Element_Type
+      function To_Elem (E : Returned_Type) return Element_Type
         renames To_Element;
    end Traits;
 

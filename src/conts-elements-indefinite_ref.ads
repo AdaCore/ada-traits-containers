@@ -61,7 +61,7 @@ package Conts.Elements.Indefinite_Ref with SPARK_Mode is
    package Traits is new Conts.Elements.Traits
       (Element_Type        => Element_Type,
        Stored_Type         => Element_Access,
-       Return_Type         => Ref_Type,
+       Returned_Type         => Ref_Type,
        To_Stored           => To_Element_Access,
        To_Return           => To_Ref,
        To_Element          => To_Element,

@@ -45,7 +45,7 @@ package Conts.Elements.Definite with SPARK_Mode is
    package Traits is new Conts.Elements.Traits
       (Element_Type  => Element_Type,
        Stored_Type   => Element_Type,
-       Return_Type   => Element_Type,
+       Returned_Type   => Element_Type,
        Copyable      => Copyable,
        Movable       => Movable,
        Release       => Free,

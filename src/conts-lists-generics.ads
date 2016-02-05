@@ -46,7 +46,7 @@ package Conts.Lists.Generics with SPARK_Mode is
    --  have to define it in the instantiations of Generic_List.
 
    subtype Element_Type is Nodes.Elements.Element_Type;
-   subtype Return_Type is Nodes.Elements.Return_Type;
+   subtype Returned_Type is Nodes.Elements.Returned_Type;
    subtype Stored_Type is Nodes.Elements.Stored_Type;
 
    type Cursor is private;
@@ -86,7 +86,7 @@ package Conts.Lists.Generics with SPARK_Mode is
       with Inline,
            Global => null;
    function Element
-      (Self : List'Class; Position : Cursor) return Return_Type
+      (Self : List'Class; Position : Cursor) return Returned_Type
       with Inline,
            Global => null,
            Pre    => Has_Element (Self, Position);
@@ -116,7 +116,7 @@ package Conts.Lists.Generics with SPARK_Mode is
    function First_Primitive (Self : List) return Cursor
       is (First (Self)) with Inline;
    function Element_Primitive
-      (Self : List; Position : Cursor) return Return_Type
+      (Self : List; Position : Cursor) return Returned_Type
       is (Element (Self, Position)) with Inline;
    function Has_Element_Primitive
       (Self : List; Position : Cursor) return Boolean

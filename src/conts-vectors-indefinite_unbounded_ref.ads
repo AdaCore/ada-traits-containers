@@ -33,6 +33,7 @@ generic
    type Element_Type (<>) is private;
    type Container_Base_Type is abstract tagged limited private;
    with procedure Free (E : in out Element_Type) is null;
+
 package Conts.Vectors.Indefinite_Unbounded_Ref is
 
    package Elements is new Conts.Elements.Indefinite_Ref

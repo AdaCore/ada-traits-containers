@@ -34,7 +34,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  parent type is a generic formal.
 
    subtype Element_Type is Nodes.Elements.Element_Type;
-   subtype Return_Type is Nodes.Elements.Return_Type;
+   subtype Returned_Type is Nodes.Elements.Returned_Type;
    subtype Stored_Type is Nodes.Elements.Stored_Type;
 
    type Cursor is private;
@@ -87,7 +87,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Whether the vector is empty
 
    function Element
-     (Self : Vector'Class; Position : Index_Type) return Return_Type
+     (Self : Vector'Class; Position : Index_Type) return Returned_Type
      with Inline;
 
    procedure Replace_Element
@@ -124,7 +124,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  The vector is not resized, so it will keep its current capacity, for
    --  efficient insertion of future elements. You can call Shrink_To_Fit
 
-   function Last_Element (Self : Vector'Class) return Return_Type
+   function Last_Element (Self : Vector'Class) return Returned_Type
      with Global => null, Pre => not Self.Is_Empty;
    --  Return the last element in the vector.
 
@@ -136,7 +136,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    function First (Self : Vector'Class) return Cursor
       with Inline, Global => null;
    function Element
-      (Self : Vector'Class; Position : Cursor) return Return_Type
+      (Self : Vector'Class; Position : Cursor) return Returned_Type
       with Inline,
            Global => null,
            Pre    => Has_Element (Self, Position);
@@ -166,7 +166,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    function First_Primitive (Self : Vector) return Cursor
       is (First (Self)) with Inline;
    function Element_Primitive
-      (Self : Vector; Position : Cursor) return Return_Type
+      (Self : Vector; Position : Cursor) return Returned_Type
       is (Element (Self, Position)) with Inline;
    function Has_Element_Primitive
       (Self : Vector; Position : Cursor) return Boolean

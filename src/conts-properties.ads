@@ -49,17 +49,22 @@ package Conts.Properties is
    -------------------
 
    generic
-      type Map (<>) is limited private;
+      type Map_Type (<>) is limited private;
       --  The place where the information is stored, either the container
       --  itself or a separate data structure.
 
-      type Key (<>) is limited private;
-      type Value is private;
+      type Key_Type (<>) is limited private;
+      type Value_Type is private;
 
-      with procedure Set (M : in out Map; K : Key; V : Value) is <>;
-      with function Get (M : Map; K : Key) return Value is <>;
-      with procedure Clear (M : in out Map) is null;
+      with procedure Set
+         (M : in out Map_Type; K : Key_Type; V : Value_Type) is <>;
+      with function Get (M : Map_Type; K : Key_Type) return Value_Type is <>;
+      with procedure Clear (M : in out Map_Type) is null;
+
    package Maps is
+      subtype Map is Map_Type;
+      subtype Key is Key_Type;
+      subtype Value is Value_Type;
    end Maps;
 
    ---------------------------
@@ -74,21 +79,21 @@ package Conts.Properties is
    --  copies. This ensures that Create_Map builds the map in place.
 
    generic
-      type Container (<>) is limited private;
-      type Key (<>) is limited private;
-      type Value is private;
+      type Container_Type (<>) is limited private;
+      type Key_Type (<>) is limited private;
+      type Value_Type is private;
 
-      Default_Value : Value;
+      Default_Value : Value_Type;
       --  These maps are implemented as vectors, and a default value is needed
       --  when the vector is resized.
 
       type Index_Type is (<>);
       type Container_Base_Type is abstract tagged limited private;
 
-      with function Get_Index (K : Key) return Index_Type is <>;
+      with function Get_Index (K : Key_Type) return Index_Type is <>;
       --  Maps the key to an index
 
-      with function Length (G : Container) return Count_Type is <>;
+      with function Length (G : Container_Type) return Count_Type is <>;
       --  Use to reserve the initial capacity for the vector. This can
       --  safely return 0 or any values, since the vector is unbounded. But
       --  returning a proper value will speed things up by avoiding reallocs.
@@ -96,19 +101,19 @@ package Conts.Properties is
    package Indexed_Maps is
 
       package Value_Vectors is new Conts.Vectors.Definite_Unbounded
-        (Index_Type, Value, Container_Base_Type => Container_Base_Type);
+        (Index_Type, Value_Type, Container_Base_Type => Container_Base_Type);
+
       type Map is limited record
          Values : Value_Vectors.Vector;
       end record;
-
-      function Get (M : Map; K : Key) return Value;
-      procedure Set (M : in out Map; K : Key; Val : Value);
+      function Get (M : Map; K : Key_Type) return Value_Type;
+      procedure Set (M : in out Map; K : Key_Type; Val : Value_Type);
       procedure Clear (M : in out Map);
 
-      function Create_Map (G : Container) return Map;
+      function Create_Map (G : Container_Type) return Map;
       --  Create a new uninitialized map
 
-      package As_Map is new Maps (Map, Key, Value, Set, Get, Clear);
+      package As_Map is new Maps (Map, Key_Type, Value_Type, Set, Get, Clear);
    end Indexed_Maps;
 
 end Conts.Properties;

@@ -82,7 +82,7 @@ package body Conts.Vectors.Generics is
    -------------
 
    function Element
-     (Self : Vector'Class; Position : Index_Type) return Return_Type is
+     (Self : Vector'Class; Position : Index_Type) return Returned_Type is
    begin
       return Nodes.Elements.To_Return
         (Nodes.Get_Element (Self, To_Count (Position)));
@@ -170,7 +170,7 @@ package body Conts.Vectors.Generics is
    -- Last_Element --
    ------------------
 
-   function Last_Element (Self : Vector'Class) return Return_Type is
+   function Last_Element (Self : Vector'Class) return Returned_Type is
    begin
       return Nodes.Elements.To_Return (Nodes.Get_Element (Self, Self.Last));
    end Last_Element;
@@ -214,7 +214,7 @@ package body Conts.Vectors.Generics is
    -------------
 
    function Element
-     (Self : Vector'Class; Position : Cursor) return Return_Type is
+     (Self : Vector'Class; Position : Cursor) return Returned_Type is
    begin
       return Nodes.Elements.To_Return
         (Nodes.Get_Element (Self, Position.Index));

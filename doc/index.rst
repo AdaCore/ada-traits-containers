@@ -13,6 +13,7 @@ Contents:
 
    intro
    making_of
+   conventions
    vectors
    lists
    graphs

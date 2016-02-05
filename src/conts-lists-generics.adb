@@ -100,7 +100,7 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
    -------------
 
    function Element
-      (Self : List'Class; Position : Cursor) return Return_Type is
+      (Self : List'Class; Position : Cursor) return Returned_Type is
    begin
       --  Precondition ensures there is an element at that position
       return Nodes.Elements.To_Return (Get_Element (Self, Position.Current));

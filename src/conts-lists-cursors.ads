@@ -37,7 +37,7 @@ with Conts.Lists.Generics;
 
 generic
    with package Lists is new Conts.Lists.Generics (<>);
-   type List (<>) is new Lists.List with private;
+   type List_Type (<>) is new Lists.List with private;
 package Conts.Lists.Cursors with SPARK_Mode is
    --  Convenient package for creating the cursors traits for a list.
    --  These cursor traits cannot be instantiated in Generic_Lists itself,
@@ -46,14 +46,15 @@ package Conts.Lists.Cursors with SPARK_Mode is
    --  same type directly, so we need to have proxies for the cursor
    --  subprograms
 
+   subtype List is List_Type;
    subtype Cursor is Lists.Cursor;
-   subtype Element_Type is Lists.Nodes.Elements.Element_Type;
-   subtype Return_Type is Lists.Nodes.Elements.Return_Type;
+   subtype Element is Lists.Nodes.Elements.Element;
+   subtype Returned is Lists.Nodes.Elements.Returned;
 
    function Cursors_First (Self : List'Class) return Cursor
       is (Lists.First (Self)) with Inline;
    function Cursors_Element
-      (Self : List'Class; Position : Cursor) return Return_Type
+      (Self : List'Class; Position : Cursor) return Returned
       is (Lists.Element (Self, Position))
       with Pre => Lists.Has_Element (Self, Position),
            Inline => True;
@@ -74,14 +75,14 @@ package Conts.Lists.Cursors with SPARK_Mode is
 
    package Constant_Bidirectional is
       new Conts.Cursors.Constant_Bidirectional_Traits
-         (Container    => List'Class,
-          Cursor       => Cursor,
-          Return_Type  => Return_Type,
-          First        => Cursors_First,
-          Next         => Cursors_Next,
-          Has_Element  => Cursors_Has_Element,
-          Element      => Cursors_Element,
-          Previous     => Cursors_Previous);
+         (Container_Type => List'Class,
+          Cursor_Type    => Cursor,
+          Returned_Type  => Returned,
+          First          => Cursors_First,
+          Next           => Cursors_Next,
+          Has_Element    => Cursors_Has_Element,
+          Element        => Cursors_Element,
+          Previous       => Cursors_Previous);
    package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
 
 end Conts.Lists.Cursors;

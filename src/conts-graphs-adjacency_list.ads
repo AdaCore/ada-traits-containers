@@ -75,7 +75,7 @@ package Conts.Graphs.Adjacency_List is
 
       procedure Add_Vertices
         (Self  : in out Graph;
-         Props : Vertex_Properties.Element_Type;
+         Props : Vertex_Properties.Element;
          Count : Count_Type := 1);
       --  Add Count vertices to the graph.
       --  Each node gets a copy of Props
@@ -83,7 +83,7 @@ package Conts.Graphs.Adjacency_List is
       procedure Add_Edge
         (Self     : in out Graph;
          From, To : Vertex;
-         Props    : Edge_Properties.Element_Type)
+         Props    : Edge_Properties.Element)
         with Pre => Vertex'Pos (From) <= Self.Length
                     and Vertex'Pos (To) <= Self.Length;
       --  Add a new edge between two vertices
@@ -97,7 +97,7 @@ package Conts.Graphs.Adjacency_List is
       type Edge_Index is new Natural;
 
       type Edge is record
-         Props : Edge_Properties.Stored_Type;
+         Props : Edge_Properties.Stored;
          From, To : Vertex;
       end record;
       procedure Release (E : in out Edge);
@@ -110,7 +110,7 @@ package Conts.Graphs.Adjacency_List is
          Free                => Release);
 
       type Vertex_Record is record
-         Props     : Vertex_Properties.Stored_Type;
+         Props     : Vertex_Properties.Stored;
          Out_Edges : Edge_Vectors.Vector;
       end record;
       procedure Release (V : in out Vertex_Record);
@@ -141,34 +141,34 @@ package Conts.Graphs.Adjacency_List is
    function Identity (V : Vertex) return Vertex is (V) with Inline;
 
    package Vertices is new Conts.Elements.Traits
-     (Element_Type => Vertex,
-      Stored_Type  => Vertex,
-      Return_Type  => Vertex,
-      To_Stored    => Identity,
-      To_Return    => Identity,
-      To_Element   => Identity,
-      Copy         => Identity,   --  Unused since Copyable is True
-      Copyable     => True,
-      Movable      => True);
+     (Element_Type  => Vertex,
+      Stored_Type   => Vertex,
+      Returned_Type => Vertex,
+      To_Stored     => Identity,
+      To_Return     => Identity,
+      To_Element    => Identity,
+      Copy          => Identity,   --  Unused since Copyable is True
+      Copyable      => True,
+      Movable       => True);
 
    package Vertices_Cursors is new Conts.Cursors.Constant_Forward_Traits
-     (Container   => Graph,
-      Cursor      => Impl.Vertex_Cursor,
-      Return_Type => Vertex,
-      First       => Impl.First,
-      Element     => Impl.Element,
-      Has_Element => Impl.Has_Element,
-      Next        => Impl.Next);
+     (Container_Type => Graph,
+      Cursor_Type    => Impl.Vertex_Cursor,
+      Returned_Type  => Vertex,
+      First          => Impl.First,
+      Element        => Impl.Element,
+      Has_Element    => Impl.Has_Element,
+      Next           => Impl.Next);
 
    package Out_Edges_Cursors is new Conts.Graphs.Edge_Cursors
-     (Container   => Graph,
-      Vertices    => Vertices,
-      Edge        => Edge,
-      Cursor      => Impl.Edges_Cursor,
-      First       => Impl.Out_Edges,
-      Element     => Impl.Element,
-      Has_Element => Impl.Has_Element,
-      Next        => Impl.Next);
+     (Container_Type => Graph,
+      Vertices       => Vertices,
+      Edge_Type      => Edge,
+      Cursor_Type    => Impl.Edges_Cursor,
+      First          => Impl.Out_Edges,
+      Element        => Impl.Element,
+      Has_Element    => Impl.Has_Element,
+      Next           => Impl.Next);
 
    package Traits is new Conts.Graphs.Traits
      (Graph_Type        => Impl.Graph,
@@ -183,9 +183,9 @@ package Conts.Graphs.Adjacency_List is
    --  by algorithms. If you create a color map yourself, you need to clear
    --  it manually.
    package Color_Maps is new Conts.Properties.Indexed_Maps
-     (Container           => Graph,
-      Key                 => Vertex,
-      Value               => Color,
+     (Container_Type      => Graph,
+      Key_Type            => Vertex,
+      Value_Type          => Color,
       Default_Value       => White,
       Index_Type          => Vertex,
       Container_Base_Type => Conts.Limited_Base,
@@ -198,9 +198,9 @@ package Conts.Graphs.Adjacency_List is
    --  so that it is compatible with SPARK when people want to, but on the
    --  other hand it is in general cleared automatically when possible.
    package Integer_Maps is new Conts.Properties.Indexed_Maps
-     (Container           => Graph,
-      Key                 => Vertex,
-      Value               => Integer,
+     (Container_Type      => Graph,
+      Key_Type            => Vertex,
+      Value_Type          => Integer,
       Default_Value       => -1,
       Index_Type          => Vertex,
       Container_Base_Type => Container_Base_Type,

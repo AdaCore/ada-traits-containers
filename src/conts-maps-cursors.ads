@@ -37,7 +37,7 @@ with Conts.Maps.Generics;
 
 generic
    with package Maps is new Conts.Maps.Generics (<>);
-   type Map (<>) is new Maps.Map with private;
+   type Map_Type (<>) is new Maps.Map with private;
 package Conts.Maps.Cursors with SPARK_Mode is
    --  Convenient package for creating the cursors traits for a Map.
    --  These cursor traits cannot be instantiated in Generic_Maps itself,
@@ -46,8 +46,9 @@ package Conts.Maps.Cursors with SPARK_Mode is
    --  same type directly, so we need to have proxies for the cursor
    --  subprograms
 
+   subtype Map    is Map_Type;
    subtype Cursor is Maps.Cursor;
-   subtype Pair is Maps.Pair;
+   subtype Pair   is Maps.Pair;
 
    function Cursors_First (Self : Map'Class) return Cursor
       is (Maps.First (Self)) with Inline;
@@ -68,12 +69,12 @@ package Conts.Maps.Cursors with SPARK_Mode is
 
    package Constant_Forward is
       new Conts.Cursors.Constant_Forward_Traits
-         (Container    => Map'Class,
-          Cursor       => Cursor,
-          Return_Type  => Pair,
-          First        => Cursors_First,
-          Next         => Cursors_Next,
-          Has_Element  => Cursors_Has_Element,
-          Element      => Cursors_Element);
+         (Container_Type => Map'Class,
+          Cursor_Type    => Cursor,
+          Returned_Type  => Pair,
+          First          => Cursors_First,
+          Next           => Cursors_Next,
+          Has_Element    => Cursors_Has_Element,
+          Element        => Cursors_Element);
 
 end Conts.Maps.Cursors;

@@ -68,7 +68,10 @@ package Conts.Maps.Generics is
    procedure Resize
      (Self     : in out Map'Class;
       New_Size : Hash_Type);
-   --  Change the capacity of the container
+   --  Change the capacity of the container.
+   --  If you know you are going to insert n items, calling Resize (n) is
+   --  likely to improve the performance by limiting the number of times the
+   --  map will be resized during the insertions.
 
    procedure Set
      (Self     : in out Map'Class;
@@ -81,7 +84,7 @@ package Conts.Maps.Generics is
    function Get
      (Self     : Map'Class;
       Key      : Keys.Element_Type)
-         return Elements.Return_Type;
+         return Elements.Returned_Type;
    --  Raises a Constraint_Error if there is no such element in the table
 
    procedure Delete
@@ -96,8 +99,8 @@ package Conts.Maps.Generics is
    type Cursor is private;
 
    type Pair is private;
-   function Key   (P : Pair) return Keys.Return_Type with Inline;
-   function Value (P : Pair) return Elements.Return_Type with Inline;
+   function Key   (P : Pair) return Keys.Returned_Type with Inline;
+   function Value (P : Pair) return Elements.Returned_Type with Inline;
    --  This record contains both the key and the value of an element stored
    --  in the table.
 
@@ -187,9 +190,9 @@ private
       --  size as a mask for hashes.
    end record;
 
-   function Key   (P : Pair) return Keys.Return_Type
+   function Key   (P : Pair) return Keys.Returned_Type
    is (Keys.To_Return (P.Key));
-   function Value (P : Pair) return Elements.Return_Type
+   function Value (P : Pair) return Elements.Returned_Type
    is (Elements.To_Return (P.Value));
 
 end Conts.Maps.Generics;

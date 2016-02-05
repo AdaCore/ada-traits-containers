@@ -34,17 +34,23 @@ package Conts.Graphs is
    --  Iterates on edges in or out of a vertex
 
    generic
-      type Container (<>) is limited private;
+      type Container_Type (<>) is limited private;
       with package Vertices is new Conts.Elements.Traits (<>);
-      type Edge (<>) is private;
-      type Cursor is private;
+      type Edge_Type (<>) is private;
+      type Cursor_Type is private;
       with function First
-        (G : Container; V : Vertices.Element_Type) return Cursor is <>;
-      with function Element (G : Container; C : Cursor) return Edge is <>;
-      with function Has_Element
-        (G : Container; C : Cursor) return Boolean is <>;
-      with function Next (G : Container; C : Cursor) return Cursor is <>;
+         (G : Container_Type; V : Vertices.Element_Type)
+         return Cursor_Type is <>;
+      with function Element (G : Container_Type; C : Cursor_Type)
+         return Edge_Type is <>;
+      with function Has_Element (G : Container_Type; C : Cursor_Type)
+         return Boolean is <>;
+      with function Next (G : Container_Type; C : Cursor_Type)
+         return Cursor_Type is <>;
    package Edge_Cursors is
+      subtype Container is Container_Type;
+      subtype Edge      is Edge_Type;
+      subtype Cursor    is Cursor_Type;
    end Edge_Cursors;
 
    ------------
@@ -62,35 +68,32 @@ package Conts.Graphs is
       type Graph_Type (<>) is limited private;
       with package Vertices is new Conts.Elements.Traits (<>);
       type Edge_Type (<>) is private;
-      Null_Vertex : Vertices.Element_Type;
+      Null_Vertex : Vertices.Element;
 
       with function Get_Target
-        (G : Graph_Type; E : Edge_Type) return Vertices.Element_Type is <>;
+        (G : Graph_Type; E : Edge_Type) return Vertices.Element is <>;
       --  Return the target of the edge.
 
       with package Vertex_Cursors is new Conts.Cursors.Constant_Forward_Traits
-        (Container   => Graph_Type,
-         Return_Type => Vertices.Element_Type,
-         others      => <>);
+        (Container_Type => Graph_Type,
+         Returned_Type  => Vertices.Element,
+         others         => <>);
       --  Iterate on all edges of the graph
 
       with package Out_Edges_Cursors is new Edge_Cursors
-        (Container   => Graph_Type,
-         Vertices    => Vertices,
-         Edge        => Edge_Type,
-         others      => <>);
+        (Container_Type => Graph_Type,
+         Vertices       => Vertices,
+         Edge_Type      => Edge_Type,
+         others         => <>);
       --  Iterate on all out-edges of a given vertex.
 
    package Traits is
 
-      --  Some renamings to make the formal parameters visible in all places
-      --  (12.7 10/2 in the ARM)
-
-      subtype Graph is Graph_Type;
-      subtype Vertex is Vertices.Element_Type;
-      subtype Edge is Edge_Type;
+      subtype Graph  is Graph_Type;
+      subtype Vertex is Vertices.Element;
+      subtype Edge   is Edge_Type;
       function Get_Edge_Target
-        (G : Graph; E : Edge) return Vertices.Element_Type renames Get_Target;
+        (G : Graph; E : Edge) return Vertices.Element renames Get_Target;
 
       -----------------
       -- DFS_Visitor --

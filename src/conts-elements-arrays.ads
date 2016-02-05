@@ -100,7 +100,7 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
    package Traits is new Conts.Elements.Traits
       (Element_Type        => Array_Type,
        Stored_Type         => Impl.Stored_Array,
-       Return_Type         => Ref_Type,
+       Returned_Type         => Ref_Type,
        To_Stored           => Impl.To_Stored,
        To_Return           => Impl.To_Ref,
        To_Element          => Impl.To_Element,

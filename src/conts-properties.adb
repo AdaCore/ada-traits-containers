@@ -39,7 +39,7 @@ package body Conts.Properties is
       -- Get --
       ---------
 
-      function Get (M : Map; K : Key) return Value is
+      function Get (M : Map; K : Key_Type) return Value_Type is
       begin
          return M.Values.Element (Get_Index (K));
       end Get;
@@ -48,7 +48,7 @@ package body Conts.Properties is
       -- Set --
       ---------
 
-      procedure Set (M : in out Map; K : Key; Val : Value) is
+      procedure Set (M : in out Map; K : Key_Type; Val : Value_Type) is
          Idx : constant Index_Type := Get_Index (K);
       begin
          if not (Idx <= M.Values.Length) then
@@ -62,7 +62,7 @@ package body Conts.Properties is
       -- Create_Map --
       ----------------
 
-      function Create_Map (G : Container) return Map is
+      function Create_Map (G : Container_Type) return Map is
       begin
          return M : Map do
             M.Values.Reserve_Capacity (Length (G));

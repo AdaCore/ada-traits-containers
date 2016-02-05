@@ -35,7 +35,7 @@ package Conts.Elements.Null_Elements is
    package Traits is new Conts.Elements.Traits
       (Element_Type  => Null_Element,
        Stored_Type   => Null_Element,
-       Return_Type   => Null_Element,
+       Returned_Type   => Null_Element,
        Copyable      => True,
        Movable       => True,
        To_Stored     => Identity,

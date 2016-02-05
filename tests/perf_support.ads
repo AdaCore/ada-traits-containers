@@ -40,7 +40,7 @@ package Perf_Support is
       --  Define the types so that we can access the generic formals from an
       --  instance of this package.
       subtype Param_Type is Param;
-      subtype Return_Type is Ret;
+      subtype Returned_Type is Ret;
 
       type Obj is interface;
       function Call (Self : Obj; P : Param) return Ret is abstract;
@@ -48,13 +48,13 @@ package Perf_Support is
 
    generic
       with package F is new Unary_Functors (others => <>);
-      with function Call (P : F.Param_Type) return F.Return_Type;
+      with function Call (P : F.Param_Type) return F.Returned_Type;
    package Unary_Functions is
       package Functors renames F;
 
       type Obj is new F.Obj with null record;
       overriding function Call
-         (Self : Obj; P : F.Param_Type) return F.Return_Type
+         (Self : Obj; P : F.Param_Type) return F.Returned_Type
          is (Call (P));
 
       Make : constant Obj := (null record);
@@ -74,7 +74,7 @@ package Perf_Support is
       --  instance of this package.
       subtype Param1_Type is Param1;
       subtype Param2_Type is Param2;
-      subtype Return_Type is Ret;
+      subtype Returned_Type is Ret;
    end Binary_Functions;
 
    generic
@@ -88,13 +88,13 @@ package Perf_Support is
       --  instance of this package.
       subtype Param1_Type is Param1;
       subtype Param2_Type is Param2;
-      subtype Return_Type is Ret;
+      subtype Returned_Type is Ret;
 
-      function Binder_Call (P : Param1_Type) return Return_Type
+      function Binder_Call (P : Param1_Type) return Returned_Type
          is (Call (P, B));
       --  package Funcs is new Unary_Functors
       --     (Param => Param1_Type,
-      --      Ret   => Return_Type,
+      --      Ret   => Returned_Type,
       --      Call  => Binder_Call);
    end Binder2nd;
    --  ??? Not the same as in C++ STL: since we do not have a class, there is

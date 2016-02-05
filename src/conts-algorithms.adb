@@ -19,6 +19,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+pragma Ada_2012;
+
 package body Conts.Algorithms is
 
    ----------------------
@@ -28,7 +30,7 @@ package body Conts.Algorithms is
    function Count_If_Convert
       (Self      : Cursors.Cursors.Container;
        Predicate : not null access function
-          (E : Cursors.Element_Type) return Boolean)
+          (E : Cursors.Element) return Boolean)
       return Natural
    is
       C : Cursors.Cursors.Cursor := Cursors.Cursors.First (Self);
@@ -52,30 +54,16 @@ package body Conts.Algorithms is
    function Count_If
       (Self      : Cursors.Container;
        Predicate : not null access function
-          (E : Cursors.Return_Type) return Boolean)
+          (E : Cursors.Returned) return Boolean)
       return Natural
    is
-      --   ??? Compiler complains that Return_Type is not visible
-      --   when instantiationg Count_If in the test packages
---      function Identity (E : Cursors.Return_Type) return Cursors.Return_Type
---         is (E) with Inline;
---      package C is new Conts.Cursors.Constant_Forward_Convert_Traits
---         (Cursors, Cursors.Return_Type, Identity);
---      function Internal is new Count_If_Convert (C);
---   begin
---      return Internal (Self, Predicate);
---   end Count_If;
-
-      C : Cursors.Cursor := Cursors.First (Self);
-      Count : Natural := 0;
+      function Identity (E : Cursors.Returned) return Cursors.Returned
+         is (E) with Inline;
+      package C is new Conts.Cursors.Constant_Forward_Convert_Traits
+         (Cursors, Cursors.Returned, Identity);
+      function Internal is new Count_If_Convert (C);
    begin
-      while Cursors.Has_Element (Self, C) loop
-         if Predicate (Cursors.Element (Self, C)) then
-            Count := Count + 1;
-         end if;
-         C := Cursors.Next (Self, C);
-      end loop;
-      return Count;
+      return Internal (Self, Predicate);
    end Count_If;
 
 end Conts.Algorithms;

@@ -33,7 +33,7 @@ package Conts.Algorithms is
    function Count_If_Convert
       (Self      : Cursors.Cursors.Container;
        Predicate : not null access function
-          (E : Cursors.Element_Type) return Boolean)
+          (E : Cursors.Element) return Boolean)
       return Natural;
    --  Count the number of elements in the container that match the predicate
 
@@ -42,7 +42,7 @@ package Conts.Algorithms is
    function Count_If
       (Self      : Cursors.Container;
        Predicate : not null access function
-          (E : Cursors.Return_Type) return Boolean)
+          (E : Cursors.Returned) return Boolean)
       return Natural;
    --  Count the number of elements in the container that match the predicate
 
