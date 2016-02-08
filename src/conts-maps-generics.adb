@@ -363,10 +363,11 @@ package body Conts.Maps.Generics is
    -------------
 
    function Element
-     (Self : Map'Class; Position : Cursor) return Pair is
+     (Self : Map'Class; Position : Cursor) return Pair
+   is
+      P : Slot renames Self.Table (Position.Index);
    begin
-      return (Key   => Self.Table (Position.Index).Key,
-              Value => Self.Table (Position.Index).Value);
+      return (Key => P.Key, Value => P.Value);
    end Element;
 
    -----------------

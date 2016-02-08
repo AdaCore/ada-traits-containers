@@ -36,8 +36,10 @@ with Conts.Elements;
 
 package Conts.Vectors.Nodes with SPARK_Mode is
 
-   Min_Index : constant Count_Type := 1;
-   --  Minimal index in vectors
+   Min_Index : constant Count_Type := Count_Type'First + 1;
+   --  Minimal index in vectors.
+   --  We use Count_Type'First to indicate a No_Element, so we always start
+   --  indexing at 1.
 
    generic
       with package Elements is new Conts.Elements.Traits (<>);

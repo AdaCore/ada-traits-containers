@@ -71,7 +71,7 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
       is new Conts.Cursors.Constant_Forward_Convert_Traits
          (Cursors      => Cursors.Constant_Forward,
           Element_Type => Element_Type,
-          Convert      => Elements.From_Ref_To_Element);
+          Convert      => Elements.To_Element);
    --  A special wrapper around cursor, for use with algorithms, so that
    --  the predicates can take an element_type in parameter
 

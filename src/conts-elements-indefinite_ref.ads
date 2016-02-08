@@ -70,11 +70,4 @@ package Conts.Elements.Indefinite_Ref with SPARK_Mode is
        Copyable            => False,   --  would create aliases
        Movable             => True);
 
-   function From_Ref_To_Element (R : Ref_Type) return Element_Type
-      is (R.Element.all) with Inline_Always;
-   --  Convenience function for use in algorithms, to convert from a Ref_Type
-   --  to an Element_Type. This is not needed in general, since the compiler
-   --  will automatically (and efficiently) dereference the reference_type.
-   --  But generic algorithm need an explicit conversion.
-
 end Conts.Elements.Indefinite_Ref;

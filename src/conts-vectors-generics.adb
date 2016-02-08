@@ -229,7 +229,7 @@ package body Conts.Vectors.Generics is
    is
       pragma Unreferenced (Self);
    begin
-      return Position /= No_Element;
+      return Position.Index /= No_Element.Index;
    end Has_Element;
 
    ----------
