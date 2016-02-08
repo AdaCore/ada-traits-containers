@@ -72,6 +72,7 @@ with Vector_Controlled_Indef_Unbounded_Ref_String;
 
 with Map_Ada12_ordered_Def_Def_Unbounded_IntInt;
 with Map_Ada12_hashed_Def_Def_Unbounded_IntInt;
+with Map_Ada12_hashed_Def_Def_Bounded_IntInt;
 with Map_hashed_Def_Def_Unbounded_IntInt;
 with Map_hashed_linear_probing_Def_Def_Unbounded_IntInt;
 
@@ -203,6 +204,8 @@ begin
              Map_Ada12_ordered_Def_Def_Unbounded_IntInt'Access);
    Run_Test ("intint_map_ada_hashed_indef_indef",
              Map_Ada12_hashed_Def_Def_Unbounded_IntInt'Access);
+   Run_Test ("intint_map_ada_hashed_bounded_indef_indef",
+             Map_Ada12_hashed_Def_Def_Bounded_IntInt'Access);
    Run_Test ("intint_map_hashed_indef_indef",
              Map_hashed_Def_Def_Unbounded_IntInt'Access);
    Run_Test ("intint_map_hashed_linear_indef_indef",

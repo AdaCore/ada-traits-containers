@@ -125,11 +125,11 @@ is
    {instance}
    use Container;{adaptors}
 
-   procedure Run (V2 : in out Container.{type}'Class);
+   procedure Run (V2 : in out Container.{type});
    --  Force dynamic dispatching for the container (if relevant), as a
    --  a way to check we do not waste time there.
 
-   procedure Run (V2 : in out Container.{type}'Class) is
+   procedure Run (V2 : in out Container.{type}) is
       It : Container.Cursor;
       Co : Natural;
    begin
@@ -315,6 +315,10 @@ class Map(object):
             adaptors='',    # Creating adaptors for standard containers
             append=append.format(set=set))
 
+        if self.args['nodes'].lower() == "bounded":
+            self.args['discriminant'] = ' (Capacity => Items_Count, ' + \
+                ' Modulus => Default_Modulus (Items_Count))'
+
         self.args['test_name'] = \
             "{type}_{base}_{key}_{value}_{nodes}_{elem_type}".format(
                 **self.args)
@@ -347,11 +351,11 @@ is
    {instance}
    use Container;{adaptors}
 
-   procedure Run (V2 : in out Container.{type}'Class);
+   procedure Run (V2 : in out Container.{type});
    --  Force dynamic dispatching for the container (if relevant), as a
    --  a way to check we do not waste time there.
 
-   procedure Run (V2 : in out Container.{type}'Class) is
+   procedure Run (V2 : in out Container.{type}) is
 """.format(**self.args))
 
         if countif:
@@ -651,6 +655,14 @@ Map("IntInt", "Ada12_hashed", "Def", "Def", "Unbounded",
      "with Ada.Containers.Hashed_Maps;",
      ada2012=True).gen_ada2012(
         adaptors="Hashed_Maps")
+Map("IntInt", "Ada12_hashed", "Def", "Def", "Bounded",
+    'function Hash (K : Integer) return Conts.Hash_Type is\n'
+     + '   (Conts.Hash_Type (K)) with Inline;\n'
+     + 'package Container is new Ada.Containers.Bounded_Hashed_Maps'
+     + ' (Integer, Integer, Hash, "=");',
+     "with Ada.Containers.Bounded_Hashed_Maps;",
+     ada2012=True).gen_ada2012(
+        adaptors="Bounded_Hashed_Maps")
 Map("IntInt", "hashed", "Def", "Def", "Unbounded",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
     + '   (Conts.Hash_Type (K)) with Inline;\n'
