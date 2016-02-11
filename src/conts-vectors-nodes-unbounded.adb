@@ -93,8 +93,12 @@ package body Conts.Vectors.Nodes.Unbounded is
          Source              : Container'Class;
          Last                : Count_Type)
       is
+         --  We only allocate enough memory to copy everything. This is
+         --  slightly faster, avoid fragmentation, and means Copy can be used
+         --  to reduce the memory usage in the application.
+
          S   : constant size_t := size_t
-           (Source.Capacity * Big_Nodes_Array'Component_Size
+           (Last * Big_Nodes_Array'Component_Size
             / System.Storage_Unit);
 
          --  Use a temporary vector in case Self is the same as Source
