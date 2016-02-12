@@ -86,8 +86,9 @@ package body Conts.Algorithms is
 
       while C /= Next_To_First loop
          declare
-            function Rand is new Conts.Ranged_Random
-              (Random, First, C);
+            --  The cost of the instance is limited (just a few instructions)
+            --  thanks to inlining.
+            function Rand is new Conts.Ranged_Random (Random, First, C);
          begin
             G := Rand (Gen);
             Swap (Self, G, C);

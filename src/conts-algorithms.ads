@@ -19,8 +19,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+pragma Ada_2012;
 with Conts.Cursors;
-with Conts.Elements;
 
 package Conts.Algorithms is
 
@@ -35,7 +35,8 @@ package Conts.Algorithms is
       (Self      : Cursors.Cursors.Container;
        Predicate : not null access function
           (E : Cursors.Element) return Boolean)
-      return Natural;
+      return Natural
+      with Global => null;
    --  Count the number of elements in the container that match the predicate
 
    generic
@@ -44,7 +45,8 @@ package Conts.Algorithms is
       (Self      : Cursors.Container;
        Predicate : not null access function
           (E : Cursors.Returned) return Boolean)
-      return Natural;
+      return Natural
+      with Global => null;
    --  Count the number of elements in the container that match the predicate
 
    -------------
@@ -60,7 +62,11 @@ package Conts.Algorithms is
          Left, Right : Cursors.Index) is <>;
    procedure Shuffle
      (Self : in out Cursors.Container;
-      Gen  : Random.Generator);
+      Gen  : Random.Generator)
+      with Global => null;
    --  Generates a random permutation of Self.
+   --  If you 'use' the package for your container (vector for instance), then
+   --  Swap will generally be visible by default.
+   --  Complexity: O(n)
 
 end Conts.Algorithms;
