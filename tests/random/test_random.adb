@@ -40,7 +40,6 @@ begin
    for Count in 1 .. Items_Count loop
       Val := Rand.Traits.Rand (Gen);
       Total := Total + Long_Float (Val);
-      --  Mean := (Mean * (Count - 1) + Integer (Val)) / Count;
       Put_Line (Val'Img);
    end loop;
    Put_Line ("Mean =" & Long_Float'Image (Total / Long_Float (Items_Count)));
@@ -53,7 +52,6 @@ begin
       for Count in 1 .. Items_Count loop
          Val := Ranged (Gen);
          Total := Total + Long_Float (Val);
-         --  Mean := (Mean * (Count - 1) + Integer (Val)) / Count;
          Put_Line (Val'Img);
       end loop;
       Put_Line

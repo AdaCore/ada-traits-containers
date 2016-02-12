@@ -54,5 +54,11 @@ package Conts.Vectors.Indefinite_Unbounded is
    --  packages. However, when the type is controlled it is much easier to
    --  just use the standard assignment operator.
 
-   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
+   package Cursors is new Conts.Vectors.Cursors (Vectors);
+
+   function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
+      renames Vectors."<=";
+   procedure Swap
+      (Self : in out Vectors.Vector'Class; Left, Right : Index_Type)
+      renames Vectors.Swap;
 end Conts.Vectors.Indefinite_Unbounded;

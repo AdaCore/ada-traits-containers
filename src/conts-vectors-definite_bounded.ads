@@ -56,5 +56,12 @@ package Conts.Vectors.Definite_Bounded is
      (Self : Vector; Position : Index_Type) return Element_Type
      is (Vectors.Element (Self, Position)) with Inline;
 
-   package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
+   package Cursors is new Conts.Vectors.Cursors (Vectors);
+
+   function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
+      renames Vectors."<=";
+   procedure Swap
+      (Self : in out Vectors.Vector'Class; Left, Right : Index_Type)
+      renames Vectors.Swap;
+
 end Conts.Vectors.Definite_Bounded;

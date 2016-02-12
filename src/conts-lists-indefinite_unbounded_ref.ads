@@ -62,7 +62,7 @@ package Conts.Lists.Indefinite_Unbounded_Ref is
      (Self : List; Position : Cursor) return Element_Type
      is (Lists.Element (Self, Position)) with Inline;
 
-   package Cursors is new Conts.Lists.Cursors (Lists, List);
+   package Cursors is new Conts.Lists.Cursors (Lists);
    --  These cursors return reference types for efficiency.
 
    package Cursors_Forward_Convert

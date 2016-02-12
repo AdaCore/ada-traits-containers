@@ -28,18 +28,12 @@ with Ada.Text_IO;       use Ada.Text_IO;
 procedure Test_Shuffle is
    subtype Index_Type is Positive;
 
-   package Rand is new Conts.Default_Random (Index_Type);
    package Int_Vecs is new Conts.Vectors.Definite_Unbounded
       (Index_Type, Integer, Ada.Finalization.Controlled);
    use Int_Vecs;
-
-   procedure Swap (Self : in out Vector'Class; L, R : Index_Type) is
-   begin
-      Self.Swap (L, R);
-   end Swap;
-
+   package Rand is new Conts.Default_Random (Index_Type);
    procedure Shuffle is new Conts.Algorithms.Shuffle
-      (Cursors => Int_Vecs.Cursors.Random,
+      (Cursors => Int_Vecs.Cursors.Random_Cursors,
        Random  => Rand.Traits);
 
    V : Vector;

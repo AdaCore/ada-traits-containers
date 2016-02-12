@@ -53,5 +53,5 @@ package Conts.Lists.Definite_Unbounded is
      (Self : List; Position : Cursor) return Element_Type
      is (Lists.Element (Self, Position)) with Inline;
 
-   package Cursors is new Conts.Lists.Cursors (Lists, List);
+   package Cursors is new Conts.Lists.Cursors (Lists);
 end Conts.Lists.Definite_Unbounded;

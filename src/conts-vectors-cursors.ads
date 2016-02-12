@@ -32,28 +32,14 @@ with Conts.Vectors.Generics;
 
 generic
    with package Vectors is new Conts.Vectors.Generics (<>);
-   type Vector_Type (<>) is new Vectors.Vector with private;
 package Conts.Vectors.Cursors with SPARK_Mode is
 
-   subtype Vector   is Vector_Type;
-   subtype Cursor   is Vectors.Cursor;
+   subtype Vector   is Vectors.Vector;
    subtype Index    is Vectors.Index_Type;
-   subtype Element  is Vectors.Nodes.Elements.Element;
-   subtype Returned is Vectors.Nodes.Elements.Returned;
 
    package Impl is
       function Index_First (Self : Vector'Class) return Index
          is (Index'First) with Inline;
-      function Index_Element
-        (Self : Vector'Class; Position : Index) return Returned
-         is (Vectors.Element (Self, Position)) with Inline;
-      function Index_Last (Self : Vector'Class) return Index
-         is (Vectors.Last (Self)) with Inline;
-
-      procedure Index_Set_Element
-        (Self     : in out Vector'Class;
-         Position : Index;
-         Value    : Element) with Inline;
 
       function "-" (Left, Right : Index) return Integer
          is (Integer (Vectors.To_Count (Left))
@@ -64,18 +50,18 @@ package Conts.Vectors.Cursors with SPARK_Mode is
               (Count_Type (Integer (Vectors.To_Count (Left)) + N)));
    end Impl;
 
-   package Random is new Conts.Cursors.Random_Traits
+   package Random_Cursors is new Conts.Cursors.Random_Traits
      (Container_Type => Vector'Class,
       Index_Type     => Index,
-      Returned_Type  => Returned,
-      Element_Type   => Element,
+      Returned_Type  => Vectors.Nodes.Elements.Returned,
+      Element_Type   => Vectors.Nodes.Elements.Element,
       First          => Impl.Index_First,
-      Element        => Impl.Index_Element,
-      Set_Element    => Impl.Index_Set_Element,
-      Last           => Impl.Index_Last,
+      Element        => Vectors.Element,
+      Set_Element    => Vectors.Replace_Element,
+      Last           => Vectors.Last,
       "-"            => Impl."-",
       "+"            => Impl."+");
-   package Constant_Random renames Random.Constant_Random;
+   package Constant_Random renames Random_Cursors.Constant_Random;
    package Constant_Bidirectional
       renames Constant_Random.Constant_Bidirectional;
    package Constant_Forward renames Constant_Bidirectional.Constant_Forward;

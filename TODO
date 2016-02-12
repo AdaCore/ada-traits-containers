@@ -72,9 +72,6 @@ can be edited with any text editor.
 
 * Algorithms
 
-** TODO =Shuffle=
-   Random permutation of random-access data structures
-
 ** TODO =Contains=
    Check whether a container contains a specific item
 

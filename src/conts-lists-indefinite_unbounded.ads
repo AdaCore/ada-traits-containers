@@ -53,5 +53,5 @@ package Conts.Lists.Indefinite_Unbounded is
    --  packages. However, when the type is controlled it is much easier to
    --  just use the standard assignment operator.
 
-   package Cursors is new Conts.Lists.Cursors (Lists, List);
+   package Cursors is new Conts.Lists.Cursors (Lists);
 end Conts.Lists.Indefinite_Unbounded;

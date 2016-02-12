@@ -52,7 +52,7 @@ package Conts.Lists.Strings is
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
-   package Cursors is new Conts.Lists.Cursors (Lists, List);
+   package Cursors is new Conts.Lists.Cursors (Lists);
    --  Cursors return a reference_type for the string (i.e. a type that
    --  will automatically be dereferenced to a String by the compiler, but
    --  is much more efficient than returning a copy of the String).

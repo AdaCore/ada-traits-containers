@@ -57,5 +57,5 @@ package Conts.Lists.Definite_Bounded is
    --  Return a deep copy of Self
    --  Complexity: O(n)
 
-   package Cursors is new Conts.Lists.Cursors (Lists, List);
+   package Cursors is new Conts.Lists.Cursors (Lists);
 end Conts.Lists.Definite_Bounded;
