@@ -19,48 +19,22 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
-with Conts.Elements;
+package body Conts.Vectors.Cursors is
 
-package Conts.Algorithms is
+   package body Impl is
 
-   --------------
-   -- Count_If --
-   --------------
+      -----------------------
+      -- Index_Set_Element --
+      -----------------------
 
-   generic
-      with package Cursors
-         is new Conts.Cursors.Constant_Forward_Convert_Traits (<>);
-   function Count_If_Convert
-      (Self      : Cursors.Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Element) return Boolean)
-      return Natural;
-   --  Count the number of elements in the container that match the predicate
+      procedure Index_Set_Element
+        (Self     : in out Vector'Class;
+         Position : Index;
+         Value    : Element) is
+      begin
+         Vectors.Replace_Element (Self, Position, Value);
+      end Index_Set_Element;
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Returned) return Boolean)
-      return Natural;
-   --  Count the number of elements in the container that match the predicate
+   end Impl;
 
-   -------------
-   -- Shuffle --
-   -------------
-
-   generic
-      with package Cursors is new Conts.Cursors.Random_Traits (<>);
-      with package Random is new Conts.Uniform_Random_Traits
-        (Discrete_Type => Cursors.Index, others => <>);
-      with procedure Swap
-        (Self        : in out Cursors.Container;
-         Left, Right : Cursors.Index) is <>;
-   procedure Shuffle
-     (Self : in out Cursors.Container;
-      Gen  : Random.Generator);
-   --  Generates a random permutation of Self.
-
-end Conts.Algorithms;
+end Conts.Vectors.Cursors;

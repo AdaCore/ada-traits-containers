@@ -19,17 +19,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  A generic and general Vector implementation
---  By providing appropriate values for the formal parameters, the same
---  implementation can be used for bounded and unbounded containers, or for
---  constrained and unconstrained elements.
---
---  Design: in C++ STL, none of the methods are virtual, so there is no
---  dynamic dispatching. We achieve the same here by using 'Class
---  parameters.  This still let's use Ada2012 dot notation (the reason why
---  we use a tagged type, in addition to the Iterable aspect), while
---  increasing the performance (the count-with-explicit-loop goes from 0.25s
---  to 0.51s when we do not use 'Class parameters).
+--  Convenience package for creating the cursors traits for a Vector.
+--  These cursor traits cannot be instantiated in Generic_Vectors itself,
+--  since the Vector type is frozen too late.
+--  We also assume that Vector might be a child of Vectors.Vector, not the
+--  same type directly, so we need to have proxies for the cursor
+--  subprograms
 
 pragma Ada_2012;
 with Conts.Cursors;
@@ -39,50 +34,50 @@ generic
    with package Vectors is new Conts.Vectors.Generics (<>);
    type Vector_Type (<>) is new Vectors.Vector with private;
 package Conts.Vectors.Cursors with SPARK_Mode is
-   --  Convenient package for creating the cursors traits for a Vector.
-   --  These cursor traits cannot be instantiated in Generic_Vectors itself,
-   --  since the Vector type is frozen too late.
-   --  We also assume that Vector might be a child of Vectors.Vector, not the
-   --  same type directly, so we need to have proxies for the cursor
-   --  subprograms
 
    subtype Vector   is Vector_Type;
    subtype Cursor   is Vectors.Cursor;
+   subtype Index    is Vectors.Index_Type;
    subtype Element  is Vectors.Nodes.Elements.Element;
    subtype Returned is Vectors.Nodes.Elements.Returned;
 
-   function Cursors_First (Self : Vector'Class) return Cursor
-      is (Vectors.First (Self)) with Inline;
-   function Cursors_Element
-      (Self : Vector'Class; Position : Cursor) return Returned
-      is (Vectors.Element (Self, Position))
-      with Pre => Vectors.Has_Element (Self, Position),
-           Inline => True;
-   function Cursors_Has_Element
-      (Self : Vector'Class; Position : Cursor) return Boolean
-      is (Vectors.Has_Element (Self, Position))
-      with Inline => True;
-   function Cursors_Next
-      (Self : Vector'Class; Position : Cursor) return Cursor
-      is (Vectors.Next (Self, Position))
-      with Pre => Vectors.Has_Element (Self, Position),
-           Inline => True;
-   function Cursors_Previous
-      (Self : Vector'Class; Position : Cursor) return Cursor
-      is (Vectors.Previous (Self, Position))
-      with Pre => Vectors.Has_Element (Self, Position),
-           Inline => True;
+   package Impl is
+      function Index_First (Self : Vector'Class) return Index
+         is (Index'First) with Inline;
+      function Index_Element
+        (Self : Vector'Class; Position : Index) return Returned
+         is (Vectors.Element (Self, Position)) with Inline;
+      function Index_Last (Self : Vector'Class) return Index
+         is (Vectors.Last (Self)) with Inline;
 
-   package Constant_Bidirectional is
-      new Conts.Cursors.Constant_Bidirectional_Traits
-         (Container_Type => Vector'Class,
-          Cursor_Type    => Cursor,
-          Returned_Type  => Returned,
-          First          => Cursors_First,
-          Next           => Cursors_Next,
-          Has_Element    => Cursors_Has_Element,
-          Element        => Cursors_Element,
-          Previous       => Cursors_Previous);
+      procedure Index_Set_Element
+        (Self     : in out Vector'Class;
+         Position : Index;
+         Value    : Element) with Inline;
+
+      function "-" (Left, Right : Index) return Integer
+         is (Integer (Vectors.To_Count (Left))
+             - Integer (Vectors.To_Count (Right)));
+
+      function "+" (Left : Index; N : Integer) return Index
+         is (Vectors.To_Index
+              (Count_Type (Integer (Vectors.To_Count (Left)) + N)));
+   end Impl;
+
+   package Random is new Conts.Cursors.Random_Traits
+     (Container_Type => Vector'Class,
+      Index_Type     => Index,
+      Returned_Type  => Returned,
+      Element_Type   => Element,
+      First          => Impl.Index_First,
+      Element        => Impl.Index_Element,
+      Set_Element    => Impl.Index_Set_Element,
+      Last           => Impl.Index_Last,
+      "-"            => Impl."-",
+      "+"            => Impl."+");
+   package Constant_Random renames Random.Constant_Random;
+   package Constant_Bidirectional
+      renames Constant_Random.Constant_Bidirectional;
    package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
 
 end Conts.Vectors.Cursors;

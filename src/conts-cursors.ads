@@ -102,4 +102,123 @@ package Conts.Cursors with SPARK_Mode is
       subtype Element is Element_Type;
    end Constant_Forward_Convert_Traits;
 
+   -----------------------------
+   -- Constant Random cursors --
+   -----------------------------
+   --  These are cursors that can access any element from a container, not in
+   --  any specific order.
+
+   generic
+      type Container_Type (<>) is limited private;
+      type Index_Type is (<>);
+      type Returned_Type (<>) is private;
+
+      with function First (Self : Container_Type) return Index_Type is <>;
+      --  Index of the first element in the container (often Index_Type'First)
+      --  ??? Can we remove this parameter and always use Index_Type'First
+
+      with function Element (Self : Container_Type; Pos : Index_Type)
+        return Returned_Type is <>;
+      --  Access any element of the container
+
+      with function Last (Self : Container_Type) return Index_Type is <>;
+      --  Return the index of the last valid element in the container.
+      --  We do not use a Has_Element function, since having an explicit range
+      --  is more convenient for algorithms (for instance to select random
+      --  elements in the container).
+
+      with function "-" (Left, Right : Index_Type) return Integer is <>;
+      --  Return the number of elements between the two positions.
+
+      with function "+"
+        (left : Index_Type; N : Integer) return Index_Type is <>;
+      --  Move Left forward or backward by a number of position.
+
+   package Constant_Random_Traits is
+      subtype Container is Container_Type;
+      subtype Index     is Index_Type;
+      subtype Returned  is Returned_Type;
+
+      function "-" (Left : Index_Type; N : Integer) return Index_Type
+        is (Left + (-N)) with Inline;
+
+      function Next
+        (Self : Container_Type; Idx : Index_Type)
+         return Index_Type
+        is (Idx + 1) with Inline;
+
+      function Previous
+        (Self : Container_Type; Idx : Index_Type)
+         return Index_Type
+        is (Idx - 1) with Inline;
+
+      function Has_Element
+        (Self : Container_Type; Idx : Index_Type) return Boolean
+        is (Idx >= First (Self) and then Idx <= Last (Self)) with Inline;
+      --  This might be made efficient if you pass a First function that
+      --  returns a constant and if this contstant is Index_Type'First then
+      --  the compiler can simply remove the test.
+
+      --  A random cursor is also a bidirectional and forward cursor
+      package Constant_Bidirectional is new Constant_Bidirectional_Traits
+        (Container, Index_Type, Returned_Type);
+      package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
+   end Constant_Random_Traits;
+
+   --------------------
+   -- Random cursors --
+   --------------------
+
+   generic
+      type Container_Type (<>) is limited private;
+      type Index_Type is (<>);
+      type Returned_Type (<>) is private;
+      type Element_Type (<>) is private;
+
+      with function First (Self : Container_Type) return Index_Type is <>;
+      --  Index of the first element in the container (often Index_Type'First)
+      --  ??? Can we remove this parameter and always use Index_Type'First
+
+      with function Element (Self : Container_Type; Pos : Index_Type)
+                             return Returned_Type is <>;
+      --  Access any element of the container
+
+      with function Last (Self : Container_Type) return Index_Type is <>;
+      --  Return the index of the last valid element in the container.
+      --  We do not use a Has_Element function, since having an explicit range
+      --  is more convenient for algorithms (for instance to select random
+      --  elements in the container).
+
+      with function "-" (Left, Right : Index_Type) return Integer is <>;
+      --  Return the number of elements between the two positions.
+
+      with function "+"
+        (left : Index_Type; N : Integer) return Index_Type is <>;
+      --  Move Left forward or backward by a number of position.
+
+      with procedure Set_Element
+        (Self     : in out Container_Type;
+         Position : Index_Type;
+         Value    : Element_Type) is <>;
+      --  Modify the element at the given position
+
+   package Random_Traits is
+      subtype Container is Container_Type;
+      subtype Index     is Index_Type;
+      subtype Returned  is Returned_Type;
+
+      package Constant_Random is new Constant_Random_Traits
+        (Container_Type, Index_Type, Returned_Type);
+      package Constant_Bidirectional
+         renames Constant_Random.Constant_Bidirectional;
+      package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
+
+      function Has_Element
+        (Self : Container; Idx : Index) return Boolean
+         renames Constant_Random.Has_Element;
+      function "-" (Left : Index; N : Integer) return Index
+        renames Constant_Random."-";
+
+   end Random_Traits;
+
 end Conts.Cursors;

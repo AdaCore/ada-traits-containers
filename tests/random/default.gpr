@@ -1,0 +1,10 @@
+project Default is
+   for Main use ("test_random.adb");
+   for Source_Dirs use (".", "../../src");
+   for Object_Dir use "obj";
+
+   package Compiler is
+      for Switches ("Ada") use
+         ("-save-temps", "-O2", "-gnatn", "-gnatp");
+   end Compiler;
+end Default;

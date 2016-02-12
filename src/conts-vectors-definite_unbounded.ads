@@ -59,6 +59,6 @@ package Conts.Vectors.Definite_Unbounded is
    package Cursors is new Conts.Vectors.Cursors (Vectors, Vector);
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
-                  renames Vectors."<=";
+      renames Vectors."<=";
 
 end Conts.Vectors.Definite_Unbounded;

@@ -47,8 +47,9 @@ package Conts.Vectors.Generics with SPARK_Mode is
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
      is (To_Count (Idx) <= Count) with Inline;
 
-   function Index (Position : Cursor) return Index_Type
-     with Inline, Global => null;
+   function To_Index (Position : Cursor) return Index_Type
+      with Inline, Global => null;
+   function To_Index (Position : Count_Type) return Index_Type;
    --  Return the index corresponding to the cursor.
 
    procedure Reserve_Capacity
@@ -82,6 +83,10 @@ package Conts.Vectors.Generics with SPARK_Mode is
      with Inline => True, Global => null;
    --  Return the number of elements in Self.
 
+   function Last (Self : Vector'Class) return Index_Type
+     with Inline => True, Global => null;
+   --  Return the index of the last element in the vector
+
    function Is_Empty (Self : Vector'Class) return Boolean
       is (Self.Length = 0) with Inline;
    --  Whether the vector is empty
@@ -107,6 +112,15 @@ package Conts.Vectors.Generics with SPARK_Mode is
           Pre    => Length (Self) + Count <= Nodes.Max_Capacity (Self);
    --  Append Count copies of Element to the vector, increasing the capacity
    --  as needed.
+
+   procedure Swap
+     (Self        : in out Vector'Class;
+      Left, Right : Index_Type)
+     with Pre => Left <= Self.Last and then Right <= Self.Last;
+   --  Efficiently swap the elements at the two positions.
+   --  For large elements, this will be more efficient than retrieving them
+   --  and storing them again (which might involve the secondary stack, or
+   --  allocating and freeing elements).
 
    procedure Clear (Self : in out Vector'Class);
    --  Remove all contents from the vector.

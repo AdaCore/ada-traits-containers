@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2015-2016, AdaCore                     --
+--                     Copyright (C) 2016, AdaCore                          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -19,48 +19,43 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
-with Conts.Elements;
+pragma Ada_2012;
+with Ada.Finalization;
+with Conts.Algorithms;  use Conts.Algorithms;
+with Conts.Vectors.Definite_Unbounded;
+with Ada.Text_IO;       use Ada.Text_IO;
 
-package Conts.Algorithms is
+procedure Test_Shuffle is
+   subtype Index_Type is Positive;
 
-   --------------
-   -- Count_If --
-   --------------
+   package Rand is new Conts.Default_Random (Index_Type);
+   package Int_Vecs is new Conts.Vectors.Definite_Unbounded
+      (Index_Type, Integer, Ada.Finalization.Controlled);
+   use Int_Vecs;
 
-   generic
-      with package Cursors
-         is new Conts.Cursors.Constant_Forward_Convert_Traits (<>);
-   function Count_If_Convert
-      (Self      : Cursors.Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Element) return Boolean)
-      return Natural;
-   --  Count the number of elements in the container that match the predicate
+   procedure Swap (Self : in out Vector'Class; L, R : Index_Type) is
+   begin
+      Self.Swap (L, R);
+   end Swap;
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Returned) return Boolean)
-      return Natural;
-   --  Count the number of elements in the container that match the predicate
+   procedure Shuffle is new Conts.Algorithms.Shuffle
+      (Cursors => Int_Vecs.Cursors.Random,
+       Random  => Rand.Traits);
 
-   -------------
-   -- Shuffle --
-   -------------
+   V : Vector;
+   G : Rand.Generator;
 
-   generic
-      with package Cursors is new Conts.Cursors.Random_Traits (<>);
-      with package Random is new Conts.Uniform_Random_Traits
-        (Discrete_Type => Cursors.Index, others => <>);
-      with procedure Swap
-        (Self        : in out Cursors.Container;
-         Left, Right : Cursors.Index) is <>;
-   procedure Shuffle
-     (Self : in out Cursors.Container;
-      Gen  : Random.Generator);
-   --  Generates a random permutation of Self.
+begin
+   for J in 1 .. 40 loop
+      V.Append (J);
+   end loop;
 
-end Conts.Algorithms;
+   Rand.Reset (G);
+   Shuffle (V, G);
+
+   for J of V loop
+      Put (J'Img);
+   end loop;
+   New_Line;
+
+end Test_Shuffle;

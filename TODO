@@ -51,6 +51,16 @@ can be edited with any text editor.
    By implementing specific storage pools or node packages, we could have
    data structures directly mapped to files (perhaps via mmap) ?
 
+** TODO ranges
+   Similar to the C++ concept, these are ways to apply algorithms to whole
+   containers of subsets of them, and dynamically filter them for instance.
+   Since we use a sentinel Has_Element to find the else of a sequence, we
+   have good basis in place (it is easy to implement ranges like Iota,
+   which returns an infinite sequence of integers, or Repeat, which repeats
+   the same element forever). We then need a version of the algorithms that
+   take a range in parameter, so that we can apply operators like Take,
+   to only keep the n first elements of the range, or Group_By.
+
 * Elements traits
 
 ** TODO Review =Conts.Elements.Arrays=
@@ -70,10 +80,35 @@ can be edited with any text editor.
 
 ** TODO =Sort=
 
+** TODO =Equal=
+   Compares two containers, ignore order when relevant.
 ** MAYBE Should we have a version of the algorithms with two cursors as input ?
    This should allow working on a subset of a container. The second cursor
    might be, as in C++, past the last element of the sequence, to simplify the
    handling of containers like forward-lists.
+
+* Cursors
+
+** TODO Non-constant cursors and property maps
+   Currently, we associate the Set_Element operation with the cursors, and it
+   always takes a Container as the first parameter. Should algorithms instead
+   require a constant cursor, and a separate property map.
+   Perhaps likewise for getting the elements ?
+   This decoupling makes it a bit more complex to instantiate algorithms, but
+   provides much more flexibility since the property map might be an
+   indirection.
+   This perhaps also removes the need for the _Convert variants of the
+   algorithms.
+   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1873.html
+
+** TODO =Reverse_Cursor=
+   Reverses the order of a bidirectional cursor. This is tricky, since we
+   need to know the last iterator (the starting point for the reverse
+   iterator), but we only have the Has_Element sentinel.
+   The design on C++ ranges at
+        http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4128.html#proposed-design
+   section 3.3.12 suggests to do a probe O(n) for the last element, since
+   that doesn't change the algorithmic complexity.
 
 * Lists
 
@@ -110,6 +145,9 @@ can be edited with any text editor.
    raise an exception when moving past the current element.
 
 * Maps
+
+** TODO Bounded maps
+   Should not allocated any memory
 
 ** MAYBE QT uses skip-lists instead of red-black-trees
    The former results in less code and uses less memory per node.
@@ -160,6 +198,9 @@ can be edited with any text editor.
 
 * Testing
 
+** TODO Can we declare a vector indexed on =Integer=
+   This would be a plus compared to the standard Ada containers.
+
 ** TODO Check that =Copy= works fine in particular for lists
 ** TODO Check that all simple containers provide the same ops
    In particular, they should all redefine the iterable aspect,
@@ -177,6 +218,19 @@ can be edited with any text editor.
 
 ** TODO Document property maps
 
+** TODO Document cursors
+   As opposed to C++, we chose to use the usual Ada =Has_Element= function
+   rather than pass a past-the-end value. This is more compatible with
+   using enumeration types to index a vector, for instance, since there is not
+   past-the-end value in such a case.
+   Document why we pass the container to all cursor operations: for SPARK,
+   because this does not require the use of a Unchecked_Access, and because
+   this avoids dangling pointers.
+
+** TODO Document how to design a new container
+   Get an implementation that works, then generalize all pieces of code where
+   choices had to be made, then provide bounded implementations, then write
+   tests.
 
 * Limitations of standard Ada containers
 
@@ -210,6 +264,26 @@ http://en.m.wikipedia.org/wiki/Unrolled_linked_list
 
 ** Smart Pointers
 http://ootips.org/yonat/4dev/smart-pointers.html
+
+* Optimizations
+
+** C++ Small String Optimization (SSO)
+   Newer versions of the stl no longer use copy-on-write for std::string, since
+   that doesn't always work correctly with threads.
+   However, they have an optimization in place so that small strings do not
+   require malloc. This is what we are doing in =Conts.Elements.Arrays=, but
+   with lots of space optimization as well.
+   Some implementations do this by using one bit to store whether this is a
+   long or short string, and this bit is stored as part of the size.
+   See http://info.prelert.com/blog/cpp-stdstring-implementations.
+
+** C++ Growing strategies
+   Some stl implementation will grow data structures by multiplying their size
+   by 1.5, but when the data structure becomes larger they try to allocate
+   multiples of the page size (4096 bytes typically).
+
+** Custom allocators
+   See https://www.youtube.com/watch?v=LIb3L4vKZ7U
 
 * org-mode help
   *bold* /italic/ _underlined_  =code= ~verbatim~

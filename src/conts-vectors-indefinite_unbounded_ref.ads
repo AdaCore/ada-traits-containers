@@ -52,8 +52,8 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
-   function Index (Position : Vectors.Cursor) return Index_Type
-                   renames Vectors.Index;
+   function To_Index (Position : Vectors.Cursor) return Index_Type
+                   renames Vectors.To_Index;
 
    --  ??? Should we provide a Copy function ?
    --  This cannot be provided in the generic package, since the type could

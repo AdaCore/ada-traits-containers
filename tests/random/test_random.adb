@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2015-2016, AdaCore                     --
+--                     Copyright (C) 2016, AdaCore                          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -19,48 +19,45 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Conts.Cursors;
-with Conts.Elements;
+with Ada.Text_IO;   use Ada.Text_IO;
+with Conts;         use Conts;
 
-package Conts.Algorithms is
+procedure Test_Random is
+   type My_Subtype is new Integer range 10 .. 20;
+   package Rand is new Conts.Default_Random (My_Subtype);
 
-   --------------
-   -- Count_If --
-   --------------
+   Gen : Rand.Traits.Generator;
 
-   generic
-      with package Cursors
-         is new Conts.Cursors.Constant_Forward_Convert_Traits (<>);
-   function Count_If_Convert
-      (Self      : Cursors.Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Element) return Boolean)
-      return Natural;
-   --  Count the number of elements in the container that match the predicate
+   Total : Long_Float := 0.0;
+   Val  : My_Subtype;
 
-   generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
-   function Count_If
-      (Self      : Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Returned) return Boolean)
-      return Natural;
-   --  Count the number of elements in the container that match the predicate
+   Items_Count : constant := 20;
 
-   -------------
-   -- Shuffle --
-   -------------
+begin
+   Rand.Reset (Gen);
 
-   generic
-      with package Cursors is new Conts.Cursors.Random_Traits (<>);
-      with package Random is new Conts.Uniform_Random_Traits
-        (Discrete_Type => Cursors.Index, others => <>);
-      with procedure Swap
-        (Self        : in out Cursors.Container;
-         Left, Right : Cursors.Index) is <>;
-   procedure Shuffle
-     (Self : in out Cursors.Container;
-      Gen  : Random.Generator);
-   --  Generates a random permutation of Self.
+   Put_Line ("Standard random numbers");
+   for Count in 1 .. Items_Count loop
+      Val := Rand.Traits.Rand (Gen);
+      Total := Total + Long_Float (Val);
+      --  Mean := (Mean * (Count - 1) + Integer (Val)) / Count;
+      Put_Line (Val'Img);
+   end loop;
+   Put_Line ("Mean =" & Long_Float'Image (Total / Long_Float (Items_Count)));
 
-end Conts.Algorithms;
+   declare
+      function Ranged is new Conts.Ranged_Random (Rand.Traits, 12, 14);
+   begin
+      Put_Line ("Ranged random numbers");
+      Total := 0.0;
+      for Count in 1 .. Items_Count loop
+         Val := Ranged (Gen);
+         Total := Total + Long_Float (Val);
+         --  Mean := (Mean * (Count - 1) + Integer (Val)) / Count;
+         Put_Line (Val'Img);
+      end loop;
+      Put_Line
+         ("Mean =" & Long_Float'Image (Total / Long_Float (Items_Count)));
+   end;
+
+end Test_Random;

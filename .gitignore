@@ -1,7 +1,5 @@
-src/obj
-src/lib
-tests/obj
-spark/obj
+obj/
+lib/
 
 doc/build/
 

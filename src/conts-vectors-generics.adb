@@ -175,6 +175,15 @@ package body Conts.Vectors.Generics is
       return Nodes.Elements.To_Return (Nodes.Get_Element (Self, Self.Last));
    end Last_Element;
 
+   ----------
+   -- Last --
+   ----------
+
+   function Last (Self : Vector'Class) return Index_Type is
+   begin
+      return To_Index (Self.Last);
+   end Last;
+
    ------------
    -- Assign --
    ------------
@@ -198,16 +207,23 @@ package body Conts.Vectors.Generics is
       end if;
    end First;
 
-   -----------
-   -- Index --
-   -----------
+   --------------
+   -- To_Index --
+   --------------
 
-   function Index (Position : Cursor) return Index_Type is
+   function To_Index (Position : Count_Type) return Index_Type is
    begin
       return Index_Type'Val
-        (Position.Index - Min_Index
+        (Position - Min_Index
          + Count_Type (Index_Type'Pos (Index_Type'First)));
-   end Index;
+   end To_Index;
+
+   --------------
+   -- To_Index --
+   --------------
+
+   function To_Index (Position : Cursor) return Index_Type
+      is (To_Index (Position.Index));
 
    -------------
    -- Element --
@@ -274,6 +290,37 @@ package body Conts.Vectors.Generics is
          Position := No_Element;
       end if;
    end Next;
+
+   ----------
+   -- Swap --
+   ----------
+
+   procedure Swap
+     (Self        : in out Vector'Class;
+      Left, Right : Index_Type)
+   is
+      L     : constant Count_Type := To_Count (Left);
+      R     : constant Count_Type := To_Count (Right);
+      L_Tmp : Stored_Type := Nodes.Get_Element (Self, L);
+      R_Tmp : Stored_Type := Nodes.Get_Element (Self, R);
+   begin
+      --  Since we will only keep one copy of the elements in the end, we
+      --  should test Movable here, not Copyable.
+      if Nodes.Elements.Movable then
+         declare
+            Tmp : constant Stored_Type := L_Tmp;
+         begin
+            Nodes.Set_Element (Self, L, R_Tmp);
+            Nodes.Set_Element (Self, R, Tmp);
+         end;
+
+      else
+         Nodes.Set_Element (Self, L, Nodes.Elements.Copy (R_Tmp));
+         Nodes.Elements.Release (R_Tmp);    --  No longer needed
+         Nodes.Set_Element (Self, L, Nodes.Elements.Copy (L_Tmp));
+         Nodes.Elements.Release (L_Tmp);
+      end if;
+   end Swap;
 
    ------------
    -- Adjust --

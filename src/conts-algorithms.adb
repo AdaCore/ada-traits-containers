@@ -66,4 +66,34 @@ package body Conts.Algorithms is
       return Internal (Self, Predicate);
    end Count_If;
 
+   -------------
+   -- Shuffle --
+   -------------
+
+   procedure Shuffle
+     (Self : in out Cursors.Container;
+      Gen  : Random.Generator)
+   is
+      use Cursors;
+      First         : constant Cursors.Index := Cursors.First (Self);
+      Next_To_First : constant Cursors.Index := First + 1;
+      Last  : constant Cursors.Index := Cursors.Last (Self);
+      C     : Cursors.Index := Last;
+      G     : Cursors.Index;
+   begin
+      --  Fisher and Yates algorithm
+      --  http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
+
+      while C /= Next_To_First loop
+         declare
+            function Rand is new Conts.Ranged_Random
+              (Random, First, C);
+         begin
+            G := Rand (Gen);
+            Swap (Self, G, C);
+            C := C - 1;
+         end;
+      end loop;
+   end Shuffle;
+
 end Conts.Algorithms;

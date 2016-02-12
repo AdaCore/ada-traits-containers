@@ -1,0 +1,5 @@
+with "../../src/conts";
+project Default is
+   for Main use ("test_shuffle.adb");
+   for Object_Dir use "obj";
+end Default;
