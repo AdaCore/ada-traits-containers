@@ -218,8 +218,8 @@ Let's introduce another policy package::
       with function Allocate 
         (C : in out Container; E : Elements.Element) return Node;
       with procedure Set_Next (N, Next : Node);
-   package Nodes_Policy is
-   end Nodes_Policy;
+   package Storage_Policy is
+   end Storage_Policy;
 
 This package needs to know about the elements, since those are stored in the
 nodes. Following our previous discussion, we therefore give it the elements
@@ -230,21 +230,21 @@ which is why we also describe what a container will look like.
 We can now implement our list as::
 
    generic
-      with package Nodes is new Nodes_Policy (<>);
+      with package Storage is new Storage_Policy (<>);
    package Lists is
       type List is private;
       procedure Prepend (Self : in out List; E : Elements.Element);
    private
-      type List is new Nodes.Container with record
-        Head : Nodes.Node;
+      type List is new Storage.Container with record
+        Head : Storage.Node;
       end record;
    end Lists;
    
    package body Lists is
      procedure Prepend (Self : in out List; E : Elements.Element) is
-        N : constant Nodes.Node := Nodes.Allocate (Self, E);
+        N : constant Storage.Node := Storage.Allocate (Self, E);
      begin
-        Nodes.Set_Next (N, Self.Head);
+        Storage.Set_Next (N, Self.Head);
         Self.Head := N;
      end Prepend;
    end Lists;
@@ -265,7 +265,7 @@ flexible::
 
    generic
       with package Elements is new Elements_Policy (<>);
-   package Unbounded_Nodes is
+   package Unbounded_Storage is
       type Container is tagged null record;
       type Node_Record;
       type Node is access Node_Record;
@@ -279,23 +279,23 @@ flexible::
              (Value => Elements.To_Stored (E), Next => null))
         with Inline;
       procedure Set_Next (N, Next : Node) with Inline;
-      package Policy is new Nodes_Policy
+      package Policy is new Storage_Policy
          (Elements, Container, Node, null, Allocate, Set_Next);
-   end Unbounded_Nodes;
+   end Unbounded_Storage;
    
-   package body Unbounded_Nodes is
+   package body Unbounded_Storage is
       procedure Set_Next (N, Next : Node) is
       begin
          N.Next := Next;
       end Set_Next;
-   end Unbounded_Nodes;
+   end Unbounded_Storage;
 
 The second implementation is for a bounded list, with a known maximum
 number of elements::
 
    generic
       with package Elements is new Elements_Policy (<>);
-   package Bounded_Nodes is
+   package Bounded_Storage is
       type Node is new Integer range 1 .. 1000;
       Unset : constant Node := 0;
       type Element_Array is array (Node) of Elements.Stored;
@@ -307,11 +307,11 @@ number of elements::
         (C : in out Container; E : Elements.Element) return Node
          with Inline;
       procedure Set_Next (N, Next : Node) is null with Inline;
-      package Policy is new Nodes_Policy
+      package Policy is new Storage_Policy
          (Elements, Container, Node, Unset, Allocate, Set_Next);
-   end Bounded_Nodes;
+   end Bounded_Storage;
    
-   package body Bounded_Nodes is
+   package body Bounded_Storage is
       function Allocate 
         (C : in out Container; E : Elements.Element) return Node is
       begin
@@ -319,7 +319,7 @@ number of elements::
          C.Elms (C.Last) := Elements.To_Stored (E);
          return C.Last;          
       end Allocate;
-   end Bounded_Nodes;
+   end Bounded_Storage;
 
 Strictly speaking, this is closer to what a vector would be, not a list, but
 this is for purposes of illustration.

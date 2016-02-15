@@ -27,7 +27,7 @@ pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
-with Conts.Lists.Nodes.Unbounded;
+with Conts.Lists.Storage.Unbounded;
 with Conts.Properties;
 
 generic
@@ -36,11 +36,11 @@ generic
 package Conts.Lists.Definite_Unbounded is
 
    package Elements is new Conts.Elements.Definite (Element_Type);
-   package Nodes is new Conts.Lists.Nodes.Unbounded
+   package Storage is new Conts.Lists.Storage.Unbounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Container_Base_Type,
        Pool                => Conts.Global_Pool);
-   package Lists is new Conts.Lists.Generics (Nodes.Traits);
+   package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record

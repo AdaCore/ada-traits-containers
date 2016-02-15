@@ -25,7 +25,7 @@ with System;                    use System;
 with System.Memory;             use System.Memory;
 with System.Unsigned_Types;     use System.Unsigned_Types;
 
-package body Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
+package body Conts.Lists.Storage.Unbounded_SPARK with SPARK_Mode is
 
    package body Private_Nodes_List with SPARK_Mode => Off is
       pragma Warnings (Off);  --  no aliasing issue
@@ -176,4 +176,4 @@ package body Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
       end Set_Previous;
    end Private_Nodes_List;
 
-end Conts.Lists.Nodes.Unbounded_SPARK;
+end Conts.Lists.Storage.Unbounded_SPARK;

@@ -25,7 +25,7 @@
 
 pragma Ada_2012;
 with Conts.Elements.Indefinite_SPARK;
-with Conts.Lists.Nodes.Unbounded_SPARK;
+with Conts.Lists.Storage.Unbounded_SPARK;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
 with Conts.Properties;
@@ -40,10 +40,10 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
 
    package Elements is new Conts.Elements.Indefinite_SPARK
       (Element_Type, Pool => Conts.Global_Pool);
-   package Nodes is new Conts.Lists.Nodes.Unbounded_SPARK
+   package Storage is new Conts.Lists.Storage.Unbounded_SPARK
       (Elements            => Elements.Traits,
        Container_Base_Type => Limited_Base);
-   package Lists is new Conts.Lists.Generics (Nodes.Traits);
+   package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record

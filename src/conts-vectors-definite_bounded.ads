@@ -25,7 +25,7 @@ pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Vectors.Cursors;
 with Conts.Vectors.Generics;
-with Conts.Vectors.Nodes.Bounded;
+with Conts.Vectors.Storage.Bounded;
 with Conts.Properties;
 
 generic
@@ -35,10 +35,10 @@ generic
 package Conts.Vectors.Definite_Bounded is
 
    package Elements is new Conts.Elements.Definite (Element_Type);
-   package Nodes is new Conts.Vectors.Nodes.Bounded
+   package Storage is new Conts.Vectors.Storage.Bounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Container_Base_Type);
-   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
+   package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
    type Vector (Capacity : Count_Type) is
       new Vectors.Vector (Capacity) with null record

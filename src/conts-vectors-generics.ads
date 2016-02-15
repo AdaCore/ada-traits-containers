@@ -22,20 +22,20 @@
 --  A vector abstract data type
 
 pragma Ada_2012;
-with Conts.Vectors.Nodes;
+with Conts.Vectors.Storage;
 
 generic
    type Index_Type is (<>);
-   with package Nodes is new Conts.Vectors.Nodes.Traits (<>);
+   with package Storage is new Conts.Vectors.Storage.Traits (<>);
 package Conts.Vectors.Generics with SPARK_Mode is
 
-   type Vector is new Nodes.Container with private;
+   type Vector is new Storage.Container with private;
    --  Define the iterable aspect later, since this is not allowed when the
    --  parent type is a generic formal.
 
-   subtype Element_Type is Nodes.Elements.Element_Type;
-   subtype Returned_Type is Nodes.Elements.Returned_Type;
-   subtype Stored_Type is Nodes.Elements.Stored_Type;
+   subtype Element_Type is Storage.Elements.Element_Type;
+   subtype Returned_Type is Storage.Elements.Returned_Type;
+   subtype Stored_Type is Storage.Elements.Stored_Type;
 
    type Cursor is private;
    No_Element : constant Cursor;
@@ -70,7 +70,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    procedure Resize
      (Self    : in out Vector'Class;
       Length  : Index_Type;
-      Element : Nodes.Elements.Element_Type);
+      Element : Storage.Elements.Element_Type);
    --  Resize the container so that it contains Length elements.
    --  If Length is smaller than the current container length, Self is
    --     reduced to its first Length elements, destroying the other elements.
@@ -109,7 +109,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
       Element : Element_Type;
       Count   : Count_Type := 1)
      with Global => null,
-          Pre    => Length (Self) + Count <= Nodes.Max_Capacity (Self);
+          Pre    => Length (Self) + Count <= Storage.Max_Capacity (Self);
    --  Append Count copies of Element to the vector, increasing the capacity
    --  as needed.
 
@@ -202,7 +202,7 @@ private
 
    function To_Count (Idx : Index_Type) return Count_Type
    is (Count_Type
-       (Conts.Vectors.Nodes.Min_Index
+       (Conts.Vectors.Storage.Min_Index
         + Count_Type'Base (Index_Type'Pos (Idx))
         - Count_Type'Base (Index_Type'Pos (Index_Type'First))));
 
@@ -211,9 +211,9 @@ private
    end record;
 
    No_Element : constant Cursor :=
-     (Index => Conts.Vectors.Nodes.Min_Index - 1);
+     (Index => Conts.Vectors.Storage.Min_Index - 1);
 
-   type Vector is new Nodes.Container with record
+   type Vector is new Storage.Container with record
       Last  : Count_Type := No_Element.Index;
       --  Last assigned element
    end record;

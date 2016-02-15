@@ -19,73 +19,146 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This package provides support for unbounded lists.
---  All nodes are allocated on the heap.
-
 pragma Ada_2012;
-with Conts.Elements;
+with Ada.Unchecked_Deallocation;
 
-generic
-   with package Elements is new Conts.Elements.Traits (<>);
+package body Conts.Lists.Storage.Unbounded with SPARK_Mode => Off is
 
-   type Container_Base_Type is abstract tagged limited private;
-   --  The base type for these unbounded list.
+   procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+      (Node, Node_Access);
 
-   with package Pool is new Conts.Pools (<>);
-   --  The storage pool used for nodes.
-
-package Conts.Lists.Nodes.Unbounded with SPARK_Mode => Off is
-
-   subtype Nodes_Container is Container_Base_Type;
-   type Node;
-   type Node_Access is access Node;
-   for Node_Access'Storage_Pool use Pool.Pool.all;
-
-   --  ??? Compiler crashes if we make this type private
-   type Node is record
-      Element        : Elements.Stored_Type;
-      Previous, Next : Node_Access;
-   end record;
+   --------------
+   -- Allocate --
+   --------------
 
    procedure Allocate
       (Self    : in out Nodes_Container'Class;
        Element : Elements.Stored_Type;
        N       : out Node_Access)
-      with Inline;
+   is
+      pragma Unreferenced (Self);
+   begin
+      N := new Node;
+      N.Element := Element;
+   end Allocate;
+
+   ------------------
+   -- Release_Node --
+   ------------------
+
    procedure Release_Node
-      (Self : in out Nodes_Container'Class; N : in out Node_Access);
-   function Get_Element
-      (Self : Nodes_Container'Class; N : Node_Access)
+      (Self : in out Nodes_Container'Class; N : in out Node_Access)
+   is
+      pragma Unreferenced (Self);
+   begin
+      Unchecked_Free (N);
+   end Release_Node;
+
+   -----------------
+   -- Get_Element --
+   -----------------
+
+   function Get_Element (Self : Nodes_Container'Class; N : Node_Access)
       return Elements.Stored_Type
-      with Inline;
+   is
+      pragma Unreferenced (Self);
+   begin
+      return N.Element;
+   end Get_Element;
+
+   --------------
+   -- Get_Next --
+   --------------
+
    function Get_Next
       (Self : Nodes_Container'Class; N : Node_Access) return Node_Access
-      with Inline;
+   is
+      pragma Unreferenced (Self);
+   begin
+      return N.Next;
+   end Get_Next;
+
+   ------------------
+   -- Get_Previous --
+   ------------------
+
    function Get_Previous
       (Self : Nodes_Container'Class; N : Node_Access) return Node_Access
-      with Inline;
+   is
+      pragma Unreferenced (Self);
+   begin
+      return N.Previous;
+   end Get_Previous;
+
+   ------------------
+   -- Set_Previous --
+   ------------------
+
    procedure Set_Previous
       (Self : in out Nodes_Container'Class; N, Previous : Node_Access)
-      with Inline;
+   is
+      pragma Unreferenced (Self);
+   begin
+      N.Previous := Previous;
+   end Set_Previous;
+
+   --------------
+   -- Set_Next --
+   --------------
+
    procedure Set_Next
       (Self : in out Nodes_Container'Class; N, Next : Node_Access)
-      with Inline;
-   function Capacity (Self : Nodes_Container'Class) return Count_Type
-      is (Count_Type'Last) with Inline;
+   is
+      pragma Unreferenced (Self);
+   begin
+      N.Next := Next;
+   end Set_Next;
+
+   ------------
+   -- Assign --
+   ------------
+
    procedure Assign
       (Nodes    : in out Nodes_Container'Class;
        Source   : Nodes_Container'Class;
        New_Head : out Node_Access;
        Old_Head : Node_Access;
        New_Tail : out Node_Access;
-       Old_Tail : Node_Access);
+       Old_Tail : Node_Access)
+   is
+      pragma Unreferenced (Source, Old_Tail);
+      N, Tmp, Tmp2 : Node_Access;
+   begin
+      if Old_Head = null then
+         New_Head := null;
+         New_Tail := null;
+         return;
+      end if;
 
-   package Traits is new Conts.Lists.Nodes.Traits
-      (Elements       => Elements,
-       Container      => Nodes_Container,
-       Node_Access    => Node_Access,
-       Null_Access    => null,
-       Allocate       => Allocate,
-       Release_Node   => Release_Node);
+      Tmp2 := Old_Head;
+      if Elements.Copyable then
+         Allocate (Nodes, Tmp2.Element, Tmp);
+      else
+         Allocate (Nodes, Elements.Copy (Tmp2.Element), Tmp);
+      end if;
+      New_Head := Tmp;
 
-end Conts.Lists.Nodes.Unbounded;
+      loop
+         Tmp2 := Tmp2.Next;
+         exit when Tmp2 = null;
+
+         if Elements.Copyable then
+            Allocate (Nodes, Tmp2.Element, N);
+         else
+            Allocate (Nodes, Elements.Copy (Tmp2.Element), N);
+         end if;
+
+         Tmp.Next := N;
+         N.Previous := Tmp;
+         Tmp := N;
+      end loop;
+
+      New_Tail := N;
+   end Assign;
+
+end Conts.Lists.Storage.Unbounded;

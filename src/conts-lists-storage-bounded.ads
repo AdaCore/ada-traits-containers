@@ -36,7 +36,7 @@ generic
    --  Since this type is eventually also used as the base type for the list
    --  itself, this is a way to make lists either controlled or limited.
 
-package Conts.Lists.Nodes.Bounded with SPARK_Mode is
+package Conts.Lists.Storage.Bounded with SPARK_Mode is
 
    subtype Stored_Type is Elements.Stored_Type;
 
@@ -97,10 +97,10 @@ package Conts.Lists.Nodes.Bounded with SPARK_Mode is
    end Impl;
 
    use Impl;
-   package Traits is new Conts.Lists.Nodes.Traits
+   package Traits is new Conts.Lists.Storage.Traits
       (Elements     => Elements,
        Container    => Impl.Container,
        Node_Access  => Impl.Node_Access,
        Null_Access  => Impl.Null_Node_Access,
        Allocate     => Allocate);
-end Conts.Lists.Nodes.Bounded;
+end Conts.Lists.Storage.Bounded;

@@ -34,7 +34,7 @@ generic
    type Container_Base_Type is abstract tagged limited private;
    --  The base type for these unbounded lists
 
-package Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
+package Conts.Lists.Storage.Unbounded_SPARK with SPARK_Mode is
 
    type Node_Access is new Count_Type;
    Null_Node_Access : constant Node_Access := 0;
@@ -106,7 +106,7 @@ package Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
 
    use Private_Nodes_List;
 
-   package Traits is new Conts.Lists.Nodes.Traits
+   package Traits is new Conts.Lists.Storage.Traits
      (Elements     => Elements,
       Container    => Nodes_List,
       Node_Access  => Node_Access,
@@ -114,4 +114,4 @@ package Conts.Lists.Nodes.Unbounded_SPARK with SPARK_Mode is
       Allocate     => Allocate,
       Release      => Release);
 
-end Conts.Lists.Nodes.Unbounded_SPARK;
+end Conts.Lists.Storage.Unbounded_SPARK;

@@ -22,7 +22,7 @@
 pragma Ada_2012;
 with Ada.Finalization;
 with Conts.Elements.Indefinite_Ref;
-with Conts.Lists.Nodes.Unbounded;
+with Conts.Lists.Storage.Unbounded;
 with Conts.Lists.Generics;
 
 package QGen is
@@ -46,11 +46,11 @@ package QGen is
 
    package Elements is new Conts.Elements.Indefinite_Ref
       (EObject'Class, Pool => Conts.Global_Pool);
-   package Nodes is new Conts.Lists.Nodes.Unbounded
+   package Storage is new Conts.Lists.Storage.Unbounded
       (Elements.Traits,
        Container_Base_Type => Ada.Finalization.Controlled,
        Pool                => Conts.Global_Pool);
-   package Lists is new Conts.Lists.Generics (Nodes.Traits);
+   package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    type EObject_List is new Lists.List with null record
       with Iterable => (First       => First_Primitive,

@@ -32,18 +32,18 @@ with Ada.Finalization;
 with Conts.Elements.Arrays;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
-with Conts.Lists.Nodes.Unbounded;
+with Conts.Lists.Storage.Unbounded;
 with Conts.Properties;
 
 package Conts.Lists.Strings is
 
    package Elements is new Conts.Elements.Arrays
       (Positive, Character, String, Conts.Global_Pool);
-   package Nodes is new Conts.Lists.Nodes.Unbounded
+   package Storage is new Conts.Lists.Storage.Unbounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Ada.Finalization.Controlled,
        Pool                => Conts.Global_Pool);
-   package Lists is new Conts.Lists.Generics (Nodes.Traits);
+   package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;
    type List is new Lists.List with null record

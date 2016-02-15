@@ -20,7 +20,7 @@ copied.
 Vector nodes
 ------------
 
-The ``Conts.Vectors.Nodes`` package is a generic package that provides
+The ``Conts.Vectors.Storage`` package is a generic package that provides
 the low-level implementation of vectors. It is used to instantiate an
 actual vector, but not meant to be used directly by applications.
 
@@ -109,7 +109,7 @@ information:
        often be an integer type (natural or positive for instance), but
        could also be any discrete type like an enumeration.
 
-   ``Nodes``
+   ``Storage``
 
        This is the choice of the vector nodes package for the low-level
        implementation, as described above. This lets you chose between

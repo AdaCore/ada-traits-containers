@@ -25,7 +25,7 @@ with System;                 use System;
 
 package body Conts.Lists.Generics with SPARK_Mode => Off is
 
-   use Nodes;
+   use Storage;
 
    ------------
    -- Append --
@@ -39,7 +39,7 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
    begin
       Allocate
          (Self,
-          Nodes.Elements.To_Stored (Element),
+          Storage.Elements.To_Stored (Element),
           New_Node => N);
 
       if Self.Tail = Null_Access then
@@ -67,13 +67,13 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
          N := Self.Next (C);
          E := Get_Element (Self, C.Current);
          Elements.Release (E);
-         Nodes.Release_Node (Self, C.Current);
+         Storage.Release_Node (Self, C.Current);
          C := N;
       end loop;
-      Nodes.Release (Self);
+      Storage.Release (Self);
 
-      Self.Head := Nodes.Null_Access;
-      Self.Tail := Nodes.Null_Access;
+      Self.Head := Storage.Null_Access;
+      Self.Tail := Storage.Null_Access;
       Self.Size := 0;
    end Clear;
 
@@ -103,7 +103,7 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
       (Self : List'Class; Position : Cursor) return Returned_Type is
    begin
       --  Precondition ensures there is an element at that position
-      return Nodes.Elements.To_Return (Get_Element (Self, Position.Current));
+      return Storage.Elements.To_Return (Get_Element (Self, Position.Current));
    end Element;
 
    -----------------
@@ -170,7 +170,7 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
 
    procedure Adjust (Self : in out List) is
    begin
-      Nodes.Assign (Self, Self,
+      Storage.Assign (Self, Self,
                     Self.Head, Self.Head,
                     Self.Tail, Self.Tail);
    end Adjust;
@@ -187,7 +187,7 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
          return;
       end if;
 
-      Nodes.Assign (Self, Source,
+      Storage.Assign (Self, Source,
                     Self.Head, Source.Head,
                     Self.Tail, Source.Tail);
    end Assign;

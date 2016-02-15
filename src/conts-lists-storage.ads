@@ -27,7 +27,7 @@
 pragma Ada_2012;
 with Conts.Elements;
 
-package Conts.Lists.Nodes with SPARK_Mode is
+package Conts.Lists.Storage with SPARK_Mode is
 
    generic
       with package Elements is new Conts.Elements.Traits (<>);
@@ -106,4 +106,4 @@ package Conts.Lists.Nodes with SPARK_Mode is
    package Traits with SPARK_Mode is
    end Traits;
 
-end Conts.Lists.Nodes;
+end Conts.Lists.Storage;

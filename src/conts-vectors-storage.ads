@@ -34,7 +34,7 @@
 pragma Ada_2012;
 with Conts.Elements;
 
-package Conts.Vectors.Nodes with SPARK_Mode is
+package Conts.Vectors.Storage with SPARK_Mode is
 
    Min_Index : constant Count_Type := Count_Type'First + 1;
    --  Minimal index in vectors.
@@ -124,4 +124,4 @@ package Conts.Vectors.Nodes with SPARK_Mode is
    package Traits with SPARK_Mode is
    end Traits;
 
-end Conts.Vectors.Nodes;
+end Conts.Vectors.Storage;

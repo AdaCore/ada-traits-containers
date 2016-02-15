@@ -25,7 +25,7 @@ pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Lists.Cursors;
 with Conts.Lists.Generics;
-with Conts.Lists.Nodes.Bounded;
+with Conts.Lists.Storage.Bounded;
 with Conts.Properties;
 
 generic
@@ -36,10 +36,10 @@ package Conts.Lists.Definite_Bounded is
 
    package Elements is new Conts.Elements.Definite
      (Element_Type, Free => Free);
-   package Nodes is new Conts.Lists.Nodes.Bounded
+   package Storage is new Conts.Lists.Storage.Bounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Container_Base_Type);
-   package Lists is new Conts.Lists.Generics (Nodes.Traits);
+   package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;
    type List (Capacity : Count_Type) is

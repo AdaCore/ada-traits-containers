@@ -27,7 +27,7 @@ pragma Ada_2012;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
-with Conts.Lists.Nodes.Unbounded;
+with Conts.Lists.Storage.Unbounded;
 with Conts.Properties;
 
 generic
@@ -37,11 +37,11 @@ package Conts.Lists.Indefinite_Unbounded_Ref is
 
    package Elements is new Conts.Elements.Indefinite_Ref
       (Element_Type, Pool => Conts.Global_Pool);
-   package Nodes is new Conts.Lists.Nodes.Unbounded
+   package Storage is new Conts.Lists.Storage.Unbounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Container_Base_Type,
        Pool                => Conts.Global_Pool);
-   package Lists is new Conts.Lists.Generics (Nodes.Traits);
+   package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Ref_Type is Elements.Ref_Type;
    subtype Cursor is Lists.Cursor;

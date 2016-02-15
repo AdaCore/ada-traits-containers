@@ -25,7 +25,7 @@ pragma Ada_2012;
 with Conts.Elements.Indefinite;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Cursors;
-with Conts.Vectors.Nodes.Unbounded;
+with Conts.Vectors.Storage.Unbounded;
 with Conts.Properties;
 
 generic
@@ -36,11 +36,11 @@ package Conts.Vectors.Indefinite_Unbounded is
 
    package Elements is new Conts.Elements.Indefinite
       (Element_Type, Pool => Conts.Global_Pool);
-   package Nodes is new Conts.Vectors.Nodes.Unbounded
+   package Storage is new Conts.Vectors.Storage.Unbounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Container_Base_Type,
        Resize_Policy       => Conts.Vectors.Resize_1_5);
-   package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
+   package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
    type Vector is new Vectors.Vector with null record
       with Iterable => (First       => First_Primitive,

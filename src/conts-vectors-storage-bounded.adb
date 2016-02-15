@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 
-package body Conts.Vectors.Nodes.Bounded with SPARK_Mode is
+package body Conts.Vectors.Storage.Bounded with SPARK_Mode is
 
    ----------
    -- Impl --
@@ -85,4 +85,4 @@ package body Conts.Vectors.Nodes.Bounded with SPARK_Mode is
       end Copy;
    end Impl;
 
-end Conts.Vectors.Nodes.Bounded;
+end Conts.Vectors.Storage.Bounded;

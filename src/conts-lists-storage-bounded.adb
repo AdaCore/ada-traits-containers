@@ -27,7 +27,7 @@
 
 pragma Ada_2012;
 
-package body Conts.Lists.Nodes.Bounded with SPARK_Mode is
+package body Conts.Lists.Storage.Bounded with SPARK_Mode is
 
    package body Impl is
       --------------
@@ -148,4 +148,4 @@ package body Conts.Lists.Nodes.Bounded with SPARK_Mode is
 
    end Impl;
 
-end Conts.Lists.Nodes.Bounded;
+end Conts.Lists.Storage.Bounded;

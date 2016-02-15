@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 with Conts.Graphs.DFS;
-with Conts.Vectors.Nodes.Unbounded;
+with Conts.Vectors.Storage.Unbounded;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Definite_Unbounded;
 
@@ -75,12 +75,12 @@ package body Conts.Graphs.Components is
       --  See:
       --    https://people.mpi-inf.mpg.de/~mehlhorn/ftp/EngineeringDFS.pdf
 
-      package Vertex_Nodes is new Conts.Vectors.Nodes.Unbounded
+      package Vertex_Storage is new Conts.Vectors.Storage.Unbounded
         (Elements            => Graphs.Vertices,
          Container_Base_Type => Conts.Limited_Base,
          Resize_Policy       => Conts.Vectors.Resize_1_5);
       package Vertex_Vectors is new Conts.Vectors.Generics
-        (Natural, Vertex_Nodes.Traits);
+        (Natural, Vertex_Storage.Traits);
       --  A stack of vertices.
 
       Roots : Roots_Vectors.Vector;

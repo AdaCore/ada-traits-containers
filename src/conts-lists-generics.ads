@@ -32,22 +32,22 @@
 --  to 0.51s when we do not use 'Class parameters).
 
 pragma Ada_2012;
-with Conts.Lists.Nodes;
+with Conts.Lists.Storage;
 
 generic
-   with package Nodes is new Conts.Lists.Nodes.Traits (<>);
+   with package Storage is new Conts.Lists.Storage.Traits (<>);
    --  Describes how the nodes of the list are stored.
 
 package Conts.Lists.Generics with SPARK_Mode is
 
-   type List is new Nodes.Container with private;
+   type List is new Storage.Container with private;
    --  We do not define the Iterable aspect here: this is not allowed,
    --  since the parent type is a generic formal parameter. Instead, we
    --  have to define it in the instantiations of Generic_List.
 
-   subtype Element_Type is Nodes.Elements.Element_Type;
-   subtype Returned_Type is Nodes.Elements.Returned_Type;
-   subtype Stored_Type is Nodes.Elements.Stored_Type;
+   subtype Element_Type is Storage.Elements.Element_Type;
+   subtype Returned_Type is Storage.Elements.Returned_Type;
+   subtype Stored_Type is Storage.Elements.Stored_Type;
 
    type Cursor is private;
    No_Element : constant Cursor;
@@ -65,7 +65,7 @@ package Conts.Lists.Generics with SPARK_Mode is
    --  Complexity: O(n)  (in practice, constant)
 
    function Capacity (Self : List'Class) return Count_Type
-      is (Nodes.Capacity (Self))
+      is (Storage.Capacity (Self))
       with Inline => True,
            Global => null;
    --  Return the maximal number of elements in the list. This will be
@@ -136,15 +136,15 @@ private
    --  In case the list is a controlled type, but irrelevant when the list
    --  is not controlled.
 
-   type List is new Nodes.Container with record
-      Head, Tail : Nodes.Node_Access := Nodes.Null_Access;
+   type List is new Storage.Container with record
+      Head, Tail : Storage.Node_Access := Storage.Null_Access;
       Size : Natural := 0;
    end record;
 
    type Cursor is record
-      Current : Nodes.Node_Access;
+      Current : Storage.Node_Access;
    end record;
 
-   No_Element : constant Cursor := (Current => Nodes.Null_Access);
+   No_Element : constant Cursor := (Current => Storage.Null_Access);
 
 end Conts.Lists.Generics;

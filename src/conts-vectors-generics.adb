@@ -22,7 +22,7 @@
 pragma Ada_2012;
 
 package body Conts.Vectors.Generics is
-   use Conts.Vectors.Nodes;
+   use Conts.Vectors.Storage;
 
    ----------------------
    -- Reserve_Capacity --
@@ -31,7 +31,7 @@ package body Conts.Vectors.Generics is
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type) is
    begin
-      Nodes.Resize
+      Storage.Resize
          (Self, Count_Type'Max (Self.Last, Capacity),
           Self.Last, Force => True);
    end Reserve_Capacity;
@@ -42,7 +42,7 @@ package body Conts.Vectors.Generics is
 
    procedure Shrink_To_Fit (Self : in out Vector'Class) is
    begin
-      Nodes.Resize (Self, Self.Last, Self.Last, Force => True);
+      Storage.Resize (Self, Self.Last, Self.Last, Force => True);
    end Shrink_To_Fit;
 
    ------------
@@ -52,14 +52,14 @@ package body Conts.Vectors.Generics is
    procedure Resize
      (Self    : in out Vector'Class;
       Length  : Index_Type;
-      Element : Nodes.Elements.Element_Type)
+      Element : Storage.Elements.Element_Type)
    is
       Old_L : constant Count_Type := Self.Length;
       L     : constant Count_Type := To_Count (Length);
    begin
       if L < Old_L then
          for J in L + 1 .. Old_L loop
-            Nodes.Release_Element (Self, J);
+            Storage.Release_Element (Self, J);
          end loop;
          Self.Last := L;
 
@@ -84,8 +84,8 @@ package body Conts.Vectors.Generics is
    function Element
      (Self : Vector'Class; Position : Index_Type) return Returned_Type is
    begin
-      return Nodes.Elements.To_Return
-        (Nodes.Get_Element (Self, To_Count (Position)));
+      return Storage.Elements.To_Return
+        (Storage.Get_Element (Self, To_Count (Position)));
    end Element;
 
    ---------------------
@@ -99,8 +99,8 @@ package body Conts.Vectors.Generics is
    is
       Pos : constant Count_Type := To_Count (Index);
    begin
-      Nodes.Release_Element (Self, Pos);
-      Nodes.Set_Element (Self, Pos, Nodes.Elements.To_Stored (New_Item));
+      Storage.Release_Element (Self, Pos);
+      Storage.Set_Element (Self, Pos, Storage.Elements.To_Stored (New_Item));
    end Replace_Element;
 
    ------------
@@ -115,11 +115,11 @@ package body Conts.Vectors.Generics is
       L : constant Count_Type := Self.Last;
    begin
       if L + Count > Self.Capacity then
-         Nodes.Resize (Self, L + Count, L, Force => False);
+         Storage.Resize (Self, L + Count, L, Force => False);
       end if;
       for J in 1 .. Count loop
-         Nodes.Set_Element
-           (Self, L + J, Nodes.Elements.To_Stored (Element));
+         Storage.Set_Element
+           (Self, L + J, Storage.Elements.To_Stored (Element));
       end loop;
       Self.Last := Self.Last + Count;
    end Append;
@@ -132,11 +132,11 @@ package body Conts.Vectors.Generics is
       L : constant Count_Type := Self.Last;
    begin
       for J in Min_Index .. L loop
-         Nodes.Release_Element (Self, J);
+         Storage.Release_Element (Self, J);
       end loop;
 
       --  Deallocate all memory
-      Nodes.Resize (Self, 0, L, Force => True);
+      Storage.Resize (Self, 0, L, Force => True);
       Self.Last := Min_Index - 1;
    end Clear;
 
@@ -147,8 +147,8 @@ package body Conts.Vectors.Generics is
    procedure Delete (Self : in out Vector'Class; Index : Index_Type) is
       Idx : constant Count_Type := To_Count (Index);
    begin
-      Nodes.Release_Element (Self, Idx);
-      Nodes.Copy
+      Storage.Release_Element (Self, Idx);
+      Storage.Copy
         (Self, Source => Self,
          Source_From  => Idx + 1,
          Source_To    => Self.Last,
@@ -162,7 +162,7 @@ package body Conts.Vectors.Generics is
 
    procedure Delete_Last (Self : in out Vector'Class) is
    begin
-      Nodes.Release_Element (Self, Self.Last);
+      Storage.Release_Element (Self, Self.Last);
       Self.Last := Self.Last - 1;
    end Delete_Last;
 
@@ -172,7 +172,8 @@ package body Conts.Vectors.Generics is
 
    function Last_Element (Self : Vector'Class) return Returned_Type is
    begin
-      return Nodes.Elements.To_Return (Nodes.Get_Element (Self, Self.Last));
+      return Storage.Elements.To_Return
+         (Storage.Get_Element (Self, Self.Last));
    end Last_Element;
 
    ----------
@@ -190,7 +191,7 @@ package body Conts.Vectors.Generics is
 
    procedure Assign (Self : in out Vector'Class; Source : Vector'Class) is
    begin
-      Nodes.Assign (Self, Source, Last => Source.Last);
+      Storage.Assign (Self, Source, Last => Source.Last);
       Self.Last := Source.Last;
    end Assign;
 
@@ -232,8 +233,8 @@ package body Conts.Vectors.Generics is
    function Element
      (Self : Vector'Class; Position : Cursor) return Returned_Type is
    begin
-      return Nodes.Elements.To_Return
-        (Nodes.Get_Element (Self, Position.Index));
+      return Storage.Elements.To_Return
+        (Storage.Get_Element (Self, Position.Index));
    end Element;
 
    -----------------
@@ -301,24 +302,24 @@ package body Conts.Vectors.Generics is
    is
       L     : constant Count_Type := To_Count (Left);
       R     : constant Count_Type := To_Count (Right);
-      L_Tmp : Stored_Type := Nodes.Get_Element (Self, L);
-      R_Tmp : Stored_Type := Nodes.Get_Element (Self, R);
+      L_Tmp : Stored_Type := Storage.Get_Element (Self, L);
+      R_Tmp : Stored_Type := Storage.Get_Element (Self, R);
    begin
       --  Since we will only keep one copy of the elements in the end, we
       --  should test Movable here, not Copyable.
-      if Nodes.Elements.Movable then
+      if Storage.Elements.Movable then
          declare
             Tmp : constant Stored_Type := L_Tmp;
          begin
-            Nodes.Set_Element (Self, L, R_Tmp);
-            Nodes.Set_Element (Self, R, Tmp);
+            Storage.Set_Element (Self, L, R_Tmp);
+            Storage.Set_Element (Self, R, Tmp);
          end;
 
       else
-         Nodes.Set_Element (Self, L, Nodes.Elements.Copy (R_Tmp));
-         Nodes.Elements.Release (R_Tmp);    --  No longer needed
-         Nodes.Set_Element (Self, L, Nodes.Elements.Copy (L_Tmp));
-         Nodes.Elements.Release (L_Tmp);
+         Storage.Set_Element (Self, L, Storage.Elements.Copy (R_Tmp));
+         Storage.Elements.Release (R_Tmp);    --  No longer needed
+         Storage.Set_Element (Self, L, Storage.Elements.Copy (L_Tmp));
+         Storage.Elements.Release (L_Tmp);
       end if;
    end Swap;
 

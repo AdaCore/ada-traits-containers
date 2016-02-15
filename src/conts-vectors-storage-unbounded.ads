@@ -30,7 +30,7 @@ generic
    with package Elements is new Conts.Elements.Traits (<>);
    type Container_Base_Type is abstract tagged limited private;
    with package Resize_Policy is new Conts.Vectors.Resize_Strategy (<>);
-package Conts.Vectors.Nodes.Unbounded with SPARK_Mode is
+package Conts.Vectors.Storage.Unbounded with SPARK_Mode is
 
    package Impl with SPARK_Mode is
       type Container is abstract new Container_Base_Type with private;
@@ -89,7 +89,7 @@ package Conts.Vectors.Nodes.Unbounded with SPARK_Mode is
         is (Self.Nodes (Index));
    end Impl;
 
-   package Traits is new Conts.Vectors.Nodes.Traits
+   package Traits is new Conts.Vectors.Storage.Traits
      (Elements         => Elements,
       Container        => Impl.Container,
       Max_Capacity     => Impl.Max_Capacity,
@@ -102,4 +102,4 @@ package Conts.Vectors.Nodes.Unbounded with SPARK_Mode is
       Assign           => Impl.Assign,
       Copy             => Impl.Copy);
 
-end Conts.Vectors.Nodes.Unbounded;
+end Conts.Vectors.Storage.Unbounded;
