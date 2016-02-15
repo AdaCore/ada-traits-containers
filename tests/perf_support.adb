@@ -58,7 +58,7 @@ package body Perf_Support is
           Element_Type => Integer,
           Array_Type   => Int_Array);
       function Count_If is new Conts.Algorithms.Count_If
-         (Adaptors.Cursors.Forward, Adaptors.Element_Maps);
+         (Adaptors.Cursors.Forward, Adaptors.Maps.Element);
 
       procedure Run (V : in out Int_Array);
       procedure Run (V : in out Int_Array) is

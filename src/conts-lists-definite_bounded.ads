@@ -43,7 +43,6 @@ package Conts.Lists.Definite_Bounded is
    subtype List is Lists.List;
 
    package Cursors renames Lists.Cursors;
-   package Element_Maps renames Lists.Element_Maps;
-   package Returned_Maps renames Lists.Returned_Maps;
+   package Maps renames Lists.Maps;
 
 end Conts.Lists.Definite_Bounded;

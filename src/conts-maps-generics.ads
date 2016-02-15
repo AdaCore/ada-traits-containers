@@ -299,11 +299,14 @@ package Conts.Maps.Generics is
    -- Getters and setters --
    -------------------------
 
-   package Pair_Maps is new Conts.Properties.Read_Only_Maps
-     (Base_Map'Class, Cursor, Pair_Type, Pair);
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Base_Map'Class, Cursor, Element_Type, As_Element);
-   package Returned_Maps is new Conts.Properties.Read_Only_Maps
-     (Base_Map'Class, Cursor, Elements.Returned, Element);
+   package Maps is
+      package Pair is new Conts.Properties.Read_Only_Maps
+        (Base_Map'Class, Cursor, Pair_Type, Pair);
+      package Element is new Conts.Properties.Read_Only_Maps
+        (Base_Map'Class, Cursor, Element_Type, As_Element);
+      package Returned is new Conts.Properties.Read_Only_Maps
+        (Base_Map'Class, Cursor, Elements.Returned,
+         Conts.Maps.Generics.Element);
+   end Maps;
 
 end Conts.Maps.Generics;

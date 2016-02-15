@@ -47,8 +47,7 @@ package Conts.Vectors.Definite_Unbounded is
    subtype Cursor is Vectors.Cursor;
 
    package Cursors renames Vectors.Cursors;
-   package Element_Maps renames Vectors.Element_Maps;
-   package Returned_Maps renames Vectors.Returned_Maps;
+   package Maps renames Vectors.Maps;
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";

@@ -51,7 +51,6 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
    --  Complexity: O(n)
 
    package Cursors renames Lists.Cursors;
-   package Element_Maps renames Lists.Element_Maps;
-   package Returned_Maps renames Lists.Returned_Maps;
+   package Maps renames Lists.Maps;
 
 end Conts.Lists.Indefinite_Unbounded_SPARK;

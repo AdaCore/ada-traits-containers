@@ -46,8 +46,7 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
    subtype Cursor is Vectors.Cursor;
 
    package Cursors renames Vectors.Cursors;
-   package Element_Maps renames Vectors.Element_Maps;
-   package Returned_Maps renames Vectors.Returned_Maps;
+   package Maps renames Vectors.Maps;
 
    function To_Index (Position : Cursor) return Index_Type
      renames Vectors.To_Index;

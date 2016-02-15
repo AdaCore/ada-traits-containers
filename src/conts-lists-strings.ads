@@ -51,7 +51,6 @@ package Conts.Lists.Strings is
                         Element     => Element_Primitive);
 
    package Cursors renames Lists.Cursors;
-   package Element_Maps renames Lists.Element_Maps;
-   package Returned_Maps renames Lists.Returned_Maps;
+   package Maps renames Lists.Maps;
 
 end Conts.Lists.Strings;

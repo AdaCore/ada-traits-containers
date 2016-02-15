@@ -67,9 +67,11 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (List'Class, Cursor, Element_Type, Element);
-      package Returned_Maps renames Element_Maps;
+      package Maps is
+         package Element is new Conts.Properties.Read_Only_Maps
+           (List'Class, Cursor, Element_Type, Element);
+         package Returned renames Element;
+      end Maps;
    end Bounded_List_Adaptors;
 
    -------------------------------------
@@ -100,9 +102,11 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (List'Class, Cursor, Element_Type, Element);
-      package Returned_Maps renames Element_Maps;
+      package Maps is
+         package Element is new Conts.Properties.Read_Only_Maps
+           (List'Class, Cursor, Element_Type, Element);
+         package Returned renames Element;
+      end Maps;
    end List_Adaptors;
 
    ------------------------------------------------
@@ -137,10 +141,12 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Returned_Maps is new Conts.Properties.Read_Only_Maps
-        (List'Class, Cursor, Returned, Element);
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (List'Class, Cursor, Element_Type, Element);
+      package Maps is
+         package Returned is new Conts.Properties.Read_Only_Maps
+           (List'Class, Cursor, Returned, Element);
+         package Element is new Conts.Properties.Read_Only_Maps
+           (List'Class, Cursor, Element_Type, Element);
+      end Maps;
    end Indefinite_List_Adaptors;
 
    ---------------------------------
@@ -172,9 +178,11 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Vector'Class, Cursor, Element_Type, Element);
-      package Returned_Maps renames Element_Maps;
+      package Maps is
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Vector'Class, Cursor, Element_Type, Element);
+         package Returned renames Element;
+      end Maps;
    end Bounded_Vector_Adaptors;
 
    -------------------------
@@ -205,9 +213,11 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Vector'Class, Cursor, Element_Type, Element);
-      package Returned_Maps renames Element_Maps;
+      package Maps is
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Vector'Class, Cursor, Element_Type, Element);
+         package Returned renames Element;
+      end Maps;
    end Vector_Adaptors;
 
    ------------------------------------
@@ -241,10 +251,12 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Returned_Maps is new Conts.Properties.Read_Only_Maps
-        (Vector'Class, Cursor, Returned, Element);
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Vector'Class, Cursor, Element_Type, Element);
+      package Maps is
+         package Returned is new Conts.Properties.Read_Only_Maps
+           (Vector'Class, Cursor, Returned, Element);
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Vector'Class, Cursor, Element_Type, Element);
+      end Maps;
    end Indefinite_Vector_Adaptors;
 
    -----------------------------
@@ -275,10 +287,12 @@ package Conts.Cursors.Adaptors is
              First          => Hashed_Maps.First);
       end Cursors;
 
-      package Returned_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Returned, Element);
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Element_Type, Element);
+      package Maps is
+         package Returned is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Returned, Element);
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Element_Type, Element);
+      end Maps;
    end Hashed_Maps_Adaptors;
 
    -------------------------------------
@@ -309,10 +323,12 @@ package Conts.Cursors.Adaptors is
              First          => Hashed_Maps.First);
       end Cursors;
 
-      package Returned_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Returned, Element);
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Element_Type, Element);
+      package Maps is
+         package Returned is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Returned, Element);
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Element_Type, Element);
+      end Maps;
    end Bounded_Hashed_Maps_Adaptors;
 
    ------------------------------
@@ -346,10 +362,12 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Returned_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Returned, Element);
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Element_Type, Element);
+      package Maps is
+         package Returned is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Returned, Element);
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Element_Type, Element);
+      end Maps;
    end Ordered_Maps_Adaptors;
 
    ----------------------------------------
@@ -381,10 +399,12 @@ package Conts.Cursors.Adaptors is
              First          => Hashed_Maps.First);
       end Cursors;
 
-      package Returned_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Returned, Element);
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Element_Type, Element);
+      package Maps is
+         package Returned is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Returned, Element);
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Element_Type, Element);
+      end Maps;
    end Indefinite_Hashed_Maps_Adaptors;
 
    -----------------------------------------
@@ -419,10 +439,12 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Returned_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Returned, Element);
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Map'Class, Cursor, Element_Type, Element);
+      package Maps is
+         package Returned is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Returned, Element);
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Map'Class, Cursor, Element_Type, Element);
+      end Maps;
    end Indefinite_Ordered_Maps_Adaptors;
 
    ------------------------
@@ -459,9 +481,11 @@ package Conts.Cursors.Adaptors is
          package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      package Element_Maps is new Conts.Properties.Read_Only_Maps
-        (Array_Type, Index_Type, Element_Type, Element);
-      package Returned_Maps renames Element_Maps;
+      package Maps is
+         package Element is new Conts.Properties.Read_Only_Maps
+           (Array_Type, Index_Type, Element_Type, Element);
+         package Returned renames Element;
+      end Maps;
    end Array_Adaptors;
 
 end Conts.Cursors.Adaptors;

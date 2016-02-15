@@ -226,11 +226,13 @@ package Conts.Lists.Generics with SPARK_Mode is
      (Self : Base_List'Class; Position : Cursor) return Element_Type
      is (Storage.Elements.To_Element (Element (Self, Position)));
 
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Cursors.Forward.Container, Cursors.Forward.Cursor,
-      Element_Type, As_Element);
-   package Returned_Maps is new Conts.Properties.Read_Only_Maps
-     (Cursors.Forward.Container, Cursors.Forward.Cursor,
-      Storage.Elements.Returned, Element);
+   package Maps is
+      package Element is new Conts.Properties.Read_Only_Maps
+        (Cursors.Forward.Container, Cursors.Forward.Cursor,
+         Element_Type, As_Element);
+      package Returned is new Conts.Properties.Read_Only_Maps
+        (Cursors.Forward.Container, Cursors.Forward.Cursor,
+         Storage.Elements.Returned, Conts.Lists.Generics.Element);
+   end Maps;
 
 end Conts.Lists.Generics;

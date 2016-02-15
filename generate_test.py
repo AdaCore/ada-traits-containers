@@ -206,11 +206,11 @@ end {test_name};
         if use_cursor_convert:
             self.args['adaptors'] = ("""
    function Count_If is new Conts.Algorithms.Count_If
-      (Container.Cursors.Forward, Container.Element_Maps);""").format(**self.args)
+      (Container.Cursors.Forward, Container.Maps.Element);""").format(**self.args)
         else:
             self.args['adaptors'] = ("""
    function Count_If is new Conts.Algorithms.Count_If
-      (Container.Cursors.Forward, Container.Returned_Maps);""").format(**self.args)
+      (Container.Cursors.Forward, Container.Maps.Returned);""").format(**self.args)
 
         self.__common()
 
@@ -228,7 +228,7 @@ end {test_name};
    package Adaptors is new Conts.Cursors.Adaptors.""" +
             adaptors + """ (Container);
    function Count_If is new Conts.Algorithms.Count_If
-      (Adaptors.Cursors.Forward, Adaptors.Element_Maps);
+      (Adaptors.Cursors.Forward, Adaptors.Maps.Element);
 """).format(**self.args)
 
         else:
@@ -237,7 +237,7 @@ end {test_name};
    package Adaptors is new Conts.Cursors.Adaptors.""" +
             adaptors + """ (Container);
    function Count_If is new Conts.Algorithms.Count_If
-      (Adaptors.Cursors.Forward, Adaptors.Returned_Maps);
+      (Adaptors.Cursors.Forward, Adaptors.Maps.Returned);
 """).format(**self.args)
 
 
@@ -460,7 +460,7 @@ end {test_name};
     """_Adaptors
         (Container);
     function Count_If is new Conts.Algorithms.Count_If
-       (Adaptors.Cursors.Forward, Adaptors.Element_Maps);"""
+       (Adaptors.Cursors.Forward, Adaptors.Maps.Element);"""
 
         self.__common()
 
@@ -472,11 +472,11 @@ end {test_name};
             if use_cursor_convert:
                 self.args['adaptors'] = ("""
    function Count_If is new Conts.Algorithms.Count_If
-      (Container.Cursors.Forward, Container.Element_Maps);""").format(**self.args)
+      (Container.Cursors.Forward, Container.Maps.Element);""").format(**self.args)
             else:
                 self.args['adaptors'] = ("""
    function Count_If is new Conts.Algorithms.Count_If
-      (Container.Cursors.Forward, Container.Pair_Maps);""").format(**self.args)
+      (Container.Cursors.Forward, Container.Maps.Pair);""").format(**self.args)
 
         self.__common(countif=use_cursors)
 

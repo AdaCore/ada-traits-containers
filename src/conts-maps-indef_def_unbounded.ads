@@ -45,7 +45,7 @@ package Conts.Maps.Indef_Def_Unbounded is
    function "=" (Left : Key_Type; Right : Keys.Traits.Stored) return Boolean
      is (Left = Right.all) with Inline;
 
-   package Maps is new Conts.Maps.Generics
+   package Impl is new Conts.Maps.Generics
      (Keys                => Keys.Traits,
       Elements            => Elements.Traits,
       Hash                => Hash,
@@ -54,16 +54,14 @@ package Conts.Maps.Indef_Def_Unbounded is
       Pool                => Conts.Global_Pool,
       Container_Base_Type => Container_Base_Type);
 
-   subtype Cursor is Maps.Cursor;
-   subtype Map is Maps.Map;
+   subtype Cursor is Impl.Cursor;
+   subtype Map is Impl.Map;
 
-   subtype Pair_Type is Maps.Pair_Type;
-   function Key (P : Pair_Type) return Keys.Traits.Returned renames Maps.Key;
-   function Value (P : Pair_Type) return Element_Type renames Maps.Value;
+   subtype Pair_Type is Impl.Pair_Type;
+   function Key (P : Pair_Type) return Keys.Traits.Returned renames Impl.Key;
+   function Value (P : Pair_Type) return Element_Type renames Impl.Value;
 
-   package Cursors renames Maps.Cursors;
-   package Pair_Maps renames Maps.Pair_Maps;
-   package Element_Maps renames Maps.Element_Maps;
-   package Returned_Maps renames Maps.Returned_Maps;
+   package Cursors renames Impl.Cursors;
+   package Maps renames Impl.Maps;
 
 end Conts.Maps.Indef_Def_Unbounded;
