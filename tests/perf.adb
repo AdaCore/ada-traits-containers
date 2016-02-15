@@ -38,7 +38,6 @@ with List_Ada12_Indef_Unbounded_Integer;
 with List_Controlled_Indef_Unbounded_Integer;
 with List_Controlled_Def_Unbounded_Integer;
 with List_Controlled_Def_Bounded_Integer;
-with List_Limited_Def_Bounded_Integer;
 with List_Limited_Indef_Spark_Unbounded_Spark_Integer;
 
 --  String lists
@@ -59,7 +58,6 @@ with Vector_Ada12_Indef_Unbounded_Integer;
 with Vector_Controlled_Indef_Unbounded_Integer;
 with Vector_Controlled_Def_Unbounded_Integer;
 with Vector_Controlled_Def_Bounded_Integer;
-with Vector_Limited_Def_Bounded_Integer;
 
 --  String vectors
 
@@ -145,8 +143,6 @@ begin
              List_Controlled_Def_Unbounded_Integer'Access);
    Run_Test ("int_list_controlled_def_bounded",
              List_Controlled_Def_Bounded_Integer'Access);
-   Run_Test ("int_list_limited_def_bounded",
-             List_Limited_Def_Bounded_Integer'Access);
    Run_Test ("int_list_spark_indef_unbounded",
              List_Limited_Indef_Spark_Unbounded_Spark_Integer'Access);
 
@@ -184,8 +180,6 @@ begin
              Vector_Controlled_Def_Unbounded_Integer'Access);
    Run_Test ("int_vector_controlled_def_bounded",
              Vector_Controlled_Def_Bounded_Integer'Access);
-   Run_Test ("int_vector_limited_def_bounded",
-             Vector_Limited_Def_Bounded_Integer'Access);
 
    Run_Test ("str_vector_c++", Test_Cpp_Str_Vector'Access);
    Run_Test ("str_vector_ada_indef_unbounded",

@@ -491,11 +491,9 @@ class Vector (List):
 # Integer lists
 
 i = " (Integer);"
-ci = " (Integer, Ada.Finalization.Controlled);"
-li = " (Integer, Conts.Limited_Base);"
+ci = " (Integer);"
 s = " (String);"
-cs = " (String, Ada.Finalization.Controlled);"
-ls = " (String, Conts.Limited_Base);" 
+cs = " (String);"
 
 List("Integer", "Ada12", "Def", "Bounded",
      "package Container is new Ada.Containers.Bounded_Doubly_Linked_Lists" + i,
@@ -526,9 +524,6 @@ List("Integer", "Controlled", "Def", "Unbounded",
     ).gen()
 List("Integer", "Controlled", "Def", "Bounded",
      "package Container is new Conts.Lists.Definite_Bounded" + ci,
-     "with Conts.Lists.Definite_Bounded;").gen()
-List("Integer", "Limited", "Def", "Bounded",
-     "package Container is new Conts.Lists.Definite_Bounded" + li,
      "with Conts.Lists.Definite_Bounded;").gen()
 List("Integer", "Limited", "Indef_Spark", "Unbounded_Spark",
      "package Container is new Conts.Lists.Indefinite_Unbounded_SPARK" + i,
@@ -561,7 +556,7 @@ List("String", "Controlled", "Indef", "Unbounded_Ref",
      favorite=True).gen(use_cursor_convert=True)
 List("Unbounded_String", "Controlled", "Def", "Unbounded",
      "package Container is new Conts.Lists.Definite_Unbounded"
-       + "(Unbounded_String, Ada.Finalization.Controlled);",
+       + "(Unbounded_String);",
      "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
      "with Conts.Lists.Definite_Unbounded;",
      comments=Comments(
@@ -599,7 +594,7 @@ Vector("Integer", "Ada12_No_Checks", "Def", "Unbounded",
      "with Ada.Containers.Vectors;",
      favorite=True).gen_ada2012(disable_checks=True)
 Vector("Integer", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp,
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
      "with Conts.Vectors.Indefinite_Unbounded;").gen()
 Vector("Integer", "Controlled", "Def", "Unbounded",
      "package Container is new Conts.Vectors.Definite_Unbounded" + cp,
@@ -608,10 +603,7 @@ Vector("Integer", "Controlled", "Def", "Unbounded",
            cursorloop='test in Next to see if we reached end of loop'),
      favorite=True).gen()
 Vector("Integer", "Controlled", "Def", "Bounded",
-     "package Container is new Conts.Vectors.Definite_Bounded" + cp,
-     "with Conts.Vectors.Definite_Bounded;").gen()
-Vector("Integer", "Limited", "Def", "Bounded",
-     "package Container is new Conts.Vectors.Definite_Bounded" + lp,
+     "package Container is new Conts.Vectors.Definite_Bounded" + p,
      "with Conts.Vectors.Definite_Bounded;").gen()
 
 # String vectors
@@ -632,7 +624,7 @@ Vector("String", "Ada12_No_Checks", "Indef", "Unbounded",
          adaptors='Indefinite_Vector_Adaptors',
          disable_checks=True)
 Vector("String", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp,
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
      "with Conts.Vectors.Indefinite_Unbounded;").gen()
 Vector("String", "Controlled", "Indef", "Unbounded_Ref",
      "package Container is new Conts.Vectors.Indefinite_Unbounded_Ref" + cp,

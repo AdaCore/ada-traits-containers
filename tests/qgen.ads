@@ -63,16 +63,19 @@ package QGen is
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => As_Block);
-   function As_Block (C : Block_List; P : Lists.Cursor) return Block'Class
+   function As_Block (C : Block_List; P : Lists.Impl.Cursor) return Block'Class
       is (Block'Class (Lists.Element (C, P).Element.all))
       with Inline => True;
+   --   ??? We need to use "Lists.Impl.Cursor", and not "Lists.Cursor" above,
+   --  because of limitations in GNAT and its implementation of the Iterable
+   --  aspect.
 
    type Sum_List is new Block_List with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
                         Has_Element => Has_Element_Primitive,
                         Element     => As_Sum);
-   function As_Sum (C : Sum_List; P : Lists.Cursor) return Sum'Class
+   function As_Sum (C : Sum_List; P : Lists.Impl.Cursor) return Sum'Class
       is (Sum'Class (Lists.Element (C, P).Element.all))
       with Inline => True;
 

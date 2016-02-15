@@ -28,42 +28,44 @@ package body Conts.Maps.Generics is
    Min_Size : constant Hash_Type := 2 ** 3;
    --  Minimum size for maps. Must be a power of 2.
 
-   procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-     (Slot_Table, Slot_Table_Access);
+   package body Impl is
 
-   function Find_Slot
-     (Self  : Map'Class;
-      Key   : Keys.Element_Type;
-      H     : Hash_Type) return Hash_Type;
-   --  Probe the table and look for the place where the element with that
-   --  key would be inserted (or already exists).
+      procedure Unchecked_Free is new Ada.Unchecked_Deallocation
+        (Slot_Table, Slot_Table_Access);
 
-   procedure Internal_Insert
-     (Self  : in out Map'Class;
-      Key   : Keys.Element_Type;
-      H     : Hash_Type;
-      Value : Elements.Element_Type);
-   --  Internal insert function.
+      function Find_Slot
+        (Self  : Base_Map'Class;
+         Key   : Keys.Element_Type;
+         H     : Hash_Type) return Hash_Type;
+      --  Probe the table and look for the place where the element with that
+      --  key would be inserted (or already exists).
 
-   ---------------
-   -- Find_Slot --
-   ---------------
+      procedure Internal_Insert
+        (Self  : in out Base_Map'Class;
+         Key   : Keys.Element_Type;
+         H     : Hash_Type;
+         Value : Elements.Element_Type);
+      --  Internal insert function.
 
-   function Find_Slot
-     (Self  : Map'Class;
-      Key   : Keys.Element_Type;
-      H     : Hash_Type) return Hash_Type
-   is
-      Candidate   : Hash_Type := H and Self.Table'Last;
-      First_Dummy : Hash_Type := Hash_Type'Last;
-      S           : Slot;
-      Prob        : Probing;
-   begin
-      Prob.Initialize_Probing (Hash => H, Size => Self.Table'Last);
+      ---------------
+      -- Find_Slot --
+      ---------------
 
-      loop
-         S := Self.Table (Candidate);
-         case S.Kind is
+      function Find_Slot
+        (Self  : Base_Map'Class;
+         Key   : Keys.Element_Type;
+         H     : Hash_Type) return Hash_Type
+      is
+         Candidate   : Hash_Type := H and Self.Table'Last;
+         First_Dummy : Hash_Type := Hash_Type'Last;
+         S           : Slot;
+         Prob        : Probing;
+      begin
+         Prob.Initialize_Probing (Hash => H, Size => Self.Table'Last);
+
+         loop
+            S := Self.Table (Candidate);
+            case S.Kind is
             when Empty =>
                exit;
 
@@ -77,33 +79,33 @@ package body Conts.Maps.Generics is
 
             when Full =>
                exit when S.Hash = H and then "=" (Key, S.Key);
-         end case;
+            end case;
 
-         Candidate := Prob.Next_Probing (Candidate) and Self.Table'Last;
-      end loop;
+            Candidate := Prob.Next_Probing (Candidate) and Self.Table'Last;
+         end loop;
 
-      if First_Dummy /= Hash_Type'Last then
-         return First_Dummy;
-      else
-         return Candidate;
-      end if;
-   end Find_Slot;
+         if First_Dummy /= Hash_Type'Last then
+            return First_Dummy;
+         else
+            return Candidate;
+         end if;
+      end Find_Slot;
 
-   ---------------------
-   -- Internal_Insert --
-   ---------------------
+      ---------------------
+      -- Internal_Insert --
+      ---------------------
 
-   procedure Internal_Insert
-     (Self  : in out Map'Class;
-      Key   : Keys.Element_Type;
-      H     : Hash_Type;
-      Value : Elements.Element_Type)
-   is
-      Index    : constant Hash_Type := Find_Slot (Self, Key, H);
-      S        : Slot renames Self.Table (Index);
-      Old_Kind : constant Slot_Kind := S.Kind;
-   begin
-      case Old_Kind is
+      procedure Internal_Insert
+        (Self  : in out Base_Map'Class;
+         Key   : Keys.Element_Type;
+         H     : Hash_Type;
+         Value : Elements.Element_Type)
+      is
+         Index    : constant Hash_Type := Find_Slot (Self, Key, H);
+         S        : Slot renames Self.Table (Index);
+         Old_Kind : constant Slot_Kind := S.Kind;
+      begin
+         case Old_Kind is
          when Empty =>
             S := (Hash  => H,
                   Kind  => Full,
@@ -122,279 +124,280 @@ package body Conts.Maps.Generics is
          when Full =>
             Elements.Release (S.Value);
             S.Value := Elements.To_Stored (Value);
-      end case;
-   end Internal_Insert;
+         end case;
+      end Internal_Insert;
 
-   --------------
-   -- Capacity --
-   --------------
+      ------------
+      -- Adjust --
+      ------------
 
-   function Capacity (Self : Map'Class) return Count_Type is
-   begin
-      if Self.Table = null then
-         return 0;
-      else
-         return Self.Table'Length;
-      end if;
-   end Capacity;
+      procedure Adjust (Self : in out Base_Map) is
+         Tmp : constant Slot_Table_Access := Self.Table;
+      begin
+         if Tmp /= null then
 
-   ------------
-   -- Resize --
-   ------------
-
-   procedure Resize
-     (Self     : in out Map'Class;
-      New_Size : Hash_Type)
-   is
-      Size      : Hash_Type := Min_Size;
-      Tmp       : Slot_Table_Access;
-      Candidate : Hash_Type;
-      Prob      : Probing;
-   begin
-      --  Find smallest valid size greater than New_Size
-
-      while Size < New_Size loop
-         Size := Size * 2;
-      end loop;
-
-      Tmp := Self.Table;
-      Self.Table := new Slot_Table (0 .. Size - 1);
-
-      --  Reinsert all the elements in the new table. We do not need to
-      --  recompute their hashes, which are unchanged an cached. Since we
-      --  know there are no duplicate keys either, we can simplify the
-      --  search for the slot, in particular no need to compare the keys.
-      --  There are also no dummy slots
-
-      if Tmp /= null then
-         for E in Tmp'Range loop
-            if Tmp (E).Kind = Full then
-               Prob.Initialize_Probing
-                 (Hash => Tmp (E).Hash, Size => Self.Table'Last);
-
-               Candidate := Tmp (E).Hash and Self.Table'Last;
-               loop
-                  if Self.Table (Candidate).Kind = Empty then
-                     Self.Table (Candidate) :=
+            if Elements.Copyable and then Keys.Copyable then
+               Self.Table := new Slot_Table'(Tmp.all);
+            else
+               Self.Table := new Slot_Table (Tmp'Range);
+               for E in Self.Table'Range loop
+                  if Tmp (E).Kind = Full then
+                     Self.Table (E) :=
                        (Hash  => Tmp (E).Hash,
                         Kind  => Full,
-                        Key   => Tmp (E).Key,
-                        Value => Tmp (E).Value);
-                     exit;
+                        Key   =>
+                          (if Keys.Copyable
+                           then Tmp (E).Key
+                           else Keys.Copy (Tmp (E).Key)),
+                        Value =>
+                          (if Elements.Copyable
+                           then Tmp (E).Value
+                           else Elements.Copy (Tmp (E).Value)));
+                  else
+                     Self.Table (E) := Tmp (E);
                   end if;
-
-                  Candidate := Prob.Next_Probing (Candidate)
-                    and Self.Table'Last;
                end loop;
             end if;
-         end loop;
-
-         Unchecked_Free (Tmp);
-      end if;
-   end Resize;
-
-   ---------
-   -- Set --
-   ---------
-
-   procedure Set
-     (Self     : in out Map'Class;
-      Key      : Keys.Element_Type;
-      Value    : Elements.Element_Type)
-   is
-      H        : constant Hash_Type := Hash (Key);
-      Used     : constant Hash_Type := Self.Used;
-      New_Size : Hash_Type;
-   begin
-      --  At least one empty slot
-      pragma Assert (Self.Fill <= Self.Capacity);
-
-      if Self.Table = null then
-         Resize (Self, Min_Size);
-      end if;
-
-      Internal_Insert (Self, Key, H, Value);
-
-      --  We might need to resize if we just added a key
-
-      if Self.Used > Used then
-         New_Size := Resize_Strategy
-           (Used     => Self.Used,
-            Fill     => Self.Fill,
-            Capacity => Self.Capacity);
-         if New_Size /= 0 then
-            Resize (Self, New_Size);
          end if;
-      end if;
-   end Set;
+      end Adjust;
 
-   ---------
-   -- Get --
-   ---------
+      --------------
+      -- Finalize --
+      --------------
 
-   function Get
-     (Self     : Map'Class;
-      Key      : Keys.Element_Type)
-         return Elements.Returned_Type is
-   begin
-      if Self.Table /= null then
-         declare
-            H     : constant Hash_Type := Hash (Key);
-            Index : constant Hash_Type := Find_Slot (Self, Key, H);
-         begin
-            if Self.Table (Index).Kind = Full then
-               return Elements.To_Return (Self.Table (Index).Value);
-            end if;
-         end;
-      end if;
-      raise Constraint_Error with "Key not in map";
-   end Get;
+      procedure Finalize (Self : in out Base_Map) is
+      begin
+         Clear (Self);
+      end Finalize;
 
-   ------------
-   -- Delete --
-   ------------
+      -----------
+      -- First --
+      -----------
 
-   procedure Delete
-     (Self     : in out Map'Class;
-      Key      : Keys.Element_Type) is
-   begin
-      if Self.Table /= null then
-         declare
-            H     : constant Hash_Type := Hash (Key);
-            Index : constant Hash_Type := Find_Slot (Self, Key, H);
-            S     : Slot renames Self.Table (Index);
-         begin
-            if S.Kind = Full then
-               Keys.Release (S.Key);
-               Elements.Release (S.Value);
-               S.Kind := Dummy;
-               Self.Used := Self.Used - 1;
-               --   unchanged: Self.Fill
-            end if;
-         end;
-      end if;
-   end Delete;
+      function First (Self : Base_Map'Class) return Cursor is
+         C : Cursor;
+      begin
+         if Self.Table = null then
+            return No_Element;
+         end if;
 
-   -----------
-   -- Clear --
-   -----------
-
-   procedure Clear (Self : in out Map'Class) is
-   begin
-      if Self.Table /= null then
-         for S of Self.Table.all loop
-            if S.Kind = Full then
-               Keys.Release (S.Key);
-               Elements.Release (S.Value);
-            end if;
+         C.Index := Self.Table'First;
+         while C.Index <= Self.Table'Last
+           and then Self.Table (C.Index).Kind /= Full
+         loop
+            C.Index := C.Index + 1;
          end loop;
-         Unchecked_Free (Self.Table);
-         Self.Used := 0;
-         Self.Fill := 0;
-      end if;
-   end Clear;
 
-   ------------
-   -- Adjust --
-   ------------
+         return C;
+      end First;
 
-   procedure Adjust (Self : in out Map) is
-      Tmp : constant Slot_Table_Access := Self.Table;
-   begin
-      if Tmp /= null then
+      -----------------
+      -- Has_Element --
+      -----------------
 
-         if Elements.Copyable and then Keys.Copyable then
-            Self.Table := new Slot_Table'(Tmp.all);
+      function Has_Element
+        (Self : Base_Map'Class; Position : Cursor) return Boolean is
+      begin
+         return Position.Index <= Self.Table'Last;
+      end Has_Element;
+
+      ----------
+      -- Next --
+      ----------
+
+      function Next
+        (Self : Base_Map'Class; Position : Cursor) return Cursor
+      is
+         C : Cursor := (Index => Position.Index + 1);
+      begin
+         while C.Index <= Self.Table'Last
+           and then Self.Table (C.Index).Kind /= Full
+         loop
+            C.Index := C.Index + 1;
+         end loop;
+         return C;
+      end Next;
+
+      ----------
+      -- Pair --
+      ----------
+
+      function Pair
+        (Self : Base_Map'Class; Position : Cursor) return Pair_Type
+      is
+         P : Slot renames Self.Table (Position.Index);
+      begin
+         return (Key => P.Key, Value => P.Value);
+      end Pair;
+
+      --------------
+      -- Capacity --
+      --------------
+
+      function Capacity (Self : Base_Map'Class) return Count_Type is
+      begin
+         if Self.Table = null then
+            return 0;
          else
-            Self.Table := new Slot_Table (Tmp'Range);
-            for E in Self.Table'Range loop
+            return Self.Table'Length;
+         end if;
+      end Capacity;
+
+      ------------
+      -- Resize --
+      ------------
+
+      procedure Resize
+        (Self     : in out Base_Map'Class;
+         New_Size : Hash_Type)
+      is
+         Size      : Hash_Type := Min_Size;
+         Tmp       : Slot_Table_Access;
+         Candidate : Hash_Type;
+         Prob      : Probing;
+      begin
+         --  Find smallest valid size greater than New_Size
+
+         while Size < New_Size loop
+            Size := Size * 2;
+         end loop;
+
+         Tmp := Self.Table;
+         Self.Table := new Slot_Table (0 .. Size - 1);
+
+         --  Reinsert all the elements in the new table. We do not need to
+         --  recompute their hashes, which are unchanged an cached. Since we
+         --  know there are no duplicate keys either, we can simplify the
+         --  search for the slot, in particular no need to compare the keys.
+         --  There are also no dummy slots
+
+         if Tmp /= null then
+            for E in Tmp'Range loop
                if Tmp (E).Kind = Full then
-                  Self.Table (E) :=
-                    (Hash  => Tmp (E).Hash,
-                     Kind  => Full,
-                     Key   =>
-                       (if Keys.Copyable
-                        then Tmp (E).Key
-                        else Keys.Copy (Tmp (E).Key)),
-                     Value =>
-                       (if Elements.Copyable
-                        then Tmp (E).Value
-                        else Elements.Copy (Tmp (E).Value)));
-               else
-                  Self.Table (E) := Tmp (E);
+                  Prob.Initialize_Probing
+                    (Hash => Tmp (E).Hash, Size => Self.Table'Last);
+
+                  Candidate := Tmp (E).Hash and Self.Table'Last;
+                  loop
+                     if Self.Table (Candidate).Kind = Empty then
+                        Self.Table (Candidate) :=
+                          (Hash  => Tmp (E).Hash,
+                           Kind  => Full,
+                           Key   => Tmp (E).Key,
+                           Value => Tmp (E).Value);
+                        exit;
+                     end if;
+
+                     Candidate := Prob.Next_Probing (Candidate)
+                       and Self.Table'Last;
+                  end loop;
                end if;
             end loop;
+
+            Unchecked_Free (Tmp);
          end if;
-      end if;
-   end Adjust;
+      end Resize;
 
-   --------------
-   -- Finalize --
-   --------------
+      ---------
+      -- Set --
+      ---------
 
-   procedure Finalize (Self : in out Map) is
-   begin
-      Clear (Self);
-   end Finalize;
+      procedure Set
+        (Self     : in out Base_Map'Class;
+         Key      : Keys.Element_Type;
+         Value    : Elements.Element_Type)
+      is
+         H        : constant Hash_Type := Hash (Key);
+         Used     : constant Hash_Type := Self.Used;
+         New_Size : Hash_Type;
+      begin
+         --  At least one empty slot
+         pragma Assert (Self.Fill <= Self.Capacity);
 
-   -----------
-   -- First --
-   -----------
+         if Self.Table = null then
+            Resize (Self, Min_Size);
+         end if;
 
-   function First (Self : Map'Class) return Cursor is
-      C : Cursor;
-   begin
-      if Self.Table = null then
-         return No_Element;
-      end if;
+         Internal_Insert (Self, Key, H, Value);
 
-      C.Index := Self.Table'First;
-      while C.Index <= Self.Table'Last
-        and then Self.Table (C.Index).Kind /= Full
-      loop
-         C.Index := C.Index + 1;
-      end loop;
+         --  We might need to resize if we just added a key
 
-      return C;
-   end First;
+         if Self.Used > Used then
+            New_Size := Resize_Strategy
+              (Used     => Self.Used,
+               Fill     => Self.Fill,
+               Capacity => Self.Capacity);
+            if New_Size /= 0 then
+               Resize (Self, New_Size);
+            end if;
+         end if;
+      end Set;
 
-   ----------
-   -- Pair --
-   ----------
+      ---------
+      -- Get --
+      ---------
 
-   function Pair
-     (Self : Map'Class; Position : Cursor) return Pair_Type
-   is
-      P : Slot renames Self.Table (Position.Index);
-   begin
-      return (Key => P.Key, Value => P.Value);
-   end Pair;
+      function Get
+        (Self     : Base_Map'Class;
+         Key      : Keys.Element_Type)
+      return Elements.Returned_Type is
+      begin
+         if Self.Table /= null then
+            declare
+               H     : constant Hash_Type := Hash (Key);
+               Index : constant Hash_Type := Find_Slot (Self, Key, H);
+            begin
+               if Self.Table (Index).Kind = Full then
+                  return Elements.To_Return (Self.Table (Index).Value);
+               end if;
+            end;
+         end if;
+         raise Constraint_Error with "Key not in map";
+      end Get;
 
-   -----------------
-   -- Has_Element --
-   -----------------
+      ------------
+      -- Delete --
+      ------------
 
-   function Has_Element
-     (Self : Map'Class; Position : Cursor) return Boolean is
-   begin
-      return Position.Index <= Self.Table'Last;
-   end Has_Element;
+      procedure Delete
+        (Self     : in out Base_Map'Class;
+         Key      : Keys.Element_Type) is
+      begin
+         if Self.Table /= null then
+            declare
+               H     : constant Hash_Type := Hash (Key);
+               Index : constant Hash_Type := Find_Slot (Self, Key, H);
+               S     : Slot renames Self.Table (Index);
+            begin
+               if S.Kind = Full then
+                  Keys.Release (S.Key);
+                  Elements.Release (S.Value);
+                  S.Kind := Dummy;
+                  Self.Used := Self.Used - 1;
+                  --   unchanged: Self.Fill
+               end if;
+            end;
+         end if;
+      end Delete;
 
-   ----------
-   -- Next --
-   ----------
+      -----------
+      -- Clear --
+      -----------
 
-   function Next
-     (Self : Map'Class; Position : Cursor) return Cursor
-   is
-      C : Cursor := (Index => Position.Index + 1);
-   begin
-      while C.Index <= Self.Table'Last
-        and then Self.Table (C.Index).Kind /= Full
-      loop
-         C.Index := C.Index + 1;
-      end loop;
-      return C;
-   end Next;
+      procedure Clear (Self : in out Base_Map'Class) is
+      begin
+         if Self.Table /= null then
+            for S of Self.Table.all loop
+               if S.Kind = Full then
+                  Keys.Release (S.Key);
+                  Elements.Release (S.Value);
+               end if;
+            end loop;
+            Unchecked_Free (Self.Table);
+            Self.Used := 0;
+            Self.Fill := 0;
+         end if;
+      end Clear;
+   end Impl;
 
 end Conts.Maps.Generics;

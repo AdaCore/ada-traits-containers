@@ -15,18 +15,19 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
       begin
          while Has_Element (Element_Lists.List (L), Cu) loop
             R := Add (R, Cu, I);
-            Next (Element_Lists.List (L), Cu);
+            Next (L, Cu);
             I := I + 1;
          end loop;
          return R;
       end Positions;
+
       function Model (L : List'Class) return Sequence is
          Cu : Cursor := Cursor (First (Element_Lists.List (L)));
          R  : Sequence;
       begin
          while Has_Element (Element_Lists.List (L), Cu) loop
             R := Add (R, Element (Element_Lists.List (L), Cu));
-            Next (Element_Lists.List (L), Cu);
+            Next (L, Cu);
          end loop;
          return R;
       end Model;

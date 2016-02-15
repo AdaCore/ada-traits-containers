@@ -19,46 +19,31 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Unbounded lists of unconstrained elements
+--  Unbounded controlled lists of unconstrained elements
 
 pragma Ada_2012;
+with Ada.Finalization;
 with Conts.Elements.Indefinite;
 with Conts.Lists.Generics;
-with Conts.Lists.Cursors;
 with Conts.Lists.Storage.Unbounded;
-with Conts.Properties;
 
 generic
    type Element_Type (<>) is private;
-   type Container_Base_Type is abstract tagged limited private;
 package Conts.Lists.Indefinite_Unbounded is
 
    package Elements is new Conts.Elements.Indefinite
       (Element_Type, Pool => Conts.Global_Pool);
    package Storage is new Conts.Lists.Storage.Unbounded
       (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type,
+       Container_Base_Type => Ada.Finalization.Controlled,
        Pool                => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;
-   subtype Returned is Elements.Returned;
-   type List is new Lists.List with null record
-      with Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   subtype List is Lists.List;
 
-   --  ??? Should we provide a Copy function ?
-   --  This cannot be provided in the generic package, since the type could
-   --  be constrained and/or limited, so it has to be provided in all child
-   --  packages. However, when the type is controlled it is much easier to
-   --  just use the standard assignment operator.
-
-   package Cursors is new Conts.Lists.Cursors (Lists);
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Element_Type, Lists.Element);
-   package Returned_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Returned, Lists.Element);
+   package Cursors renames Lists.Cursors;
+   package Element_Maps renames Lists.Element_Maps;
+   package Returned_Maps renames Lists.Returned_Maps;
 
 end Conts.Lists.Indefinite_Unbounded;

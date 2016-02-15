@@ -25,8 +25,6 @@
 pragma Ada_2012;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Maps.Generics;
-with Conts.Maps.Cursors;
-with Conts.Properties;
 
 generic
    type Key_Type (<>) is private;
@@ -56,29 +54,17 @@ package Conts.Maps.Indef_Indef_Unbounded is
       Container_Base_Type => Container_Base_Type);
 
    subtype Cursor is Maps.Cursor;
+   subtype Map is Maps.Map;
+   subtype Returned is Maps.Returned_Type;
 
    subtype Pair_Type is Maps.Pair_Type;
    function Key (P : Pair_Type) return Keys.Traits.Returned renames Maps.Key;
    function Value (P : Pair_Type) return Elements.Traits.Returned
       renames Maps.Value;
 
-   type Map is new Maps.Map with null record
-     with Constant_Indexing => Constant_Reference,
-          Iterable => (First       => First_Primitive,
-                       Next        => Next_Primitive,
-                       Has_Element => Has_Element_Primitive,
-                       Element     => Element_Primitive);
-
-   function Constant_Reference
-     (Self : Map; Position : Key_Type) return Element_Type
-     is (Maps.Get (Self, Position)) with Inline;
-
-   package Cursors is new Conts.Maps.Cursors (Maps);
-   package Pair_Maps is new Conts.Properties.Read_Only_Maps
-     (Maps.Map'Class, Cursor, Pair_Type, Maps.Pair);
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Maps.Map'Class, Cursor, Element_Type, Maps.As_Element);
-   package Returned_Maps is new Conts.Properties.Read_Only_Maps
-     (Maps.Map'Class, Cursor, Elements.Traits.Returned, Maps.Element);
+   package Cursors renames Maps.Cursors;
+   package Pair_Maps renames Maps.Pair_Maps;
+   package Element_Maps renames Maps.Element_Maps;
+   package Returned_Maps renames Maps.Returned_Maps;
 
 end Conts.Maps.Indef_Indef_Unbounded;

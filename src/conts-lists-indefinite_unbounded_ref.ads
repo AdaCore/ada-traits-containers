@@ -24,52 +24,29 @@
 --  of the element, but is sometimes slightly less convenient to use.
 
 pragma Ada_2012;
+with Ada.Finalization;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Lists.Generics;
-with Conts.Lists.Cursors;
 with Conts.Lists.Storage.Unbounded;
-with Conts.Properties;
 
 generic
    type Element_Type (<>) is private;
-   type Container_Base_Type is abstract tagged limited private;
 package Conts.Lists.Indefinite_Unbounded_Ref is
 
    package Elements is new Conts.Elements.Indefinite_Ref
       (Element_Type, Pool => Conts.Global_Pool);
    package Storage is new Conts.Lists.Storage.Unbounded
       (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type,
+       Container_Base_Type => Ada.Finalization.Controlled,
        Pool                => Conts.Global_Pool);
    package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Ref_Type is Elements.Ref_Type;
    subtype Cursor is Lists.Cursor;
-   type List is new Lists.List with null record
-     with Constant_Indexing => Constant_Reference,
-          Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   subtype List is Lists.List;
 
-   --  ??? Should we provide a Copy function ?
-   --  This cannot be provided in the generic package, since the type could
-   --  be constrained and/or limited, so it has to be provided in all child
-   --  packages. However, when the type is controlled it is much easier to
-   --  just use the standard assignment operator.
-
-   function Constant_Reference
-     (Self : List; Position : Cursor) return Element_Type
-     is (Lists.Element (Self, Position)) with Inline;
-
-   function As_Element
-     (Self : Lists.List'Class; Position : Cursor) return Element_Type
-   is (Lists.Element (Self, Position).Element.all);
-
-   package Cursors is new Conts.Lists.Cursors (Lists);
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Element_Type, As_Element);
-   package Returned_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Ref_Type, Lists.Element);
+   package Cursors renames Lists.Cursors;
+   package Element_Maps renames Lists.Element_Maps;
+   package Returned_Maps renames Lists.Returned_Maps;
 
 end Conts.Lists.Indefinite_Unbounded_Ref;

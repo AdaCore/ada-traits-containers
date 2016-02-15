@@ -31,9 +31,7 @@ pragma Ada_2012;
 with Ada.Finalization;
 with Conts.Elements.Arrays;
 with Conts.Lists.Generics;
-with Conts.Lists.Cursors;
 with Conts.Lists.Storage.Unbounded;
-with Conts.Properties;
 
 package Conts.Lists.Strings is
 
@@ -52,15 +50,8 @@ package Conts.Lists.Strings is
                         Has_Element => Has_Element_Primitive,
                         Element     => Element_Primitive);
 
-   package Cursors is new Conts.Lists.Cursors (Lists);
-
-   function Element
-     (Self : Lists.List'Class; Position : Cursor) return String
-   is (Lists.Element (Self, Position).Element.all);
-
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, String, Element);
-   package Return_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Elements.Traits.Returned, Lists.Element);
+   package Cursors renames Lists.Cursors;
+   package Element_Maps renames Lists.Element_Maps;
+   package Returned_Maps renames Lists.Returned_Maps;
 
 end Conts.Lists.Strings;

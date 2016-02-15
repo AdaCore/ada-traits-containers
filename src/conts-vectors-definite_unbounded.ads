@@ -19,16 +19,14 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Unbounded Vectors of constrained elements.
+--  Unbounded vectors of constrained elements.
 --  Compared with standard Ada containers, this is saving half of the memory
 --  allocations, so much more efficient in general.
 
 pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Vectors.Generics;
-with Conts.Vectors.Cursors;
 with Conts.Vectors.Storage.Unbounded;
-with Conts.Properties;
 
 generic
    type Index_Type is (<>);
@@ -45,27 +43,17 @@ package Conts.Vectors.Definite_Unbounded is
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
-   type Vector is new Vectors.Vector with null record
-      with Constant_Indexing => Constant_Reference,
-           Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
-
-   function Constant_Reference
-     (Self : Vector; Position : Index_Type) return Element_Type
-     is (Vectors.Element (Self, Position)) with Inline;
-
-   package Cursors is new Conts.Vectors.Cursors (Vectors);
+   subtype Vector is Vectors.Vector;
    subtype Cursor is Vectors.Cursor;
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Vectors.Vector'Class, Cursor, Element_Type, Vectors.Element);
-   package Returned_Maps renames Element_Maps;
+
+   package Cursors renames Vectors.Cursors;
+   package Element_Maps renames Vectors.Element_Maps;
+   package Returned_Maps renames Vectors.Returned_Maps;
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";
    procedure Swap
-      (Self : in out Vectors.Vector'Class; Left, Right : Index_Type)
+      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
       renames Vectors.Swap;
 
 end Conts.Vectors.Definite_Unbounded;

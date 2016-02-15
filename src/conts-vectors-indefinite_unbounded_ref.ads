@@ -19,14 +19,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Unbounded Vectors of unconstrained elements
+--  Unbounded vectors of unconstrained elements
 
 pragma Ada_2012;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Vectors.Generics;
-with Conts.Vectors.Cursors;
 with Conts.Vectors.Storage.Unbounded;
-with Conts.Properties;
 
 generic
    type Index_Type is (<>);
@@ -44,42 +42,19 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
-   type Vector is new Vectors.Vector with null record
-      with Constant_Indexing => Constant_Reference,
-           Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   subtype Vector is Vectors.Vector;
+   subtype Cursor is Vectors.Cursor;
 
-   function To_Index (Position : Vectors.Cursor) return Index_Type
-                   renames Vectors.To_Index;
+   package Cursors renames Vectors.Cursors;
+   package Element_Maps renames Vectors.Element_Maps;
+   package Returned_Maps renames Vectors.Returned_Maps;
 
-   --  ??? Should we provide a Copy function ?
-   --  This cannot be provided in the generic package, since the type could
-   --  be constrained and/or limited, so it has to be provided in all child
-   --  packages. However, when the type is controlled it is much easier to
-   --  just use the standard assignment operator.
-
-   function Constant_Reference
-     (Self : Vector; Position : Index_Type) return Element_Type
-   is (Vectors.Element (Self, Position)) with Inline;
-
-   package Cursors is new Conts.Vectors.Cursors (Vectors);
-   subtype Cursor is Cursors.Forward.Cursor;
-
-   function As_Element
-     (Self     : Vectors.Vector'Class;
-      Position : Cursor) return Element_Type
-     is (Vectors.Element (Self, Position).Element.all);
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Vectors.Vector'Class, Cursor, Element_Type, As_Element);
-   package Returned_Maps is new Conts.Properties.Read_Only_Maps
-     (Vectors.Vector'Class, Cursor, Elements.Traits.Returned, Vectors.Element);
-
+   function To_Index (Position : Cursor) return Index_Type
+     renames Vectors.To_Index;
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";
    procedure Swap
-      (Self : in out Vectors.Vector'Class; Left, Right : Index_Type)
+      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
       renames Vectors.Swap;
 
 end Conts.Vectors.Indefinite_Unbounded_Ref;

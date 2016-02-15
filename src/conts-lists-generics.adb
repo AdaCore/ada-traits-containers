@@ -27,169 +27,174 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
 
    use Storage;
 
-   ------------
-   -- Append --
-   ------------
+   package body Impl is
 
-   procedure Append
-      (Self    : in out List'Class;
-       Element : Element_Type)
-   is
-      N : Node_Access;
-   begin
-      Allocate
-         (Self,
-          Storage.Elements.To_Stored (Element),
-          New_Node => N);
+      -----------
+      -- Clear --
+      -----------
 
-      if Self.Tail = Null_Access then
-         Self.Tail := N;
-         Self.Head := Self.Tail;
-      else
-         Set_Next (Self, Self.Tail, Next => N);
-         Set_Previous (Self, N, Previous => Self.Tail);
-         Self.Tail := N;
-      end if;
+      procedure Clear (Self : in out Base_List'Class) is
+         C : Cursor := Self.First;
+         N : Cursor;
+         E : Stored_Type;
+      begin
+         while Self.Has_Element (C) loop
+            N := Self.Next (C);
+            E := Get_Element (Self, C.Current);
+            Elements.Release (E);
+            Storage.Release_Node (Self, C.Current);
+            C := N;
+         end loop;
+         Storage.Release (Self);
 
-      Self.Size := Self.Size + 1;
-   end Append;
+         Self.Head := Storage.Null_Access;
+         Self.Tail := Storage.Null_Access;
+         Self.Size := 0;
+      end Clear;
 
-   -----------
-   -- Clear --
-   -----------
+      -----------
+      -- First --
+      -----------
 
-   procedure Clear (Self : in out List'Class) is
-      C : Cursor := Self.First;
-      N : Cursor;
-      E : Stored_Type;
-   begin
-      while Self.Has_Element (C) loop
-         N := Self.Next (C);
-         E := Get_Element (Self, C.Current);
-         Elements.Release (E);
-         Storage.Release_Node (Self, C.Current);
-         C := N;
-      end loop;
-      Storage.Release (Self);
+      function First (Self : Base_List'Class) return Cursor is
+      begin
+         return (Current => Self.Head);
+      end First;
 
-      Self.Head := Storage.Null_Access;
-      Self.Tail := Storage.Null_Access;
-      Self.Size := 0;
-   end Clear;
+      -------------
+      -- Element --
+      -------------
 
-   ------------
-   -- Length --
-   ------------
+      function Element
+        (Self : Base_List'Class; Position : Cursor) return Returned_Type is
+      begin
+         return Storage.Elements.To_Return
+           (Get_Element (Self, Position.Current));
+      end Element;
 
-   function Length (Self : List'Class) return Count_Type is
-   begin
-      return Self.Size;
-   end Length;
+      -----------------
+      -- Has_Element --
+      -----------------
 
-   -----------
-   -- First --
-   -----------
+      function Has_Element
+        (Self : Base_List'Class; Position : Cursor) return Boolean
+      is
+         pragma Unreferenced (Self);
+      begin
+         return Position.Current /= Null_Access;
+      end Has_Element;
 
-   function First (Self : List'Class) return Cursor is
-   begin
-      return (Current => Self.Head);
-   end First;
+      ----------
+      -- Next --
+      ----------
 
-   -------------
-   -- Element --
-   -------------
+      function Next
+        (Self : Base_List'Class; Position : Cursor) return Cursor is
+      begin
+         if Position.Current = Null_Access then
+            return Position;
+         else
+            return (Current => Get_Next (Self, Position.Current));
+         end if;
+      end Next;
 
-   function Element
-      (Self : List'Class; Position : Cursor) return Returned_Type is
-   begin
-      --  Precondition ensures there is an element at that position
-      return Storage.Elements.To_Return (Get_Element (Self, Position.Current));
-   end Element;
+      --------------
+      -- Previous --
+      --------------
 
-   -----------------
-   -- Has_Element --
-   -----------------
+      function Previous
+        (Self : Base_List'Class; Position : Cursor) return Cursor is
+      begin
+         if Position.Current = Null_Access then
+            return Position;
+         else
+            return (Current => Get_Previous (Self, Position.Current));
+         end if;
+      end Previous;
 
-   function Has_Element
-      (Self : List'Class; Position : Cursor) return Boolean
-   is
-      pragma Unreferenced (Self);
-   begin
-      return Position.Current /= Null_Access;
-   end Has_Element;
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append
+        (Self    : in out Base_List'Class;
+         Element : Element_Type)
+      is
+         N : Node_Access;
+      begin
+         Allocate
+           (Self,
+            Storage.Elements.To_Stored (Element),
+            New_Node => N);
+
+         if Self.Tail = Null_Access then
+            Self.Tail := N;
+            Self.Head := Self.Tail;
+         else
+            Set_Next (Self, Self.Tail, Next => N);
+            Set_Previous (Self, N, Previous => Self.Tail);
+            Self.Tail := N;
+         end if;
+
+         Self.Size := Self.Size + 1;
+      end Append;
+
+      ------------
+      -- Length --
+      ------------
+
+      function Length (Self : Base_List'Class) return Count_Type is
+      begin
+         return Self.Size;
+      end Length;
+
+      ------------
+      -- Adjust --
+      ------------
+
+      procedure Adjust (Self : in out Base_List) is
+      begin
+         Storage.Assign (Self, Self,
+                         Self.Head, Self.Head,
+                         Self.Tail, Self.Tail);
+      end Adjust;
+
+      --------------
+      -- Finalize --
+      --------------
+
+      procedure Finalize (Self : in out Base_List) is
+      begin
+         Clear (Self);
+      end Finalize;
+
+      ------------
+      -- Assign --
+      ------------
+
+      procedure Assign
+        (Self : in out Base_List'Class; Source : Base_List'Class) is
+      begin
+         if Self'Address = Source'Address then
+            --  Tagged types are always passed by reference, so we know they
+            --  are the same, and do nothing.
+            return;
+         end if;
+
+         Storage.Assign (Self, Source,
+                         Self.Head, Source.Head,
+                         Self.Tail, Source.Tail);
+      end Assign;
+
+   end Impl;
 
    ----------
    -- Next --
    ----------
 
-   function Next
-      (Self : List'Class; Position : Cursor) return Cursor is
-   begin
-      if Position.Current = Null_Access then
-         return Position;
-      else
-         return (Current => Get_Next (Self, Position.Current));
-      end if;
-   end Next;
-
-   --------------
-   -- Previous --
-   --------------
-
-   function Previous
-      (Self : List'Class; Position : Cursor) return Cursor is
-   begin
-      if Position.Current = Null_Access then
-         return Position;
-      else
-         return (Current => Get_Previous (Self, Position.Current));
-      end if;
-   end Previous;
-
-   ----------
-   -- Next --
-   ----------
-
-   procedure Next (Self : List'Class; Position : in out Cursor) is
+   procedure Next (Self : Base_List'Class; Position : in out Cursor) is
    begin
       Position := Next (Self, Position);
    end Next;
-
-   --------------
-   -- Finalize --
-   --------------
-
-   procedure Finalize (Self : in out List) is
-   begin
-      Clear (Self);
-   end Finalize;
-
-   ------------
-   -- Adjust --
-   ------------
-
-   procedure Adjust (Self : in out List) is
-   begin
-      Storage.Assign (Self, Self,
-                    Self.Head, Self.Head,
-                    Self.Tail, Self.Tail);
-   end Adjust;
-
-   ------------
-   -- Assign --
-   ------------
-
-   procedure Assign (Self : in out List'Class; Source : List'Class) is
-   begin
-      if Self'Address = Source'Address then
-         --  Tagged types are always passed by reference, so we know they
-         --  are the same, and do nothing.
-         return;
-      end if;
-
-      Storage.Assign (Self, Source,
-                    Self.Head, Source.Head,
-                    Self.Tail, Source.Tail);
-   end Assign;
 
 end Conts.Lists.Generics;

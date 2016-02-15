@@ -19,18 +19,16 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Bounded lists of constrained elements
+--  Bounded controlled lists of constrained elements
 
 pragma Ada_2012;
+with Ada.Finalization;
 with Conts.Elements.Definite;
-with Conts.Lists.Cursors;
 with Conts.Lists.Generics;
 with Conts.Lists.Storage.Bounded;
-with Conts.Properties;
 
 generic
    type Element_Type is private;
-   type Container_Base_Type is abstract tagged limited private;
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Lists.Definite_Bounded is
 
@@ -38,29 +36,14 @@ package Conts.Lists.Definite_Bounded is
      (Element_Type, Free => Free);
    package Storage is new Conts.Lists.Storage.Bounded
       (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type);
+       Container_Base_Type => Ada.Finalization.Controlled);
    package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;
-   type List (Capacity : Count_Type) is
-      new Lists.List (Capacity) with null record
-       with Constant_Indexing => Constant_Reference,
-            Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   subtype List is Lists.List;
 
-   function Constant_Reference
-     (Self : List; Position : Cursor) return Element_Type
-     is (Lists.Element (Self, Position)) with Inline;
-
-   function Copy (Self : List'Class) return List'Class;
-   --  Return a deep copy of Self
-   --  Complexity: O(n)
-
-   package Cursors is new Conts.Lists.Cursors (Lists);
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Element_Type, Lists.Element);
-   package Returned_Maps renames Element_Maps;
+   package Cursors renames Lists.Cursors;
+   package Element_Maps renames Lists.Element_Maps;
+   package Returned_Maps renames Lists.Returned_Maps;
 
 end Conts.Lists.Definite_Bounded;

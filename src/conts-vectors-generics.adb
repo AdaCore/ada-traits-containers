@@ -24,272 +24,266 @@ pragma Ada_2012;
 package body Conts.Vectors.Generics is
    use Conts.Vectors.Storage;
 
-   ----------------------
-   -- Reserve_Capacity --
-   ----------------------
+   package body Impl is
 
-   procedure Reserve_Capacity
-     (Self : in out Vector'Class; Capacity : Count_Type) is
-   begin
-      Storage.Resize
-         (Self, Count_Type'Max (Self.Last, Capacity),
-          Self.Last, Force => True);
-   end Reserve_Capacity;
+      -----------
+      -- First --
+      -----------
 
-   -------------------
-   -- Shrink_To_Fit --
-   -------------------
+      function First (Self : Base_Vector'Class) return Cursor is
+      begin
+         if Self.Last = No_Element.Index then
+            return No_Element;
+         else
+            return (Index => Min_Index);
+         end if;
+      end First;
 
-   procedure Shrink_To_Fit (Self : in out Vector'Class) is
-   begin
-      Storage.Resize (Self, Self.Last, Self.Last, Force => True);
-   end Shrink_To_Fit;
+      -------------
+      -- Element --
+      -------------
 
-   ------------
-   -- Resize --
-   ------------
+      function Element
+        (Self : Base_Vector'Class; Position : Cursor) return Returned_Type is
+      begin
+         return Storage.Elements.To_Return
+           (Storage.Get_Element (Self, Position.Index));
+      end Element;
 
-   procedure Resize
-     (Self    : in out Vector'Class;
-      Length  : Index_Type;
-      Element : Storage.Elements.Element_Type)
-   is
-      Old_L : constant Count_Type := Self.Length;
-      L     : constant Count_Type := To_Count (Length);
-   begin
-      if L < Old_L then
-         for J in L + 1 .. Old_L loop
+      -----------------
+      -- Has_Element --
+      -----------------
+
+      function Has_Element
+        (Self : Base_Vector'Class; Position : Cursor) return Boolean
+      is
+         pragma Unreferenced (Self);
+      begin
+         return Position.Index /= No_Element.Index;
+      end Has_Element;
+
+      ----------
+      -- Next --
+      ----------
+
+      function Next
+        (Self : Base_Vector'Class; Position : Cursor) return Cursor is
+      begin
+         if Position.Index < Self.Last then
+            return (Index => Position.Index + 1);
+         else
+            return No_Element;
+         end if;
+      end Next;
+
+      --------------
+      -- Previous --
+      --------------
+
+      function Previous
+        (Self : Base_Vector'Class; Position : Cursor) return Cursor
+      is
+         pragma Unreferenced (Self);
+      begin
+         if Position.Index > Min_Index then
+            return (Index => Position.Index - 1);
+         else
+            return No_Element;
+         end if;
+      end Previous;
+
+      ----------------------
+      -- Reserve_Capacity --
+      ----------------------
+
+      procedure Reserve_Capacity
+        (Self : in out Base_Vector'Class; Capacity : Count_Type) is
+      begin
+         Storage.Resize
+           (Self, Count_Type'Max (Self.Last, Capacity),
+            Self.Last, Force => True);
+      end Reserve_Capacity;
+
+      -------------------
+      -- Shrink_To_Fit --
+      -------------------
+
+      procedure Shrink_To_Fit (Self : in out Base_Vector'Class) is
+      begin
+         Storage.Resize (Self, Self.Last, Self.Last, Force => True);
+      end Shrink_To_Fit;
+
+      ------------
+      -- Resize --
+      ------------
+
+      procedure Resize
+        (Self    : in out Base_Vector'Class;
+         Length  : Index_Type;
+         Element : Storage.Elements.Element_Type)
+      is
+         Old_L : constant Count_Type := Self.Length;
+         L     : constant Count_Type := To_Count (Length);
+      begin
+         if L < Old_L then
+            for J in L + 1 .. Old_L loop
+               Storage.Release_Element (Self, J);
+            end loop;
+            Self.Last := L;
+
+         elsif L > Old_L then
+            Self.Append (Element, Count => L - Old_L);
+         end if;
+      end Resize;
+
+      ------------
+      -- Length --
+      ------------
+
+      function Length (Self : Base_Vector'Class) return Count_Type is
+      begin
+         return Self.Last - Min_Index + 1;
+      end Length;
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append
+        (Self    : in out Base_Vector'Class;
+         Element : Element_Type;
+         Count   : Count_Type := 1)
+      is
+         L : constant Count_Type := Self.Last;
+      begin
+         if L + Count > Self.Capacity then
+            Storage.Resize (Self, L + Count, L, Force => False);
+         end if;
+         for J in 1 .. Count loop
+            Storage.Set_Element
+              (Self, L + J, Storage.Elements.To_Stored (Element));
+         end loop;
+         Self.Last := Self.Last + Count;
+      end Append;
+
+      -----------
+      -- Clear --
+      -----------
+
+      procedure Clear (Self : in out Base_Vector'Class) is
+         L : constant Count_Type := Self.Last;
+      begin
+         for J in Min_Index .. L loop
             Storage.Release_Element (Self, J);
          end loop;
-         Self.Last := L;
 
-      elsif L > Old_L then
-         Self.Append (Element, Count => L - Old_L);
-      end if;
-   end Resize;
+         --  Deallocate all memory
+         Storage.Resize (Self, 0, L, Force => True);
+         Self.Last := Min_Index - 1;
+      end Clear;
 
-   ------------
-   -- Length --
-   ------------
+      ------------
+      -- Delete --
+      ------------
 
-   function Length (Self : Vector'Class) return Count_Type is
-   begin
-      return Self.Last - Min_Index + 1;
-   end Length;
+      procedure Delete (Self : in out Base_Vector'Class; Index : Index_Type) is
+         Idx : constant Count_Type := To_Count (Index);
+      begin
+         Storage.Release_Element (Self, Idx);
+         Storage.Copy
+           (Self, Source => Self,
+            Source_From  => Idx + 1,
+            Source_To    => Self.Last,
+            Self_From    => Idx);
+         Self.Last := Self.Last - 1;
+      end Delete;
 
-   -------------
-   -- Element --
-   -------------
+      -----------------
+      -- Delete_Last --
+      -----------------
 
-   function Element
-     (Self : Vector'Class; Position : Index_Type) return Returned_Type is
-   begin
-      return Storage.Elements.To_Return
-        (Storage.Get_Element (Self, To_Count (Position)));
-   end Element;
+      procedure Delete_Last (Self : in out Base_Vector'Class) is
+      begin
+         Storage.Release_Element (Self, Self.Last);
+         Self.Last := Self.Last - 1;
+      end Delete_Last;
 
-   ---------------------
-   -- Replace_Element --
-   ---------------------
+      ------------------
+      -- Last_Element --
+      ------------------
 
-   procedure Replace_Element
-     (Self     : in out Vector'Class;
-      Index    : Index_Type;
-      New_Item : Element_Type)
-   is
-      Pos : constant Count_Type := To_Count (Index);
-   begin
-      Storage.Release_Element (Self, Pos);
-      Storage.Set_Element (Self, Pos, Storage.Elements.To_Stored (New_Item));
-   end Replace_Element;
+      function Last_Element (Self : Base_Vector'Class) return Returned_Type is
+      begin
+         return Storage.Elements.To_Return
+           (Storage.Get_Element (Self, Self.Last));
+      end Last_Element;
 
-   ------------
-   -- Append --
-   ------------
+      ------------
+      -- Assign --
+      ------------
 
-   procedure Append
-     (Self    : in out Vector'Class;
-      Element : Element_Type;
-      Count   : Count_Type := 1)
-   is
-      L : constant Count_Type := Self.Last;
-   begin
-      if L + Count > Self.Capacity then
-         Storage.Resize (Self, L + Count, L, Force => False);
-      end if;
-      for J in 1 .. Count loop
+      procedure Assign
+        (Self : in out Base_Vector'Class; Source : Base_Vector'Class) is
+      begin
+         Storage.Assign (Self, Source, Last => Source.Last);
+         Self.Last := Source.Last;
+      end Assign;
+
+      ------------
+      -- Adjust --
+      ------------
+
+      procedure Adjust (Self : in out Base_Vector) is
+      begin
+         Assign (Self, Self);
+      end Adjust;
+
+      --------------
+      -- Finalize --
+      --------------
+
+      procedure Finalize (Self : in out Base_Vector) is
+      begin
+         Clear (Self);
+      end Finalize;
+
+      -------------
+      -- Element --
+      -------------
+
+      function Element
+        (Self : Base_Vector'Class; Position : Index_Type) return Returned_Type
+      is
+      begin
+         return Storage.Elements.To_Return
+           (Storage.Get_Element (Self, To_Count (Position)));
+      end Element;
+
+      ---------------------
+      -- Replace_Element --
+      ---------------------
+
+      procedure Replace_Element
+        (Self     : in out Base_Vector'Class;
+         Index    : Index_Type;
+         New_Item : Element_Type)
+      is
+         Pos : constant Count_Type := To_Count (Index);
+      begin
+         Storage.Release_Element (Self, Pos);
          Storage.Set_Element
-           (Self, L + J, Storage.Elements.To_Stored (Element));
-      end loop;
-      Self.Last := Self.Last + Count;
-   end Append;
+           (Self, Pos, Storage.Elements.To_Stored (New_Item));
+      end Replace_Element;
 
-   -----------
-   -- Clear --
-   -----------
-
-   procedure Clear (Self : in out Vector'Class) is
-      L : constant Count_Type := Self.Last;
-   begin
-      for J in Min_Index .. L loop
-         Storage.Release_Element (Self, J);
-      end loop;
-
-      --  Deallocate all memory
-      Storage.Resize (Self, 0, L, Force => True);
-      Self.Last := Min_Index - 1;
-   end Clear;
-
-   ------------
-   -- Delete --
-   ------------
-
-   procedure Delete (Self : in out Vector'Class; Index : Index_Type) is
-      Idx : constant Count_Type := To_Count (Index);
-   begin
-      Storage.Release_Element (Self, Idx);
-      Storage.Copy
-        (Self, Source => Self,
-         Source_From  => Idx + 1,
-         Source_To    => Self.Last,
-         Self_From    => Idx);
-      Self.Last := Self.Last - 1;
-   end Delete;
-
-   -----------------
-   -- Delete_Last --
-   -----------------
-
-   procedure Delete_Last (Self : in out Vector'Class) is
-   begin
-      Storage.Release_Element (Self, Self.Last);
-      Self.Last := Self.Last - 1;
-   end Delete_Last;
-
-   ------------------
-   -- Last_Element --
-   ------------------
-
-   function Last_Element (Self : Vector'Class) return Returned_Type is
-   begin
-      return Storage.Elements.To_Return
-         (Storage.Get_Element (Self, Self.Last));
-   end Last_Element;
-
-   ----------
-   -- Last --
-   ----------
-
-   function Last (Self : Vector'Class) return Index_Type is
-   begin
-      return To_Index (Self.Last);
-   end Last;
-
-   ------------
-   -- Assign --
-   ------------
-
-   procedure Assign (Self : in out Vector'Class; Source : Vector'Class) is
-   begin
-      Storage.Assign (Self, Source, Last => Source.Last);
-      Self.Last := Source.Last;
-   end Assign;
-
-   -----------
-   -- First --
-   -----------
-
-   function First (Self : Vector'Class) return Cursor is
-   begin
-      if Self.Last = No_Element.Index then
-         return No_Element;
-      else
-         return (Index => Min_Index);
-      end if;
-   end First;
-
-   --------------
-   -- To_Index --
-   --------------
-
-   function To_Index (Position : Count_Type) return Index_Type is
-   begin
-      return Index_Type'Val
-        (Position - Min_Index
-         + Count_Type (Index_Type'Pos (Index_Type'First)));
-   end To_Index;
-
-   --------------
-   -- To_Index --
-   --------------
-
-   function To_Index (Position : Cursor) return Index_Type
-      is (To_Index (Position.Index));
-
-   -------------
-   -- Element --
-   -------------
-
-   function Element
-     (Self : Vector'Class; Position : Cursor) return Returned_Type is
-   begin
-      return Storage.Elements.To_Return
-        (Storage.Get_Element (Self, Position.Index));
-   end Element;
-
-   -----------------
-   -- Has_Element --
-   -----------------
-
-   function Has_Element
-     (Self : Vector'Class; Position : Cursor) return Boolean
-   is
-      pragma Unreferenced (Self);
-   begin
-      return Position.Index /= No_Element.Index;
-   end Has_Element;
+   end Impl;
 
    ----------
    -- Next --
    ----------
 
-   function Next
-     (Self : Vector'Class; Position : Cursor) return Cursor is
+   procedure Next (Self : Base_Vector'Class; Position : in out Cursor) is
    begin
-      if Position.Index < Self.Last then
-         return (Index => Position.Index + 1);
-      else
-         return No_Element;
-      end if;
-   end Next;
-
-   --------------
-   -- Previous --
-   --------------
-
-   function Previous
-     (Self : Vector'Class; Position : Cursor) return Cursor
-   is
-      pragma Unreferenced (Self);
-   begin
-      if Position.Index > Min_Index then
-         return (Index => Position.Index - 1);
-      else
-         return No_Element;
-      end if;
-   end Previous;
-
-   ----------
-   -- Next --
-   ----------
-
-   procedure Next (Self : Vector'Class; Position : in out Cursor) is
-   begin
-      if Position.Index < Self.Last then
-         Position.Index := Position.Index + 1;
-      else
-         Position := No_Element;
-      end if;
+      Position := Impl.Next (Self, Position);
    end Next;
 
    ----------
@@ -297,7 +291,7 @@ package body Conts.Vectors.Generics is
    ----------
 
    procedure Swap
-     (Self        : in out Vector'Class;
+     (Self        : in out Base_Vector'Class;
       Left, Right : Index_Type)
    is
       L     : constant Count_Type := To_Count (Left);
@@ -322,23 +316,5 @@ package body Conts.Vectors.Generics is
          Storage.Elements.Release (L_Tmp);
       end if;
    end Swap;
-
-   ------------
-   -- Adjust --
-   ------------
-
-   procedure Adjust (Self : in out Vector) is
-   begin
-      Assign (Self, Self);
-   end Adjust;
-
-   --------------
-   -- Finalize --
-   --------------
-
-   procedure Finalize (Self : in out Vector) is
-   begin
-      Clear (Self);
-   end Finalize;
 
 end Conts.Vectors.Generics;

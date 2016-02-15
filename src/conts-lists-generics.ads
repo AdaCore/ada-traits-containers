@@ -32,7 +32,9 @@
 --  to 0.51s when we do not use 'Class parameters).
 
 pragma Ada_2012;
+with Conts.Cursors;
 with Conts.Lists.Storage;
+with Conts.Properties;
 
 generic
    with package Storage is new Conts.Lists.Storage.Traits (<>);
@@ -40,111 +42,195 @@ generic
 
 package Conts.Lists.Generics with SPARK_Mode is
 
-   type List is new Storage.Container with private;
-   --  We do not define the Iterable aspect here: this is not allowed,
-   --  since the parent type is a generic formal parameter. Instead, we
-   --  have to define it in the instantiations of Generic_List.
-
    subtype Element_Type is Storage.Elements.Element_Type;
    subtype Returned_Type is Storage.Elements.Returned_Type;
    subtype Stored_Type is Storage.Elements.Stored_Type;
 
-   type Cursor is private;
-   No_Element : constant Cursor;
+   package Impl is
+      type Base_List is new Storage.Container with private;
+      --  We do not define the Iterable aspect here: this is not allowed,
+      --  since the parent type is a generic formal parameter. Instead, we
+      --  have to define it in the instantiations of Generic_List.
 
-   procedure Append (Self : in out List'Class; Element : Element_Type)
-      with Global => null,
-           Pre    => Length (Self) + 1 <= Capacity (Self);
+      type Cursor is private;
+      No_Element : constant Cursor;
+
+      function Length (Self : Base_List'Class) return Count_Type
+        with Inline => True, Global => null;
+      function Capacity (Self : Base_List'Class) return Count_Type
+        is (Storage.Capacity (Self))
+        with Inline => True, Global => null;
+      procedure Clear (Self : in out Base_List'Class);
+      procedure Assign
+        (Self : in out Base_List'Class; Source : Base_List'Class);
+      procedure Append (Self : in out Base_List'Class; Element : Element_Type)
+        with Global => null,
+             Pre    => Length (Self) + 1 <= Capacity (Self);
+      function First (Self : Base_List'Class) return Cursor
+        with Inline, Global => null;
+      function Has_Element
+        (Self : Base_List'Class; Position : Cursor) return Boolean
+        with Inline, Global => null;
+      function Element
+        (Self : Base_List'Class; Position : Cursor) return Returned_Type
+        with Inline, Global => null,
+             Pre    => Has_Element (Self, Position);
+      function Next
+        (Self : Base_List'Class; Position : Cursor) return Cursor
+        with Inline, Global => null,
+             Pre    => Has_Element (Self, Position);
+      function Previous
+        (Self : Base_List'Class; Position : Cursor) return Cursor
+        with Inline, Global => null,
+             Pre    => Has_Element (Self, Position);
+      --  Actual implementation for the subprograms renamed below. See the
+      --  descriptions below.
+
+      function First_Primitive (Self : Base_List) return Cursor
+         is (First (Self)) with Inline;
+      function Element_Primitive
+        (Self : Base_List; Position : Cursor) return Returned_Type
+         is (Element (Self, Position)) with Inline;
+      function Has_Element_Primitive
+        (Self : Base_List; Position : Cursor) return Boolean
+         is (Has_Element (Self, Position)) with Inline;
+      function Next_Primitive
+        (Self : Base_List; Position : Cursor) return Cursor
+         is (Next (Self, Position)) with Inline;
+      --  These are only needed because the Iterable aspect expects a parameter
+      --  of type List instead of List'Class. But then it means that the loop
+      --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
+      --  using an explicit cursor.
+
+   private
+      pragma SPARK_Mode (Off);
+      procedure Adjust (Self : in out Base_List);
+      procedure Finalize (Self : in out Base_List);
+      --  In case the list is a controlled type, but irrelevant when the list
+      --  is not controlled.
+
+      type Base_List is new Storage.Container with record
+         Head, Tail : Storage.Node_Access := Storage.Null_Access;
+         Size       : Natural := 0;
+      end record;
+
+      type Cursor is record
+         Current : Storage.Node_Access;
+      end record;
+      No_Element : constant Cursor := (Current => Storage.Null_Access);
+   end Impl;
+
+   subtype Base_List is Impl.Base_List;
+   subtype Cursor is Impl.Cursor;
+   No_Element : constant Cursor := Impl.No_Element;
+
+   procedure Append (Self : in out Base_List'Class; Element : Element_Type)
+     renames Impl.Append;
    --  Append a new element to the list.
    --  Complexity: O(1)
 
-   function Length (Self : List'Class) return Count_Type
-      with Inline => True,
-           Global => null;
+   function Length (Self : Base_List'Class) return Count_Type
+     renames Impl.Length;
    --  Return the number of elements in the list.
    --  Complexity: O(n)  (in practice, constant)
 
-   function Capacity (Self : List'Class) return Count_Type
-      is (Storage.Capacity (Self))
-      with Inline => True,
-           Global => null;
+   function Capacity (Self : Base_List'Class) return Count_Type
+     renames Impl.Capacity;
    --  Return the maximal number of elements in the list. This will be
    --  Count_Type'Last for unbounded containers.
    --  Complexity: constant
 
-   procedure Clear (Self : in out List'Class);
+   procedure Clear (Self : in out Base_List'Class)
+     renames Impl.Clear;
    --  Free the contents of the list
    --  Complexity:  O(n)
 
-   procedure Assign (Self : in out List'Class; Source : List'Class);
+   procedure Assign (Self : in out Base_List'Class; Source : Base_List'Class)
+     renames Impl.Assign;
    --  Replace all elements of Self with a copy of the elements of Source.
    --  When the list is controlled, this has the same behavior as calling
    --  Self := Source.
    --  Complexity: O(n)
 
-   function First (Self : List'Class) return Cursor
-      with Inline,
-           Global => null;
+   function First (Self : Base_List'Class) return Cursor
+     renames Impl.First;
    function Element
-      (Self : List'Class; Position : Cursor) return Returned_Type
-      with Inline,
-           Global => null,
-           Pre    => Has_Element (Self, Position);
+     (Self : Base_List'Class; Position : Cursor) return Returned_Type
+     renames Impl.Element;
    function Has_Element
-      (Self : List'Class; Position : Cursor) return Boolean
-      with Inline,
-           Global => null;
+     (Self : Base_List'Class; Position : Cursor) return Boolean
+     renames Impl.Has_Element;
    function Next
-      (Self : List'Class; Position : Cursor) return Cursor
-      with Inline,
-           Global => null,
-           Pre    => Has_Element (Self, Position);
+     (Self : Base_List'Class; Position : Cursor) return Cursor
+     renames Impl.Next;
    function Previous
-      (Self : List'Class; Position : Cursor) return Cursor
-      with Inline,
-           Global => null,
-           Pre    => Has_Element (Self, Position);
+     (Self : Base_List'Class; Position : Cursor) return Cursor
+     renames Impl.Previous;
    --  We pass the container explicitly for the sake of writing the pre
    --  and post conditions.
    --  Complexity: constant for all cursor operations.
 
-   procedure Next (Self : List'Class; Position : in out Cursor)
-      with Inline,
-           Global => null,
+   procedure Next (Self : Base_List'Class; Position : in out Cursor)
+      with Inline, Global => null,
            Pre    => Has_Element (Self, Position);
 
-   function First_Primitive (Self : List) return Cursor
-      is (First (Self)) with Inline;
-   function Element_Primitive
-      (Self : List; Position : Cursor) return Returned_Type
-      is (Element (Self, Position)) with Inline;
-   function Has_Element_Primitive
-      (Self : List; Position : Cursor) return Boolean
-      is (Has_Element (Self, Position)) with Inline;
-   function Next_Primitive
-      (Self : List; Position : Cursor) return Cursor
-      is (Next (Self, Position)) with Inline;
-   --  These are only needed because the Iterable aspect expects a parameter
-   --  of type List instead of List'Class. But then it means that the loop
-   --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
-   --  using an explicit cursor.
+   --  ??? Should we provide a Copy function ?
+   --  This cannot be provided in this generic package, since the type could
+   --  be constrained and/or limited, so it has to be provided in all child
+   --  packages. However, when the type is controlled it is much easier to
+   --  just use the standard assignment operator, so providing Copy is not
+   --  needed (only when base type is limited)
 
-private
-   pragma SPARK_Mode (Off);
-   procedure Adjust (Self : in out List);
-   procedure Finalize (Self : in out List);
-   --  In case the list is a controlled type, but irrelevant when the list
-   --  is not controlled.
+   ------------------
+   -- for-of loops --
+   ------------------
 
-   type List is new Storage.Container with record
-      Head, Tail : Storage.Node_Access := Storage.Null_Access;
-      Size : Natural := 0;
-   end record;
+   type List is new Base_List with null record
+     with Constant_Indexing => Constant_Reference,
+          Iterable => (First       => First_Primitive,
+                       Next        => Next_Primitive,
+                       Has_Element => Has_Element_Primitive,
+                       Element     => Element_Primitive);
 
-   type Cursor is record
-      Current : Storage.Node_Access;
-   end record;
+   function Constant_Reference
+     (Self : List; Position : Cursor) return Element_Type
+     is (Storage.Elements.To_Element (Element (Self, Position))) with Inline;
 
-   No_Element : constant Cursor := (Current => Storage.Null_Access);
+   function Reference
+     (Self : List; Position : Cursor) return Returned_Type
+     is (Element (Self, Position)) with Inline;
+   --  Depending on the implementation of the element traits, this might in
+   --  fact be a constant reference since the element might not be modifiable
+   --  through the Returned_Type.
+
+   --------------------
+   -- Cursors traits --
+   --------------------
+
+   package Cursors is
+      package Bidirectional is new Conts.Cursors.Bidirectional_Cursors
+        (Container_Type => Base_List'Class,
+         Cursor_Type    => Cursor,
+         First          => First,
+         Next           => Next,
+         Has_Element    => Has_Element,
+         Previous       => Previous);
+      package Forward renames Bidirectional.Forward;
+   end Cursors;
+
+   -------------------------
+   -- Getters and setters --
+   -------------------------
+
+   function As_Element
+     (Self : Base_List'Class; Position : Cursor) return Element_Type
+     is (Storage.Elements.To_Element (Element (Self, Position)));
+
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Cursors.Forward.Container, Cursors.Forward.Cursor,
+      Element_Type, As_Element);
+   package Returned_Maps is new Conts.Properties.Read_Only_Maps
+     (Cursors.Forward.Container, Cursors.Forward.Cursor,
+      Storage.Elements.Returned, Element);
 
 end Conts.Lists.Generics;

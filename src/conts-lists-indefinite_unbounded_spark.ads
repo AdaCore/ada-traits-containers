@@ -27,8 +27,6 @@ pragma Ada_2012;
 with Conts.Elements.Indefinite_SPARK;
 with Conts.Lists.Storage.Unbounded_SPARK;
 with Conts.Lists.Generics;
-with Conts.Lists.Cursors;
-with Conts.Properties;
 
 generic
    type Element_Type (<>) is private;
@@ -46,25 +44,14 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
    package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;
-   type List is new Lists.List with null record
-       with Constant_Indexing => Constant_Reference,
-            Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
+   subtype List is Lists.List;
 
    function Copy (Self : List'Class) return List'Class;
    --  Return a deep copy of Self
    --  Complexity: O(n)
 
-   function Constant_Reference
-     (Self : List; Position : Cursor) return Element_Type
-     is (Lists.Element (Self, Position)) with Inline;
-
-   package Cursors is new Conts.Lists.Cursors (Lists);
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Element_Type, Lists.Element);
-   package Returned_Maps is new Conts.Properties.Read_Only_Maps
-     (Lists.List'Class, Cursor, Elements.Traits.Returned, Lists.Element);
+   package Cursors renames Lists.Cursors;
+   package Element_Maps renames Lists.Element_Maps;
+   package Returned_Maps renames Lists.Returned_Maps;
 
 end Conts.Lists.Indefinite_Unbounded_SPARK;

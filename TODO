@@ -1,6 +1,6 @@
 TODO -*- mode: org -*-
 #+TAGS: PERFORMANCE(p) SPARK(s)
-#+TODO: TODO MAYBE DONE
+#+TODO: TODO MAYBE DONE REJECT
 
 This is a TODO list for the containers library. Not all ideas will be
 implemented, most likely, but this is a good list of candidates.
@@ -8,9 +8,6 @@ Open with Emacs to use the org-mode for easier editing, although this
 can be edited with any text editor.
 
 * General organization of packages
-
-** MAYBE Merge packages (=conts.vectors= and =conts.vectors.nodes= for instance)
-   Would limit the number of with clauses in user code.
 
 ** TODO Replace storage_pools package with higher-level package
    For unbounded vectors, for instance, we want to use directly =System.Memory=
@@ -51,8 +48,6 @@ can be edited with any text editor.
    By implementing specific storage pools or node packages, we could have
    data structures directly mapped to files (perhaps via mmap) ?
 
-** TODO rename =*Nodes= packages to =*Storage= or =*Core=
-   Can we use interfaces instead of just generic packages here ?
 ** MAYBE should we implement the Random packages as input cursors ?
 
 ** TODO ranges
@@ -96,18 +91,6 @@ can be edited with any text editor.
 
 * Cursors
 
-** TODO Non-constant cursors and property maps
-   Currently, we associate the Set_Element operation with the cursors, and it
-   always takes a Container as the first parameter. Should algorithms instead
-   require a constant cursor, and a separate property map.
-   Perhaps likewise for getting the elements ?
-   This decoupling makes it a bit more complex to instantiate algorithms, but
-   provides much more flexibility since the property map might be an
-   indirection.
-   This perhaps also removes the need for the _Convert variants of the
-   algorithms.
-   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1873.html
-
 ** TODO Should we have a property map that provides =Swap= ?
 ** TODO =Reverse_Cursor=
    Reverses the order of a bidirectional cursor. This is tricky, since we
@@ -119,11 +102,6 @@ can be edited with any text editor.
    that doesn't change the algorithmic complexity.
 
 ** TODO adaptors for Ada2012 vectors should be random_access cursors
-
-** TODO instantiate =conts-{vectors,lists,...}-cursors.ads= in *-generics packages
-   Perhaps we can provide the maps there as well.
-   Perhaps provide the cursor definition directly in the =Storage= or =Nodes=
-   packages, since they have access to lower-level info potentially.
 
 ** TODO Algorithms that apply to a slice of a container (ranges)
 * Lists
@@ -163,6 +141,12 @@ can be edited with any text editor.
 ** TODO Optimize cursors
    We could avoid one test in forward_cursors, since both Has_Element and
    Next test to check whether we are past the end
+
+** TODO =Indefinite_Unbounded_Ref= constant_indexing should return ref_type
+   We currently return a copy of the type. This might unfortunately mean that
+   the simpler packages all need to override Constant_Indexing, which cannot
+   be defined in vectors-generics.ads.
+   We need a performance test on constant indexing
 
 * Strings
 
@@ -318,6 +302,16 @@ http://ootips.org/yonat/4dev/smart-pointers.html
 
 ** Custom allocators
    See https://www.youtube.com/watch?v=LIb3L4vKZ7U
+
+* Rejected design
+** REJECT Use an interface instead of traits package for =Storage=
+   CLOSED: [2016-02-15 Mon 14:02]
+   An interface would simplify the list of formal parameters in the Storage
+   traits package. However, this means we would need to make the subprograms
+   primitive operations, instead of 'Class. It would likely not have any
+   performance impact, but would make these primitive operations visible to the
+   end user (container.Resize), whereas the operations are only meant to be
+   called from the *generics.adb packages.
 
 * org-mode help
   *bold* /italic/ _underlined_  =code= ~verbatim~

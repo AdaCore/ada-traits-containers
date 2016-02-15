@@ -19,53 +19,36 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Bounded vectors of constrained elements
+--  Bounded controlled vectors of constrained elements
 
 pragma Ada_2012;
+with Ada.Finalization;
 with Conts.Elements.Definite;
-with Conts.Vectors.Cursors;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Storage.Bounded;
-with Conts.Properties;
 
 generic
    type Index_Type is range <>;
    type Element_Type is private;
-   type Container_Base_Type is abstract tagged limited private;
 package Conts.Vectors.Definite_Bounded is
 
    package Elements is new Conts.Elements.Definite (Element_Type);
    package Storage is new Conts.Vectors.Storage.Bounded
       (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type);
+       Container_Base_Type => Ada.Finalization.Controlled);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
-   type Vector (Capacity : Count_Type) is
-      new Vectors.Vector (Capacity) with null record
-      with Constant_Indexing => Constant_Reference,
-           Iterable => (First       => First_Primitive,
-                        Next        => Next_Primitive,
-                        Has_Element => Has_Element_Primitive,
-                        Element     => Element_Primitive);
-
-   function Copy (Self : Vector'Class) return Vector'Class;
-   --  Return a deep copy of Self
-   --  Complexity: O(n)
-
-   function Constant_Reference
-     (Self : Vector; Position : Index_Type) return Element_Type
-     is (Vectors.Element (Self, Position)) with Inline;
-
-   package Cursors is new Conts.Vectors.Cursors (Vectors);
+   subtype Vector is Vectors.Vector;
    subtype Cursor is Vectors.Cursor;
-   package Element_Maps is new Conts.Properties.Read_Only_Maps
-     (Vectors.Vector'Class, Cursor, Element_Type, Vectors.Element);
-   package Returned_Maps renames Element_Maps;
+
+   package Cursors renames Vectors.Cursors;
+   package Element_Maps renames Vectors.Element_Maps;
+   package Returned_Maps renames Vectors.Returned_Maps;
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";
    procedure Swap
-      (Self : in out Vectors.Vector'Class; Left, Right : Index_Type)
+      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
       renames Vectors.Swap;
 
 end Conts.Vectors.Definite_Bounded;

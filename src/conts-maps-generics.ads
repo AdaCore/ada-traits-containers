@@ -20,7 +20,9 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
+with Conts.Cursors;
 with Conts.Elements;
+with Conts.Properties;
 
 generic
    with package Keys is new Conts.Elements.Traits (<>);
@@ -60,148 +62,248 @@ generic
 
 package Conts.Maps.Generics is
 
-   type Map is new Container_Base_Type with private;
+   subtype Key_Type is Keys.Element_Type;
+   subtype Element_Type is Elements.Element_Type;
+   subtype Returned_Type is Elements.Returned_Type;
 
-   function Capacity (Self : Map'Class) return Count_Type;
+   package Impl is
+
+      type Base_Map is new Container_Base_Type with private;
+
+      type Cursor is private;
+      No_Element : constant Cursor;
+
+      type Pair_Type is private;
+      function Key   (P : Pair_Type) return Keys.Returned_Type with Inline;
+      function Value (P : Pair_Type) return Elements.Returned_Type with Inline;
+
+      function Capacity (Self : Base_Map'Class) return Count_Type;
+      procedure Resize
+        (Self     : in out Base_Map'Class;
+         New_Size : Hash_Type);
+      procedure Set
+        (Self     : in out Base_Map'Class;
+         Key      : Keys.Element_Type;
+         Value    : Elements.Element_Type);
+      function Get
+        (Self     : Base_Map'Class;
+         Key      : Keys.Element_Type)
+         return Elements.Returned_Type;
+      procedure Clear (Self : in out Base_Map'Class);
+      procedure Delete
+        (Self     : in out Base_Map'Class;
+         Key      : Keys.Element_Type);
+      function Pair
+        (Self : Base_Map'Class; Position : Cursor) return Pair_Type
+         with Inline, Global => null;
+      function Element
+        (Self : Base_Map'Class; Position : Cursor) return Returned_Type
+         is (Value (Pair (Self, Position)));
+      function As_Element
+        (Self : Base_Map'Class; Position : Cursor) return Element_Type
+         is (Elements.To_Element (Value (Pair (Self, Position))))
+         with Inline, Global => null;
+      function First (Self : Base_Map'Class) return Cursor
+        with Inline, Global => null;
+      function Has_Element
+        (Self : Base_Map'Class; Position : Cursor) return Boolean
+        with Inline, Global => null;
+      function Next
+        (Self : Base_Map'Class; Position : Cursor) return Cursor
+        with Inline, Global => null,
+             Pre    => Has_Element (Self, Position);
+      --  Actual implementation for the subprograms renamed below. See the
+      --  descriptions below.
+
+      function First_Primitive (Self : Base_Map) return Cursor
+         is (First (Self)) with Inline;
+      function Element_Primitive
+        (Self : Base_Map; Position : Cursor) return Pair_Type
+         is (Pair (Self, Position)) with Inline;
+      function Has_Element_Primitive
+        (Self : Base_Map; Position : Cursor) return Boolean
+         is (Has_Element (Self, Position)) with Inline;
+      function Next_Primitive
+        (Self : Base_Map; Position : Cursor) return Cursor
+         is (Next (Self, Position)) with Inline;
+      --  These are only needed because the Iterable aspect expects a parameter
+      --  of type Map instead of Map'Class. But then it means that the loop
+      --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
+      --  using an explicit cursor.
+
+   private
+      procedure Adjust (Self : in out Base_Map);
+      procedure Finalize (Self : in out Base_Map);
+      --  In case the mp is a controlled type, but irrelevant when Self
+      --  is not controlled.
+
+      type Pair_Type is record
+         Key   : Keys.Stored_Type;
+         Value : Elements.Stored_Type;
+      end record;
+
+      function Key   (P : Pair_Type) return Keys.Returned_Type
+         is (Keys.To_Return (P.Key));
+      function Value (P : Pair_Type) return Elements.Returned_Type
+         is (Elements.To_Return (P.Value));
+
+      type Slot_Kind is (Empty, Dummy, Full);
+      --  A node can have three statuses:
+      --    * empty: it was never assigned
+      --      Hash is 0
+      --    * dummy: the node had been allocated, but was then deleted. It can
+      --      be reused as soon as possible
+      --      Hash is 0
+      --    * full: the node is currently in use.
+
+      type Slot is record
+         Key   : Keys.Stored_Type;
+         Value : Elements.Stored_Type;
+         Hash  : Hash_Type;
+         --  Cached value for the hash, to speed lookups in the table
+         --  (before we do more extensive comparison of the key), and
+         --  also to speed up the resizing.
+         Kind  : Slot_Kind := Empty;
+      end record;
+      pragma Pack (Slot);
+      --  The order of fields is important here to achieve a compact structure
+      --  and save memory.
+      --  On our example with 250000 items stored in the table, we end up
+      --  allocating/reallocating 15900kb instead of 19500kb.
+
+      type Slot_Table is array (Hash_Type range <>) of Slot;
+      type Slot_Table_Access is access Slot_Table;
+      for Slot_Table_Access'Storage_Pool use Pool.Pool.all;
+
+      type Cursor is record
+         Index : Hash_Type := Hash_Type'Last;
+      end record;
+      No_Element : constant Cursor := (Index => Hash_Type'Last);
+
+      type Base_Map is new Container_Base_Type with record
+         Used   : Hash_Type := 0;
+         --  Number of slots occupied by keys
+
+         Fill   : Count_Type := 0;
+         --  Number of slots occupied by keys or dummy slots
+
+         Table  : Slot_Table_Access;
+         --  The slots table. This is always a power of 2, since we use the
+         --  size as a mask for hashes.
+      end record;
+   end Impl;
+
+   subtype Base_Map is Impl.Base_Map;
+   subtype Cursor is Impl.Cursor;
+   No_Element : constant Cursor := Impl.No_Element;
+
+   subtype Pair_Type is Impl.Pair_Type;
+   function Key   (P : Pair_Type) return Keys.Returned_Type
+     renames Impl.Key;
+   function Value (P : Pair_Type) return Elements.Returned_Type
+     renames Impl.Value;
+   --  This record contains both the key and the value of an element stored
+
+   function Capacity (Self : Base_Map'Class) return Count_Type
+     renames Impl.Capacity;
    --  Return the current capacity of the container.
 
    procedure Resize
-     (Self     : in out Map'Class;
-      New_Size : Hash_Type);
+     (Self     : in out Base_Map'Class;
+      New_Size : Hash_Type) renames Impl.Resize;
    --  Change the capacity of the container.
    --  If you know you are going to insert n items, calling Resize (n) is
    --  likely to improve the performance by limiting the number of times the
    --  map will be resized during the insertions.
 
    procedure Set
-     (Self     : in out Map'Class;
+     (Self     : in out Base_Map'Class;
       Key      : Keys.Element_Type;
-      Value    : Elements.Element_Type);
+      Value    : Elements.Element_Type) renames Impl.Set;
    --  This never resizes Self if there is already an element with that key
    --  in the table. That means it is safe to iterate over a map and change
    --  some of the elements, but not insert new ones or remove ones.
 
    function Get
-     (Self     : Map'Class;
+     (Self     : Base_Map'Class;
       Key      : Keys.Element_Type)
-         return Elements.Returned_Type;
+      return Elements.Returned_Type
+     renames Impl.Get;
    --  Raises a Constraint_Error if there is no such element in the table
 
    procedure Delete
-     (Self     : in out Map'Class;
-      Key      : Keys.Element_Type);
+     (Self     : in out Base_Map'Class;
+      Key      : Keys.Element_Type)
+     renames Impl.Delete;
    --  Remove the element from the map.
    --  No exception is raised if the element is not in the map.
 
-   procedure Clear (Self : in out Map'Class);
+   procedure Clear (Self : in out Base_Map'Class) renames Impl.Clear;
    --  Remove all elements from the map
 
-   type Cursor is private;
-
-   type Pair_Type is private;
-   function Key   (P : Pair_Type) return Keys.Returned_Type with Inline;
-   function Value (P : Pair_Type) return Elements.Returned_Type with Inline;
-   --  This record contains both the key and the value of an element stored
-   --  in the table.
-
    function Pair
-     (Self : Map'Class; Position : Cursor) return Pair_Type
-     with Inline, Global => null;
+     (Self : Base_Map'Class; Position : Cursor) return Pair_Type
+     renames Impl.Pair;
    function Element
-     (Self : Map'Class; Position : Cursor) return Elements.Returned_Type
-     is (Value (Pair (Self, Position)))
-     with Inline, Global => null;
+     (Self : Base_Map'Class; Position : Cursor) return Returned_Type
+     renames Impl.Element;
    function As_Element
-     (Self : Map'Class; Position : Cursor) return Elements.Element_Type
-     is (Elements.To_Element (Value (Pair (Self, Position))))
-     with Inline, Global => null;
+     (Self : Base_Map'Class; Position : Cursor) return Elements.Element_Type
+     renames Impl.As_Element;
 
-   function First (Self : Map'Class) return Cursor
-     with Inline, Global => null;
+   function First (Self : Base_Map'Class) return Cursor
+     renames Impl.First;
    function Has_Element
-     (Self : Map'Class; Position : Cursor) return Boolean
-     with Inline, Global => null;
+     (Self : Base_Map'Class; Position : Cursor) return Boolean
+     renames Impl.Has_Element;
    function Next
-     (Self : Map'Class; Position : Cursor) return Cursor
-     with Inline,
-     Global => null,
-     Pre    => Has_Element (Self, Position);
+     (Self : Base_Map'Class; Position : Cursor) return Cursor
+     renames Impl.Next;
 
-   function First_Primitive (Self : Map) return Cursor
-      is (First (Self)) with Inline;
-   function Element_Primitive
-     (Self : Map; Position : Cursor) return Pair_Type
-     is (Pair (Self, Position)) with Inline;
-   function Has_Element_Primitive
-     (Self : Map; Position : Cursor) return Boolean
-     is (Has_Element (Self, Position)) with Inline;
-   function Next_Primitive
-     (Self : Map; Position : Cursor) return Cursor
-     is (Next (Self, Position)) with Inline;
-   --  These are only needed because the Iterable aspect expects a parameter
-   --  of type Map instead of Map'Class. But then it means that the loop
-   --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
-   --  using an explicit cursor.
+   ------------------
+   -- for-of loops --
+   ------------------
 
-private
-   procedure Adjust (Self : in out Map);
-   procedure Finalize (Self : in out Map);
-   --  In case the mp is a controlled type, but irrelevant when Self
-   --  is not controlled.
+   type Map is new Base_Map with null record
+     with Constant_Indexing => Constant_Reference,
+          Iterable => (First       => First_Primitive,
+                       Next        => Next_Primitive,
+                       Has_Element => Has_Element_Primitive,
+                       Element     => Element_Primitive);
 
-   type Slot_Kind is (Empty, Dummy, Full);
-   --  A node can have three statuses:
-   --    * empty: it was never assigned
-   --      Hash is 0
-   --    * dummy: the node had been allocated, but was then deleted. It can
-   --      be reused as soon as possible
-   --      Hash is 0
-   --    * full: the node is currently in use.
+   function Constant_Reference
+     (Self : Map; Key : Key_Type) return Element_Type
+     is (Elements.To_Element (Get (Self, Key))) with Inline;
 
-   type Slot is record
-      Key   : Keys.Stored_Type;
-      Value : Elements.Stored_Type;
-      Hash  : Hash_Type;
-      --  Cached value for the hash, to speed lookups in the table
-      --  (before we do more extensive comparison of the key), and
-      --  also to speed up the resizing.
-      Kind  : Slot_Kind := Empty;
-   end record;
-   pragma Pack (Slot);
-   --  The order of fields is important here to achieve a compact structure
-   --  and save memory.
-   --  On our example with 250000 items stored in the table, we end up
-   --  allocating/reallocating 15900kb instead of 19500kb.
+   function Reference
+     (Self : Map; Key : Key_Type) return Returned_Type
+     is (Get (Self, Key)) with Inline;
+   --  Depending on the implementation of the element traits, this might in
+   --  fact be a constant reference since the element might not be modifiable
+   --  through the Returned_Type.
 
-   type Slot_Table is array (Hash_Type range <>) of Slot;
-   type Slot_Table_Access is access Slot_Table;
-   for Slot_Table_Access'Storage_Pool use Pool.Pool.all;
+   -------------
+   -- Cursors --
+   -------------
 
-   type Pair_Type is record
-      Key   : Keys.Stored_Type;
-      Value : Elements.Stored_Type;
-   end record;
+   package Cursors is
+      package Forward is new Conts.Cursors.Forward_Cursors
+        (Container_Type => Base_Map'Class,
+         Cursor_Type    => Cursor,
+         First          => First,
+         Next           => Next,
+         Has_Element    => Has_Element);
+   end Cursors;
 
-   type Cursor is record
-      Index : Hash_Type := Hash_Type'Last;
-   end record;
-   No_Element : constant Cursor := (Index => Hash_Type'Last);
+   -------------------------
+   -- Getters and setters --
+   -------------------------
 
-   type Map is new Container_Base_Type with record
-      Used   : Hash_Type := 0;
-      --  Number of slots occupied by keys
-
-      Fill   : Count_Type := 0;
-      --  Number of slots occupied by keys or dummy slots
-
-      Table  : Slot_Table_Access;
-      --  The slots table. This is always a power of 2, since we use the
-      --  size as a mask for hashes.
-   end record;
-
-   function Key   (P : Pair_Type) return Keys.Returned_Type
-   is (Keys.To_Return (P.Key));
-   function Value (P : Pair_Type) return Elements.Returned_Type
-   is (Elements.To_Return (P.Value));
+   package Pair_Maps is new Conts.Properties.Read_Only_Maps
+     (Base_Map'Class, Cursor, Pair_Type, Pair);
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Base_Map'Class, Cursor, Element_Type, As_Element);
+   package Returned_Maps is new Conts.Properties.Read_Only_Maps
+     (Base_Map'Class, Cursor, Elements.Returned, Element);
 
 end Conts.Maps.Generics;
