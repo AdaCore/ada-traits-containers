@@ -25,7 +25,7 @@
 pragma Ada_2012;
 
 with Conts.Cursors;
-with Conts.Properties;
+with Conts.Properties.Indexed;
 with Conts.Vectors.Indefinite_Unbounded_Ref;
 with Conts.Vectors.Definite_Unbounded;
 with Conts.Graphs.DFS;
@@ -151,14 +151,18 @@ package Conts.Graphs.Adjacency_List is
       Copyable      => True,
       Movable       => True);
 
-   package Vertices_Cursors is new Conts.Cursors.Constant_Forward_Traits
+   package Vertices_Cursors is new Conts.Cursors.Forward_Cursors
      (Container_Type => Graph,
       Cursor_Type    => Impl.Vertex_Cursor,
-      Returned_Type  => Vertex,
       First          => Impl.First,
-      Element        => Impl.Element,
       Has_Element    => Impl.Has_Element,
       Next           => Impl.Next);
+
+   package Vertices_Maps is new Conts.Properties.Read_Only_Maps
+     (Map_Type       => Graph,
+      Key_Type       => Impl.Vertex_Cursor,
+      Value_Type     => Vertex,
+      Get            => Impl.Element);
 
    package Out_Edges_Cursors is new Conts.Graphs.Edge_Cursors
      (Container_Type => Graph,
@@ -177,12 +181,13 @@ package Conts.Graphs.Adjacency_List is
       Null_Vertex       => Impl.Null_Vertex,
       Get_Target        => Impl.Get_Target,
       Vertex_Cursors    => Vertices_Cursors,
+      Vertex_Maps       => Vertices_Maps,
       Out_Edges_Cursors => Out_Edges_Cursors);
 
    --  Color map is always limited, since this is mostly created automatically
    --  by algorithms. If you create a color map yourself, you need to clear
    --  it manually.
-   package Color_Maps is new Conts.Properties.Indexed_Maps
+   package Color_Maps is new Conts.Properties.Indexed
      (Container_Type      => Graph,
       Key_Type            => Vertex,
       Value_Type          => Color,
@@ -197,7 +202,7 @@ package Conts.Graphs.Adjacency_List is
    --  a controlled type (implicit Clear) if the graph itself is controlled,
    --  so that it is compatible with SPARK when people want to, but on the
    --  other hand it is in general cleared automatically when possible.
-   package Integer_Maps is new Conts.Properties.Indexed_Maps
+   package Integer_Maps is new Conts.Properties.Indexed
      (Container_Type      => Graph,
       Key_Type            => Vertex,
       Value_Type          => Integer,

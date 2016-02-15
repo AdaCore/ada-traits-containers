@@ -37,7 +37,6 @@ with Conts.Maps.Generics;
 
 generic
    with package Maps is new Conts.Maps.Generics (<>);
-   type Map_Type (<>) is new Maps.Map with private;
 package Conts.Maps.Cursors with SPARK_Mode is
    --  Convenient package for creating the cursors traits for a Map.
    --  These cursor traits cannot be instantiated in Generic_Maps itself,
@@ -46,35 +45,15 @@ package Conts.Maps.Cursors with SPARK_Mode is
    --  same type directly, so we need to have proxies for the cursor
    --  subprograms
 
-   subtype Map    is Map_Type;
-   subtype Cursor is Maps.Cursor;
-   subtype Pair   is Maps.Pair;
+   subtype Map       is Maps.Map;
+   subtype Cursor    is Maps.Cursor;
+   subtype Pair_Type is Maps.Pair_Type;
 
-   function Cursors_First (Self : Map'Class) return Cursor
-      is (Maps.First (Self)) with Inline;
-   function Cursors_Element
-      (Self : Map'Class; Position : Cursor) return Pair
-      is (Maps.Element (Self, Position))
-      with Pre => Maps.Has_Element (Self, Position),
-           Inline => True;
-   function Cursors_Has_Element
-      (Self : Map'Class; Position : Cursor) return Boolean
-      is (Maps.Has_Element (Self, Position))
-      with Inline => True;
-   function Cursors_Next
-      (Self : Map'Class; Position : Cursor) return Cursor
-      is (Maps.Next (Self, Position))
-      with Pre => Maps.Has_Element (Self, Position),
-           Inline => True;
-
-   package Constant_Forward is
-      new Conts.Cursors.Constant_Forward_Traits
-         (Container_Type => Map'Class,
-          Cursor_Type    => Cursor,
-          Returned_Type  => Pair,
-          First          => Cursors_First,
-          Next           => Cursors_Next,
-          Has_Element    => Cursors_Has_Element,
-          Element        => Cursors_Element);
+   package Forward is new Conts.Cursors.Forward_Cursors
+     (Container_Type => Map'Class,
+      Cursor_Type    => Cursor,
+      First          => Maps.First,
+      Next           => Maps.Next,
+      Has_Element    => Maps.Has_Element);
 
 end Conts.Maps.Cursors;

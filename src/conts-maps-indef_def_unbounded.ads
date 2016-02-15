@@ -27,6 +27,7 @@ with Conts.Elements.Definite;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Maps.Generics;
 with Conts.Maps.Cursors;
+with Conts.Properties;
 
 generic
    type Key_Type (<>) is private;
@@ -57,9 +58,9 @@ package Conts.Maps.Indef_Def_Unbounded is
 
    subtype Cursor is Maps.Cursor;
 
-   subtype Pair is Maps.Pair;
-   function Key (P : Pair) return Keys.Traits.Returned renames Maps.Key;
-   function Value (P : Pair) return Element_Type renames Maps.Value;
+   subtype Pair_Type is Maps.Pair_Type;
+   function Key (P : Pair_Type) return Keys.Traits.Returned renames Maps.Key;
+   function Value (P : Pair_Type) return Element_Type renames Maps.Value;
 
    type Map is new Maps.Map with null record
      with Constant_Indexing => Constant_Reference,
@@ -72,6 +73,11 @@ package Conts.Maps.Indef_Def_Unbounded is
      (Self : Map; Position : Key_Type) return Element_Type
    is (Maps.Get (Self, Position)) with Inline;
 
-   package Cursors is new Conts.Maps.Cursors (Maps, Map);
+   package Cursors is new Conts.Maps.Cursors (Maps);
+   package Pair_Maps is new Conts.Properties.Read_Only_Maps
+     (Maps.Map'Class, Cursor, Pair_Type, Maps.Pair);
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Maps.Map'Class, Cursor, Element_Type, Maps.Element);
+   package Returned_Maps renames Element_Maps;
 
 end Conts.Maps.Indef_Def_Unbounded;

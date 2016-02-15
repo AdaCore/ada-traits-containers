@@ -36,8 +36,25 @@ package Conts.Vectors.Cursors with SPARK_Mode is
 
    subtype Vector   is Vectors.Vector;
    subtype Index    is Vectors.Index_Type;
+   subtype Cursor   is Vectors.Cursor;
 
    package Impl is
+      function Cursors_First (Self : Vector'Class) return Cursor
+         is (Vectors.First (Self)) with Inline;
+      function Cursors_Has_Element
+        (Self : Vector'Class; Position : Cursor) return Boolean
+         is (Vectors.Has_Element (Self, Position))
+         with Inline => True;
+      function Cursors_Next
+        (Self : Vector'Class; Position : Cursor) return Cursor
+         is (Vectors.Next (Self, Position))
+         with Pre => Vectors.Has_Element (Self, Position),
+      Inline => True;
+      function Cursors_Previous
+        (Self : Vector'Class; Position : Cursor) return Cursor
+         is (Vectors.Previous (Self, Position))
+         with Pre => Vectors.Has_Element (Self, Position),
+      Inline => True;
       function Index_First (Self : Vector'Class) return Index
          is (Index'First) with Inline;
 
@@ -50,20 +67,21 @@ package Conts.Vectors.Cursors with SPARK_Mode is
               (Count_Type (Integer (Vectors.To_Count (Left)) + N)));
    end Impl;
 
-   package Random_Cursors is new Conts.Cursors.Random_Traits
+   package Random_Access is new Conts.Cursors.Random_Access_Cursors
      (Container_Type => Vector'Class,
       Index_Type     => Index,
-      Returned_Type  => Vectors.Nodes.Elements.Returned,
-      Element_Type   => Vectors.Nodes.Elements.Element,
       First          => Impl.Index_First,
-      Element        => Vectors.Element,
-      Set_Element    => Vectors.Replace_Element,
       Last           => Vectors.Last,
       "-"            => Impl."-",
       "+"            => Impl."+");
-   package Constant_Random renames Random_Cursors.Constant_Random;
-   package Constant_Bidirectional
-      renames Constant_Random.Constant_Bidirectional;
-   package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
+
+   package Bidirectional is new Conts.Cursors.Bidirectional_Cursors
+     (Container_Type => Vector'Class,
+      Cursor_Type    => Vectors.Cursor,
+      First          => Impl.Cursors_First,
+      Has_Element    => Impl.Cursors_Has_Element,
+      Next           => Impl.Cursors_Next,
+      Previous       => Impl.Cursors_Previous);
+   package Forward renames Bidirectional.Forward;
 
 end Conts.Vectors.Cursors;

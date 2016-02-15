@@ -28,6 +28,7 @@ with Conts.Elements.Definite;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Cursors;
 with Conts.Vectors.Nodes.Unbounded;
+with Conts.Properties;
 
 generic
    type Index_Type is (<>);
@@ -44,7 +45,6 @@ package Conts.Vectors.Definite_Unbounded is
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   subtype Cursor is Vectors.Cursor;
    type Vector is new Vectors.Vector with null record
       with Constant_Indexing => Constant_Reference,
            Iterable => (First       => First_Primitive,
@@ -57,6 +57,10 @@ package Conts.Vectors.Definite_Unbounded is
      is (Vectors.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Vectors.Cursors (Vectors);
+   subtype Cursor is Vectors.Cursor;
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Vectors.Vector'Class, Cursor, Element_Type, Vectors.Element);
+   package Returned_Maps renames Element_Maps;
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";

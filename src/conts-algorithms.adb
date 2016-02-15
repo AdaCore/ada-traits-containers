@@ -23,47 +23,49 @@ pragma Ada_2012;
 
 package body Conts.Algorithms is
 
-   ----------------------
-   -- Count_If_Convert --
-   ----------------------
+   -----------------------
+   -- Count_If_With_Map --
+   -----------------------
 
-   function Count_If_Convert
-      (Self      : Cursors.Cursors.Container;
+   function Count_If_With_Map
+      (Self      : Cursors.Container;
+       Map       : Maps.Map;
        Predicate : not null access function
-          (E : Cursors.Element) return Boolean)
+          (E : Maps.Value_Type) return Boolean)
       return Natural
    is
-      C : Cursors.Cursors.Cursor := Cursors.Cursors.First (Self);
+      C     : Cursors.Cursor := Cursors.First (Self);
       Count : Natural := 0;
    begin
-      while Cursors.Cursors.Has_Element (Self, C) loop
-         if Predicate
-            (Cursors.Convert (Cursors.Cursors.Element (Self, C)))
-         then
+      while Cursors.Has_Element (Self, C) loop
+         if Predicate (Maps.Get (Map, C)) then
             Count := Count + 1;
          end if;
-         C := Cursors.Cursors.Next (Self, C);
+         C := Cursors.Next (Self, C);
       end loop;
       return Count;
-   end Count_If_Convert;
+   end Count_If_With_Map;
 
    --------------
    -- Count_If --
    --------------
 
    function Count_If
-      (Self      : Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Returned) return Boolean)
-      return Natural
+     (Self      : Cursors.Container;
+      Predicate : not null access function
+        (E : Maps.Value_Type) return Boolean)
+       return Natural
    is
-      function Identity (E : Cursors.Returned) return Cursors.Returned
-         is (E) with Inline;
-      package C is new Conts.Cursors.Constant_Forward_Convert_Traits
-         (Cursors, Cursors.Returned, Identity);
-      function Internal is new Count_If_Convert (C);
+      C     : Cursors.Cursor := Cursors.First (Self);
+      Count : Natural := 0;
    begin
-      return Internal (Self, Predicate);
+      while Cursors.Has_Element (Self, C) loop
+         if Predicate (Maps.Get (Self, C)) then
+            Count := Count + 1;
+         end if;
+         C := Cursors.Next (Self, C);
+      end loop;
+      return Count;
    end Count_If;
 
    -------------

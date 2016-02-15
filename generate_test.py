@@ -205,12 +205,12 @@ end {test_name};
         # When using reference types
         if use_cursor_convert:
             self.args['adaptors'] = ("""
-   function Count_If is new Conts.Algorithms.Count_If_Convert
-      (Container.Cursors_Forward_Convert);""").format(**self.args)
+   function Count_If is new Conts.Algorithms.Count_If
+      (Container.Cursors.Forward, Container.Element_Maps);""").format(**self.args)
         else:
             self.args['adaptors'] = ("""
    function Count_If is new Conts.Algorithms.Count_If
-      (Container.Cursors.Constant_Forward);""").format(**self.args)
+      (Container.Cursors.Forward, Container.Returned_Maps);""").format(**self.args)
 
         self.__common()
 
@@ -227,8 +227,8 @@ end {test_name};
             """
    package Adaptors is new Conts.Cursors.Adaptors.""" +
             adaptors + """ (Container);
-   function Count_If is new Conts.Algorithms.Count_If_Convert
-      (Adaptors.Cursors_Forward_Convert);
+   function Count_If is new Conts.Algorithms.Count_If
+      (Adaptors.Cursors.Forward, Adaptors.Element_Maps);
 """).format(**self.args)
 
         else:
@@ -237,7 +237,7 @@ end {test_name};
    package Adaptors is new Conts.Cursors.Adaptors.""" +
             adaptors + """ (Container);
    function Count_If is new Conts.Algorithms.Count_If
-      (Adaptors.Cursors.Constant_Forward);
+      (Adaptors.Cursors.Forward, Adaptors.Returned_Maps);
 """).format(**self.args)
 
 
@@ -459,8 +459,8 @@ end {test_name};
     package Adaptors is new Conts.Cursors.Adaptors.""" + adaptors + \
     """_Adaptors
         (Container);
-    function Count_If is new Conts.Algorithms.Count_If_Convert
-       (Adaptors.Cursors_Forward_Convert);"""
+    function Count_If is new Conts.Algorithms.Count_If
+       (Adaptors.Cursors.Forward, Adaptors.Element_Maps);"""
 
         self.__common()
 
@@ -471,12 +471,12 @@ end {test_name};
         if use_cursors:
             if use_cursor_convert:
                 self.args['adaptors'] = ("""
-   function Count_If is new Conts.Algorithms.Count_If_Convert
-      (Container.Cursors_Forward_Convert);""").format(**self.args)
+   function Count_If is new Conts.Algorithms.Count_If
+      (Container.Cursors.Forward, Container.Element_Maps);""").format(**self.args)
             else:
                 self.args['adaptors'] = ("""
    function Count_If is new Conts.Algorithms.Count_If
-      (Container.Cursors.Constant_Forward);""").format(**self.args)
+      (Container.Cursors.Forward, Container.Pair_Maps);""").format(**self.args)
 
         self.__common(countif=use_cursors)
 
@@ -668,7 +668,7 @@ Map("IntInt", "hashed", "Def", "Def", "Unbounded",
     + '   (Conts.Hash_Type (K)) with Inline;\n'
     + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
     + '   (Integer, Integer, Ada.Finalization.Controlled, Hash);'
-    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Def_Def_Unbounded;',
     favorite=True).gen()
@@ -677,7 +677,7 @@ Map("IntInt", "hashed_linear_probing", "Def", "Def", "Unbounded",
      + '   (Conts.Hash_Type (K)) with Inline;\n'
     + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
     + '   (Integer, Integer, Ada.Finalization.Controlled, Hash);'
-    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Def_Def_Unbounded;',
     favorite=True).gen()
@@ -700,14 +700,14 @@ Map("StrStr", "Ada12_hashed", "Indef", "Indef", "Unbounded",
 Map("StrStr", "hashed", "Indef", "Indef", "Unbounded",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
     + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
-    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
     favorite=True).gen()
 Map("StrStr", "hashed_linear_probing", "Indef", "Indef", "Unbounded",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
     + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
-    + 'function Predicate (P : Container.Pair) return Boolean\n'
+    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
     favorite=True).gen()

@@ -21,6 +21,7 @@
 
 pragma Ada_2012;
 with Conts.Cursors;
+with Conts.Properties;
 
 package Conts.Algorithms is
 
@@ -29,32 +30,39 @@ package Conts.Algorithms is
    --------------
 
    generic
-      with package Cursors
-         is new Conts.Cursors.Constant_Forward_Convert_Traits (<>);
-   function Count_If_Convert
-      (Self      : Cursors.Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Element) return Boolean)
+      with package Cursors is new Conts.Cursors.Forward_Cursors (<>);
+      with package Maps is new Conts.Properties.Read_Only_Maps
+        (Key_Type => Cursors.Cursor, others => <>);
+   function Count_If_With_Map
+     (Self      : Cursors.Container;
+      Map       : Maps.Map;
+      Predicate : not null access function
+        (E : Maps.Value_Type) return Boolean)
       return Natural
-      with Global => null;
+     with Global => null;
    --  Count the number of elements in the container that match the predicate
 
    generic
-      with package Cursors is new Conts.Cursors.Constant_Forward_Traits (<>);
+      with package Cursors is new Conts.Cursors.Forward_Cursors (<>);
+      with package Maps is new Conts.Properties.Read_Only_Maps
+        (Map_Type => Cursors.Container,
+         Key_Type => Cursors.Cursor,
+         others   => <>);
    function Count_If
-      (Self      : Cursors.Container;
-       Predicate : not null access function
-          (E : Cursors.Returned) return Boolean)
+     (Self      : Cursors.Container;
+      Predicate : not null access function
+        (E : Maps.Value_Type) return Boolean)
       return Natural
-      with Global => null;
-   --  Count the number of elements in the container that match the predicate
+     with Global => null;
+   --  Same as above, but the container itself is the property map to
+   --  retrieve the element
 
    -------------
    -- Shuffle --
    -------------
 
    generic
-      with package Cursors is new Conts.Cursors.Random_Traits (<>);
+      with package Cursors is new Conts.Cursors.Random_Access_Cursors (<>);
       with package Random is new Conts.Uniform_Random_Traits
         (Discrete_Type => Cursors.Index, others => <>);
       with procedure Swap

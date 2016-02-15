@@ -358,17 +358,17 @@ package body Conts.Maps.Generics is
       return C;
    end First;
 
-   -------------
-   -- Element --
-   -------------
+   ----------
+   -- Pair --
+   ----------
 
-   function Element
-     (Self : Map'Class; Position : Cursor) return Pair
+   function Pair
+     (Self : Map'Class; Position : Cursor) return Pair_Type
    is
       P : Slot renames Self.Table (Position.Index);
    begin
       return (Key => P.Key, Value => P.Value);
-   end Element;
+   end Pair;
 
    -----------------
    -- Has_Element --

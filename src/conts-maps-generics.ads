@@ -98,16 +98,25 @@ package Conts.Maps.Generics is
 
    type Cursor is private;
 
-   type Pair is private;
-   function Key   (P : Pair) return Keys.Returned_Type with Inline;
-   function Value (P : Pair) return Elements.Returned_Type with Inline;
+   type Pair_Type is private;
+   function Key   (P : Pair_Type) return Keys.Returned_Type with Inline;
+   function Value (P : Pair_Type) return Elements.Returned_Type with Inline;
    --  This record contains both the key and the value of an element stored
    --  in the table.
 
-   function First (Self : Map'Class) return Cursor
+   function Pair
+     (Self : Map'Class; Position : Cursor) return Pair_Type
      with Inline, Global => null;
    function Element
-     (Self : Map'Class; Position : Cursor) return Pair
+     (Self : Map'Class; Position : Cursor) return Elements.Returned_Type
+     is (Value (Pair (Self, Position)))
+     with Inline, Global => null;
+   function As_Element
+     (Self : Map'Class; Position : Cursor) return Elements.Element_Type
+     is (Elements.To_Element (Value (Pair (Self, Position))))
+     with Inline, Global => null;
+
+   function First (Self : Map'Class) return Cursor
      with Inline, Global => null;
    function Has_Element
      (Self : Map'Class; Position : Cursor) return Boolean
@@ -121,8 +130,8 @@ package Conts.Maps.Generics is
    function First_Primitive (Self : Map) return Cursor
       is (First (Self)) with Inline;
    function Element_Primitive
-     (Self : Map; Position : Cursor) return Pair
-     is (Element (Self, Position)) with Inline;
+     (Self : Map; Position : Cursor) return Pair_Type
+     is (Pair (Self, Position)) with Inline;
    function Has_Element_Primitive
      (Self : Map; Position : Cursor) return Boolean
      is (Has_Element (Self, Position)) with Inline;
@@ -168,7 +177,7 @@ private
    type Slot_Table_Access is access Slot_Table;
    for Slot_Table_Access'Storage_Pool use Pool.Pool.all;
 
-   type Pair is record
+   type Pair_Type is record
       Key   : Keys.Stored_Type;
       Value : Elements.Stored_Type;
    end record;
@@ -190,9 +199,9 @@ private
       --  size as a mask for hashes.
    end record;
 
-   function Key   (P : Pair) return Keys.Returned_Type
+   function Key   (P : Pair_Type) return Keys.Returned_Type
    is (Keys.To_Return (P.Key));
-   function Value (P : Pair) return Elements.Returned_Type
+   function Value (P : Pair_Type) return Elements.Returned_Type
    is (Elements.To_Return (P.Value));
 
 end Conts.Maps.Generics;

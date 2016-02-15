@@ -26,6 +26,7 @@ with Conts.Elements.Indefinite;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Cursors;
 with Conts.Vectors.Nodes.Unbounded;
+with Conts.Properties;
 
 generic
    type Index_Type is range <>;
@@ -41,7 +42,6 @@ package Conts.Vectors.Indefinite_Unbounded is
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   subtype Cursor is Vectors.Cursor;
    type Vector is new Vectors.Vector with null record
       with Iterable => (First       => First_Primitive,
                         Next        => Next_Primitive,
@@ -55,6 +55,11 @@ package Conts.Vectors.Indefinite_Unbounded is
    --  just use the standard assignment operator.
 
    package Cursors is new Conts.Vectors.Cursors (Vectors);
+   subtype Cursor is Cursors.Forward.Cursor;
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Vectors.Vector'Class, Cursor, Element_Type, Vectors.Element);
+   package Returned_Maps is new Conts.Properties.Read_Only_Maps
+     (Vectors.Vector'Class, Cursor, Elements.Traits.Returned, Vectors.Element);
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";

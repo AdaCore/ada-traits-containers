@@ -20,15 +20,25 @@
 ------------------------------------------------------------------------------
 
 --  This package provides signature packages that describe how to iterate over
---  containers, or to point to containers objects.
+--  containers.
+--  Such cursors do not provide access to the elements that are in the
+--  container, this is done via a separate instance of property maps (see
+--  the package Conts.Properties for more information). Separating the two
+--  concepts keeps them simpler:
+--     We currently provide Forward, Bidirectional and Random_Access cursors
+--  If accessing and modifying the elements was built into the concept of
+--  cursors, we would need an extra version for all of these to mean
+--  Constant_Forward, Constant_Bidirectional and Constant_Random_Access, and
+--  perhaps even a concept of Write_Only cursor (for output streams for
+--  instance).
 
 pragma Ada_2012;
 
 package Conts.Cursors with SPARK_Mode is
 
-   -----------------------------
-   -- Constant_Forward_Traits --
-   -----------------------------
+   ---------------------
+   -- Forward_Cursors --
+   ---------------------
    --  A package that describes how to use forward cursors.  Each container
    --  for which this is applicable provides an instance of this package,
    --  and algorithms should take this package as a generic parameter.
@@ -36,90 +46,51 @@ package Conts.Cursors with SPARK_Mode is
    generic
       type Container_Type (<>) is limited private;
       type Cursor_Type is private;
-      type Returned_Type (<>) is private;
       with function First (Self : Container_Type) return Cursor_Type is <>;
-      with function Element (Self : Container_Type; Pos : Cursor_Type)
-         return Returned_Type is <>;
       with function Has_Element (Self : Container_Type; Pos : Cursor_Type)
          return Boolean is <>;
       with function Next (Self : Container_Type; Pos : Cursor_Type)
          return Cursor_Type is <>;
-
-   package Constant_Forward_Traits is
+   package Forward_Cursors is
       subtype Container is Container_Type;
       subtype Cursor    is Cursor_Type;
-      subtype Returned  is Returned_Type;
-   end Constant_Forward_Traits;
+   end Forward_Cursors;
 
-   -----------------------------------
-   -- Constant_Bidirectional_Traits --
-   -----------------------------------
+   ---------------------------
+   -- Bidirectional_Cursors --
+   ---------------------------
 
    generic
       type Container_Type (<>) is limited private;
       type Cursor_Type is private;
-      type Returned_Type (<>) is private;
       with function First (Self : Container_Type) return Cursor_Type is <>;
-      with function Element (Self : Container_Type; Pos : Cursor_Type)
-         return Returned_Type is <>;
       with function Has_Element (Self : Container_Type; Pos : Cursor_Type)
          return Boolean is <>;
       with function Next (Self : Container_Type; Pos : Cursor_Type)
          return Cursor_Type is <>;
       with function Previous (Self : Container_Type; Pos : Cursor_Type)
          return Cursor_Type is <>;
-
-   package Constant_Bidirectional_Traits is
+   package Bidirectional_Cursors is
       subtype Container is Container_Type;
       subtype Cursor    is Cursor_Type;
-      subtype Returned  is Returned_Type;
 
       --  A bidirectional cursor is also a forward cursor
-      package Constant_Forward is new Constant_Forward_Traits
-         (Container, Cursor, Returned_Type);
-   end Constant_Bidirectional_Traits;
+      package Forward is new Forward_Cursors (Container, Cursor);
+   end Bidirectional_Cursors;
 
-   -----------------------------
-   -- Cursors on Element_Type --
-   -----------------------------
-   --  The above cursor packages will return a Returned_Type, not an
-   --  Element_Type as stored in the container.
-   --  For some containers, a Returned_Type is in fact a reference type, as a
-   --  way to efficiently return unconstrained types without copying them.
-   --  However, algorithms often expect to work on the original Element_Type,
-   --  so the following provides a wrapper with a conversion function.
-   --
-   --  Design: we did not put these conversion functions in the Element_Traits
-   --  packages because a cursor traits does not have access to these element
-   --  traits.
-
-   generic
-      with package Cursors is new Constant_Forward_Traits (<>);
-      type Element_Type (<>) is private;
-      with function Convert
-         (E : Cursors.Returned_Type) return Element_Type is <>;
-   package Constant_Forward_Convert_Traits is
-      subtype Element is Element_Type;
-   end Constant_Forward_Convert_Traits;
-
-   -----------------------------
-   -- Constant Random cursors --
-   -----------------------------
-   --  These are cursors that can access any element from a container, not in
-   --  any specific order.
+   ----------------------------
+   -- Random_Access_Cursors --
+   ----------------------------
+   --  These are cursors that can access any element from a container, in no
+   --  specific order.
 
    generic
       type Container_Type (<>) is limited private;
       type Index_Type is (<>);
-      type Returned_Type (<>) is private;
 
       with function First (Self : Container_Type) return Index_Type is <>;
       --  Index of the first element in the container (often Index_Type'First)
       --  ??? Can we remove this parameter and always use Index_Type'First
-
-      with function Element (Self : Container_Type; Pos : Index_Type)
-        return Returned_Type is <>;
-      --  Access any element of the container
 
       with function Last (Self : Container_Type) return Index_Type is <>;
       --  Return the index of the last valid element in the container.
@@ -131,25 +102,21 @@ package Conts.Cursors with SPARK_Mode is
       --  Return the number of elements between the two positions.
 
       with function "+"
-        (left : Index_Type; N : Integer) return Index_Type is <>;
+        (Left : Index_Type; N : Integer) return Index_Type is <>;
       --  Move Left forward or backward by a number of position.
 
-   package Constant_Random_Traits is
+   package Random_Access_Cursors is
       subtype Container is Container_Type;
       subtype Index     is Index_Type;
-      subtype Returned  is Returned_Type;
 
       function "-" (Left : Index_Type; N : Integer) return Index_Type
         is (Left + (-N)) with Inline;
 
-      function Next
-        (Self : Container_Type; Idx : Index_Type)
-         return Index_Type
+      function Next (Self : Container_Type; Idx : Index_Type) return Index_Type
         is (Idx + 1) with Inline;
 
       function Previous
-        (Self : Container_Type; Idx : Index_Type)
-         return Index_Type
+        (Self : Container_Type; Idx : Index_Type) return Index_Type
         is (Idx - 1) with Inline;
 
       function Has_Element
@@ -160,65 +127,9 @@ package Conts.Cursors with SPARK_Mode is
       --  the compiler can simply remove the test.
 
       --  A random cursor is also a bidirectional and forward cursor
-      package Constant_Bidirectional is new Constant_Bidirectional_Traits
-        (Container, Index_Type, Returned_Type);
-      package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
-   end Constant_Random_Traits;
-
-   --------------------
-   -- Random cursors --
-   --------------------
-
-   generic
-      type Container_Type (<>) is limited private;
-      type Index_Type is (<>);
-      type Returned_Type (<>) is private;
-      type Element_Type (<>) is private;
-
-      with function First (Self : Container_Type) return Index_Type is <>;
-      --  Index of the first element in the container (often Index_Type'First)
-      --  ??? Can we remove this parameter and always use Index_Type'First
-
-      with function Element (Self : Container_Type; Pos : Index_Type)
-                             return Returned_Type is <>;
-      --  Access any element of the container
-
-      with function Last (Self : Container_Type) return Index_Type is <>;
-      --  Return the index of the last valid element in the container.
-      --  We do not use a Has_Element function, since having an explicit range
-      --  is more convenient for algorithms (for instance to select random
-      --  elements in the container).
-
-      with function "-" (Left, Right : Index_Type) return Integer is <>;
-      --  Return the number of elements between the two positions.
-
-      with function "+"
-        (left : Index_Type; N : Integer) return Index_Type is <>;
-      --  Move Left forward or backward by a number of position.
-
-      with procedure Set_Element
-        (Self     : in out Container_Type;
-         Position : Index_Type;
-         Value    : Element_Type) is <>;
-      --  Modify the element at the given position
-
-   package Random_Traits is
-      subtype Container is Container_Type;
-      subtype Index     is Index_Type;
-      subtype Returned  is Returned_Type;
-
-      package Constant_Random is new Constant_Random_Traits
-        (Container_Type, Index_Type, Returned_Type);
-      package Constant_Bidirectional
-         renames Constant_Random.Constant_Bidirectional;
-      package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
-
-      function Has_Element
-        (Self : Container; Idx : Index) return Boolean
-         renames Constant_Random.Has_Element;
-      function "-" (Left : Index; N : Integer) return Index
-        renames Constant_Random."-";
-
-   end Random_Traits;
+      package Bidirectional is
+        new Bidirectional_Cursors (Container, Index_Type);
+      package Forward renames Bidirectional.Forward;
+   end Random_Access_Cursors;
 
 end Conts.Cursors;

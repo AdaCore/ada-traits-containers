@@ -28,6 +28,7 @@ with Conts.Elements.Definite;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
 with Conts.Lists.Nodes.Unbounded;
+with Conts.Properties;
 
 generic
    type Element_Type is private;
@@ -54,4 +55,8 @@ package Conts.Lists.Definite_Unbounded is
      is (Lists.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Lists.Cursors (Lists);
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Lists.List'Class, Cursor, Element_Type, Lists.Element);
+   package Returned_Maps renames Element_Maps;
+
 end Conts.Lists.Definite_Unbounded;

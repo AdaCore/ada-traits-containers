@@ -188,8 +188,8 @@ package body Conts.Graphs.DFS is
          VC := Graphs.Vertex_Cursors.First (G);
          while Graphs.Vertex_Cursors.Has_Element (G, VC) loop
             Color_Maps.Set
-              (Colors, Graphs.Vertex_Cursors.Element (G, VC), White);
-            Visit.Initialize_Vertex (G, Graphs.Vertex_Cursors.Element (G, VC));
+              (Colors, Graphs.Vertex_Maps.Get (G, VC), White);
+            Visit.Initialize_Vertex (G, Graphs.Vertex_Maps.Get (G, VC));
             Count := Count + 1;
             VC := Graphs.Vertex_Cursors.Next (G, VC);
          end loop;
@@ -216,9 +216,8 @@ package body Conts.Graphs.DFS is
          while not Terminated
            and then Vertex_Cursors.Has_Element (G, VC)
          loop
-            if Color_Maps.Get (Colors, Vertex_Cursors.Element (G, VC)) = White
-            then
-               Impl (Vertex_Cursors.Element (G, VC));
+            if Color_Maps.Get (Colors, Vertex_Maps.Get (G, VC)) = White then
+               Impl (Vertex_Maps.Get (G, VC));
             end if;
 
             VC := Vertex_Cursors.Next (G, VC);
@@ -286,8 +285,8 @@ package body Conts.Graphs.DFS is
 
          VC := Vertex_Cursors.First (G);
          while Vertex_Cursors.Has_Element (G, VC) loop
-            Color_Maps.Set (Colors, Vertex_Cursors.Element (G, VC), White);
-            Visit.Initialize_Vertex (G, Vertex_Cursors.Element (G, VC));
+            Color_Maps.Set (Colors, Vertex_Maps.Get (G, VC), White);
+            Visit.Initialize_Vertex (G, Vertex_Maps.Get (G, VC));
             Count := Count + 1;
             VC := Vertex_Cursors.Next (G, VC);
          end loop;
@@ -305,10 +304,8 @@ package body Conts.Graphs.DFS is
 
          VC := Vertex_Cursors.First (G);
          while not Terminated and then Vertex_Cursors.Has_Element (G, VC) loop
-            if Color_Maps.Get
-              (Colors, Vertex_Cursors.Element (G, VC)) = White
-            then
-               Impl (Vertex_Cursors.Element (G, VC));
+            if Color_Maps.Get (Colors, Vertex_Maps.Get (G, VC)) = White then
+               Impl (Vertex_Maps.Get (G, VC));
             end if;
 
             VC := Vertex_Cursors.Next (G, VC);

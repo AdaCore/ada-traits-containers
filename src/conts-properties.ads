@@ -19,20 +19,50 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This package describes how to associate values with keys.
---  This is in particular used for graph algorithms to store whether a vertex
---  was visited.
---  There are two approaches here:
---    * Either the container itself is able to store the information directly
---      (in the vertex, the edge, or in some other internal field).
---    * Or an external data structure (provided just for the duration of
---      the algorithm) is used. For instance, a vector indexed by a unique
---      integer id associated with the vertices or edges. Or a map.
+--  This package describes the concept of property maps.
+--  These are an abstract description that explain how to extract information
+--  from a container, and possibly set information.
 --
---  Both types of maps have similar generic profiles, but in some cases the
---  Map will be the container itself (and most likely the Clear operation
---  should do nothing). In other cases, the algorithm will need to create the
---  map explicitly.
+--  It is used almost everywhere in this library. Here are some examples:
+--
+--    * Retrieving stored elements from a container given a cursor.
+--      A container of course provides such a capability directly (generally
+--      via a function named Element or Get). But the generic algorithms also
+--      need to know how to do this operation.
+--      Some libraries chose to associate this capability directly with cursors
+--      so that a cursor traits package also provides the Get command. But this
+--      is slightly inflexible, since containers now need to provide different
+--      traits package when they need to return different information (for
+--      instance a map could chose to return either the element's key, its
+--      value, or a pair of the two. And yet this is the same cursor in all
+--      cases.
+--
+--    * Storing temporary information in the container
+--      Graph algorithms typically need to mark vertices when they are visited
+--      so that they are not processed again later on.
+--      There are two approaches here:
+--
+--        - Either the container itself is able to store the information
+--          directly (in the vertex, the edge, or in some other internal
+--          field).
+--
+--        - Or an external data structure (provided just for the duration of
+--          the algorithm) is used. For instance, a vector indexed by a unique
+--          integer id associated with the vertices or edges. Or a map.
+--
+--      In both cases, the algorithm needs to perform the same Set and Get
+--      operation. But in the first case, the map is the container itself (and
+--      most likely the Clear operation will do nothing). These are called
+--      "internal maps".
+--
+--  Such internal maps are exactly what is used to retrieve an element stored
+--  in the container, as described in the first bullet above. But instead of
+--  just relying on a primitive operation of the container (which would limit
+--  the reusability of the algorithm to other data structures), or a Get
+--  formal parameter that assumes the map is the container, the algorithms
+--  generally let users decide where the map is stored.
+--  This provides one level of indirection (with no performance cost in the
+--  general case), which is sometimes useful to reuse algorithms.
 --
 --  In general, multiple versions of the algorithms will be provided, one for
 --  each type of map (interior or exterior), and one that takes the map
@@ -40,9 +70,24 @@
 --  map on its own, and the container can act as its own map.
 
 pragma Ada_2012;
-with Conts.Vectors.Definite_Unbounded;
 
 package Conts.Properties is
+
+   -----------------------------
+   -- Read-only property maps --
+   -----------------------------
+
+   generic
+      type Map_Type (<>) is limited private;
+      type Key_Type (<>) is limited private;
+      type Value_Type (<>) is private;
+      with function Get (M : Map_Type; K : Key_Type) return Value_Type is <>;
+
+   package Read_Only_Maps is
+      subtype Map is Map_Type;
+      subtype Key is Key_Type;
+      subtype Value is Value_Type;
+   end Read_Only_Maps;
 
    -------------------
    -- Property maps --
@@ -50,70 +95,18 @@ package Conts.Properties is
 
    generic
       type Map_Type (<>) is limited private;
-      --  The place where the information is stored, either the container
-      --  itself or a separate data structure.
-
       type Key_Type (<>) is limited private;
       type Value_Type is private;
-
       with procedure Set
          (M : in out Map_Type; K : Key_Type; V : Value_Type) is <>;
       with function Get (M : Map_Type; K : Key_Type) return Value_Type is <>;
       with procedure Clear (M : in out Map_Type) is null;
-
    package Maps is
       subtype Map is Map_Type;
       subtype Key is Key_Type;
       subtype Value is Value_Type;
+
+      package As_Read_Only is new Read_Only_Maps (Map, Key, Value);
    end Maps;
-
-   ---------------------------
-   -- Indexed property maps --
-   ---------------------------
-   --  An implementation of property maps that can be used when the key
-   --  maps to indexes. These are implemented as vectors, rather than
-   --  arrays, so that they can be used without necessarily knowing the
-   --  required size in advance, and because a very large array for a
-   --  very large container could blow the stack.
-   --  The map is also set as a limited type to limit the number of
-   --  copies. This ensures that Create_Map builds the map in place.
-
-   generic
-      type Container_Type (<>) is limited private;
-      type Key_Type (<>) is limited private;
-      type Value_Type is private;
-
-      Default_Value : Value_Type;
-      --  These maps are implemented as vectors, and a default value is needed
-      --  when the vector is resized.
-
-      type Index_Type is (<>);
-      type Container_Base_Type is abstract tagged limited private;
-
-      with function Get_Index (K : Key_Type) return Index_Type is <>;
-      --  Maps the key to an index
-
-      with function Length (G : Container_Type) return Count_Type is <>;
-      --  Use to reserve the initial capacity for the vector. This can
-      --  safely return 0 or any values, since the vector is unbounded. But
-      --  returning a proper value will speed things up by avoiding reallocs.
-
-   package Indexed_Maps is
-
-      package Value_Vectors is new Conts.Vectors.Definite_Unbounded
-        (Index_Type, Value_Type, Container_Base_Type => Container_Base_Type);
-
-      type Map is limited record
-         Values : Value_Vectors.Vector;
-      end record;
-      function Get (M : Map; K : Key_Type) return Value_Type;
-      procedure Set (M : in out Map; K : Key_Type; Val : Value_Type);
-      procedure Clear (M : in out Map);
-
-      function Create_Map (G : Container_Type) return Map;
-      --  Create a new uninitialized map
-
-      package As_Map is new Maps (Map, Key_Type, Value_Type, Set, Get, Clear);
-   end Indexed_Maps;
 
 end Conts.Properties;

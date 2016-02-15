@@ -34,6 +34,7 @@ with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Vectors;
+with Conts.Properties;
 
 package Conts.Cursors.Adaptors is
 
@@ -43,14 +44,12 @@ package Conts.Cursors.Adaptors is
 
    generic
       with package Lists is
-          new Ada.Containers.Bounded_Doubly_Linked_Lists (<>);
+        new Ada.Containers.Bounded_Doubly_Linked_Lists (<>);
    package Bounded_List_Adaptors is
       subtype Element_Type is Lists.Element_Type;
       subtype List is Lists.List;
       subtype Cursor is Lists.Cursor;
 
-      function First (Self : List) return Cursor
-         renames Lists.First;
       function Element (Self : List; Position : Cursor) return Element_Type
          is (Lists.Element (Position)) with Inline;
       function Has_Element (Self : List; Position : Cursor) return Boolean
@@ -61,13 +60,16 @@ package Conts.Cursors.Adaptors is
          is (Lists.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => List'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Element_Type);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Lists.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
+
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (List'Class, Cursor, Element_Type, Element);
+      package Returned_Maps renames Element_Maps;
    end Bounded_List_Adaptors;
 
    -------------------------------------
@@ -81,8 +83,6 @@ package Conts.Cursors.Adaptors is
       subtype List is Lists.List;
       subtype Cursor is Lists.Cursor;
 
-      function First (Self : List) return Cursor
-         renames Lists.First;
       function Element (Self : List; Position : Cursor) return Element_Type
          is (Lists.Element (Position)) with Inline;
       function Has_Element (Self : List; Position : Cursor) return Boolean
@@ -93,13 +93,16 @@ package Conts.Cursors.Adaptors is
          is (Lists.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => List'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Element_Type);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Lists.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
+
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (List'Class, Cursor, Element_Type, Element);
+      package Returned_Maps renames Element_Maps;
    end List_Adaptors;
 
    ------------------------------------------------
@@ -111,14 +114,14 @@ package Conts.Cursors.Adaptors is
          new Ada.Containers.Indefinite_Doubly_Linked_Lists (<>);
    package Indefinite_List_Adaptors is
       subtype Element_Type is Lists.Element_Type;
-      subtype Returned_Type is Lists.Constant_Reference_Type;
+      subtype Returned is Lists.Constant_Reference_Type;
       subtype List is Lists.List;
       subtype Cursor is Lists.Cursor;
 
-      function First (Self : List) return Cursor
-         renames Lists.First;
-      function Element (Self : List; Position : Cursor) return Returned_Type
+      function Element (Self : List; Position : Cursor) return Returned
          is (Lists.Constant_Reference (Self, Position)) with Inline;
+      function Element (Self : List; Position : Cursor) return Element_Type
+         is (Element (Self, Position).Element.all) with Inline;
       function Has_Element (Self : List; Position : Cursor) return Boolean
          is (Lists.Has_Element (Position)) with Inline;
       function Next (Self : List; Position : Cursor) return Cursor
@@ -127,19 +130,17 @@ package Conts.Cursors.Adaptors is
          is (Lists.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => List'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Returned_Type);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Lists.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      function From_Ref_To_Elem (R : Returned_Type) return Element_Type
-         is (R.Element.all) with Inline;
-      package Cursors_Forward_Convert is
-         new Conts.Cursors.Constant_Forward_Convert_Traits
-           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+      package Returned_Maps is new Conts.Properties.Read_Only_Maps
+        (List'Class, Cursor, Returned, Element);
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (List'Class, Cursor, Element_Type, Element);
    end Indefinite_List_Adaptors;
 
    ---------------------------------
@@ -153,8 +154,6 @@ package Conts.Cursors.Adaptors is
       subtype Vector is Vectors.Vector;
       subtype Cursor is Vectors.Cursor;
 
-      function First (Self : Vector) return Cursor
-         renames Vectors.First;
       function Element (Self : Vector; Position : Cursor) return Element_Type
          is (Vectors.Element (Position)) with Inline;
       function Has_Element (Self : Vector; Position : Cursor) return Boolean
@@ -165,13 +164,17 @@ package Conts.Cursors.Adaptors is
          is (Vectors.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         --  ??? Should provide random access cursors
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Element_Type);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Vectors.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
+
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Vector'Class, Cursor, Element_Type, Element);
+      package Returned_Maps renames Element_Maps;
    end Bounded_Vector_Adaptors;
 
    -------------------------
@@ -185,8 +188,6 @@ package Conts.Cursors.Adaptors is
       subtype Vector is Vectors.Vector;
       subtype Cursor is Vectors.Cursor;
 
-      function First (Self : Vector) return Cursor
-         renames Vectors.First;
       function Element (Self : Vector; Position : Cursor) return Element_Type
          is (Vectors.Element (Position)) with Inline;
       function Has_Element (Self : Vector; Position : Cursor) return Boolean
@@ -197,13 +198,16 @@ package Conts.Cursors.Adaptors is
          is (Vectors.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Element_Type);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Vectors.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
+
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Vector'Class, Cursor, Element_Type, Element);
+      package Returned_Maps renames Element_Maps;
    end Vector_Adaptors;
 
    ------------------------------------
@@ -218,10 +222,10 @@ package Conts.Cursors.Adaptors is
       subtype Vector       is Vectors.Vector;
       subtype Cursor       is Vectors.Cursor;
 
-      function First (Self : Vector) return Cursor
-         renames Vectors.First;
       function Element (Self : Vector; Position : Cursor) return Returned
          is (Vectors.Constant_Reference (Self, Position)) with Inline;
+      function Element (Self : Vector; Position : Cursor) return Element_Type
+         is (Element (Self, Position).Element.all) with Inline;
       function Has_Element (Self : Vector; Position : Cursor) return Boolean
          is (Vectors.Has_Element (Position)) with Inline;
       function Next (Self : Vector; Position : Cursor) return Cursor
@@ -230,19 +234,17 @@ package Conts.Cursors.Adaptors is
          is (Vectors.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Returned);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Vectors.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      function From_Ref_To_Elem (R : Returned) return Element_Type
-         is (R.Element.all) with Inline;
-      package Cursors_Forward_Convert is
-         new Conts.Cursors.Constant_Forward_Convert_Traits
-           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+      package Returned_Maps is new Conts.Properties.Read_Only_Maps
+        (Vector'Class, Cursor, Returned, Element);
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Vector'Class, Cursor, Element_Type, Element);
    end Indefinite_Vector_Adaptors;
 
    -----------------------------
@@ -250,34 +252,33 @@ package Conts.Cursors.Adaptors is
    -----------------------------
 
    generic
-      with package Maps is new Ada.Containers.Hashed_Maps (<>);
+      with package Hashed_Maps is new Ada.Containers.Hashed_Maps (<>);
    package Hashed_Maps_Adaptors is
-      subtype Element_Type is Maps.Element_Type;
-      subtype Returned     is Maps.Constant_Reference_Type;
-      subtype Map          is Maps.Map;
-      subtype Cursor       is Maps.Cursor;
+      subtype Element_Type is Hashed_Maps.Element_Type;
+      subtype Returned     is Hashed_Maps.Constant_Reference_Type;
+      subtype Map          is Hashed_Maps.Map;
+      subtype Cursor       is Hashed_Maps.Cursor;
 
-      function First (Self : Map) return Cursor
-         renames Maps.First;
       function Element (Self : Map; Position : Cursor) return Returned
-         is (Maps.Constant_Reference (Self, Position)) with Inline;
+         is (Hashed_Maps.Constant_Reference (Self, Position)) with Inline;
+      function Element (Self : Map; Position : Cursor) return Element_Type
+         is (Element (Self, Position).Element.all) with Inline;
       function Has_Element (Self : Map; Position : Cursor) return Boolean
-         is (Maps.Has_Element (Position)) with Inline;
+         is (Hashed_Maps.Has_Element (Position)) with Inline;
       function Next (Self : Map; Position : Cursor) return Cursor
-         is (Maps.Next (Position)) with Inline;
+         is (Hashed_Maps.Next (Position)) with Inline;
 
       package Cursors is
-         package Constant_Forward is new Constant_Forward_Traits
+         package Forward is new Forward_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Returned);
+             First          => Hashed_Maps.First);
       end Cursors;
 
-      function From_Ref_To_Elem (R : Returned) return Element_Type
-         is (R.Element.all) with Inline;
-      package Cursors_Forward_Convert is
-         new Conts.Cursors.Constant_Forward_Convert_Traits
-           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+      package Returned_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Returned, Element);
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Element_Type, Element);
    end Hashed_Maps_Adaptors;
 
    -------------------------------------
@@ -285,34 +286,33 @@ package Conts.Cursors.Adaptors is
    -------------------------------------
 
    generic
-      with package Maps is new Ada.Containers.Bounded_Hashed_Maps (<>);
+      with package Hashed_Maps is new Ada.Containers.Bounded_Hashed_Maps (<>);
    package Bounded_Hashed_Maps_Adaptors is
-      subtype Element_Type is Maps.Element_Type;
-      subtype Returned     is Maps.Constant_Reference_Type;
-      subtype Map          is Maps.Map;
-      subtype Cursor       is Maps.Cursor;
+      subtype Element_Type is Hashed_Maps.Element_Type;
+      subtype Returned     is Hashed_Maps.Constant_Reference_Type;
+      subtype Map          is Hashed_Maps.Map;
+      subtype Cursor       is Hashed_Maps.Cursor;
 
-      function First (Self : Map) return Cursor
-         renames Maps.First;
       function Element (Self : Map; Position : Cursor) return Returned
-         is (Maps.Constant_Reference (Self, Position)) with Inline;
+         is (Hashed_Maps.Constant_Reference (Self, Position)) with Inline;
+      function Element (Self : Map; Position : Cursor) return Element_Type
+         is (Element (Self, Position).Element.all) with Inline;
       function Has_Element (Self : Map; Position : Cursor) return Boolean
-         is (Maps.Has_Element (Position)) with Inline;
+         is (Hashed_Maps.Has_Element (Position)) with Inline;
       function Next (Self : Map; Position : Cursor) return Cursor
-         is (Maps.Next (Position)) with Inline;
+         is (Hashed_Maps.Next (Position)) with Inline;
 
       package Cursors is
-         package Constant_Forward is new Constant_Forward_Traits
+         package Forward is new Forward_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Returned);
+             First          => Hashed_Maps.First);
       end Cursors;
 
-      function From_Ref_To_Elem (R : Returned) return Element_Type
-         is (R.Element.all) with Inline;
-      package Cursors_Forward_Convert is
-         new Conts.Cursors.Constant_Forward_Convert_Traits
-           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+      package Returned_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Returned, Element);
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Element_Type, Element);
    end Bounded_Hashed_Maps_Adaptors;
 
    ------------------------------
@@ -320,38 +320,36 @@ package Conts.Cursors.Adaptors is
    ------------------------------
 
    generic
-      with package Maps is new Ada.Containers.Ordered_Maps (<>);
+      with package Ordered_Maps is new Ada.Containers.Ordered_Maps (<>);
    package Ordered_Maps_Adaptors is
-      subtype Element_Type is Maps.Element_Type;
-      subtype Returned     is Maps.Constant_Reference_Type;
-      subtype Map          is Maps.Map;
-      subtype Cursor       is Maps.Cursor;
+      subtype Element_Type is Ordered_Maps.Element_Type;
+      subtype Returned     is Ordered_Maps.Constant_Reference_Type;
+      subtype Map          is Ordered_Maps.Map;
+      subtype Cursor       is Ordered_Maps.Cursor;
 
-      function First (Self : Map) return Cursor
-         renames Maps.First;
       function Element (Self : Map; Position : Cursor) return Returned
-         is (Maps.Constant_Reference (Self, Position)) with Inline;
+         is (Ordered_Maps.Constant_Reference (Self, Position)) with Inline;
+      function Element (Self : Map; Position : Cursor) return Element_Type
+         is (Element (Self, Position).Element.all) with Inline;
       function Has_Element (Self : Map; Position : Cursor) return Boolean
-         is (Maps.Has_Element (Position)) with Inline;
+         is (Ordered_Maps.Has_Element (Position)) with Inline;
       function Next (Self : Map; Position : Cursor) return Cursor
-         is (Maps.Next (Position)) with Inline;
+         is (Ordered_Maps.Next (Position)) with Inline;
       function Previous (Self : Map; Position : Cursor) return Cursor
-         is (Maps.Previous (Position)) with Inline;
+         is (Ordered_Maps.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Returned);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Ordered_Maps.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      function From_Ref_To_Elem (R : Returned) return Element_Type
-         is (R.Element.all) with Inline;
-      package Cursors_Forward_Convert is
-         new Conts.Cursors.Constant_Forward_Convert_Traits
-           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+      package Returned_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Returned, Element);
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Element_Type, Element);
    end Ordered_Maps_Adaptors;
 
    ----------------------------------------
@@ -359,35 +357,34 @@ package Conts.Cursors.Adaptors is
    ----------------------------------------
 
    generic
-      with package Maps is
+      with package Hashed_Maps is
          new Ada.Containers.Indefinite_Hashed_Maps (<>);
    package Indefinite_Hashed_Maps_Adaptors is
-      subtype Element_Type is Maps.Element_Type;
-      subtype Returned     is Maps.Constant_Reference_Type;
-      subtype Map          is Maps.Map;
-      subtype Cursor       is Maps.Cursor;
+      subtype Element_Type is Hashed_Maps.Element_Type;
+      subtype Returned     is Hashed_Maps.Constant_Reference_Type;
+      subtype Map          is Hashed_Maps.Map;
+      subtype Cursor       is Hashed_Maps.Cursor;
 
-      function First (Self : Map) return Cursor
-         renames Maps.First;
       function Element (Self : Map; Position : Cursor) return Returned
-         is (Maps.Constant_Reference (Self, Position)) with Inline;
+         is (Hashed_Maps.Constant_Reference (Self, Position)) with Inline;
+      function Element (Self : Map; Position : Cursor) return Element_Type
+         is (Element (Self, Position).Element.all) with Inline;
       function Has_Element (Self : Map; Position : Cursor) return Boolean
-         is (Maps.Has_Element (Position)) with Inline;
+         is (Hashed_Maps.Has_Element (Position)) with Inline;
       function Next (Self : Map; Position : Cursor) return Cursor
-         is (Maps.Next (Position)) with Inline;
+         is (Hashed_Maps.Next (Position)) with Inline;
 
       package Cursors is
-         package Constant_Forward is new Constant_Forward_Traits
+         package Forward is new Forward_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Returned);
+             First          => Hashed_Maps.First);
       end Cursors;
 
-      function From_Ref_To_Elem (R : Returned) return Element_Type
-         is (R.Element.all) with Inline;
-      package Cursors_Forward_Convert is
-         new Conts.Cursors.Constant_Forward_Convert_Traits
-           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+      package Returned_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Returned, Element);
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Element_Type, Element);
    end Indefinite_Hashed_Maps_Adaptors;
 
    -----------------------------------------
@@ -395,39 +392,37 @@ package Conts.Cursors.Adaptors is
    -----------------------------------------
 
    generic
-      with package Maps is
+      with package Ordered_Maps is
          new Ada.Containers.Indefinite_Ordered_Maps (<>);
    package Indefinite_Ordered_Maps_Adaptors is
-      subtype Element_Type is Maps.Element_Type;
-      subtype Returned     is Maps.Constant_Reference_Type;
-      subtype Map          is Maps.Map;
-      subtype Cursor       is Maps.Cursor;
+      subtype Element_Type is Ordered_Maps.Element_Type;
+      subtype Returned     is Ordered_Maps.Constant_Reference_Type;
+      subtype Map          is Ordered_Maps.Map;
+      subtype Cursor       is Ordered_Maps.Cursor;
 
-      function First (Self : Map) return Cursor
-         renames Maps.First;
       function Element (Self : Map; Position : Cursor) return Returned
-         is (Maps.Constant_Reference (Self, Position)) with Inline;
+         is (Ordered_Maps.Constant_Reference (Self, Position)) with Inline;
+      function Element (Self : Map; Position : Cursor) return Element_Type
+         is (Element (Self, Position).Element.all) with Inline;
       function Has_Element (Self : Map; Position : Cursor) return Boolean
-         is (Maps.Has_Element (Position)) with Inline;
+         is (Ordered_Maps.Has_Element (Position)) with Inline;
       function Next (Self : Map; Position : Cursor) return Cursor
-         is (Maps.Next (Position)) with Inline;
+         is (Ordered_Maps.Next (Position)) with Inline;
       function Previous (Self : Map; Position : Cursor) return Cursor
-         is (Maps.Previous (Position)) with Inline;
+         is (Ordered_Maps.Previous (Position)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
+         package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
-             Returned_Type  => Returned);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+             First          => Ordered_Maps.First);
+         package Forward renames Bidirectional.Forward;
       end Cursors;
 
-      function From_Ref_To_Elem (R : Returned) return Element_Type
-         is (R.Element.all) with Inline;
-      package Cursors_Forward_Convert is
-         new Conts.Cursors.Constant_Forward_Convert_Traits
-           (Cursors.Constant_Forward, Element_Type, From_Ref_To_Elem);
+      package Returned_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Returned, Element);
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Map'Class, Cursor, Element_Type, Element);
    end Indefinite_Ordered_Maps_Adaptors;
 
    ------------------------
@@ -441,27 +436,32 @@ package Conts.Cursors.Adaptors is
    package Array_Adaptors is
       function First (Self : Array_Type) return Index_Type
          is (Self'First) with Inline;
+      function Last (Self : Array_Type) return Index_Type
+         is (Self'Last) with Inline;
       function Element
          (Self : Array_Type; Position : Index_Type) return Element_Type
          is (Self (Position)) with Inline;
-      function Has_Element
-         (Self : Array_Type; Position : Index_Type) return Boolean
-         is (Position <= Self'Last) with Inline;
-      function Next
-         (Self : Array_Type; Position : Index_Type) return Index_Type
-         is (Index_Type'Succ (Position)) with Inline;
-      function Previous
-         (Self : Array_Type; Position : Index_Type) return Index_Type
-         is (Index_Type'Pred (Position)) with Inline;
+      function "-" (Left, Right : Index_Type) return Integer
+         is (Index_Type'Pos (Left) - Index_Type'Pos (Right)) with Inline;
+      function "+"
+        (Left : Index_Type; N : Integer) return Index_Type
+         is (Index_Type'Val (Index_Type'Pos (Left) + N)) with Inline;
 
       package Cursors is
-         package Constant_Bidirectional is new Constant_Bidirectional_Traits
-            (Container_Type => Array_Type,
-             Cursor_Type    => Index_Type,
-             Returned_Type  => Element_Type);
-         package Constant_Forward
-            renames Constant_Bidirectional.Constant_Forward;
+         package Random_Access is new Random_Access_Cursors
+           (Container_Type => Array_Type,
+            Index_Type     => Index_Type,
+            First          => First,
+            Last           => Last,
+            "-"            => "-",
+            "+"            => "+");
+         package Bidirectional renames Random_Access.Bidirectional;
+         package Forward renames Bidirectional.Forward;
       end Cursors;
+
+      package Element_Maps is new Conts.Properties.Read_Only_Maps
+        (Array_Type, Index_Type, Element_Type, Element);
+      package Returned_Maps renames Element_Maps;
    end Array_Adaptors;
 
 end Conts.Cursors.Adaptors;

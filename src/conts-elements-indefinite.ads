@@ -44,6 +44,8 @@ package Conts.Elements.Indefinite with SPARK_Mode is
    type Element_Access is access all Element_Type;
    for Element_Access'Storage_Pool use Pool.Pool.all;
 
+   subtype Returned is Element_Type;
+
    function To_Element_Access (E : Element_Type) return Element_Access
       is (new Element_Type'(E)) with Inline;
    function To_Element (E : Element_Access) return Element_Type
@@ -57,7 +59,7 @@ package Conts.Elements.Indefinite with SPARK_Mode is
    package Traits is new Conts.Elements.Traits
       (Element_Type        => Element_Type,
        Stored_Type         => Element_Access,
-       Returned_Type         => Element_Type,
+       Returned_Type       => Element_Type,
        To_Stored           => To_Element_Access,
        To_Return           => To_Element,
        To_Element          => Identity,

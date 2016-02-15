@@ -28,6 +28,7 @@ with Conts.Elements.Indefinite_SPARK;
 with Conts.Lists.Nodes.Unbounded_SPARK;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
+with Conts.Properties;
 
 generic
    type Element_Type (<>) is private;
@@ -61,4 +62,9 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
      is (Lists.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Lists.Cursors (Lists);
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Lists.List'Class, Cursor, Element_Type, Lists.Element);
+   package Returned_Maps is new Conts.Properties.Read_Only_Maps
+     (Lists.List'Class, Cursor, Elements.Traits.Returned, Lists.Element);
+
 end Conts.Lists.Indefinite_Unbounded_SPARK;

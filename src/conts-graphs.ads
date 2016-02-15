@@ -22,6 +22,7 @@
 pragma Ada_2012;
 with Conts.Cursors;
 with Conts.Elements;
+with Conts.Properties;
 
 package Conts.Graphs is
 
@@ -74,11 +75,15 @@ package Conts.Graphs is
         (G : Graph_Type; E : Edge_Type) return Vertices.Element is <>;
       --  Return the target of the edge.
 
-      with package Vertex_Cursors is new Conts.Cursors.Constant_Forward_Traits
+      with package Vertex_Cursors is new Conts.Cursors.Forward_Cursors
         (Container_Type => Graph_Type,
-         Returned_Type  => Vertices.Element,
          others         => <>);
-      --  Iterate on all edges of the graph
+      with package Vertex_Maps is new Conts.Properties.Read_Only_Maps
+        (Key_Type   => Vertex_Cursors.Cursor,
+         Value_Type => Vertices.Element,
+         Map_Type   => Graph_Type,
+         others     => <>);
+      --  Iterate on all vertices of the graph
 
       with package Out_Edges_Cursors is new Edge_Cursors
         (Container_Type => Graph_Type,

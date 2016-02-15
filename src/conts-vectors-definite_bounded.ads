@@ -26,6 +26,7 @@ with Conts.Elements.Definite;
 with Conts.Vectors.Cursors;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Nodes.Bounded;
+with Conts.Properties;
 
 generic
    type Index_Type is range <>;
@@ -39,7 +40,6 @@ package Conts.Vectors.Definite_Bounded is
        Container_Base_Type => Container_Base_Type);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   subtype Cursor is Vectors.Cursor;
    type Vector (Capacity : Count_Type) is
       new Vectors.Vector (Capacity) with null record
       with Constant_Indexing => Constant_Reference,
@@ -57,6 +57,10 @@ package Conts.Vectors.Definite_Bounded is
      is (Vectors.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Vectors.Cursors (Vectors);
+   subtype Cursor is Vectors.Cursor;
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Vectors.Vector'Class, Cursor, Element_Type, Vectors.Element);
+   package Returned_Maps renames Element_Maps;
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";

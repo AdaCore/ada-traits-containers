@@ -22,11 +22,11 @@
 --  Unbounded Vectors of unconstrained elements
 
 pragma Ada_2012;
-with Conts.Cursors;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Cursors;
 with Conts.Vectors.Nodes.Unbounded;
+with Conts.Properties;
 
 generic
    type Index_Type is (<>);
@@ -44,7 +44,6 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Nodes.Traits);
 
-   subtype Cursor is Vectors.Cursor;
    type Vector is new Vectors.Vector with null record
       with Constant_Indexing => Constant_Reference,
            Iterable => (First       => First_Primitive,
@@ -66,19 +65,21 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
    is (Vectors.Element (Self, Position)) with Inline;
 
    package Cursors is new Conts.Vectors.Cursors (Vectors);
+   subtype Cursor is Cursors.Forward.Cursor;
+
+   function As_Element
+     (Self     : Vectors.Vector'Class;
+      Position : Cursor) return Element_Type
+     is (Vectors.Element (Self, Position).Element.all);
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Vectors.Vector'Class, Cursor, Element_Type, As_Element);
+   package Returned_Maps is new Conts.Properties.Read_Only_Maps
+     (Vectors.Vector'Class, Cursor, Elements.Traits.Returned, Vectors.Element);
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
       renames Vectors."<=";
    procedure Swap
       (Self : in out Vectors.Vector'Class; Left, Right : Index_Type)
       renames Vectors.Swap;
-
-   package Cursors_Forward_Convert
-      is new Conts.Cursors.Constant_Forward_Convert_Traits
-         (Cursors      => Cursors.Constant_Forward,
-          Element_Type => Element_Type,
-          Convert      => Elements.To_Element);
-   --  A special wrapper around cursor, for use with algorithms, so that
-   --  the predicates can take an element_type in parameter
 
 end Conts.Vectors.Indefinite_Unbounded_Ref;

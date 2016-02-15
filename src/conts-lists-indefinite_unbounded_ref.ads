@@ -24,11 +24,11 @@
 --  of the element, but is sometimes slightly less convenient to use.
 
 pragma Ada_2012;
-with Conts.Cursors;
 with Conts.Elements.Indefinite_Ref;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
 with Conts.Lists.Nodes.Unbounded;
+with Conts.Properties;
 
 generic
    type Element_Type (<>) is private;
@@ -62,15 +62,14 @@ package Conts.Lists.Indefinite_Unbounded_Ref is
      (Self : List; Position : Cursor) return Element_Type
      is (Lists.Element (Self, Position)) with Inline;
 
-   package Cursors is new Conts.Lists.Cursors (Lists);
-   --  These cursors return reference types for efficiency.
+   function As_Element
+     (Self : Lists.List'Class; Position : Cursor) return Element_Type
+   is (Lists.Element (Self, Position).Element.all);
 
-   package Cursors_Forward_Convert
-      is new Conts.Cursors.Constant_Forward_Convert_Traits
-         (Cursors      => Cursors.Constant_Forward,
-          Element_Type => Element_Type,
-          Convert      => Elements.To_Element);
-   --  A special wrapper around cursor, for use with algorithms, so that
-   --  the predicates can take an element_type in parameter
+   package Cursors is new Conts.Lists.Cursors (Lists);
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Lists.List'Class, Cursor, Element_Type, As_Element);
+   package Returned_Maps is new Conts.Properties.Read_Only_Maps
+     (Lists.List'Class, Cursor, Ref_Type, Lists.Element);
 
 end Conts.Lists.Indefinite_Unbounded_Ref;

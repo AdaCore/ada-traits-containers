@@ -51,6 +51,10 @@ can be edited with any text editor.
    By implementing specific storage pools or node packages, we could have
    data structures directly mapped to files (perhaps via mmap) ?
 
+** TODO rename =*Nodes= packages to =*Storage= or =*Core=
+   Can we use interfaces instead of just generic packages here ?
+** MAYBE should we implement the Random packages as input cursors ?
+
 ** TODO ranges
    Similar to the C++ concept, these are ways to apply algorithms to whole
    containers of subsets of them, and dynamically filter them for instance.
@@ -60,6 +64,7 @@ can be edited with any text editor.
    the same element forever). We then need a version of the algorithms that
    take a range in parameter, so that we can apply operators like Take,
    to only keep the n first elements of the range, or Group_By.
+   http://www.informit.com/articles/printerfriendly/1407357
 
 * Elements traits
 
@@ -69,6 +74,11 @@ can be edited with any text editor.
 
 ** MAYBE merge conts-elements-indefinite and indefinite_spark
    The access type should never be shown in fact.
+
+** TODO =move= and =copy= operations instead of =Copyable= and =Movable=
+   Since users have to provide =Copy= anyway, no need to provide the extra
+   flag. We could have intermediate generic packages that provide convenient
+   default for these subprograms.
 
 * Algorithms
 
@@ -98,6 +108,7 @@ can be edited with any text editor.
    algorithms.
    http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1873.html
 
+** TODO Should we have a property map that provides =Swap= ?
 ** TODO =Reverse_Cursor=
    Reverses the order of a bidirectional cursor. This is tricky, since we
    need to know the last iterator (the starting point for the reverse
@@ -107,6 +118,14 @@ can be edited with any text editor.
    section 3.3.12 suggests to do a probe O(n) for the last element, since
    that doesn't change the algorithmic complexity.
 
+** TODO adaptors for Ada2012 vectors should be random_access cursors
+
+** TODO instantiate =conts-{vectors,lists,...}-cursors.ads= in *-generics packages
+   Perhaps we can provide the maps there as well.
+   Perhaps provide the cursor definition directly in the =Storage= or =Nodes=
+   packages, since they have access to lower-level info potentially.
+
+** TODO Algorithms that apply to a slice of a container (ranges)
 * Lists
 
 ** TODO Implement single-linked lists
@@ -141,6 +160,12 @@ can be edited with any text editor.
    there is no convenient way to define =No_Element=, and =Next= will
    raise an exception when moving past the current element.
 
+* Strings
+
+** TODO One possible storage is vectors
+   http://www.drdobbs.com/generic-a-policy-based-basicstring-imple/184403784
+
+** TODO provide iterators to reuse algorithms like =Shuffle=
 * Maps
 
 ** TODO Bounded maps
@@ -148,6 +173,11 @@ can be edited with any text editor.
 
 ** MAYBE QT uses skip-lists instead of red-black-trees
    The former results in less code and uses less memory per node.
+
+** TODO support for different key types when searching
+   For instance, can we have a Find taking an =Unbounded_String= when
+   the map is created with a =String=, to save explicit and costly conversions?
+   http://erdani.com/publications/cuj-2006-02.pdf
 
 * Graphs
 
@@ -210,6 +240,9 @@ can be edited with any text editor.
    since the aspect =Iterable= forces it).
    For now, since we also do not force it in C++, we let the
    compiler resolve it statically.
+
+** TODO performance: take the minimal of time, not the mean or median
+   This better cancels quantization noise.
 
 * Documentation
 

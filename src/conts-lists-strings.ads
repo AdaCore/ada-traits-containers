@@ -29,11 +29,11 @@
 
 pragma Ada_2012;
 with Ada.Finalization;
-with Conts.Cursors;
 with Conts.Elements.Arrays;
 with Conts.Lists.Generics;
 with Conts.Lists.Cursors;
 with Conts.Lists.Nodes.Unbounded;
+with Conts.Properties;
 
 package Conts.Lists.Strings is
 
@@ -53,16 +53,14 @@ package Conts.Lists.Strings is
                         Element     => Element_Primitive);
 
    package Cursors is new Conts.Lists.Cursors (Lists);
-   --  Cursors return a reference_type for the string (i.e. a type that
-   --  will automatically be dereferenced to a String by the compiler, but
-   --  is much more efficient than returning a copy of the String).
 
-   package Cursors_Forward_Convert
-      is new Conts.Cursors.Constant_Forward_Convert_Traits
-         (Cursors      => Cursors.Constant_Forward,
-          Element_Type => String,
-          Convert      => Elements.From_Ref_To_Element);
-   --  A special wrapper around cursor, for use with algorithms, so that
-   --  the predicates can take an element_type in parameter
+   function Element
+     (Self : Lists.List'Class; Position : Cursor) return String
+   is (Lists.Element (Self, Position).Element.all);
+
+   package Element_Maps is new Conts.Properties.Read_Only_Maps
+     (Lists.List'Class, Cursor, String, Element);
+   package Return_Maps is new Conts.Properties.Read_Only_Maps
+     (Lists.List'Class, Cursor, Elements.Traits.Returned, Lists.Element);
 
 end Conts.Lists.Strings;

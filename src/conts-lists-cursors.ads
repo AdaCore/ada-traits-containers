@@ -30,15 +30,12 @@ with Conts.Lists.Generics;
 generic
    with package Lists is new Conts.Lists.Generics (<>);
 package Conts.Lists.Cursors with SPARK_Mode is
-   package Constant_Bidirectional is
-      new Conts.Cursors.Constant_Bidirectional_Traits
-         (Container_Type => Lists.List'Class,
-          Cursor_Type    => Lists.Cursor,
-          Returned_Type  => Lists.Nodes.Elements.Returned,
-          First          => Lists.First,
-          Next           => Lists.Next,
-          Has_Element    => Lists.Has_Element,
-          Element        => Lists.Element,
-          Previous       => Lists.Previous);
-   package Constant_Forward renames Constant_Bidirectional.Constant_Forward;
+   package Bidirectional is new Conts.Cursors.Bidirectional_Cursors
+     (Container_Type => Lists.List'Class,
+      Cursor_Type    => Lists.Cursor,
+      First          => Lists.First,
+      Next           => Lists.Next,
+      Has_Element    => Lists.Has_Element,
+      Previous       => Lists.Previous);
+   package Forward renames Bidirectional.Forward;
 end Conts.Lists.Cursors;

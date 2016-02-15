@@ -61,10 +61,14 @@ package Graph1_Support is
    function Next
      (G : Graph; C : Vertex_Cursor) return Vertex_Cursor with Inline;
 
-   package Custom_Vertices is new Conts.Cursors.Constant_Forward_Traits
+   package Custom_Vertices is new Conts.Cursors.Forward_Cursors
      (Container_Type => Graph,
-      Returned_Type  => Vertex,
       Cursor_Type    => Vertex_Cursor);
+   package Vertices_Maps is new Conts.Properties.Read_Only_Maps
+     (Map_Type       => Graph,
+      Key_Type       => Vertex_Cursor,
+      Value_Type     => Vertex,
+      Get            => Element);
 
    ------------------
    -- Edge_Cursors --
@@ -97,6 +101,7 @@ package Graph1_Support is
        Null_Vertex       => -1,
        Edge_Type         => Edge,
        Vertex_Cursors    => Custom_Vertices,
+       Vertex_Maps       => Vertices_Maps,
        Out_Edges_Cursors => Custom_Edges);
 
    ----------------
