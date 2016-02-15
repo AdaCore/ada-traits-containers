@@ -160,6 +160,10 @@ can be edited with any text editor.
    there is no convenient way to define =No_Element=, and =Next= will
    raise an exception when moving past the current element.
 
+** TODO Optimize cursors
+   We could avoid one test in forward_cursors, since both Has_Element and
+   Next test to check whether we are past the end
+
 * Strings
 
 ** TODO One possible storage is vectors

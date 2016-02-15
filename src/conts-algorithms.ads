@@ -31,27 +31,27 @@ package Conts.Algorithms is
 
    generic
       with package Cursors is new Conts.Cursors.Forward_Cursors (<>);
-      with package Maps is new Conts.Properties.Read_Only_Maps
+      with package Getters is new Conts.Properties.Read_Only_Maps
         (Key_Type => Cursors.Cursor, others => <>);
-   function Count_If_With_Map
+   function Count_If_With_External_Get
      (Self      : Cursors.Container;
-      Map       : Maps.Map;
-      Predicate : not null access function
-        (E : Maps.Value_Type) return Boolean)
+      Map       : Getters.Map;
+      Predicate : not null access
+        function (E : Getters.Value_Type) return Boolean)
       return Natural
      with Global => null;
    --  Count the number of elements in the container that match the predicate
 
    generic
       with package Cursors is new Conts.Cursors.Forward_Cursors (<>);
-      with package Maps is new Conts.Properties.Read_Only_Maps
+      with package Getters is new Conts.Properties.Read_Only_Maps
         (Map_Type => Cursors.Container,
          Key_Type => Cursors.Cursor,
          others   => <>);
    function Count_If
      (Self      : Cursors.Container;
-      Predicate : not null access function
-        (E : Maps.Value_Type) return Boolean)
+      Predicate : not null access
+        function (E : Getters.Value_Type) return Boolean)
       return Natural
      with Global => null;
    --  Same as above, but the container itself is the property map to

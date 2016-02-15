@@ -23,28 +23,28 @@ pragma Ada_2012;
 
 package body Conts.Algorithms is
 
-   -----------------------
-   -- Count_If_With_Map --
-   -----------------------
+   --------------------------------
+   -- Count_If_With_External_Get --
+   --------------------------------
 
-   function Count_If_With_Map
+   function Count_If_With_External_Get
       (Self      : Cursors.Container;
-       Map       : Maps.Map;
-       Predicate : not null access function
-          (E : Maps.Value_Type) return Boolean)
+       Map       : Getters.Map;
+       Predicate : not null access
+         function (E : Getters.Value_Type) return Boolean)
       return Natural
    is
       C     : Cursors.Cursor := Cursors.First (Self);
       Count : Natural := 0;
    begin
       while Cursors.Has_Element (Self, C) loop
-         if Predicate (Maps.Get (Map, C)) then
+         if Predicate (Getters.Get (Map, C)) then
             Count := Count + 1;
          end if;
          C := Cursors.Next (Self, C);
       end loop;
       return Count;
-   end Count_If_With_Map;
+   end Count_If_With_External_Get;
 
    --------------
    -- Count_If --
@@ -53,19 +53,12 @@ package body Conts.Algorithms is
    function Count_If
      (Self      : Cursors.Container;
       Predicate : not null access function
-        (E : Maps.Value_Type) return Boolean)
+        (E : Getters.Value_Type) return Boolean)
        return Natural
    is
-      C     : Cursors.Cursor := Cursors.First (Self);
-      Count : Natural := 0;
+      function Internal is new Count_If_With_External_Get (Cursors, Getters);
    begin
-      while Cursors.Has_Element (Self, C) loop
-         if Predicate (Maps.Get (Self, C)) then
-            Count := Count + 1;
-         end if;
-         C := Cursors.Next (Self, C);
-      end loop;
-      return Count;
+      return Internal (Self, Self, Predicate);
    end Count_If;
 
    -------------
