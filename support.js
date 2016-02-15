@@ -1,11 +1,21 @@
 var app = angular.module('containers', []);
 
-var MEAN_PERCENT = 0;
-var MEAN_MS = 1;
+// How to display info
+var Display_Type = {
+   PERCENT: 0,
+   MS: 1
+};
+
+// What info to display
+var Display_Info = {
+   MEAN: 0,
+   MIN: 1
+};
 
 app.
 run(function($rootScope) {
-   $rootScope.display = MEAN_PERCENT;
+   $rootScope.display = Display_Type.PERCENT;
+   $rootScope.info = Display_Info.MIN;
 }).
 
 factory('Reftime', function() {
@@ -49,7 +59,6 @@ factory('Reftime', function() {
             angular.forEach(test.duration, function(d) {
                g += d;
             });
-            test.mean_duration = g / test.duration.length;
             test.cumulated = g;
          });
       });
@@ -93,16 +102,6 @@ factory('Reftime', function() {
       };
    }
 
-   /**
-    * Return the computed percent value for a given test
-    */
-   Reftime.prototype.compute_percent = function(test_name, test, category) {
-      var rt = test.ref;
-      test.mean_percent = (
-         (test.mean_duration / rt.mean_duration) * 100).toFixed(0);
-      test.mean_duration_str = (test.mean_duration * 1000).toFixed(2);
-   };
-
    return new Reftime;
 }).
 
@@ -112,10 +111,6 @@ controller('ResultsCtrl', function($scope, Reftime) {
 
 controller('HeaderCtrl', function(Reftime, $scope) {
    $scope.data = Reftime.data;
-   $scope.percents = [
-      {value: MEAN_PERCENT, text: 'As percent'},
-      {value: MEAN_MS, text: 'As milliseconds'}
-   ];
 }).
 
 /**
@@ -140,33 +135,61 @@ directive('ctMem', function() {
    };
 }).
 
-directive('ctDuration', function() {
+directive('ctDuration', function($rootScope) {
+   // Compute display info for a test
+   function compute_test_data(test) {
+      var ref = test.ref;
+
+      if (ref != test) {
+         //  ??? We do this for every test that share the same ref
+         compute_test_data(ref);
+      }
+      switch (Number($rootScope.info)) {
+         case Display_Info.MEAN:
+            test._duration = test.cumulated / test.duration.length;
+            break;
+         case Display_Info.MIN:
+            var m = test.duration[0];
+            angular.forEach(test.duration, function(d) {
+               m = Math.min(m, d);
+            });
+            test._duration = m;
+            break;
+         default:
+            test._duration = '-';
+      }
+
+      test.slow = test._duration > ref._duration * 1.05;
+
+      switch (Number($rootScope.display)) {
+         case Display_Type.PERCENT:
+            return (test._duration / ref._duration * 100).toFixed(0) + '%';
+         case Display_Type.MS:
+            return (test._duration * 1000).toFixed(2);
+         default:
+            return '-';
+      }
+   }
+
    return {
       scope: {
          testname: '=ctDuration',
-         aspercent: '=',
          container: '='
       },
       controller: function($scope, Reftime, $rootScope) {
          $scope.test = $scope.container.tests[$scope.testname];
+         $scope.display;  // what to display
+
          if ($scope.test && $scope.test.duration.length) {
-            Reftime.compute_percent(
-               $scope.testname,
-               $scope.test,
-               $scope.container.category);
+            $rootScope.$watch('[info,display]', function() {
+               $scope.display = compute_test_data($scope.test);
+            }, true);
          }
       },
-   template: '<span ng-if="test"' +
-           ' ng-class="{worse:test.mean_percent>105, comment:test.comment}"' +
+      template: '<span ng-if="test"' +
+           ' ng-class="{worse:test.slow, comment:test.comment}"' +
            ' title="{{test.comment}}">' +
-
-         '<span ng-if="$root.display==0 && test.duration.length"' +
-              ' ng-class="{worse:test.mean_percent>105}">' +
-              '{{test.mean_percent}}%</span>' +
-
-         '<span ng-if="$root.display==1 && test.duration.length"' +
-              ' ng-class="{worse:test.mean_percent>105}">' +
-              '{{test.mean_duration_str}}</span>' +
+           '<span ng-if="test.duration.length">{{display}}</span>' +
          '</span>'
    };
 }).

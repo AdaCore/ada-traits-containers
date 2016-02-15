@@ -91,14 +91,18 @@ body {
 </head>
 <body>
    <div class='header' ng-controller='HeaderCtrl'>
-      <select ng-options='t.value as t.text for t in percents' ng-model='$root.display'></select>
+      <input type='radio' name='display' ng-model='$root.display' value=0>Percent</input>
+      <input type='radio' name='display' ng-model='$root.display' value=1>Milliseconds</input>
+      <span style='margin-left: 30px'></span>
+      <input type='radio' name='info' ng-model='$root.info' value=0>Mean duration</input>
+      <input type='radio' name='info' ng-model='$root.info' value=1>Min duration</input>
+      <span style='margin-left: 30px'></span>
 
-      <input style="margin-left:30px" type='checkbox' ng-model='$root.show_test_allocs'>
+      <input type='checkbox' ng-model='$root.show_test_allocs'>
       allocs/free for each test
 
-      <span style="margin-left:30px">
-         {{data.items_count}} items, tests are repeated {{data.repeat_count}} times.
-      </span>
+      <span style='margin-left: 30px'></span>
+      <span>{{data.items_count}} items, tests are repeated {{data.repeat_count}} times.</span>
    </div>
 
    <div ng-controller='ResultsCtrl' class='results'>
