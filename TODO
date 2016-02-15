@@ -104,6 +104,7 @@ can be edited with any text editor.
 ** TODO adaptors for Ada2012 vectors should be random_access cursors
 
 ** TODO Algorithms that apply to a slice of a container (ranges)
+
 * Lists
 
 ** TODO Implement single-linked lists
@@ -113,7 +114,7 @@ can be edited with any text editor.
 ** TODO Implement =Conts.List.Nodes.Unbounded_SPARK= as a vector
    This would avoid code duplication
 
-** MAYBE Implement a version of =Nodes= that perform database queries ?
+** MAYBE Implement a version of =Storage= that perform database queries ?
    This would let users manipulate a database as if they were manipulating
    a list
 
@@ -130,8 +131,6 @@ can be edited with any text editor.
 * Vectors
 
 ** TODO circular buffer with Prepend operation
-
-** TODO pass a storage_pool in parameter to =Unbounded= nodes
 
 ** TODO can a cursor be implemented as an =Index_Type= directly ?
    That would be more logical (removing one layer of abstraction), but
@@ -228,9 +227,6 @@ can be edited with any text editor.
    since the aspect =Iterable= forces it).
    For now, since we also do not force it in C++, we let the
    compiler resolve it statically.
-
-** TODO performance: take the minimal of time, not the mean or median
-   This better cancels quantization noise.
 
 * Documentation
 
