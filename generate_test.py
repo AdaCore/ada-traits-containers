@@ -117,7 +117,7 @@ pragma Warnings (Off, "unit * is not referenced");
 with Perf_Support;  use Perf_Support;
 with Ada.Finalization;
 with Conts.Algorithms;
-with Conts.Cursors.Adaptors;
+with Conts.Adaptors;
 pragma Warnings (On, "unit * is not referenced");
 procedure {test_name}
    (Stdout : not null access Output'Class)
@@ -225,7 +225,7 @@ end {test_name};
         if use_cursor_convert:
             self.args['adaptors'] = (
             """
-   package Adaptors is new Conts.Cursors.Adaptors.""" +
+   package Adaptors is new Conts.Adaptors.""" +
             adaptors + """ (Container);
    function Count_If is new Conts.Algorithms.Count_If
       (Adaptors.Cursors.Forward, Adaptors.Maps.Element);
@@ -234,7 +234,7 @@ end {test_name};
         else:
             self.args['adaptors'] = (
             """
-   package Adaptors is new Conts.Cursors.Adaptors.""" +
+   package Adaptors is new Conts.Adaptors.""" +
             adaptors + """ (Container);
    function Count_If is new Conts.Algorithms.Count_If
       (Adaptors.Cursors.Forward, Adaptors.Maps.Returned);
@@ -343,7 +343,7 @@ pragma Warnings (Off, "unit * is not referenced");
 with Perf_Support;  use Perf_Support;
 with Ada.Finalization;
 with Conts.Algorithms;
-with Conts.Cursors.Adaptors;
+with Conts.Adaptors;
 pragma Warnings (On, "unit * is not referenced");
 procedure {test_name}
    (Stdout : not null access Output'Class)
@@ -456,7 +456,7 @@ end {test_name};
         """
 
         self.args['adaptors'] = """
-    package Adaptors is new Conts.Cursors.Adaptors.""" + adaptors + \
+    package Adaptors is new Conts.Adaptors.""" + adaptors + \
     """_Adaptors
         (Container);
     function Count_If is new Conts.Algorithms.Count_If

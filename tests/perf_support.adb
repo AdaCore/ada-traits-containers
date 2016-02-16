@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 with Conts.Algorithms;
-with Conts.Cursors.Adaptors;     use Conts.Cursors.Adaptors;
+with Conts.Adaptors;     use Conts.Adaptors;
 
 package body Perf_Support is
 

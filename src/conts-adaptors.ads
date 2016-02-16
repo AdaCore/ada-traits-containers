@@ -34,9 +34,10 @@ with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Vectors;
+with Conts.Cursors;        use Conts.Cursors;
 with Conts.Properties;
 
-package Conts.Cursors.Adaptors is
+package Conts.Adaptors is
 
    ---------------------------------------------
    -- Adaptor for bounded doubly linked lists --
@@ -488,4 +489,4 @@ package Conts.Cursors.Adaptors is
       end Maps;
    end Array_Adaptors;
 
-end Conts.Cursors.Adaptors;
+end Conts.Adaptors;
