@@ -50,8 +50,6 @@ package Conts.Vectors.Indefinite_Unbounded_Ref is
 
    function To_Index (Position : Cursor) return Index_Type
      renames Vectors.To_Index;
-   function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
-      renames Vectors."<=";
    procedure Swap
       (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
       renames Vectors.Swap;

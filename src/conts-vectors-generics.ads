@@ -297,11 +297,11 @@ package Conts.Vectors.Generics with SPARK_Mode is
                   Element     => Element_Primitive);
 
    function Constant_Reference
-     (Self : Vector; Position : Cursor) return Element_Type
+     (Self : Vector; Position : Index_Type) return Element_Type
    is (Storage.Elements.To_Element (Element (Self, Position))) with Inline;
 
    function Reference
-     (Self : Vector; Position : Cursor) return Returned_Type
+     (Self : Vector; Position : Index_Type) return Returned_Type
    is (Element (Self, Position)) with Inline;
    --  Depending on the implementation of the element traits, this might in
    --  fact be a constant reference since the element might not be modifiable

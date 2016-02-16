@@ -50,7 +50,8 @@ package body Conts.Properties.Indexed is
    procedure Set (M : in out Map; K : Key_Type; Val : Value_Type) is
       Idx : constant Index_Type := Get_Index (K);
    begin
-      if not (Idx <= M.Values.Length) then
+      --  ??? We should have such an operation in the vector directly
+      if not (Value_Vectors.Vectors.To_Count (Idx) <= M.Values.Length) then
          M.Values.Resize (Idx, Element => Default_Value);
       end if;
 

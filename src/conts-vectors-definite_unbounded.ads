@@ -49,8 +49,6 @@ package Conts.Vectors.Definite_Unbounded is
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;
 
-   function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
-      renames Vectors."<=";
    procedure Swap
       (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
       renames Vectors.Swap;

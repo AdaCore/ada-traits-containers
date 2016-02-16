@@ -111,7 +111,7 @@ can be edited with any text editor.
    They are much more efficient when they satisfy the user need, as experiments
    showed.
 
-** TODO Implement =Conts.List.Nodes.Unbounded_SPARK= as a vector
+** TODO Implement =Conts.Vectors.Nodes.Unbounded_SPARK= as a vector
    This would avoid code duplication
 
 ** MAYBE Implement a version of =Storage= that perform database queries ?
@@ -131,7 +131,6 @@ can be edited with any text editor.
 * Vectors
 
 ** TODO circular buffer with Prepend operation
-
 ** TODO can a cursor be implemented as an =Index_Type= directly ?
    That would be more logical (removing one layer of abstraction), but
    there is no convenient way to define =No_Element=, and =Next= will
@@ -141,11 +140,11 @@ can be edited with any text editor.
    We could avoid one test in forward_cursors, since both Has_Element and
    Next test to check whether we are past the end
 
+
 ** TODO =Indefinite_Unbounded_Ref= constant_indexing should return ref_type
    We currently return a copy of the type. This might unfortunately mean that
    the simpler packages all need to override Constant_Indexing, which cannot
    be defined in vectors-generics.ads.
-   We need a performance test on constant indexing
 
 * Strings
 
@@ -298,6 +297,9 @@ http://ootips.org/yonat/4dev/smart-pointers.html
 
 ** Custom allocators
    See https://www.youtube.com/watch?v=LIb3L4vKZ7U
+
+** Use =pragma Suppress_Initialization=
+   To avoid generating not needed code
 
 * Rejected design
 ** REJECT Use an interface instead of traits package for =Storage=
