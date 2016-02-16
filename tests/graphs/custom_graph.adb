@@ -67,11 +67,7 @@ package body Custom_Graph is
       use type Vertex;
 
    begin
-      Stdout.Start_Container_Test
-        (Base     => "adjacency list",
-         Elements => "",
-         Nodes    => "",
-         Category => "Graph");
+      Stdout.Start_Container_Test ("adjacency list", Category => "Graph");
 
       for C in 1 .. Perf_Support.Repeat_Count loop
          declare
@@ -127,11 +123,7 @@ package body Custom_Graph is
         new Graph1_Support.DFS.Search_Recursive (My_Visitor2);
 
    begin
-      Stdout.Start_Container_Test
-         (Base     => "custom graph",
-          Elements => "",
-          Nodes    => "",
-          Category => "Graph");
+      Stdout.Start_Container_Test ("custom graph", Category => "Graph");
 
       for C in 1 .. Perf_Support.Repeat_Count loop
          declare

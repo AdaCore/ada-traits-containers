@@ -50,7 +50,7 @@ extern "C"
 void test_cpp_int_list (void * output) {
    reset_mem();
 
-   start_container_test (output, "C++", "", "", "Integer List", 1);
+   start_container_test (output, "C++", "Integer List", 1);
    save_container_size (output, sizeof(std::list<int>));
 
    for (int r = 0; r < repeat_count; r++) {
@@ -112,7 +112,7 @@ extern "C"
 void test_cpp_str_list (void * output) {
    reset_mem();
 
-   start_container_test (output, "C++", "", "", "String List", 1);
+   start_container_test (output, "C++", "String List", 1);
    save_container_size (output, sizeof(std::list<int>));
 
    for (int r = 0; r < repeat_count; r++) {
@@ -177,7 +177,7 @@ extern "C"
 void test_cpp_int_vector (void * output) {
    reset_mem();
 
-   start_container_test (output, "C++", "", "", "Integer Vector", 1);
+   start_container_test (output, "C++", "Integer Vector", 1);
    save_container_size (output, sizeof(std::vector<int>));
 
    for (int r = 0; r < repeat_count; r++) {
@@ -250,7 +250,7 @@ extern "C"
 void test_cpp_str_vector (void * output) {
    reset_mem();
 
-   start_container_test (output, "C++", "", "", "String Vector", 1);
+   start_container_test (output, "C++", "String Vector", 1);
    save_container_size (output, sizeof(std::vector<int>));
 
    for (int r = 0; r < repeat_count; r++) {
@@ -328,8 +328,7 @@ void test_cpp_int_int_map (void * output) {
 
    reset_mem();
 
-   start_container_test
-      (output, "C++", "ordered", "", "IntInt Map", 1);
+   start_container_test (output, "C++ ordered", "IntInt Map", 1);
    save_container_size (output, sizeof(int_int_map));
 
    for (int r = 0; r < repeat_count; r++) {
@@ -411,8 +410,7 @@ void test_cpp_int_int_unordered_map (void * output) {
 
    reset_mem();
 
-   start_container_test
-      (output, "C++", "unordered", "", "IntInt Map", 1);
+   start_container_test (output, "C++ unordered", "IntInt Map", 1);
    save_container_size (output, sizeof(int_int_unordered_map));
 
    for (int r = 0; r < repeat_count; r++) {
@@ -495,8 +493,7 @@ void test_cpp_str_str_map (void * output) {
 
    reset_mem();
 
-   start_container_test
-      (output, "C++", "ordered", "", "StrStr Map", 1);
+   start_container_test (output, "C++ ordered", "StrStr Map", 1);
    save_container_size (output, sizeof(str_str_map));
 
    for (int r = 0; r < repeat_count; r++) {
@@ -578,8 +575,7 @@ void test_cpp_str_str_unordered_map (void * output) {
 
    reset_mem();
 
-   start_container_test
-      (output, "C++", "unordered", "", "StrStr Map", 1);
+   start_container_test (output, "C++ unordered", "StrStr Map", 1);
    save_container_size (output, sizeof(str_str_unordered_map));
 
    for (int r = 0; r < repeat_count; r++) {

@@ -37,7 +37,7 @@ package body Report is
 
    procedure Start_Container_Test
       (Self : System.Address;
-       Base, Elements, Nodes, Category : chars_ptr;
+       Name, Category : chars_ptr;
        Favorite : Integer)
        with Export, Convention => C, External_Name => "start_container_test";
    procedure Save_Container_Size
@@ -66,9 +66,7 @@ package body Report is
 
    procedure Start_Container_Test
       (Self         : not null access Output'Class;
-       Base         : String;
-       Elements     : String;
-       Nodes        : String;
+       Name         : String;
        Category     : String;
        Favorite     : Boolean := False) is
    begin
@@ -85,9 +83,7 @@ package body Report is
 
       Self.Container_Test := GNATCOLL.JSON.Create_Object;
       Append (Self.All_Tests, Self.Container_Test);
-      Self.Container_Test.Set_Field ("base", Base);
-      Self.Container_Test.Set_Field ("elements", Elements);
-      Self.Container_Test.Set_Field ("nodes", Nodes);
+      Self.Container_Test.Set_Field ("name", Name);
       Self.Container_Test.Set_Field ("category", Category);
 
       if Favorite then
@@ -236,11 +232,11 @@ package body Report is
 
    procedure Start_Container_Test
       (Self : System.Address;
-       Base, Elements, Nodes, Category : chars_ptr;
+       Name, Category : chars_ptr;
        Favorite : Integer) is
    begin
       Start_Container_Test
-         (To_Output (Self), Value (Base), Value (Elements), Value (Nodes),
+         (To_Output (Self), Value (Name),
           Value (Category), Favorite => Favorite /= 0);
    end Start_Container_Test;
 

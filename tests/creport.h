@@ -26,8 +26,7 @@ extern "C" {
    extern const int items_count;
    extern const int repeat_count;
    extern void start_container_test
-      (void* output, const char *base, const char* elements,
-      const char *nodes, const char* category, int favorite);
+      (void* output, const char *name, const char* category, int favorite);
    extern void save_container_size (void* output, long int size);
    extern void start_test
       (void* output, const char* name, const int start_group);

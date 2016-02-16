@@ -46,8 +46,7 @@ class Templates(object):
     spec = """
 with Report; use Report;
 pragma Style_Checks (Off);
-procedure {test_name}
-   (Stdout : not null access Output'Class);"""
+procedure {test_name} (Stdout : not null access Output'Class);"""
 
     # Header for the .adb file
 
@@ -81,8 +80,7 @@ is
    end Run;
 
 begin
-   Stdout.Start_Container_Test
-      ("{base}", "{definite}", "{nodes}", "{category}", {favorite});
+   Stdout.Start_Container_Test ("{name}", "{category}", {favorite});
    for C in 1 .. Repeat_Count loop
       declare
          V : Container.{type}{discriminant};
@@ -289,6 +287,11 @@ class Tests(object):
         adb.write(Templates.body_footer.format(**self.args))
         adb.close()
 
+        all_tests_withs.append(
+            "with {test_name};".format(**self.args))
+        all_tests.append(
+            """   Run_Test ("{filename}", {test_name}'Access);""".format(**self.args))
+
     def gen(self, adaptor):
         self.args['prefix'] = 'V2.'
         self.args['adaptors'] = """
@@ -324,11 +327,12 @@ class List(Tests):
     def __init__(
         self,
         elem_type,   # "integer", "string",...
-        base,        # "controlled", "limited", ...
-        definite,    # "definite", "indefinite", ...
-        nodes,       # "bounded", "unbounded", ...
         instance,    # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
+        unbounded,
+        name,        # test name
+        filename,    # suffix for filename
+        limited=False, # Whether we need explicit Copy and Clear
         comments=None, # instance of Comments
         favorite=False # Whether this should be highlighted in the results
     ):
@@ -337,12 +341,12 @@ class List(Tests):
         # We use two default strings (one short, one long), to test various
         # approaches of storing elements
 
-        if elem_type.lower() == "integer":
+        if self.elem_type == "integer":
             category = '%s %s' % (elem_type, self.type)
             append = "V2.Append (C);"
             expected = "2"
 
-        elif elem_type.lower() == "string":
+        elif self.elem_type == "string":
             category = '%s %s' % (elem_type, self.type)
             expected = "Items_Count"
             append = """
@@ -352,7 +356,7 @@ class List(Tests):
              V2.Append ("foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo");
          end if;"""
 
-        elif elem_type.lower() == "unbounded_string":
+        elif self.elem_type == "unbounded_string":
             category = 'String %s' % (self.type, )
             expected = "Items_Count"
             append = """
@@ -362,13 +366,13 @@ class List(Tests):
              V2.Append (To_Unbounded_String
                 ("foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo"));
          end if;"""
+
         else:
-            raise Exception("Unknown element type: %s" % elem_type)
+            raise Exception("Unknown element type: %s" % self.elem_type)
 
         self.args = dict(
-            base=base,
-            definite=definite,
-            nodes=nodes,
+            name=name,
+            filename=filename,
             expected=expected,
             category=category,
             type=self.type,
@@ -386,17 +390,16 @@ class List(Tests):
             adaptors='',    # Creating adaptors for standard containers
             append=append)
 
-        if self.args['base'].lower() == "limited":
+        if limited:
             # Need an explicit copy, since ":=" is not defined for limited types
             self.args['copy'] = '.Copy'
             self.args['clear'] = '\n      V.Clear;'
             self.args['clear_copy'] = '\n         V_Copy.Clear;'
 
-        if self.args['nodes'].lower() == "bounded":
+        if not unbounded:
             self.args['discriminant'] = ' (Capacity => Items_Count)'
 
-        self.args['test_name'] = \
-            "{type}_{base}_{definite}_{nodes}_{elem_type}".format(**self.args)
+        self.args['test_name'] = "{type}_{elem_type}_{filename}".format(**self.args)
 
     def tests(self):
         return Templates.lists(self.elem_type)
@@ -410,12 +413,11 @@ class Map(Tests):
     def __init__(
         self,
         elem_type,   # "intint", "strstr",...
-        base,        # "controlled", "limited", ...
-        key,         # "definite", "indefinite", ...
-        value,       # "definite", "indefinite", ...
-        nodes,       # "bounded", "unbounded", ...
         instance,    # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
+        unbounded,
+        name,        # test name
+        filename,    # suffix for filename
         comments=None, # instance of Comments
         favorite=False, # Whether this should be highlighted in the results
         ada2012=False
@@ -433,7 +435,7 @@ class Map(Tests):
         V2.{set} (Image (C), "foo");
 """
 
-        elif elem_type.lower() == "intint":
+        elif self.elem_type == "intint":
             get_val = 'C'
             expected = "2"
             append = """
@@ -448,11 +450,8 @@ class Map(Tests):
             get = '.Get (%s)' % get_val
 
         self.args = dict(
-            base=base,
-            key=key,
-            value=value,
-            definite="%s-%s" % (key, value),
-            nodes=nodes,
+            name=name,
+            filename=filename,
             category=category,
             type=type,
             elem_type=elem_type,
@@ -472,13 +471,11 @@ class Map(Tests):
             adaptors='',    # Creating adaptors for standard containers
             append=append.format(set=set))
 
-        if self.args['nodes'].lower() == "bounded":
+        if not unbounded:
             self.args['discriminant'] = ' (Capacity => Items_Count, ' + \
                 ' Modulus => Default_Modulus (Items_Count))'
 
-        self.args['test_name'] = \
-            "{type}_{base}_{key}_{value}_{nodes}_{elem_type}".format(
-                **self.args)
+        self.args['test_name'] = "{type}_{elem_type}_{filename}".format(**self.args)
 
     def tests(self):
         return Templates.maps(self.elem_type)
@@ -494,6 +491,11 @@ class Vector(List):
         return Templates.vectors(self.elem_type)
 
 
+# Setup
+
+all_tests_withs = []
+all_tests = []
+
 # Integer lists
 
 i = " (Integer);"
@@ -501,77 +503,113 @@ ci = " (Integer);"
 s = " (String);"
 cs = " (String);"
 
-List("Integer", "Ada12", "Def", "Bounded",
+List("Integer",
      "package Container is new Ada.Containers.Bounded_Doubly_Linked_Lists" + i,
-     "with Ada.Containers.Bounded_Doubly_Linked_Lists;").gen_ada2012(
+     "with Ada.Containers.Bounded_Doubly_Linked_Lists;",
+     unbounded=False, name="Ada12 Bounded", filename="ada12_bounded"
+    ).gen_ada2012(
         adaptors='Bounded_List_Adaptors')
-List("Integer", "Ada12", "Def", "Unbounded",
-     "package Container is new Ada.Containers.Doubly_Linked_Lists" + i,
-     "with Ada.Containers.Doubly_Linked_Lists;").gen_ada2012()
-List("Integer", "Ada12", "Indef", "Unbounded",
-     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
-     " (Integer);",
-     "with Ada.Containers.Indefinite_Doubly_Linked_Lists;").gen_ada2012(
-         adaptor="Element",
-         adaptors='Indefinite_List_Adaptors')
-List("Integer", "Ada12_No_Checks", "Def", "Unbounded",
+List("Integer",
      "package Container is new Ada.Containers.Doubly_Linked_Lists" + i,
      "with Ada.Containers.Doubly_Linked_Lists;",
+     unbounded=True,
+     name="Ada12 Definite Unbounded", filename="ada12_def_unbounded"
+    ).gen_ada2012()
+List("Integer",
+     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
+     " (Integer);",
+     "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
+     unbounded=True,
+     name="Ada12 Indefinite Unbounded", filename="ada12_indef_unbounded"
+    ).gen_ada2012(
+         adaptor="Element",
+         adaptors='Indefinite_List_Adaptors')
+List("Integer",
+     "package Container is new Ada.Containers.Doubly_Linked_Lists" + i,
+     "with Ada.Containers.Doubly_Linked_Lists;",
+     unbounded=True,
+     name="Ada12 Nochecks Def unbounded",
+     filename="ada12_nocheck_def_unbounded",
      favorite=True).gen_ada2012(disable_checks=True)
-List("Integer", "Controlled", "Indef", "Unbounded",
+List("Integer",
      "package Container is new Conts.Lists.Indefinite_Unbounded" + ci,
-     "with Conts.Lists.Indefinite_Unbounded;").gen(adaptor="Element")
-List("Integer", "Controlled", "Def", "Unbounded",
+     "with Conts.Lists.Indefinite_Unbounded;",
+     unbounded=True,
+     name="Indef Unbounded", filename="indef_unbounded"
+    ).gen(adaptor="Element")
+List("Integer",
      "package Container is new Conts.Lists.Definite_Unbounded" + ci,
      "with Conts.Lists.Definite_Unbounded;",
+     unbounded=True,
+     name="Def Unbounded", filename="def_unbounded",
      favorite=True,
      comments=Comments(forofloop=
           "Because of dynamic dispatching -- When avoided, we gain 40%")
     ).gen(adaptor="Constant_Returned")
-List("Integer", "Controlled", "Def", "Bounded",
+List("Integer",
      "package Container is new Conts.Lists.Definite_Bounded" + ci,
-     "with Conts.Lists.Definite_Bounded;").gen(adaptor="Constant_Returned")
-List("Integer", "Limited", "Indef_Spark", "Unbounded_Spark",
+     "with Conts.Lists.Definite_Bounded;",
+     unbounded=False,
+     name="Def Bounded", filename="def_bounded"
+    ).gen(adaptor="Constant_Returned")
+List("Integer",
      "package Container is new Conts.Lists.Indefinite_Unbounded_SPARK" + i,
-     "with Conts.Lists.Indefinite_Unbounded_SPARK;").gen(adaptor="Element")
+     "with Conts.Lists.Indefinite_Unbounded_SPARK;",
+    unbounded=True, limited=True,
+    name="Limited Indef_Spark Unbounded_Spark",
+    filename="indef_unbounded_spark").gen(adaptor="Element")
 
 # String lists
 
-List("String", "Ada12", "Indef", "Unbounded",
+List("String",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s,
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
+     unbounded=True,
+     name="Ada12 Indefinite Unbounded", filename="ada12_indef_unbounded",
      favorite=False).gen_ada2012(
          adaptor="Element",
          adaptors='Indefinite_List_Adaptors')
-List("String", "Ada12_No_Checks", "Indef", "Unbounded",
+List("String",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s,
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
+     unbounded=True,
+     name="Ada12 Nochecks Indef Unbounded",
+     filename="ada12_nocheck_indef_unbounded",
      favorite=True).gen_ada2012(
          adaptor="Element",
          adaptors='Indefinite_List_Adaptors',
          disable_checks=True)
-List("String", "Controlled", "Indef", "Unbounded",
+List("String",
      "package Container is new Conts.Lists.Indefinite_Unbounded" + cs,
      "with Conts.Lists.Indefinite_Unbounded;",
+     unbounded=True,
+     name="Unbounded of Indef",
+     filename="indef_unbounded",
      favorite=True,
      comments=Comments(cursorloop="Cost if for copying the string")).gen(
          adaptor="Element")
-List("Unbounded_String", "Controlled", "Def", "Unbounded",
+List("Unbounded_String",
      "package Container is new Conts.Lists.Definite_Unbounded"
        + "(Unbounded_String);",
      "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
      "with Conts.Lists.Definite_Unbounded;",
+     unbounded=True,
+     name="Unbounded of Unbounded_String",
+     filename="def_unbounded_string",
      comments=Comments(
          cursorloop="Maybe because of the atomic counters or controlled elements")
     ).gen(adaptor="Constant_Returned")
-List("String", "Controlled", "Strings_Specific", "Unbounded",
-     "package Container renames Conts.Lists.Strings;",
-     "with Conts.Lists.Strings;",
-     comments=Comments(
-         countif='conversion to String',
-         fill='strange, since we are doing fewer mallocs. Faster if we only' +
-             'preallocate a 1 element array')
-    ).gen(adaptor="Element")
+#List("String",
+#     "package Container renames Conts.Lists.Strings;",
+#     "with Conts.Lists.Strings;",
+#     unbounded=True,
+#     name="Unbounded string-specific",
+#     filename="unbounded_strings",
+#     comments=Comments(
+#         countif='conversion to String',
+#         fill='strange, since we are doing fewer mallocs. Faster if we only' +
+#             'preallocate a 1 element array')
+#    ).gen(adaptor="Element")
 
 # Integer vectors
 
@@ -579,87 +617,132 @@ p = " (Positive, Integer);"
 cp = " (Positive, Integer, Ada.Finalization.Controlled);"
 lp = " (Positive, Integer, Conts.Limited_Base);"
 
-Vector("Integer", "Ada12", "Def", "Bounded",
+Vector("Integer",
      "package Container is new Ada.Containers.Bounded_Vectors" + p,
-     "with Ada.Containers.Bounded_Vectors;").gen_ada2012(
+     "with Ada.Containers.Bounded_Vectors;",
+       unbounded=False,
+       name="Ada12 Bounded",
+       filename="ada12_bounded"
+      ).gen_ada2012(
         adaptors='Bounded_Vector_Adaptors')
-Vector("Integer", "Ada12", "Def", "Unbounded",
-     "package Container is new Ada.Containers.Vectors" + p,
-     "with Ada.Containers.Vectors;").gen_ada2012()
-Vector("Integer", "Ada12", "Indef", "Unbounded",
-     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
-     "with Ada.Containers.Indefinite_Vectors;").gen_ada2012(
-         adaptor="Element",
-         adaptors='Indefinite_Vector_Adaptors')
-Vector("Integer", "Ada12_No_Checks", "Def", "Unbounded",
+Vector("Integer",
      "package Container is new Ada.Containers.Vectors" + p,
      "with Ada.Containers.Vectors;",
-     favorite=True).gen_ada2012(disable_checks=True)
-Vector("Integer", "Controlled", "Indef", "Unbounded",
+      unbounded=True,
+      name="Ada12 Definite Unbounded",
+      filename="ada12_def_unbounded").gen_ada2012()
+Vector("Integer",
+     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
+     "with Ada.Containers.Indefinite_Vectors;",
+       unbounded=True,
+       name="Ada12 Indefinite Unbounded",
+       filename="ada12_indef_unbounded"
+      ).gen_ada2012(
+         adaptor="Element",
+         adaptors='Indefinite_Vector_Adaptors')
+Vector("Integer",
+     "package Container is new Ada.Containers.Vectors" + p,
+     "with Ada.Containers.Vectors;",
+       unbounded=True,
+       name="Ada12 Nochecks Definite Unbounded",
+       filename="ada12_nochecks_definite_unbounded",
+       favorite=True).gen_ada2012(disable_checks=True)
+Vector("Integer",
      "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp,
-     "with Conts.Vectors.Indefinite_Unbounded;").gen(adaptor="Element")
-Vector("Integer", "Controlled", "Def", "Unbounded",
+     "with Conts.Vectors.Indefinite_Unbounded;",
+       unbounded=True,
+       name="Indef Unbounded",
+       filename="indef_unbounded"
+      ).gen(adaptor="Element")
+Vector("Integer",
      "package Container is new Conts.Vectors.Definite_Unbounded" + cp,
      "with Conts.Vectors.Definite_Unbounded;",
+       unbounded=True,
+       name="Def Unbounded",
+       filename="def_unbounded",
        comments=Comments(
            cursorloop='test in Next to see if we reached end of loop'),
      favorite=True).gen(adaptor="Constant_Returned")
-Vector("Integer", "Controlled", "Def", "Bounded",
+Vector("Integer",
      "package Container is new Conts.Vectors.Definite_Bounded" + p,
-     "with Conts.Vectors.Definite_Bounded;").gen(adaptor="Constant_Returned")
+     "with Conts.Vectors.Definite_Bounded;",
+       unbounded=False,
+       name="Def Bounded",
+       filename="def_bounded"
+      ).gen(adaptor="Constant_Returned")
 
 # String vectors
 
 p = " (Positive, String);"
 cp = " (Positive, String, Ada.Finalization.Controlled);"
 
-Vector("String", "Ada12", "Indef", "Unbounded",
-     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
-     "with Ada.Containers.Indefinite_Vectors;").gen_ada2012(
-         adaptor="Element",
-         adaptors='Indefinite_Vector_Adaptors')
-Vector("String", "Ada12_No_Checks", "Indef", "Unbounded",
+Vector("String",
      "package Container is new Ada.Containers.Indefinite_Vectors" + p,
      "with Ada.Containers.Indefinite_Vectors;",
-     favorite=True).gen_ada2012(
+       unbounded=True,
+       name="Ada12 Indefinite Unbounded",
+       filename="ada12_indef_unbounded"
+      ).gen_ada2012(
+         adaptor="Element",
+         adaptors='Indefinite_Vector_Adaptors')
+Vector("String",
+     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
+     "with Ada.Containers.Indefinite_Vectors;",
+       unbounded=True,
+       name="Ada12 Nochecks Indefinite Unbounded",
+       filename="ada12_nochecks_indef_unbounded",
+       favorite=True).gen_ada2012(
          adaptor="Element",
          adaptors='Indefinite_Vector_Adaptors',
          disable_checks=True)
-Vector("String", "Controlled", "Indef", "Unbounded",
+Vector("String",
      "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp
      + '\n   function Predicate (P : Container.Constant_Returned) return Boolean\n'
      + '      is (Perf_Support.Predicate (P)) with Inline;',
-     "with Conts.Vectors.Indefinite_Unbounded;", favorite=True).gen(
+     "with Conts.Vectors.Indefinite_Unbounded;",
+       unbounded=True,
+       name="Indef Unbounded",
+       filename="indef_unbounded",
+       favorite=True).gen(
          adaptor="Constant_Returned")
 
 # Integer-Integer maps
 
-Map("IntInt", "Ada12_ordered", "Def", "Def", "Unbounded",
-     "package Container is new Ada.Containers.Ordered_Maps" +
-         " (Integer, Integer);",
-     "with Ada.Containers.Ordered_Maps;",
+Map("IntInt",
+    "package Container is new Ada.Containers.Ordered_Maps"
+    +  " (Integer, Integer);",
+    "with Ada.Containers.Ordered_Maps;",
+    unbounded=True,
+    name="Ada12 ordered definite unbounded",
+    filename="ada12_ordered_def_unbounded",
      ada2012=True).gen_ada2012(
          adaptor="Element",
          adaptors="Ordered_Maps_Adaptors")
-Map("IntInt", "Ada12_hashed", "Def", "Def", "Unbounded",
+Map("IntInt",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
      + '   (Conts.Hash_Type (K)) with Inline;\n'
      + 'package Container is new Ada.Containers.Hashed_Maps'
      + ' (Integer, Integer, Hash, "=");',
-     "with Ada.Containers.Hashed_Maps;",
-     ada2012=True).gen_ada2012(
+    "with Ada.Containers.Hashed_Maps;",
+    unbounded=True,
+    name="Ada12 hashed definite unbounded",
+    filename="ada12_hashed_def_unbounded",
+    ada2012=True).gen_ada2012(
          adaptor="Element",
          adaptors="Hashed_Maps_Adaptors")
-Map("IntInt", "Ada12_hashed", "Def", "Def", "Bounded",
+Map("IntInt",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
      + '   (Conts.Hash_Type (K)) with Inline;\n'
      + 'package Container is new Ada.Containers.Bounded_Hashed_Maps'
      + ' (Integer, Integer, Hash, "=");',
-     "with Ada.Containers.Bounded_Hashed_Maps;",
-     ada2012=True).gen_ada2012(
+    "with Ada.Containers.Bounded_Hashed_Maps;",
+    unbounded=False,
+    name="Ada12 hashed definite bounded",
+    filename="ada12_hashed_def_bounded",
+    ada2012=True).gen_ada2012(
          adaptor="Element",
          adaptors="Bounded_Hashed_Maps_Adaptors")
-Map("IntInt", "hashed", "Def", "Def", "Unbounded",
+Map("IntInt",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
     + '   (Conts.Hash_Type (K)) with Inline;\n'
     + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
@@ -667,45 +750,75 @@ Map("IntInt", "hashed", "Def", "Def", "Unbounded",
     + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Def_Def_Unbounded;',
+    unbounded=True,
+    name="Hashed Def Def Unbounded",
+    filename="hashed_def_def_unbounded",
     favorite=True).gen(adaptor="Pair")
-Map("IntInt", "hashed_linear_probing", "Def", "Def", "Unbounded",
+Map("IntInt",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
-     + '   (Conts.Hash_Type (K)) with Inline;\n'
+    + '   (Conts.Hash_Type (K)) with Inline;\n'
     + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
     + '   (Integer, Integer, Ada.Finalization.Controlled, Hash);'
     + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Def_Def_Unbounded;',
+    unbounded=True,
+    name="Hashed Linear Probing Def Def Unbounded",
+    filename="hashed_linear_probing_def_def_unbounded",
     favorite=True).gen(adaptor="Pair")
 
 # String-String maps
 
-Map("StrStr", "Ada12_ordered", "Indef", "Indef", "Unbounded",
-     "package Container is new Ada.Containers.Indefinite_Ordered_Maps" +
-         " (String, String);",
-     "with Ada.Containers.Indefinite_Ordered_Maps;",
-     ada2012=True).gen_ada2012(
+Map("StrStr",
+    "package Container is new Ada.Containers.Indefinite_Ordered_Maps"
+    + " (String, String);",
+    "with Ada.Containers.Indefinite_Ordered_Maps;",
+    unbounded=True,
+    name="Ada12 Ordered Indefinite Unbounded",
+    filename="ada12_ordered_indef_unbounded",
+    ada2012=True).gen_ada2012(
          adaptor="Element",
          adaptors="Indefinite_Ordered_Maps_Adaptors")
-Map("StrStr", "Ada12_hashed", "Indef", "Indef", "Unbounded",
-     'package Container is new Ada.Containers.Indefinite_Hashed_Maps' +
-         ' (String, String, Ada.Strings.Hash, "=");',
-     "with Ada.Strings.Hash;\n" +
-     "with Ada.Containers.Indefinite_Hashed_Maps;",
-     ada2012=True).gen_ada2012(
+Map("StrStr",
+    'package Container is new Ada.Containers.Indefinite_Hashed_Maps'
+    +  ' (String, String, Ada.Strings.Hash, "=");',
+    "with Ada.Strings.Hash;\n" +
+    "with Ada.Containers.Indefinite_Hashed_Maps;",
+    unbounded=True,
+    name="Ada12 Hashed Indefinite Unbounded",
+    filename="ada12_hashed_indef_unbounded",
+    ada2012=True).gen_ada2012(
          adaptor="Element",
          adaptors="Indefinite_Hashed_Maps_Adaptors")
-Map("StrStr", "hashed", "Indef", "Indef", "Unbounded",
+Map("StrStr",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
     + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
     + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
+    unbounded=True,
+    name="Hashed Indef-Indef Unbounded",
+    filename="hashed_indef_indef_unbounded",
     favorite=True).gen(adaptor="Pair")
-Map("StrStr", "hashed_linear_probing", "Indef", "Indef", "Unbounded",
+Map("StrStr",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
     + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
     + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
     + '   is (Predicate (Container.Value (P))) with Inline;',
     'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
+    unbounded=True,
+    name="Hashed Linear Probing Indef-Indef Unbounded",
+    filename="hashed_linear_probing_indef_indef_unbounded",
     favorite=True).gen(adaptor="Pair")
+
+run_all = open("tests/generated/perf-run_all.adb", "w")
+run_all.write("\n".join(all_tests_withs))
+run_all.write("""
+pragma Style_Checks (Off);
+separate (Perf)
+procedure Run_All is
+begin\n""")
+run_all.write("\n".join(all_tests))
+run_all.write("""
+end Run_All;""")
+run_all.close()

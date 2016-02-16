@@ -17,7 +17,7 @@ void test_cpp_graph(void* output) {
   const int num_vertices = items_count;
 
   reset_mem();
-  start_container_test (output, "C++", "", "", "Graph", 1);
+  start_container_test (output, "C++ Boost", "Graph", 1);
   save_container_size (output, sizeof(Graph));
 
   for (int r = 0; r < repeat_count; r++) {

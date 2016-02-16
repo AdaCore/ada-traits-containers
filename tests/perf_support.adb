@@ -105,7 +105,7 @@ package body Perf_Support is
       end Run;
 
    begin
-      Stdout.Start_Container_Test ("Ada Array", "", "", "Integer Vector");
+      Stdout.Start_Container_Test ("Ada Array", "Integer Vector");
       for R in 1 .. Repeat_Count loop
          declare
             V     : Int_Array (1 .. Items_Count);
