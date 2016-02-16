@@ -41,6 +41,7 @@ package Conts.Lists.Indefinite_Unbounded is
 
    subtype Cursor is Lists.Cursor;
    subtype List is Lists.List;
+   subtype Constant_Returned is Elements.Traits.Constant_Returned;
 
    package Cursors renames Lists.Cursors;
    package Maps renames Lists.Maps;

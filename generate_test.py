@@ -126,7 +126,7 @@ end {test_name};"""
     list_str_cursor_loop = wrap("cursor loop", """
       It := V2.First;
       while {prefix}Has_Element (It) loop
-         if Perf_Support.Predicate ({prefix}Element (It)) then
+         if Perf_Support.Predicate ({get} (It)) then
             Co := Co + 1;
          end if;
          It := {prefix}Next (It);
@@ -292,30 +292,25 @@ class Tests(object):
         all_tests.append(
             """   Run_Test ("{filename}", {test_name}'Access);""".format(**self.args))
 
-    def gen(self, adaptor):
-        self.args['prefix'] = 'V2.'
-        self.args['adaptors'] = """
-   function Count_If is new Conts.Algorithms.Count_If
-      (Container.Cursors.Forward, Container.Maps.%s);""" % adaptor
-        self.write()
+    def gen(self, adaptor="Constant_Returned", adaptors="{type}_Adaptors",
+            disable_checks=False):
+        if self.ada2012:
+            adapt = adaptors.format(**self.args)
+            suppress = "pragma Suppress (Container_Checks);\n" if disable_checks else ""
 
-    def gen_ada2012(self,
-                    disable_checks=False,
-                    adaptor="Constant_Returned",
-                    adaptors='{type}_Adaptors'):
-        """
-        Generate tests for the Ada 2012 containers
-        """
-
-        adapt = adaptors.format(**self.args)
-        suppress = "pragma Suppress (Container_Checks);\n" if disable_checks else ""
-
-        self.args['adaptors'] = """
+            self.args['adaptors'] = """
    %spackage Adaptors is new Conts.Adaptors.%s (Container);
    function Count_If is new Conts.Algorithms.Count_If
       (Adaptors.Cursors.Forward, Adaptors.Maps.%s);""" % (suppress, adapt, adaptor)
 
+        else:
+            self.args['prefix'] = 'V2.'
+            self.args['adaptors'] = """
+   function Count_If is new Conts.Algorithms.Count_If
+      (Container.Cursors.Forward, Container.Maps.%s);""" % adaptor
+
         self.write()
+
 
 ########
 # List #
@@ -334,9 +329,16 @@ class List(Tests):
         filename,    # suffix for filename
         limited=False, # Whether we need explicit Copy and Clear
         comments=None, # instance of Comments
-        favorite=False # Whether this should be highlighted in the results
+        favorite=False, # Whether this should be highlighted in the results
+        ada2012=False
     ):
         self.elem_type = elem_type.lower()
+        self.ada2012 = ada2012
+
+        if ada2012:
+            get = "Element"
+        else:
+            get = "V2.Element"
 
         # We use two default strings (one short, one long), to test various
         # approaches of storing elements
@@ -349,6 +351,9 @@ class List(Tests):
         elif self.elem_type == "string":
             category = '%s %s' % (elem_type, self.type)
             expected = "Items_Count"
+            if ada2012:
+                get = "V2.Constant_Reference"
+
             append = """
          if C mod 2 = 0 then
              V2.Append ("foo");
@@ -378,6 +383,7 @@ class List(Tests):
             type=self.type,
             elem_type=elem_type,
             instance=instance,
+            get=get,
             withs=withs,
             copy='',
             call_count_if='',
@@ -426,6 +432,7 @@ class Map(Tests):
         category = '%s %s' % (elem_type, type)
 
         self.elem_type = elem_type.lower()
+        self.ada2012 = ada2012
 
         if self.elem_type == "strstr":
             get_val = 'Image (C)'
@@ -506,31 +513,32 @@ cs = " (String);"
 List("Integer",
      "package Container is new Ada.Containers.Bounded_Doubly_Linked_Lists" + i,
      "with Ada.Containers.Bounded_Doubly_Linked_Lists;",
-     unbounded=False, name="Ada12 Bounded", filename="ada12_bounded"
-    ).gen_ada2012(
+     unbounded=False, name="Ada12 Bounded", filename="ada12_bounded",
+     ada2012=True
+    ).gen(
         adaptors='Bounded_List_Adaptors')
 List("Integer",
      "package Container is new Ada.Containers.Doubly_Linked_Lists" + i,
      "with Ada.Containers.Doubly_Linked_Lists;",
-     unbounded=True,
+     unbounded=True, ada2012=True,
      name="Ada12 Definite Unbounded", filename="ada12_def_unbounded"
-    ).gen_ada2012()
+    ).gen()
 List("Integer",
      "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" +
      " (Integer);",
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
-     unbounded=True,
+     unbounded=True, ada2012=True,
      name="Ada12 Indefinite Unbounded", filename="ada12_indef_unbounded"
-    ).gen_ada2012(
+    ).gen(
          adaptor="Element",
          adaptors='Indefinite_List_Adaptors')
 List("Integer",
      "package Container is new Ada.Containers.Doubly_Linked_Lists" + i,
      "with Ada.Containers.Doubly_Linked_Lists;",
-     unbounded=True,
+     unbounded=True, ada2012=True,
      name="Ada12 Nochecks Def unbounded",
      filename="ada12_nocheck_def_unbounded",
-     favorite=True).gen_ada2012(disable_checks=True)
+     favorite=True).gen(disable_checks=True)
 List("Integer",
      "package Container is new Conts.Lists.Indefinite_Unbounded" + ci,
      "with Conts.Lists.Indefinite_Unbounded;",
@@ -562,35 +570,41 @@ List("Integer",
 # String lists
 
 List("String",
-     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s,
+     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s
+     + '\n   function Predicate (P : Container.Constant_Reference_Type) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
-     unbounded=True,
+     unbounded=True, ada2012=True,
      name="Ada12 Indefinite Unbounded", filename="ada12_indef_unbounded",
-     favorite=False).gen_ada2012(
-         adaptor="Element",
+     favorite=False).gen(
+         adaptor="Constant_Returned",
          adaptors='Indefinite_List_Adaptors')
 List("String",
-     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s,
+     "package Container is new Ada.Containers.Indefinite_Doubly_Linked_Lists" + s
+     + '\n   function Predicate (P : Container.Constant_Reference_Type) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
      "with Ada.Containers.Indefinite_Doubly_Linked_Lists;",
-     unbounded=True,
+     unbounded=True, ada2012=True,
      name="Ada12 Nochecks Indef Unbounded",
      filename="ada12_nocheck_indef_unbounded",
-     favorite=True).gen_ada2012(
-         adaptor="Element",
+     favorite=True).gen(
+         adaptor="Constant_Returned",
          adaptors='Indefinite_List_Adaptors',
          disable_checks=True)
 List("String",
-     "package Container is new Conts.Lists.Indefinite_Unbounded" + cs,
+     "package Container is new Conts.Lists.Indefinite_Unbounded" + cs
+     + '\n   function Predicate (P : Container.Constant_Returned) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
      "with Conts.Lists.Indefinite_Unbounded;",
      unbounded=True,
      name="Unbounded of Indef",
      filename="indef_unbounded",
      favorite=True,
      comments=Comments(cursorloop="Cost if for copying the string")).gen(
-         adaptor="Element")
+         adaptor="Constant_Returned")
 List("Unbounded_String",
      "package Container is new Conts.Lists.Definite_Unbounded"
-       + "(Unbounded_String);",
+     + "(Unbounded_String);",
      "with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;\n" +
      "with Conts.Lists.Definite_Unbounded;",
      unbounded=True,
@@ -620,33 +634,33 @@ lp = " (Positive, Integer, Conts.Limited_Base);"
 Vector("Integer",
      "package Container is new Ada.Containers.Bounded_Vectors" + p,
      "with Ada.Containers.Bounded_Vectors;",
-       unbounded=False,
+       unbounded=False, ada2012=True,
        name="Ada12 Bounded",
        filename="ada12_bounded"
-      ).gen_ada2012(
+      ).gen(
         adaptors='Bounded_Vector_Adaptors')
 Vector("Integer",
      "package Container is new Ada.Containers.Vectors" + p,
      "with Ada.Containers.Vectors;",
-      unbounded=True,
+      unbounded=True, ada2012=True,
       name="Ada12 Definite Unbounded",
-      filename="ada12_def_unbounded").gen_ada2012()
+      filename="ada12_def_unbounded").gen()
 Vector("Integer",
      "package Container is new Ada.Containers.Indefinite_Vectors" + p,
      "with Ada.Containers.Indefinite_Vectors;",
-       unbounded=True,
+       unbounded=True, ada2012=True,
        name="Ada12 Indefinite Unbounded",
        filename="ada12_indef_unbounded"
-      ).gen_ada2012(
+      ).gen(
          adaptor="Element",
          adaptors='Indefinite_Vector_Adaptors')
 Vector("Integer",
      "package Container is new Ada.Containers.Vectors" + p,
      "with Ada.Containers.Vectors;",
-       unbounded=True,
+       unbounded=True, ada2012=True,
        name="Ada12 Nochecks Definite Unbounded",
        filename="ada12_nochecks_definite_unbounded",
-       favorite=True).gen_ada2012(disable_checks=True)
+       favorite=True).gen(disable_checks=True)
 Vector("Integer",
      "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp,
      "with Conts.Vectors.Indefinite_Unbounded;",
@@ -677,22 +691,26 @@ p = " (Positive, String);"
 cp = " (Positive, String, Ada.Finalization.Controlled);"
 
 Vector("String",
-     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
+     "package Container is new Ada.Containers.Indefinite_Vectors" + p
+     + '\n   function Predicate (P : Container.Constant_Reference_Type) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
      "with Ada.Containers.Indefinite_Vectors;",
-       unbounded=True,
+       unbounded=True, ada2012=True,
        name="Ada12 Indefinite Unbounded",
        filename="ada12_indef_unbounded"
-      ).gen_ada2012(
-         adaptor="Element",
+      ).gen(
+         adaptor="Constant_Returned",
          adaptors='Indefinite_Vector_Adaptors')
 Vector("String",
-     "package Container is new Ada.Containers.Indefinite_Vectors" + p,
+     "package Container is new Ada.Containers.Indefinite_Vectors" + p
+     + '\n   function Predicate (P : Container.Constant_Reference_Type) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
      "with Ada.Containers.Indefinite_Vectors;",
-       unbounded=True,
+       unbounded=True, ada2012=True,
        name="Ada12 Nochecks Indefinite Unbounded",
        filename="ada12_nochecks_indef_unbounded",
-       favorite=True).gen_ada2012(
-         adaptor="Element",
+       favorite=True).gen(
+         adaptor="Constant_Returned",
          adaptors='Indefinite_Vector_Adaptors',
          disable_checks=True)
 Vector("String",
@@ -712,10 +730,10 @@ Map("IntInt",
     "package Container is new Ada.Containers.Ordered_Maps"
     +  " (Integer, Integer);",
     "with Ada.Containers.Ordered_Maps;",
-    unbounded=True,
+    unbounded=True, ada2012=True,
     name="Ada12 ordered definite unbounded",
-    filename="ada12_ordered_def_unbounded",
-     ada2012=True).gen_ada2012(
+    filename="ada12_ordered_def_unbounded"
+    ).gen(
          adaptor="Element",
          adaptors="Ordered_Maps_Adaptors")
 Map("IntInt",
@@ -724,10 +742,10 @@ Map("IntInt",
      + 'package Container is new Ada.Containers.Hashed_Maps'
      + ' (Integer, Integer, Hash, "=");',
     "with Ada.Containers.Hashed_Maps;",
-    unbounded=True,
+    unbounded=True, ada2012=True,
     name="Ada12 hashed definite unbounded",
-    filename="ada12_hashed_def_unbounded",
-    ada2012=True).gen_ada2012(
+    filename="ada12_hashed_def_unbounded"
+    ).gen(
          adaptor="Element",
          adaptors="Hashed_Maps_Adaptors")
 Map("IntInt",
@@ -736,10 +754,10 @@ Map("IntInt",
      + 'package Container is new Ada.Containers.Bounded_Hashed_Maps'
      + ' (Integer, Integer, Hash, "=");',
     "with Ada.Containers.Bounded_Hashed_Maps;",
-    unbounded=False,
+    unbounded=False, ada2012=True,
     name="Ada12 hashed definite bounded",
-    filename="ada12_hashed_def_bounded",
-    ada2012=True).gen_ada2012(
+    filename="ada12_hashed_def_bounded"
+    ).gen(
          adaptor="Element",
          adaptors="Bounded_Hashed_Maps_Adaptors")
 Map("IntInt",
@@ -773,10 +791,10 @@ Map("StrStr",
     "package Container is new Ada.Containers.Indefinite_Ordered_Maps"
     + " (String, String);",
     "with Ada.Containers.Indefinite_Ordered_Maps;",
-    unbounded=True,
+    unbounded=True, ada2012=True,
     name="Ada12 Ordered Indefinite Unbounded",
-    filename="ada12_ordered_indef_unbounded",
-    ada2012=True).gen_ada2012(
+    filename="ada12_ordered_indef_unbounded"
+    ).gen(
          adaptor="Element",
          adaptors="Indefinite_Ordered_Maps_Adaptors")
 Map("StrStr",
@@ -784,10 +802,10 @@ Map("StrStr",
     +  ' (String, String, Ada.Strings.Hash, "=");',
     "with Ada.Strings.Hash;\n" +
     "with Ada.Containers.Indefinite_Hashed_Maps;",
-    unbounded=True,
+    unbounded=True, ada2012=True,
     name="Ada12 Hashed Indefinite Unbounded",
-    filename="ada12_hashed_indef_unbounded",
-    ada2012=True).gen_ada2012(
+    filename="ada12_hashed_indef_unbounded"
+    ).gen(
          adaptor="Element",
          adaptors="Indefinite_Hashed_Maps_Adaptors")
 Map("StrStr",

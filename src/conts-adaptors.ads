@@ -120,6 +120,7 @@ package Conts.Adaptors is
    package Indefinite_List_Adaptors is
       subtype Element_Type is Lists.Element_Type;
       subtype Returned is Lists.Constant_Reference_Type;
+      subtype Constant_Returned is Lists.Constant_Reference_Type;
       subtype List is Lists.List;
       subtype Cursor is Lists.Cursor;
 
@@ -228,10 +229,11 @@ package Conts.Adaptors is
    generic
       with package Vectors is new Ada.Containers.Indefinite_Vectors (<>);
    package Indefinite_Vector_Adaptors is
-      subtype Element_Type is Vectors.Element_Type;
-      subtype Returned     is Vectors.Constant_Reference_Type;
-      subtype Vector       is Vectors.Vector;
-      subtype Cursor       is Vectors.Cursor;
+      subtype Element_Type      is Vectors.Element_Type;
+      subtype Returned          is Vectors.Constant_Reference_Type;
+      subtype Constant_Returned is Vectors.Constant_Reference_Type;
+      subtype Vector            is Vectors.Vector;
+      subtype Cursor            is Vectors.Cursor;
 
       function Element (Self : Vector; Position : Cursor) return Returned
          is (Vectors.Constant_Reference (Self, Position)) with Inline;
