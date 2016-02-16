@@ -23,7 +23,7 @@
 --  indefinite elements (class-wide for instance).
 
 pragma Ada_2012;
-with Conts.Elements.Indefinite_Ref;
+with Conts.Elements.Indefinite;
 with Conts.Maps.Generics;
 
 generic
@@ -36,9 +36,9 @@ generic
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Maps.Indef_Indef_Unbounded is
 
-   package Keys is new Conts.Elements.Indefinite_Ref
+   package Keys is new Conts.Elements.Indefinite
      (Key_Type, Pool => Conts.Global_Pool, Free => Free);
-   package Elements is new Conts.Elements.Indefinite_Ref
+   package Elements is new Conts.Elements.Indefinite
      (Element_Type, Pool => Conts.Global_Pool, Free => Free);
 
    function "=" (Left : Key_Type; Right : Keys.Traits.Stored) return Boolean
@@ -58,8 +58,10 @@ package Conts.Maps.Indef_Indef_Unbounded is
    subtype Returned is Impl.Returned_Type;
 
    subtype Pair_Type is Impl.Pair_Type;
-   function Key (P : Pair_Type) return Keys.Traits.Returned renames Impl.Key;
-   function Value (P : Pair_Type) return Elements.Traits.Returned
+   function Key
+     (P : Pair_Type) return Keys.Traits.Constant_Returned renames Impl.Key;
+   function Value
+     (P : Pair_Type) return Elements.Traits.Constant_Returned
       renames Impl.Value;
 
    package Cursors renames Impl.Cursors;

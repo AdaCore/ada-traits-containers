@@ -43,9 +43,19 @@ package Conts.Elements with SPARK_Mode is
       --  Reference type as introduced by Ada 2012. Other variations are of
       --  course possible.
 
+      type Constant_Returned_Type (<>) is private;
+      --  The type of elements returned by getters. As opposed to
+      --  Returned_Type, this one guarantees that the type cannot be modified
+      --  via this value (so it can't be a direct pointer, not a reference_type
+      --  for which the discriminant is not "constant"). This is used in
+      --  particular for the Constant_Indexing aspect.
+
       with function To_Stored (E : Element_Type) return Stored_Type;
-      with function To_Return (E : Stored_Type) return Returned_Type;
-      with function To_Element (E : Returned_Type) return Element_Type;
+      with function To_Returned (E : Stored_Type) return Returned_Type;
+      with function To_Constant_Returned
+        (E : Stored_Type) return Constant_Returned_Type;
+      with function To_Element
+        (E : Constant_Returned_Type) return Element_Type;
       --  Converting between the types
 
       with procedure Release (E : in out Stored_Type) is null;
@@ -79,9 +89,14 @@ package Conts.Elements with SPARK_Mode is
       subtype Element is Element_Type;
       subtype Stored is Stored_Type;
       subtype Returned is Returned_Type;
+      subtype Constant_Returned is Constant_Returned_Type;
 
-      function To_Elem (E : Returned_Type) return Element_Type
-        renames To_Element;
+      function To_Elem (E : Constant_Returned_Type) return Element_Type
+         renames To_Element;
+
+      function Identity (E : Returned_Type) return Returned_Type is (E);
+      --  Convenience function
+
    end Traits;
 
 end Conts.Elements;

@@ -52,7 +52,7 @@ generic
 
 package Conts.Elements.Arrays with SPARK_Mode => Off is
 
-   type Ref_Type (Element : not null access constant Array_Type) is
+   type Constant_Ref_Type (Element : not null access constant Array_Type) is
       null record with Implicit_Dereference => Element;
 
    --  This package stores a string with explicit bounds, but is able to
@@ -62,7 +62,8 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
       type Fat_Pointer is private;
       procedure Set (FP : in out Fat_Pointer; A : Array_Type) with Inline;
 
-      function Get (FP : not null access constant Fat_Pointer) return Ref_Type
+      function Get
+        (FP : not null access constant Fat_Pointer) return Constant_Ref_Type
          with Inline;
    private
       type Both_Bounds is record
@@ -77,8 +78,8 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
    package Impl is
       type Stored_Array is private;
       function To_Stored (A : Array_Type) return Stored_Array with Inline;
-      function To_Ref (S : Stored_Array) return Ref_Type with Inline;
-      function To_Element (R : Ref_Type) return Array_Type
+      function To_Ref (S : Stored_Array) return Constant_Ref_Type with Inline;
+      function To_Element (R : Constant_Ref_Type) return Array_Type
          is (R.Element.all) with Inline;
       function Copy (S : Stored_Array) return Stored_Array with Inline;
       procedure Release (S : in out Stored_Array) with Inline;
@@ -98,18 +99,20 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
    end Impl;
 
    package Traits is new Conts.Elements.Traits
-      (Element_Type        => Array_Type,
-       Stored_Type         => Impl.Stored_Array,
-       Returned_Type         => Ref_Type,
-       To_Stored           => Impl.To_Stored,
-       To_Return           => Impl.To_Ref,
-       To_Element          => Impl.To_Element,
-       Copy                => Impl.Copy,
-       Release             => Impl.Release,
-       Copyable            => False,   --  would create aliases
-       Movable             => True);
+     (Element_Type           => Array_Type,
+      Stored_Type            => Impl.Stored_Array,
+      Returned_Type          => Constant_Ref_Type,
+      Constant_Returned_Type => Constant_Ref_Type,
+      To_Stored              => Impl.To_Stored,
+      To_Returned            => Impl.To_Ref,
+      To_Constant_Returned   => Impl.To_Ref,
+      To_Element             => Impl.To_Element,
+      Copy                   => Impl.Copy,
+      Release                => Impl.Release,
+      Copyable               => False,   --  would create aliases
+      Movable                => True);
 
-   function From_Ref_To_Element (R : Ref_Type) return Array_Type
+   function From_Ref_To_Element (R : Constant_Ref_Type) return Array_Type
       is (R.Element.all) with Inline;
    --  Convenience function for use in algorithms, to convert from a Ref_Type
    --  to an Element_Type. This is not needed in general, since the compiler

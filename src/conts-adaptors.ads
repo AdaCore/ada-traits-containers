@@ -71,7 +71,7 @@ package Conts.Adaptors is
       package Maps is
          package Element is new Conts.Properties.Read_Only_Maps
            (List'Class, Cursor, Element_Type, Element);
-         package Returned renames Element;
+         package Constant_Returned renames Element;
       end Maps;
    end Bounded_List_Adaptors;
 
@@ -106,7 +106,7 @@ package Conts.Adaptors is
       package Maps is
          package Element is new Conts.Properties.Read_Only_Maps
            (List'Class, Cursor, Element_Type, Element);
-         package Returned renames Element;
+         package Constant_Returned renames Element;
       end Maps;
    end List_Adaptors;
 
@@ -143,7 +143,7 @@ package Conts.Adaptors is
       end Cursors;
 
       package Maps is
-         package Returned is new Conts.Properties.Read_Only_Maps
+         package Constant_Returned is new Conts.Properties.Read_Only_Maps
            (List'Class, Cursor, Returned, Element);
          package Element is new Conts.Properties.Read_Only_Maps
            (List'Class, Cursor, Element_Type, Element);
@@ -182,7 +182,7 @@ package Conts.Adaptors is
       package Maps is
          package Element is new Conts.Properties.Read_Only_Maps
            (Vector'Class, Cursor, Element_Type, Element);
-         package Returned renames Element;
+         package Constant_Returned renames Element;
       end Maps;
    end Bounded_Vector_Adaptors;
 
@@ -217,7 +217,7 @@ package Conts.Adaptors is
       package Maps is
          package Element is new Conts.Properties.Read_Only_Maps
            (Vector'Class, Cursor, Element_Type, Element);
-         package Returned renames Element;
+         package Constant_Returned renames Element;
       end Maps;
    end Vector_Adaptors;
 
@@ -253,7 +253,7 @@ package Conts.Adaptors is
       end Cursors;
 
       package Maps is
-         package Returned is new Conts.Properties.Read_Only_Maps
+         package Constant_Returned is new Conts.Properties.Read_Only_Maps
            (Vector'Class, Cursor, Returned, Element);
          package Element is new Conts.Properties.Read_Only_Maps
            (Vector'Class, Cursor, Element_Type, Element);
@@ -289,7 +289,7 @@ package Conts.Adaptors is
       end Cursors;
 
       package Maps is
-         package Returned is new Conts.Properties.Read_Only_Maps
+         package Constant_Returned is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Returned, Element);
          package Element is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Element_Type, Element);
@@ -325,7 +325,7 @@ package Conts.Adaptors is
       end Cursors;
 
       package Maps is
-         package Returned is new Conts.Properties.Read_Only_Maps
+         package Constant_Returned is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Returned, Element);
          package Element is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Element_Type, Element);
@@ -364,7 +364,7 @@ package Conts.Adaptors is
       end Cursors;
 
       package Maps is
-         package Returned is new Conts.Properties.Read_Only_Maps
+         package Constant_Returned is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Returned, Element);
          package Element is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Element_Type, Element);
@@ -401,7 +401,7 @@ package Conts.Adaptors is
       end Cursors;
 
       package Maps is
-         package Returned is new Conts.Properties.Read_Only_Maps
+         package Constant_Returned is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Returned, Element);
          package Element is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Element_Type, Element);
@@ -441,7 +441,7 @@ package Conts.Adaptors is
       end Cursors;
 
       package Maps is
-         package Returned is new Conts.Properties.Read_Only_Maps
+         package Constant_Returned is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Returned, Element);
          package Element is new Conts.Properties.Read_Only_Maps
            (Map'Class, Cursor, Element_Type, Element);
@@ -485,7 +485,7 @@ package Conts.Adaptors is
       package Maps is
          package Element is new Conts.Properties.Read_Only_Maps
            (Array_Type, Index_Type, Element_Type, Element);
-         package Returned renames Element;
+         package Constant_Returned renames Element;
       end Maps;
    end Array_Adaptors;
 

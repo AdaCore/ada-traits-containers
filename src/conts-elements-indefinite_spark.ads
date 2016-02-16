@@ -34,10 +34,18 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
 
    package Impl with SPARK_Mode => On is
       type Element_Access is private;
+      type Constant_Reference_Type
+        (Element : not null access constant Element_Type)
+        is null record with Implicit_Dereference => Element;
       function To_Element_Access (E : Element_Type) return Element_Access
          with Inline;
       function To_Element_Type (E : Element_Access) return Element_Type
          with Inline;
+      function To_Constant_Reference_Type
+        (E : Element_Access) return Constant_Reference_Type
+        with Inline;
+      function To_Element (E : Constant_Reference_Type) return Element_Type
+        is (E.Element.all) with Inline;
       function Identity (E : Element_Type) return Element_Type
          is (E) with Inline;
       function Copy (E : Element_Access) return Element_Access with Inline;
@@ -52,18 +60,23 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
          is (E.all);
       function Copy (E : Element_Access) return Element_Access
          is (new Element_Type'(E.all));
+      function To_Constant_Reference_Type
+        (E : Element_Access) return Constant_Reference_Type
+        is ((Element => E));
    end Impl;
 
    package Traits is new Conts.Elements.Traits
-      (Element_Type        => Element_Type,
-       Stored_Type         => Impl.Element_Access,
-       Returned_Type         => Element_Type,
-       To_Stored           => Impl.To_Element_Access,
-       To_Return           => Impl.To_Element_Type,
-       To_Element          => Impl.Identity,
-       Copy                => Impl.Copy,
-       Copyable            => False,
-       Movable             => False,
-       Release             => Impl.Free);
+     (Element_Type           => Element_Type,
+      Stored_Type            => Impl.Element_Access,
+      Returned_Type          => Impl.Constant_Reference_Type,
+      Constant_Returned_Type => Impl.Constant_Reference_Type,
+      To_Stored              => Impl.To_Element_Access,
+      To_Returned            => Impl.To_Constant_Reference_Type,
+      To_Constant_Returned   => Impl.To_Constant_Reference_Type,
+      To_Element             => Impl.To_Element,
+      Copy                   => Impl.Copy,
+      Copyable               => False,
+      Movable                => False,
+      Release                => Impl.Free);
 
 end Conts.Elements.Indefinite_SPARK;

@@ -24,7 +24,7 @@
 
 pragma Ada_2012;
 with Conts.Elements.Definite;
-with Conts.Elements.Indefinite_Ref;
+with Conts.Elements.Indefinite;
 with Conts.Maps.Generics;
 
 generic
@@ -37,7 +37,7 @@ generic
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Maps.Indef_Def_Unbounded is
 
-   package Keys is new Conts.Elements.Indefinite_Ref
+   package Keys is new Conts.Elements.Indefinite
      (Key_Type, Pool => Conts.Global_Pool, Free => Free);
    package Elements is new Conts.Elements.Definite
      (Element_Type, Free => Free);
@@ -58,7 +58,8 @@ package Conts.Maps.Indef_Def_Unbounded is
    subtype Map is Impl.Map;
 
    subtype Pair_Type is Impl.Pair_Type;
-   function Key (P : Pair_Type) return Keys.Traits.Returned renames Impl.Key;
+   function Key
+     (P : Pair_Type) return Keys.Traits.Constant_Returned renames Impl.Key;
    function Value (P : Pair_Type) return Element_Type renames Impl.Value;
 
    package Cursors renames Impl.Cursors;

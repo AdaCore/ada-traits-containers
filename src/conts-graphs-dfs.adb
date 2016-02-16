@@ -129,7 +129,7 @@ package body Conts.Graphs.DFS is
                      --   stack here if Vertex is unconstrained
                      V : Vertex renames
                        Graphs.Vertices.To_Element
-                         (Graphs.Vertices.To_Return (Info.VC));
+                         (Graphs.Vertices.To_Constant_Returned (Info.VC));
                   begin
                      Color_Maps.Set (Colors, V, Black);
                      Visit.Finish_Vertex (G, V);

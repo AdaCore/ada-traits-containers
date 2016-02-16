@@ -29,10 +29,12 @@ with Conts.Vectors.Storage;
 generic
    type Index_Type is (<>);
    with package Storage is new Conts.Vectors.Storage.Traits (<>);
+
 package Conts.Vectors.Generics with SPARK_Mode is
 
    subtype Element_Type is Storage.Elements.Element_Type;
    subtype Returned_Type is Storage.Elements.Returned_Type;
+   subtype Constant_Returned_Type is Storage.Elements.Constant_Returned_Type;
    subtype Stored_Type is Storage.Elements.Stored_Type;
 
    package Impl is
@@ -73,15 +75,22 @@ package Conts.Vectors.Generics with SPARK_Mode is
         with Pre => Index <= Last (Self);
       procedure Delete_Last (Self : in out Base_Vector'Class)
         with Global => null, Pre => Length (Self) /= 0;
-      function Last_Element (Self : Base_Vector'Class) return Returned_Type
+      function Last_Element
+        (Self : Base_Vector'Class) return Constant_Returned_Type
         with Global => null, Pre => Length (Self) /= 0;
       function First (Self : Base_Vector'Class) return Cursor
         with Inline, Global => null;
       function Element
-        (Self : Base_Vector'Class; Position : Index_Type) return Returned_Type
+        (Self : Base_Vector'Class; Position : Index_Type)
+         return Constant_Returned_Type
+        with Inline;
+      function Reference
+        (Self : Base_Vector'Class; Position : Index_Type)
+         return Returned_Type
         with Inline;
       function Element
-        (Self : Base_Vector'Class; Position : Cursor) return Returned_Type
+        (Self : Base_Vector'Class; Position : Cursor)
+         return Constant_Returned_Type
         with Inline, Global => null,
              Pre    => Has_Element (Self, Position);
       function Has_Element
@@ -103,7 +112,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
       function First_Primitive (Self : Base_Vector) return Cursor
          is (First (Self)) with Inline;
       function Element_Primitive
-        (Self : Base_Vector; Position : Cursor) return Returned_Type
+        (Self : Base_Vector; Position : Cursor) return Constant_Returned_Type
          is (Element (Self, Position)) with Inline;
       function Has_Element_Primitive
         (Self : Base_Vector; Position : Cursor) return Boolean
@@ -247,7 +256,8 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  The vector is not resized, so it will keep its current capacity, for
    --  efficient insertion of future elements. You can call Shrink_To_Fit
 
-   function Last_Element (Self : Base_Vector'Class) return Returned_Type
+   function Last_Element
+     (Self : Base_Vector'Class) return Constant_Returned_Type
      renames Impl.Last_Element;
    --  Return the last element in the vector.
 
@@ -259,13 +269,19 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Self := Source.
 
    function Element
-     (Self : Base_Vector'Class; Position : Index_Type) return Returned_Type
+     (Self : Base_Vector'Class; Position : Index_Type)
+      return Constant_Returned_Type
      renames Impl.Element;
+   function Reference
+     (Self : Base_Vector'Class; Position : Index_Type)
+      return Returned_Type
+      renames Impl.Reference;
 
    function First (Self : Base_Vector'Class) return Cursor
      renames Impl.First;
    function Element
-     (Self : Base_Vector'Class; Position : Cursor) return Returned_Type
+     (Self : Base_Vector'Class; Position : Cursor)
+      return Constant_Returned_Type
      renames Impl.Element;
    function Has_Element
      (Self : Base_Vector'Class; Position : Cursor) return Boolean
@@ -291,21 +307,14 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    type Vector is new Base_Vector with null record
      with Constant_Indexing => Constant_Reference,
-     Iterable => (First       => First_Primitive,
-                  Next        => Next_Primitive,
-                  Has_Element => Has_Element_Primitive,
-                  Element     => Element_Primitive);
+          Iterable          => (First       => First_Primitive,
+                                Next        => Next_Primitive,
+                                Has_Element => Has_Element_Primitive,
+                                Element     => Element_Primitive);
 
    function Constant_Reference
-     (Self : Vector; Position : Index_Type) return Element_Type
-   is (Storage.Elements.To_Element (Element (Self, Position))) with Inline;
-
-   function Reference
-     (Self : Vector; Position : Index_Type) return Returned_Type
-   is (Element (Self, Position)) with Inline;
-   --  Depending on the implementation of the element traits, this might in
-   --  fact be a constant reference since the element might not be modifiable
-   --  through the Returned_Type.
+     (Self : Vector; Position : Index_Type) return Constant_Returned_Type
+     is (Element (Self, Position)) with Inline;
 
    -------------
    -- Cursors --
@@ -350,9 +359,9 @@ package Conts.Vectors.Generics with SPARK_Mode is
       package Element is new Conts.Properties.Read_Only_Maps
         (Cursors.Forward.Container, Cursors.Forward.Cursor,
          Element_Type, As_Element);
-      package Returned is new Conts.Properties.Read_Only_Maps
+      package Constant_Returned is new Conts.Properties.Read_Only_Maps
         (Cursors.Forward.Container, Cursors.Forward.Cursor,
-         Storage.Elements.Returned, Conts.Vectors.Generics.Element);
+         Storage.Elements.Constant_Returned, Conts.Vectors.Generics.Element);
    end Maps;
 
 private

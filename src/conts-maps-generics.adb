@@ -340,7 +340,7 @@ package body Conts.Maps.Generics is
       function Get
         (Self     : Base_Map'Class;
          Key      : Keys.Element_Type)
-      return Elements.Returned_Type is
+      return Elements.Constant_Returned_Type is
       begin
          if Self.Table /= null then
             declare
@@ -348,7 +348,8 @@ package body Conts.Maps.Generics is
                Index : constant Hash_Type := Find_Slot (Self, Key, H);
             begin
                if Self.Table (Index).Kind = Full then
-                  return Elements.To_Return (Self.Table (Index).Value);
+                  return Elements.To_Constant_Returned
+                    (Self.Table (Index).Value);
                end if;
             end;
          end if;

@@ -68,7 +68,7 @@ package body Conts.Graphs.Adjacency_List is
          From, To : Vertex;
          Props    : Edge_Properties.Element_Type) is
       begin
-         Self.Vertices.Element (From).Out_Edges.Append
+         Self.Vertices.Reference (From).Out_Edges.Append
            (Edge'
               (From  => From,
                To    => To,

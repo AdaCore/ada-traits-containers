@@ -26,7 +26,7 @@ pragma Ada_2012;
 
 with Conts.Cursors;
 with Conts.Properties.Indexed;
-with Conts.Vectors.Indefinite_Unbounded_Ref;
+with Conts.Vectors.Indefinite_Unbounded;
 with Conts.Vectors.Definite_Unbounded;
 with Conts.Graphs.DFS;
 
@@ -115,7 +115,8 @@ package Conts.Graphs.Adjacency_List is
       end record;
       procedure Release (V : in out Vertex_Record);
 
-      package Vertex_Vectors is new Conts.Vectors.Indefinite_Unbounded_Ref
+      --  Indefinite so that we can edit in place
+      package Vertex_Vectors is new Conts.Vectors.Indefinite_Unbounded
         (Index_Type          => Vertex,
          Element_Type        => Vertex_Record,
          Container_Base_Type => Dummy_Record,
@@ -141,15 +142,17 @@ package Conts.Graphs.Adjacency_List is
    function Identity (V : Vertex) return Vertex is (V) with Inline;
 
    package Vertices is new Conts.Elements.Traits
-     (Element_Type  => Vertex,
-      Stored_Type   => Vertex,
-      Returned_Type => Vertex,
-      To_Stored     => Identity,
-      To_Return     => Identity,
-      To_Element    => Identity,
-      Copy          => Identity,   --  Unused since Copyable is True
-      Copyable      => True,
-      Movable       => True);
+     (Element_Type           => Vertex,
+      Stored_Type            => Vertex,
+      Returned_Type          => Vertex,
+      Constant_Returned_Type => Vertex,
+      To_Stored              => Identity,
+      To_Returned            => Identity,
+      To_Constant_Returned   => Identity,
+      To_Element             => Identity,
+      Copy                   => Identity,   --  Unused since Copyable is True
+      Copyable               => True,
+      Movable                => True);
 
    package Vertices_Cursors is new Conts.Cursors.Forward_Cursors
      (Container_Type => Graph,

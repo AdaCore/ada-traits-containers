@@ -45,7 +45,6 @@ with List_Limited_Indef_Spark_Unbounded_Spark_Integer;
 with List_Ada12_Indef_Unbounded_String;
 with List_Ada12_No_Checks_Indef_Unbounded_String;
 with List_Controlled_Indef_Unbounded_String;
-with List_Controlled_Indef_Unbounded_Ref_String;
 with List_Controlled_Def_Unbounded_Unbounded_String;
 with List_Controlled_Strings_Specific_Unbounded_String;
 
@@ -64,7 +63,6 @@ with Vector_Controlled_Def_Bounded_Integer;
 with Vector_Ada12_Indef_Unbounded_String;
 with Vector_Ada12_No_Checks_Indef_Unbounded_String;
 with Vector_Controlled_Indef_Unbounded_String;
-with Vector_Controlled_Indef_Unbounded_Ref_String;
 
 --  Integer-Integer maps
 
@@ -153,8 +151,6 @@ begin
              List_Ada12_No_Checks_Indef_Unbounded_String'Access);
    Run_Test ("str_list_controlled_indef_unbounded",
              List_Controlled_Indef_Unbounded_String'Access);
-   Run_Test ("str_list_controlled_indef_unbounded_ref",
-             List_Controlled_Indef_Unbounded_Ref_String'Access);
    Run_Test ("str_list_controlled_def_unbounded_ustr",
              List_Controlled_Def_Unbounded_Unbounded_String'Access);
 
@@ -188,8 +184,6 @@ begin
              Vector_Ada12_No_Checks_Indef_Unbounded_String'Access);
    Run_Test ("str_vector_controlled_indef_unbounded",
              Vector_Controlled_Indef_Unbounded_String'Access);
-   Run_Test ("str_vector_controlled_indef_unbounded_ref",
-             Vector_Controlled_Indef_Unbounded_Ref_String'Access);
 
    Run_Test ("intint_map_c++_unordered",
              Test_Cpp_Int_Int_Unordered_Map'Access);

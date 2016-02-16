@@ -65,6 +65,7 @@ package Conts.Maps.Generics is
    subtype Key_Type is Keys.Element_Type;
    subtype Element_Type is Elements.Element_Type;
    subtype Returned_Type is Elements.Returned_Type;
+   subtype Constant_Returned_Type is Elements.Constant_Returned_Type;
 
    package Impl is
 
@@ -74,8 +75,10 @@ package Conts.Maps.Generics is
       No_Element : constant Cursor;
 
       type Pair_Type is private;
-      function Key   (P : Pair_Type) return Keys.Returned_Type with Inline;
-      function Value (P : Pair_Type) return Elements.Returned_Type with Inline;
+      function Key
+        (P : Pair_Type) return Keys.Constant_Returned_Type with Inline;
+      function Value
+        (P : Pair_Type) return Elements.Constant_Returned_Type with Inline;
 
       function Capacity (Self : Base_Map'Class) return Count_Type;
       procedure Resize
@@ -88,7 +91,7 @@ package Conts.Maps.Generics is
       function Get
         (Self     : Base_Map'Class;
          Key      : Keys.Element_Type)
-         return Elements.Returned_Type;
+         return Elements.Constant_Returned_Type;
       procedure Clear (Self : in out Base_Map'Class);
       procedure Delete
         (Self     : in out Base_Map'Class;
@@ -97,7 +100,8 @@ package Conts.Maps.Generics is
         (Self : Base_Map'Class; Position : Cursor) return Pair_Type
          with Inline, Global => null;
       function Element
-        (Self : Base_Map'Class; Position : Cursor) return Returned_Type
+        (Self : Base_Map'Class; Position : Cursor)
+         return Constant_Returned_Type
          is (Value (Pair (Self, Position)));
       function As_Element
         (Self : Base_Map'Class; Position : Cursor) return Element_Type
@@ -142,10 +146,10 @@ package Conts.Maps.Generics is
          Value : Elements.Stored_Type;
       end record;
 
-      function Key   (P : Pair_Type) return Keys.Returned_Type
-         is (Keys.To_Return (P.Key));
-      function Value (P : Pair_Type) return Elements.Returned_Type
-         is (Elements.To_Return (P.Value));
+      function Key   (P : Pair_Type) return Keys.Constant_Returned_Type
+         is (Keys.To_Constant_Returned (P.Key));
+      function Value (P : Pair_Type) return Elements.Constant_Returned_Type
+         is (Elements.To_Constant_Returned (P.Value));
 
       type Slot_Kind is (Empty, Dummy, Full);
       --  A node can have three statuses:
@@ -198,9 +202,9 @@ package Conts.Maps.Generics is
    No_Element : constant Cursor := Impl.No_Element;
 
    subtype Pair_Type is Impl.Pair_Type;
-   function Key   (P : Pair_Type) return Keys.Returned_Type
+   function Key   (P : Pair_Type) return Keys.Constant_Returned_Type
      renames Impl.Key;
-   function Value (P : Pair_Type) return Elements.Returned_Type
+   function Value (P : Pair_Type) return Elements.Constant_Returned_Type
      renames Impl.Value;
    --  This record contains both the key and the value of an element stored
 
@@ -227,7 +231,7 @@ package Conts.Maps.Generics is
    function Get
      (Self     : Base_Map'Class;
       Key      : Keys.Element_Type)
-      return Elements.Returned_Type
+      return Elements.Constant_Returned_Type
      renames Impl.Get;
    --  Raises a Constraint_Error if there is no such element in the table
 
@@ -245,7 +249,7 @@ package Conts.Maps.Generics is
      (Self : Base_Map'Class; Position : Cursor) return Pair_Type
      renames Impl.Pair;
    function Element
-     (Self : Base_Map'Class; Position : Cursor) return Returned_Type
+     (Self : Base_Map'Class; Position : Cursor) return Constant_Returned_Type
      renames Impl.Element;
    function As_Element
      (Self : Base_Map'Class; Position : Cursor) return Elements.Element_Type
@@ -272,15 +276,8 @@ package Conts.Maps.Generics is
                        Element     => Element_Primitive);
 
    function Constant_Reference
-     (Self : Map; Key : Key_Type) return Element_Type
-     is (Elements.To_Element (Get (Self, Key))) with Inline;
-
-   function Reference
-     (Self : Map; Key : Key_Type) return Returned_Type
+     (Self : Map; Key : Key_Type) return Constant_Returned_Type
      is (Get (Self, Key)) with Inline;
-   --  Depending on the implementation of the element traits, this might in
-   --  fact be a constant reference since the element might not be modifiable
-   --  through the Returned_Type.
 
    -------------
    -- Cursors --
@@ -304,8 +301,8 @@ package Conts.Maps.Generics is
         (Base_Map'Class, Cursor, Pair_Type, Pair);
       package Element is new Conts.Properties.Read_Only_Maps
         (Base_Map'Class, Cursor, Element_Type, As_Element);
-      package Returned is new Conts.Properties.Read_Only_Maps
-        (Base_Map'Class, Cursor, Elements.Returned,
+      package Constant_Returned is new Conts.Properties.Read_Only_Maps
+        (Base_Map'Class, Cursor, Elements.Constant_Returned,
          Conts.Maps.Generics.Element);
    end Maps;
 

@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 with Ada.Finalization;
-with Conts.Elements.Indefinite_Ref;
+with Conts.Elements.Indefinite;
 with Conts.Lists.Storage.Unbounded;
 with Conts.Lists.Generics;
 
@@ -44,7 +44,7 @@ package QGen is
    --  We do our own instances (not the ones in
    --  Conts.Lists.Indefinite_Unbounded) for better sharing of code.
 
-   package Elements is new Conts.Elements.Indefinite_Ref
+   package Elements is new Conts.Elements.Indefinite
       (EObject'Class, Pool => Conts.Global_Pool);
    package Storage is new Conts.Lists.Storage.Unbounded
       (Elements.Traits,

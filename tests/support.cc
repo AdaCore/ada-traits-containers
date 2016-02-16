@@ -462,7 +462,7 @@ void test_cpp_int_int_unordered_map (void * output) {
       }
 
       count = 0;
-      start_test (output, "indexed", SAME_GROUP);
+      start_test (output, "indexed", START_GROUP);
       for (int r = 1; r <= items_count; r++) {
          if (v[r] <= 2) {
             count ++;
@@ -546,7 +546,7 @@ void test_cpp_str_str_map (void * output) {
       }
 
       count = 0;
-      start_test (output, "indexed", SAME_GROUP);
+      start_test (output, "indexed", START_GROUP);
       for (int r = 1; r <= items_count; r++) {
          if (startsWithStr(v["1"])) {
             count ++;
@@ -630,7 +630,7 @@ void test_cpp_str_str_unordered_map (void * output) {
       }
 
       count = 0;
-      start_test (output, "indexed", SAME_GROUP);
+      start_test (output, "indexed", START_GROUP);
       for (int r = 1; r <= items_count; r++) {
          if (startsWithStr(v["1"])) {
             count ++;

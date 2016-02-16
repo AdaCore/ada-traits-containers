@@ -45,12 +45,12 @@ package body Conts.Elements.Arrays is
       end Set;
 
       function Get
-         (FP : not null access constant Fat_Pointer) return Ref_Type
+         (FP : not null access constant Fat_Pointer) return Constant_Ref_Type
       is
          F  : constant C_Fat_Pointer := (FP.Data'Address, FP.Bounds'Address);
          AC : constant Array_Access := To_FP (F);
       begin
-         return Ref_Type'(Element => AC);
+         return Constant_Ref_Type'(Element => AC);
       end Get;
    end Fat_Pointers;
 
@@ -79,12 +79,12 @@ package body Conts.Elements.Arrays is
       -- To_Ref --
       ------------
 
-      function To_Ref (S : Stored_Array) return Ref_Type is
+      function To_Ref (S : Stored_Array) return Constant_Ref_Type is
       begin
          if S.Kind = Short_Array then
             return Fat_Pointers.Get (S.Short'Access);
          else
-            return Ref_Type'(Element => S.Long);
+            return Constant_Ref_Type'(Element => S.Long);
          end if;
       end To_Ref;
 

@@ -46,15 +46,17 @@ package Conts.Elements.Definite with SPARK_Mode is
    function Identity (E : Element_Type) return Element_Type is (E) with Inline;
 
    package Traits is new Conts.Elements.Traits
-      (Element_Type  => Element_Type,
-       Stored_Type   => Element_Type,
-       Returned_Type   => Element_Type,
-       Copyable      => True,
-       Movable       => Movable,
-       Release       => Free,
-       To_Stored     => Identity,
-       To_Return     => Identity,
-       To_Element    => Identity,
-       Copy          => Identity);
+     (Element_Type           => Element_Type,
+      Stored_Type            => Element_Type,
+      Returned_Type          => Element_Type,
+      Constant_Returned_Type => Element_Type,
+      Copyable               => True,
+      Movable                => Movable,
+      Release                => Free,
+      To_Stored              => Identity,
+      To_Returned            => Identity,
+      To_Constant_Returned   => Identity,
+      To_Element             => Identity,
+      Copy                   => Identity);
 
 end Conts.Elements.Definite;

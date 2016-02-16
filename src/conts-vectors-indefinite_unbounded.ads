@@ -22,30 +22,34 @@
 --  Unbounded controlled vectors of unconstrained elements
 
 pragma Ada_2012;
-with Ada.Finalization;
 with Conts.Elements.Indefinite;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Storage.Unbounded;
 
 generic
-   type Index_Type is range <>;
+   type Index_Type is (<>);
    type Element_Type (<>) is private;
+   type Container_Base_Type is abstract tagged limited private;
+   with procedure Free (E : in out Element_Type) is null;
 package Conts.Vectors.Indefinite_Unbounded is
 
    package Elements is new Conts.Elements.Indefinite
-      (Element_Type, Pool => Conts.Global_Pool);
+      (Element_Type, Free => Free, Pool => Conts.Global_Pool);
    package Storage is new Conts.Vectors.Storage.Unbounded
       (Elements            => Elements.Traits,
-       Container_Base_Type => Ada.Finalization.Controlled,
+       Container_Base_Type => Container_Base_Type,
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
    subtype Vector is Vectors.Vector;
    subtype Cursor is Vectors.Cursor;
+   subtype Constant_Returned is Elements.Traits.Constant_Returned;
 
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;
 
+   function To_Index (Position : Cursor) return Index_Type
+     renames Vectors.To_Index;
    procedure Swap
      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
        renames Vectors.Swap;

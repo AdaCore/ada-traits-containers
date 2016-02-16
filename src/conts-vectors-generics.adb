@@ -44,9 +44,10 @@ package body Conts.Vectors.Generics is
       -------------
 
       function Element
-        (Self : Base_Vector'Class; Position : Cursor) return Returned_Type is
+        (Self : Base_Vector'Class; Position : Cursor)
+         return Constant_Returned_Type is
       begin
-         return Storage.Elements.To_Return
+         return Storage.Elements.To_Constant_Returned
            (Storage.Get_Element (Self, Position.Index));
       end Element;
 
@@ -212,9 +213,10 @@ package body Conts.Vectors.Generics is
       -- Last_Element --
       ------------------
 
-      function Last_Element (Self : Base_Vector'Class) return Returned_Type is
+      function Last_Element
+        (Self : Base_Vector'Class) return Constant_Returned_Type is
       begin
-         return Storage.Elements.To_Return
+         return Storage.Elements.To_Constant_Returned
            (Storage.Get_Element (Self, Self.Last));
       end Last_Element;
 
@@ -252,12 +254,25 @@ package body Conts.Vectors.Generics is
       -------------
 
       function Element
-        (Self : Base_Vector'Class; Position : Index_Type) return Returned_Type
+        (Self : Base_Vector'Class; Position : Index_Type)
+         return Constant_Returned_Type
       is
       begin
-         return Storage.Elements.To_Return
+         return Storage.Elements.To_Constant_Returned
            (Storage.Get_Element (Self, To_Count (Position)));
       end Element;
+
+      ---------------
+      -- Reference --
+      ---------------
+
+      function Reference
+        (Self : Base_Vector'Class; Position : Index_Type)
+         return Returned_Type is
+      begin
+         return Storage.Elements.To_Returned
+           (Storage.Get_Element (Self, To_Count (Position)));
+      end Reference;
 
       ---------------------
       -- Replace_Element --

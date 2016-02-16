@@ -66,9 +66,10 @@ package body Conts.Lists.Generics with SPARK_Mode => Off is
       -------------
 
       function Element
-        (Self : Base_List'Class; Position : Cursor) return Returned_Type is
+        (Self : Base_List'Class; Position : Cursor)
+         return Constant_Returned_Type is
       begin
-         return Storage.Elements.To_Return
+         return Storage.Elements.To_Constant_Returned
            (Get_Element (Self, Position.Current));
       end Element;
 

@@ -128,7 +128,7 @@ end {test_name};"""
     list_str_cursor_loop = wrap("cursor loop", """
       It := V2.First;
       while {prefix}Has_Element (It) loop
-         if Predicate ({prefix}Element (It)) then
+         if Perf_Support.Predicate ({prefix}Element (It)) then
             Co := Co + 1;
          end if;
          It := {prefix}Next (It);
@@ -147,7 +147,7 @@ end {test_name};"""
 
     list_str_for_of_loop = wrap("for-of loop", """
       for E of V2 loop
-         if Predicate (E) then
+         if Perf_Support.Predicate (E) then
             Co := Co + 1;
          end if;
       end loop;""", group=False)
@@ -168,14 +168,14 @@ end {test_name};"""
 
     int_str_indexing_loop = wrap("indexed", """
       for C in 1 .. Items_Count loop
-         if Predicate (V2 (C)) then
+         if Perf_Support.Predicate (V2 (C)) then
             Co := Co + 1;
          end if;
       end loop;""", group=False)
 
     str_str_indexing_loop = wrap("indexed", """
       for C in 1 .. Items_Count loop
-         if Predicate (V2 ("1")) then
+         if Perf_Support.Predicate (V2 ("1")) then
             Co := Co + 1;
          end if;
       end loop;""", group=False)
@@ -298,7 +298,7 @@ class Tests(object):
 
     def gen_ada2012(self,
                     disable_checks=False,
-                    adaptor="Returned",
+                    adaptor="Constant_Returned",
                     adaptors='{type}_Adaptors'):
         """
         Generate tests for the Ada 2012 containers
@@ -520,20 +520,20 @@ List("Integer", "Ada12_No_Checks", "Def", "Unbounded",
      favorite=True).gen_ada2012(disable_checks=True)
 List("Integer", "Controlled", "Indef", "Unbounded",
      "package Container is new Conts.Lists.Indefinite_Unbounded" + ci,
-     "with Conts.Lists.Indefinite_Unbounded;").gen(adaptor="Returned")
+     "with Conts.Lists.Indefinite_Unbounded;").gen(adaptor="Element")
 List("Integer", "Controlled", "Def", "Unbounded",
      "package Container is new Conts.Lists.Definite_Unbounded" + ci,
      "with Conts.Lists.Definite_Unbounded;",
      favorite=True,
      comments=Comments(forofloop=
           "Because of dynamic dispatching -- When avoided, we gain 40%")
-    ).gen(adaptor="Returned")
+    ).gen(adaptor="Constant_Returned")
 List("Integer", "Controlled", "Def", "Bounded",
      "package Container is new Conts.Lists.Definite_Bounded" + ci,
-     "with Conts.Lists.Definite_Bounded;").gen(adaptor="Returned")
+     "with Conts.Lists.Definite_Bounded;").gen(adaptor="Constant_Returned")
 List("Integer", "Limited", "Indef_Spark", "Unbounded_Spark",
      "package Container is new Conts.Lists.Indefinite_Unbounded_SPARK" + i,
-     "with Conts.Lists.Indefinite_Unbounded_SPARK;").gen(adaptor="Returned")
+     "with Conts.Lists.Indefinite_Unbounded_SPARK;").gen(adaptor="Element")
 
 # String lists
 
@@ -553,13 +553,9 @@ List("String", "Ada12_No_Checks", "Indef", "Unbounded",
 List("String", "Controlled", "Indef", "Unbounded",
      "package Container is new Conts.Lists.Indefinite_Unbounded" + cs,
      "with Conts.Lists.Indefinite_Unbounded;",
-     comments=Comments(cursorloop="Cost if for copying the string")).gen(adaptor="Returned")
-List("String", "Controlled", "Indef", "Unbounded_Ref",
-     "package Container is new Conts.Lists.Indefinite_Unbounded_Ref" + cs,
-     "with Conts.Lists.Indefinite_Unbounded_Ref;",
-     comments=Comments(
-         countif="Conversion from Reference_Type to Element_Type"),
-     favorite=True).gen(adaptor="Element")
+     favorite=True,
+     comments=Comments(cursorloop="Cost if for copying the string")).gen(
+         adaptor="Element")
 List("Unbounded_String", "Controlled", "Def", "Unbounded",
      "package Container is new Conts.Lists.Definite_Unbounded"
        + "(Unbounded_String);",
@@ -567,7 +563,7 @@ List("Unbounded_String", "Controlled", "Def", "Unbounded",
      "with Conts.Lists.Definite_Unbounded;",
      comments=Comments(
          cursorloop="Maybe because of the atomic counters or controlled elements")
-    ).gen(adaptor="Returned")
+    ).gen(adaptor="Constant_Returned")
 List("String", "Controlled", "Strings_Specific", "Unbounded",
      "package Container renames Conts.Lists.Strings;",
      "with Conts.Lists.Strings;",
@@ -600,17 +596,17 @@ Vector("Integer", "Ada12_No_Checks", "Def", "Unbounded",
      "with Ada.Containers.Vectors;",
      favorite=True).gen_ada2012(disable_checks=True)
 Vector("Integer", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
-     "with Conts.Vectors.Indefinite_Unbounded;").gen(adaptor="Returned")
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp,
+     "with Conts.Vectors.Indefinite_Unbounded;").gen(adaptor="Element")
 Vector("Integer", "Controlled", "Def", "Unbounded",
      "package Container is new Conts.Vectors.Definite_Unbounded" + cp,
      "with Conts.Vectors.Definite_Unbounded;",
        comments=Comments(
            cursorloop='test in Next to see if we reached end of loop'),
-     favorite=True).gen(adaptor="Returned")
+     favorite=True).gen(adaptor="Constant_Returned")
 Vector("Integer", "Controlled", "Def", "Bounded",
      "package Container is new Conts.Vectors.Definite_Bounded" + p,
-     "with Conts.Vectors.Definite_Bounded;").gen(adaptor="Returned")
+     "with Conts.Vectors.Definite_Bounded;").gen(adaptor="Constant_Returned")
 
 # String vectors
 
@@ -630,12 +626,11 @@ Vector("String", "Ada12_No_Checks", "Indef", "Unbounded",
          adaptors='Indefinite_Vector_Adaptors',
          disable_checks=True)
 Vector("String", "Controlled", "Indef", "Unbounded",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded" + p,
-     "with Conts.Vectors.Indefinite_Unbounded;").gen(adaptor="Returned")
-Vector("String", "Controlled", "Indef", "Unbounded_Ref",
-     "package Container is new Conts.Vectors.Indefinite_Unbounded_Ref" + cp,
-     "with Conts.Vectors.Indefinite_Unbounded_Ref;", favorite=True).gen(
-         adaptor="Element")
+     "package Container is new Conts.Vectors.Indefinite_Unbounded" + cp
+     + '\n   function Predicate (P : Container.Constant_Returned) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
+     "with Conts.Vectors.Indefinite_Unbounded;", favorite=True).gen(
+         adaptor="Constant_Returned")
 
 # Integer-Integer maps
 

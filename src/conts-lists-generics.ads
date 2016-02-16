@@ -45,6 +45,7 @@ package Conts.Lists.Generics with SPARK_Mode is
    subtype Element_Type is Storage.Elements.Element_Type;
    subtype Returned_Type is Storage.Elements.Returned_Type;
    subtype Stored_Type is Storage.Elements.Stored_Type;
+   subtype Constant_Returned_Type is Storage.Elements.Constant_Returned_Type;
 
    package Impl is
       type Base_List is new Storage.Container with private;
@@ -72,7 +73,8 @@ package Conts.Lists.Generics with SPARK_Mode is
         (Self : Base_List'Class; Position : Cursor) return Boolean
         with Inline, Global => null;
       function Element
-        (Self : Base_List'Class; Position : Cursor) return Returned_Type
+        (Self : Base_List'Class; Position : Cursor)
+         return Constant_Returned_Type
         with Inline, Global => null,
              Pre    => Has_Element (Self, Position);
       function Next
@@ -89,7 +91,7 @@ package Conts.Lists.Generics with SPARK_Mode is
       function First_Primitive (Self : Base_List) return Cursor
          is (First (Self)) with Inline;
       function Element_Primitive
-        (Self : Base_List; Position : Cursor) return Returned_Type
+        (Self : Base_List; Position : Cursor) return Constant_Returned_Type
          is (Element (Self, Position)) with Inline;
       function Has_Element_Primitive
         (Self : Base_List; Position : Cursor) return Boolean
@@ -155,7 +157,7 @@ package Conts.Lists.Generics with SPARK_Mode is
    function First (Self : Base_List'Class) return Cursor
      renames Impl.First;
    function Element
-     (Self : Base_List'Class; Position : Cursor) return Returned_Type
+     (Self : Base_List'Class; Position : Cursor) return Constant_Returned_Type
      renames Impl.Element;
    function Has_Element
      (Self : Base_List'Class; Position : Cursor) return Boolean
@@ -193,15 +195,8 @@ package Conts.Lists.Generics with SPARK_Mode is
                        Element     => Element_Primitive);
 
    function Constant_Reference
-     (Self : List; Position : Cursor) return Element_Type
-     is (Storage.Elements.To_Element (Element (Self, Position))) with Inline;
-
-   function Reference
-     (Self : List; Position : Cursor) return Returned_Type
+     (Self : List; Position : Cursor) return Constant_Returned_Type
      is (Element (Self, Position)) with Inline;
-   --  Depending on the implementation of the element traits, this might in
-   --  fact be a constant reference since the element might not be modifiable
-   --  through the Returned_Type.
 
    --------------------
    -- Cursors traits --
@@ -230,9 +225,9 @@ package Conts.Lists.Generics with SPARK_Mode is
       package Element is new Conts.Properties.Read_Only_Maps
         (Cursors.Forward.Container, Cursors.Forward.Cursor,
          Element_Type, As_Element);
-      package Returned is new Conts.Properties.Read_Only_Maps
+      package Constant_Returned is new Conts.Properties.Read_Only_Maps
         (Cursors.Forward.Container, Cursors.Forward.Cursor,
-         Storage.Elements.Returned, Conts.Lists.Generics.Element);
+         Storage.Elements.Constant_Returned, Conts.Lists.Generics.Element);
    end Maps;
 
 end Conts.Lists.Generics;

@@ -140,7 +140,6 @@ can be edited with any text editor.
    We could avoid one test in forward_cursors, since both Has_Element and
    Next test to check whether we are past the end
 
-
 ** TODO =Indefinite_Unbounded_Ref= constant_indexing should return ref_type
    We currently return a copy of the type. This might unfortunately mean that
    the simpler packages all need to override Constant_Indexing, which cannot
@@ -299,7 +298,8 @@ http://ootips.org/yonat/4dev/smart-pointers.html
    See https://www.youtube.com/watch?v=LIb3L4vKZ7U
 
 ** Use =pragma Suppress_Initialization=
-   To avoid generating not needed code
+   To avoid generating not needed code.
+   also =pragma Restrictions(No_Initialize_Scalars)=  (see P216-017)
 
 * Rejected design
 ** REJECT Use an interface instead of traits package for =Storage=

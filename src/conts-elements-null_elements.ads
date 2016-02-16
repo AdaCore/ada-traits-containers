@@ -33,14 +33,16 @@ package Conts.Elements.Null_Elements is
 
    function Identity (E : Null_Element) return Null_Element is (E) with Inline;
    package Traits is new Conts.Elements.Traits
-      (Element_Type  => Null_Element,
-       Stored_Type   => Null_Element,
-       Returned_Type   => Null_Element,
-       Copyable      => True,
-       Movable       => True,
-       To_Stored     => Identity,
-       To_Return     => Identity,
-       To_Element    => Identity,
-       Copy          => Identity);
+     (Element_Type            => Null_Element,
+      Stored_Type             => Null_Element,
+      Returned_Type           => Null_Element,
+      Constant_Returned_Type  => Null_Element,
+      Copyable                => True,
+      Movable                 => True,
+      To_Stored               => Identity,
+      To_Returned             => Identity,
+      To_Constant_Returned    => Identity,
+      To_Element              => Identity,
+      Copy                    => Identity);
 
 end Conts.Elements.Null_Elements;
