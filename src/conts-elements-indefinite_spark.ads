@@ -34,9 +34,7 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
 
    package Impl with SPARK_Mode => On is
       type Element_Access is private;
-      type Constant_Reference_Type
-        (Element : not null access constant Element_Type)
-        is null record with Implicit_Dereference => Element;
+      subtype Constant_Reference_Type is Element_Type;
       function To_Element_Access (E : Element_Type) return Element_Access
          with Inline;
       function To_Element_Type (E : Element_Access) return Element_Type
@@ -45,7 +43,7 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
         (E : Element_Access) return Constant_Reference_Type
         with Inline;
       function To_Element (E : Constant_Reference_Type) return Element_Type
-        is (E.Element.all) with Inline;
+        is (E) with Inline;
       function Identity (E : Element_Type) return Element_Type
          is (E) with Inline;
       function Copy (E : Element_Access) return Element_Access with Inline;
@@ -62,7 +60,7 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
          is (new Element_Type'(E.all));
       function To_Constant_Reference_Type
         (E : Element_Access) return Constant_Reference_Type
-        is ((Element => E));
+        is (E.all);
    end Impl;
 
    package Traits is new Conts.Elements.Traits

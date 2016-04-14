@@ -1,6 +1,5 @@
 pragma Ada_2012;
-with Ada.Containers; use Ada.Containers;
-with Ada.Containers.Indefinite_Vectors;
+with Conts.Vectors.Indefinite_Unbounded;
 
 generic
    type Key_Type (<>) is private;
@@ -8,6 +7,7 @@ generic
    --  Special key which cannot be contained in any map. This is needed to
    --  use the Iterable aspect without introducing indirections (which would
    --  be bad for proof).
+   --  ??? Can we imagine a way to remove it ?
 
    type Element_Type (<>)  is private;
 package Functional_Maps with SPARK_Mode is
@@ -109,6 +109,7 @@ package Functional_Maps with SPARK_Mode is
      Post   => Is_Replace (M, K, E, Replace'Result);
 
    --  For quantification purpose
+   --  ??? Those are really inefficient. Do we want to do something about it ?
    function First_Key (M : Map) return Key_Type with
      Global => null;
    function Next_Key (M : Map; K : Key_Type) return Key_Type with
@@ -117,24 +118,26 @@ package Functional_Maps with SPARK_Mode is
 private
    pragma SPARK_Mode (Off);
 
-   type Element_Access is access all Element_Type;
-   package Key_Lists is new Ada.Containers.Indefinite_Vectors
-     (Element_Type => Key_Type,
-      Index_Type   => Positive,
-      "="          => "=");
+   type Neither_Controlled_Nor_Limited is tagged null record;
 
-   package Element_Lists is new Ada.Containers.Indefinite_Vectors
-     (Element_Type => Element_Type,
-      Index_Type   => Positive,
-      "="          => "=");
+   --  Functional maps are neither controlled nor limited. As a result,
+   --  no primitive should be provided to modify them. Note that we
+   --  should definitely not use limited types for those as we need to apply
+   --  'Old on them.
+   --  ??? Should we make them controlled to avoid memory leak ?
+
+   package Element_Lists is new Conts.Vectors.Indefinite_Unbounded
+     (Element_Type        => Element_Type,
+      Index_Type          => Positive,
+      Container_Base_Type => Neither_Controlled_Nor_Limited);
+
+   package Key_Lists is new Conts.Vectors.Indefinite_Unbounded
+     (Element_Type        => Key_Type,
+      Index_Type          => Positive,
+      Container_Base_Type => Neither_Controlled_Nor_Limited);
 
    type Map is record
       Keys     : Key_Lists.Vector;
       Elements : Element_Lists.Vector;
    end record;
-
-   --  We currently implement Map with Ada.Containers.Indefinite_Vectors
-   --  but, ideally, we should rather use new indefinite vectors. Note that we
-   --  should definitely not use limited types for those as we need to apply
-   --  'Old on them.
 end Functional_Maps;

@@ -55,6 +55,11 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
       --  The Positions map is used to model cursors. It only contains valid
       --  cursors and map them to their position in the container.
 
+        Import,
+        --  ??? We removed the implementation as GNATprove was wrongly assuming
+        --  Positions could be recursive. To be reassed when O722-006 is done
+        --  and flow analysis can be called.
+
         Post =>
 
           --  Positions of cursors are smaller than the container's length.

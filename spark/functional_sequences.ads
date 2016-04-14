@@ -1,6 +1,5 @@
 pragma Ada_2012;
-with Ada.Containers;
-with Ada.Containers.Indefinite_Vectors;
+with Conts.Vectors.Indefinite_Unbounded;
 
 generic
    type Element_Type (<>) is private;
@@ -83,16 +82,18 @@ package Functional_Sequences with SPARK_Mode is
 private
    pragma SPARK_Mode (Off);
 
-   package Element_Lists is new Ada.Containers.Indefinite_Vectors
-     (Element_Type => Element_Type,
-      Index_Type   => Positive,
-      "="          => "=");
-   use Element_Lists;
+   type Neither_Controlled_Nor_Limited is tagged null record;
 
-   type Sequence is new Vector with null record;
-
-   --  We currently implement Sequence with Ada.Containers.Indefinite_Vectors
-   --  but, ideally, we should rather use new indefinite vectors. Note that we
+   --  Functional sequences are neither controlled nor limited. As a result,
+   --  no primitive should be provided to modify them. Note that we
    --  should definitely not use limited types for those as we need to apply
    --  'Old on them.
+   --  ??? Should we make them controlled to avoid memory leak ?
+
+   package Element_Lists is new Conts.Vectors.Indefinite_Unbounded
+     (Element_Type        => Element_Type,
+      Index_Type          => Positive,
+      Container_Base_Type => Neither_Controlled_Nor_Limited);
+
+   type Sequence is new Element_Lists.Vector with null record;
 end Functional_Sequences;
