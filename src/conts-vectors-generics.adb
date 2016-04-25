@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 
-package body Conts.Vectors.Generics is
+package body Conts.Vectors.Generics with SPARK_Mode => Off is
    use Conts.Vectors.Storage;
 
    package body Impl is

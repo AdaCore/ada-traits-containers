@@ -31,7 +31,7 @@ generic
    type Element_Type (<>) is private;
    type Container_Base_Type is abstract tagged limited private;
    with procedure Free (E : in out Element_Type) is null;
-package Conts.Vectors.Indefinite_Unbounded is
+package Conts.Vectors.Indefinite_Unbounded with SPARK_Mode is
 
    package Elements is new Conts.Elements.Indefinite
       (Element_Type, Free => Free, Pool => Conts.Global_Pool);
