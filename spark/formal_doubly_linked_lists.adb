@@ -8,36 +8,36 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
      (Element_Lists.Lists.Capacity (L));
 
    package body Formal_Model is
---        function Positions (L : List'Class) return Map is
---           Cu : Cursor := Cursor (First (Element_Lists.List (L)));
---           R  : Map;
---           I  : Positive := 1;
---        begin
---           while Has_Element (Element_Lists.List (L), Cu) loop
---              R := Add (R, Cu, I);
---              Next (L, Cu);
---              I := I + 1;
---           end loop;
---           return R;
---        end Positions;
+      function Positions (L : List'Class) return Map is
+         Cu : Cursor := Cursor (Element_Lists.Lists.First (L));
+         R  : Map;
+         I  : Positive := 1;
+      begin
+         while Element_Lists.Lists.Has_Element (L, Cu) loop
+            R := Add (R, Cu, I);
+            Cu := Element_Lists.Lists.Next (L, Cu);
+            I := I + 1;
+         end loop;
+         return R;
+      end Positions;
 
       function Model (L : List'Class) return Sequence is
-         Cu : Cursor := Cursor (First (Element_Lists.List (L)));
+         Cu : Cursor := Cursor (Element_Lists.Lists.First (L));
          R  : Sequence;
       begin
-         while Has_Element (Element_Lists.List (L), Cu) loop
-            R := Add (R, Element (Element_Lists.List (L), Cu));
-            Next (L, Cu);
+         while Element_Lists.Lists.Has_Element (L, Cu) loop
+            R := Add (R, Element_Lists.Lists.Element (L, Cu));
+            Cu := Next (Element_Lists.List (L), Cu);
          end loop;
          return R;
       end Model;
    end Formal_Model;
 
    function Element (L : List'Class; C : Cursor) return Element_Type is
-      (Element_Lists.Lists.Element (L, Element_Lists.Lists.Cursor (C)));
+      (Element_Lists.Lists.Element (L, C));
 
    function Has_Element (L : List'Class; C : Cursor) return Boolean is
-      (Element_Lists.Lists.Has_Element (L, Element_Lists.Lists.Cursor (C)));
+      (Element_Lists.Lists.Has_Element (L, C));
 
    procedure Append (L : in out List'Class; E : Element_Type) is
    begin
@@ -51,7 +51,7 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
 
    procedure Next (L : List'Class; C : in out Cursor) is
    begin
-      Element_Lists.Lists.Next (L, Element_Lists.Lists.Cursor (C));
+      Element_Lists.Lists.Next (L, C);
    end Next;
 
    function First (L : List'Class) return Cursor is
