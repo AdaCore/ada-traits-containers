@@ -127,4 +127,27 @@ package body Use_Maps with SPARK_Mode is
       end loop;
    end Union_P;
 
+   function Q (E : Integer) return Boolean is
+   begin
+      return E >= 0;
+   end Q;
+
+   procedure From_Keys_To_Model (S : My_Maps.Map) is null;
+
+   procedure From_Model_To_Keys (S : My_Maps.Map) is null;
+
+   procedure From_Keys_To_Cursors (S : My_Maps.Map) is null;
+
+   procedure From_Cursors_To_Keys (S : My_Maps.Map) is
+   begin
+      Lift_Abstraction_Level (S);
+   end From_Cursors_To_Keys;
+
+   procedure From_Model_To_Cursors (S : My_Maps.Map) is null;
+
+   procedure From_Cursors_To_Model (S : My_Maps.Map) is
+   begin
+      Lift_Abstraction_Level (S);
+   end From_Cursors_To_Model;
+
 end Use_Maps;

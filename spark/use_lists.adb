@@ -65,9 +65,10 @@ package body Use_Lists with SPARK_Mode is
    end Incr_All_3;
 
    procedure Double_Size (L : in out List) is
-      Cu : Cursor := First (L);
+      Cu   : Cursor := First (L);
+      Lgth : Natural := Length (L);
    begin
-      for I in 1 .. 100 loop
+      for I in 1 .. Lgth loop
          pragma Loop_Invariant (Has_Element (L, Cu));
          pragma Loop_Invariant (Capacity (L) = Capacity (L)'Loop_Entry);
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry + I - 1);
@@ -159,5 +160,17 @@ package body Use_Lists with SPARK_Mode is
       Insert (L, Cu, 0);
       Insert (L, Cu, 0);
    end Insert_5;
+
+   function P (E : Integer) return Boolean is
+   begin
+      return E >= 0;
+   end P;
+
+   procedure From_Higher_To_Lower (L : List) is null;
+
+   procedure From_Lower_To_Higher (L : List) is
+   begin
+      Lift_Abstraction_Level (L);
+   end From_Lower_To_Higher;
 
 end Use_Lists;

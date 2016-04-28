@@ -22,7 +22,7 @@
 --  Unbounded controlled vectors of unconstrained elements
 
 pragma Ada_2012;
-with Conts.Elements.Indefinite;
+with Conts.Elements.Indefinite_SPARK;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Storage.Unbounded;
 
@@ -30,11 +30,10 @@ generic
    type Index_Type is (<>);
    type Element_Type (<>) is private;
    type Container_Base_Type is abstract tagged limited private;
-   with procedure Free (E : in out Element_Type) is null;
-package Conts.Vectors.Indefinite_Unbounded is
+package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
 
-   package Elements is new Conts.Elements.Indefinite
-      (Element_Type, Free => Free, Pool => Conts.Global_Pool);
+   package Elements is new Conts.Elements.Indefinite_SPARK
+      (Element_Type, Pool => Conts.Global_Pool);
    package Storage is new Conts.Vectors.Storage.Unbounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Container_Base_Type,
@@ -54,4 +53,4 @@ package Conts.Vectors.Indefinite_Unbounded is
      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
        renames Vectors.Swap;
 
-end Conts.Vectors.Indefinite_Unbounded;
+end Conts.Vectors.Indefinite_Unbounded_SPARK;

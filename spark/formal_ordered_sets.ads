@@ -59,7 +59,8 @@ package Formal_Ordered_Sets with SPARK_Mode is
          Key_Type     => Cursor,
          No_Key       => No_Element);
       package Element_Sequence is new Functional_Sequences
-        (Element_Type => Element_Type);
+        (Index_Type   => Positive,
+         Element_Type => Element_Type);
       package Element_Set is new Functional_Sets
         (Element_Type => Element_Type,
          No_Element   => None);

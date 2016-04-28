@@ -24,7 +24,7 @@ with Ada.Unchecked_Conversion;
 with System;                   use System;
 with System.Memory;            use System.Memory;
 
-package body Conts.Vectors.Storage.Unbounded is
+package body Conts.Vectors.Storage.Unbounded with SPARK_Mode => Off is
 
    package body Impl is
       pragma Warnings (Off);  --  no aliasing issue

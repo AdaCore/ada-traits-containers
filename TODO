@@ -253,6 +253,8 @@ can be edited with any text editor.
          ... C references deallocated memory since My_Function's result
          ... has been finalized
 
+* Resizing vectors to Length 0
+* Last on empty vectors
 
 * Links to other libraries
 ** Stephe's Ada Library

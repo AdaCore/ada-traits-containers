@@ -36,18 +36,19 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
       type Element_Access is private;
       subtype Constant_Reference_Type is Element_Type;
       function To_Element_Access (E : Element_Type) return Element_Access
-         with Inline;
+         with Inline, Global => null;
       function To_Element_Type (E : Element_Access) return Element_Type
-         with Inline;
+         with Inline, Global => null;
       function To_Constant_Reference_Type
         (E : Element_Access) return Constant_Reference_Type
-        with Inline;
+        with Inline, Global => null;
       function To_Element (E : Constant_Reference_Type) return Element_Type
-        is (E) with Inline;
+        is (E) with Inline, Global => null;
       function Identity (E : Element_Type) return Element_Type
-         is (E) with Inline;
-      function Copy (E : Element_Access) return Element_Access with Inline;
-      procedure Free (X : in out Element_Access);
+         is (E) with Inline, Global => null;
+      function Copy (E : Element_Access) return Element_Access
+        with Inline, Global => null;
+      procedure Free (X : in out Element_Access) with Global => null;
    private
       pragma SPARK_Mode (Off);
       type Element_Access is access all Element_Type;

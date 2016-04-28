@@ -78,4 +78,53 @@ package Use_Sets with SPARK_Mode is
      and Inc (Model (S)'Old, Model (S))
      and (for all E in 1 .. 5 => Mem (Model (S), E))
      and (for all E in Model (S) => Mem (Model (S)'Old, E) or E in 1 .. 5);
+
+   --  Test links between high-level model, lower-level position based model
+   --  and lowest-level, cursor based model of a set.
+
+   function Q (E : Integer) return Boolean;
+
+   procedure From_Elements_To_Model (S : My_Sets.Set) with
+     Ghost,
+     Global => null,
+     Pre    => (for all I in 1 .. Length (S) =>
+                    Q (Get (Elements (S), I))),
+     Post   => (for all E in Model (S) => Q (E));
+
+   procedure From_Model_To_Elements (S : My_Sets.Set) with
+     Ghost,
+     Global => null,
+     Pre    => (for all E in Model (S) => Q (E)),
+     Post   => (for all I in 1 .. Length (S) =>
+                    Q (Get (Elements (S), I)));
+
+   procedure From_Elements_To_Cursors (S : My_Sets.Set) with
+     Ghost,
+     Global => null,
+     Pre    => (for all I in 1 .. Length (S) =>
+                    Q (Get (Elements (S), I))),
+     Post   => (for all Cu in Positions (S) =>
+                    Q (Get (Elements (S), Get (Positions (S), Cu))));
+
+   procedure From_Cursors_To_Elements (S : My_Sets.Set) with
+     Ghost,
+     Global => null,
+     Pre    => (for all Cu in Positions (S) =>
+                    Q (Get (Elements (S), Get (Positions (S), Cu)))),
+     Post   => (for all I in 1 .. Length (S) =>
+                    Q (Get (Elements (S), I)));
+
+   procedure From_Model_To_Cursors (S : My_Sets.Set) with
+     Ghost,
+     Global => null,
+     Pre    => (for all E in Model (S) => Q (E)),
+     Post   => (for all Cu in Positions (S) =>
+                    Q (Get (Elements (S), Get (Positions (S), Cu))));
+
+   procedure From_Cursors_To_Model (S : My_Sets.Set) with
+     Ghost,
+     Global => null,
+     Pre    => (for all Cu in Positions (S) =>
+                    Q (Get (Elements (S), Get (Positions (S), Cu)))),
+     Post   => (for all E in Model (S) => Q (E));
 end Use_Sets;

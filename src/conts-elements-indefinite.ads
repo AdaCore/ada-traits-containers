@@ -37,7 +37,7 @@ generic
 
    with package Pool is new Conts.Pools (<>);
 
-package Conts.Elements.Indefinite with SPARK_Mode is
+package Conts.Elements.Indefinite is
 
    type Element_Access is access all Element_Type;
    for Element_Access'Storage_Pool use Pool.Pool.all;

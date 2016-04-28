@@ -49,10 +49,7 @@ package Use_Lists with SPARK_Mode is
    --  they are inserted just before each duplicated element.
 
    procedure Double_Size (L : in out List) with
-     Pre  => Capacity (L) / 2 >= Length (L) and then Length (L) = 100,
-   --  Length is set to a static value to work around a crash in flow analysis.
-   --  See O722-006
-
+     Pre  => Capacity (L) / 2 >= Length (L),
      Post => Capacity (L) = Capacity (L)'Old
      and Length (L) = 2 * Length (L)'Old
      and (for all I in 1 .. Length (L)'Old =>
@@ -99,4 +96,25 @@ package Use_Lists with SPARK_Mode is
               Element (Model (L), I) = Element (Model (L)'Old, I - 5))
      and Mem (Positions (L), Cu)
      and Get (Positions (L), Cu) = Get (Positions (L)'Old, Cu) + 5;
+
+   --  Test links between high level, position based model of a container and
+   --  lower level, cursor based model.
+
+   function P (E : Integer) return Boolean;
+
+   procedure From_Higher_To_Lower (L : List) with
+     Ghost,
+     Global => null,
+     Pre    => (for all I in 1 .. Length (L) =>
+                    P (Element (Model (L), I))),
+     Post   => (for all Cu in Positions (L) =>
+                    P (Element (Model (L), Get (Positions (L), Cu))));
+
+   procedure From_Lower_To_Higher (L : List) with
+     Ghost,
+     Global => null,
+     Pre    => (for all Cu in Positions (L) =>
+                    P (Element (Model (L), Get (Positions (L), Cu)))),
+     Post   => (for all I in 1 .. Length (L) =>
+                    P (Element (Model (L), I)));
 end Use_Lists;

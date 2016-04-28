@@ -31,6 +31,8 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
          end loop;
          return R;
       end Model;
+
+      procedure Lift_Abstraction_Level (L : List'Class) is null;
    end Formal_Model;
 
    function Element (L : List'Class; C : Cursor) return Element_Type is

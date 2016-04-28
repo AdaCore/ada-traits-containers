@@ -40,7 +40,8 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
          Key_Type     => Cursor,
          No_Key       => No_Element);
       package Element_Sequence is new Functional_Sequences
-        (Element_Type => Element_Type);
+        (Index_Type   => Positive,
+         Element_Type => Element_Type);
       use Element_Sequence;
       use Cursor_Map;
 
@@ -70,7 +71,20 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
              (for all C2 in Positions'Result =>
                 (if Get (Positions'Result, C1) =
                      Get (Positions'Result, C2)
-                     then C1 = C2)));
+                       then C1 = C2)));
+
+      procedure Lift_Abstraction_Level (L : List'Class) with
+        Global => null,
+        Post   => (for all I in 1 .. Length (L) =>
+                       (for some Cu in Positions (L) =>
+                              Element (Model (L), Get (Positions (L), Cu)) =
+                          Element (Model (L), I)));
+      --  Lift_Abstraction_Level is a ghost procedure that does nothing but
+      --  assume that we can access to the same elements by iterating over
+      --  positions or cursors.
+      --  This information is not generally useful except when switching from
+      --  a lowlevel, cursor aware view of a container, to a highlevel position
+      --  based view.
    end Formal_Model;
 
    use Formal_Model;

@@ -117,4 +117,27 @@ package body Use_Sets with SPARK_Mode is
       Include (S, 5);
    end Insert_5;
 
+   function Q (E : Integer) return Boolean is
+   begin
+      return E >= 0;
+   end Q;
+
+   procedure From_Elements_To_Model (S : My_Sets.Set) is null;
+
+   procedure From_Model_To_Elements (S : My_Sets.Set) is null;
+
+   procedure From_Elements_To_Cursors (S : My_Sets.Set) is null;
+
+   procedure From_Cursors_To_Elements (S : My_Sets.Set) is
+   begin
+      Lift_Abstraction_Level (S);
+   end From_Cursors_To_Elements;
+
+   procedure From_Model_To_Cursors (S : My_Sets.Set) is null;
+
+   procedure From_Cursors_To_Model (S : My_Sets.Set)  is
+   begin
+      Lift_Abstraction_Level (S);
+   end From_Cursors_To_Model;
+
 end Use_Sets;

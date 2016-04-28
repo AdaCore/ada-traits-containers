@@ -80,4 +80,57 @@ package Use_Maps with SPARK_Mode is
      and (for all E of Model (S2) => P (E))
      and Capacity (S1) - Length (S1) >= Length (S2),
      Post => (for all E of Model (S1) => P (E));
+
+   --  Test links between high-level model, lower-level position based model
+   --  and lowest-level, cursor based model of a map.
+
+   function Q (E : Integer) return Boolean;
+
+   procedure From_Keys_To_Model (S : My_Maps.Map) with
+     Ghost,
+     Global => null,
+     Pre    => (for all I in 1 .. Length (S) =>
+                    Q (Get (Model (S), Get (Keys (S), I)))),
+     Post   => (for all E of Model (S) => Q (E));
+
+   procedure From_Model_To_Keys (S : My_Maps.Map) with
+     Ghost,
+     Global => null,
+     Pre    => (for all E of Model (S) => Q (E)),
+     Post   => (for all I in 1 .. Length (S) =>
+                    Q (Get (Model (S), Get (Keys (S), I))));
+
+   procedure From_Keys_To_Cursors (S : My_Maps.Map) with
+     Ghost,
+     Global => null,
+     Pre    => (for all I in 1 .. Length (S) =>
+                    Q (Get (Model (S), Get (Keys (S), I)))),
+     Post   => (for all Cu in Positions (S) =>
+                    Q (Get (Model (S), Get (Keys (S),
+                  Get (Positions (S), Cu)))));
+
+   procedure From_Cursors_To_Keys (S : My_Maps.Map) with
+     Ghost,
+     Global => null,
+     Pre    => (for all Cu in Positions (S) =>
+                    Q (Get (Model (S), Get (Keys (S),
+                  Get (Positions (S), Cu))))),
+     Post   => (for all I in 1 .. Length (S) =>
+                    Q (Get (Model (S), Get (Keys (S), I))));
+
+   procedure From_Model_To_Cursors (S : My_Maps.Map) with
+     Ghost,
+     Global => null,
+     Pre    => (for all E of Model (S) => Q (E)),
+     Post   => (for all Cu in Positions (S) =>
+                    Q (Get (Model (S), Get (Keys (S),
+                  Get (Positions (S), Cu)))));
+
+   procedure From_Cursors_To_Model (S : My_Maps.Map) with
+     Ghost,
+     Global => null,
+     Pre    => (for all Cu in Positions (S) =>
+                  Q (Get (Model (S), Get (Keys (S),
+                    Get (Positions (S), Cu))))),
+     Post   => (for all E of Model (S) => Q (E));
 end Use_Maps;
