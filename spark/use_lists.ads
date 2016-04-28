@@ -7,9 +7,8 @@ package Use_Lists with SPARK_Mode is
      Formal_Doubly_Linked_Lists (Element_Type => Integer);
    use My_Lists;
    use type My_Lists.Cursor;
-   use My_Lists.Formal_Model;
-   use My_Lists.Formal_Model.Cursor_Map;
-   use My_Lists.Formal_Model.Element_Sequence;
+   use My_Lists.P;
+   use My_Lists.M;
 
    pragma Unevaluated_Use_Of_Old (Allow);
 

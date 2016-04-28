@@ -2,7 +2,7 @@ pragma Ada_2012;
 package body Use_Vectors with SPARK_Mode is
 
    procedure Incr_All (V1 : Vector; V2 : in out Vector) is
-      Lst : Extended_Index := Last (V1);
+      Lst : Index_Type'Base := Last (V1);
    begin
       Clear (V2);
       for I in Index_Type'First .. Lst loop
@@ -21,7 +21,7 @@ package body Use_Vectors with SPARK_Mode is
    end Incr_All;
 
    procedure Incr_All_2 (V : in out Vector) is
-      Lst : Extended_Index := Last (V);
+      Lst : Index_Type'Base := Last (V);
    begin
       for I in Index_Type'First .. Lst loop
          pragma Loop_Invariant (Length (V) = Length (V)'Loop_Entry);
@@ -62,7 +62,7 @@ package body Use_Vectors with SPARK_Mode is
    end Incr_All_3;
 
    procedure Double_Size (V : in out Vector) is
-      Lst : Extended_Index := Last (V);
+      Lst : Index_Type'Base := Last (V);
    begin
       for I in Index_Type'First .. Lst loop
          pragma Loop_Invariant
@@ -78,8 +78,8 @@ package body Use_Vectors with SPARK_Mode is
       end loop;
    end Double_Size;
 
-   function My_Find (V : Vector; E : Integer) return Extended_Index is
-      Lst : Extended_Index := Last (V);
+   function My_Find (V : Vector; E : Integer) return Index_Type'Base is
+      Lst : Index_Type'Base := Last (V);
    begin
       for Current in Index_Type'First .. Lst loop
          pragma Loop_Invariant
@@ -89,7 +89,7 @@ package body Use_Vectors with SPARK_Mode is
             return Current;
          end if;
       end loop;
-      return Extended_Index'First;
+      return Index_Type'First - 1;
    end My_Find;
 
    procedure Update_Range_To_Zero (V : in out Vector; Fst, Lst : Index_Type) is

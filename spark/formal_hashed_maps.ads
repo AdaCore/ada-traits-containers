@@ -37,12 +37,12 @@ package Formal_Hashed_Maps with SPARK_Mode is
      Default_Initial_Condition => Length (Map) = 0;
    --  Maps are empty when default initialized
 
-   function Capacity (S : Map'Class) return Natural with
+   function Capacity (Self : Map'Class) return Natural with
      Import;
 
-   function Length (S : Map'Class) return Natural with
+   function Length (Self : Map'Class) return Natural with
      Import,
-     Post => Length'Result <= Capacity (S);
+     Post => Length'Result <= Capacity (Self);
    --  The length of a map is always smaller than its capacity
 
    package Formal_Model is
@@ -51,53 +51,50 @@ package Formal_Hashed_Maps with SPARK_Mode is
       --  complains that the parent type of a Ghost type extension shall be
       --  Ghost (see OA30-006).
 
-      package Cursor_Map is new Functional_Maps
+      package P is new Functional_Maps
         (Element_Type => Positive,
          Key_Type     => Cursor,
          No_Key       => No_Element);
-      package Key_Sequence is new Functional_Sequences
+      package K is new Functional_Sequences
         (Element_Type => Key_Type,
          Index_Type   => Positive);
-      package Element_Map is new Functional_Maps
+      package M is new Functional_Maps
         (Element_Type => Element_Type,
          Key_Type     => Key_Type,
          No_Key       => None);
-      use Key_Sequence;
-      use Cursor_Map;
-      use Element_Map;
 
-      function Model (S : Map'Class) return Element_Map.Map with
+      function Model (Self : Map'Class) return M.Map with
         Import;
       --  The highlevel model of a map is a map from keys to elements. Neither
       --  cursors nor order of elements are represented in this model.
 
-      function Keys (S : Map'Class) return Sequence with
+      function Keys (Self : Map'Class) return K.Sequence with
       --  The Keys sequence represents the underlying list structure of maps
       --  that is used for iteration. It does not model cursors nor elements.
 
         Import,
-        Post => Length (Keys'Result) = Length (S)
+        Post => K.Length (Keys'Result) = Length (Self)
 
         --  It only contains keys contained in Model.
 
-        and then (for all I in 1 .. Length (S) =>
-                      Mem (Model (S), Get (Keys'Result, I)))
+        and then (for all I in 1 .. Length (Self) =>
+                      M.Mem (Model (Self), K.Get (Keys'Result, I)))
 
         --  It contains all the keys contained in Model.
 
-        and then (for all E in Model (S) =>
-                      (for some I in 1 .. Length (S) =>
-                             Get (Keys'Result, I) = E))
+        and then (for all Element in Model (Self) =>
+                      (for some I in 1 .. Length (Self) =>
+                             K.Get (Keys'Result, I) = Element))
 
         --  It has no duplicate.
 
         and then
-            (for all I in 1 .. Length (S) =>
-               (for all J in 1 .. Length (S) =>
-                    (if Get (Keys'Result, I) = Get (Keys'Result, J)
+            (for all I in 1 .. Length (Self) =>
+               (for all J in 1 .. Length (Self) =>
+                    (if K.Get (Keys'Result, I) = K.Get (Keys'Result, J)
                      then I = J)));
 
-      function Positions (S : Map'Class) return Cursor_Map.Map with
+      function Positions (Self : Map'Class) return P.Map with
       --  The Positions map is used to model cursors. It only contains valid
       --  cursors and map them to their position in the container.
 
@@ -106,26 +103,27 @@ package Formal_Hashed_Maps with SPARK_Mode is
 
           --  Positions of cursors are smaller than the container's length.
 
-          (for all C1 in Positions'Result =>
-             Get (Positions'Result, C1) in 1 .. Length (S)
+          (for all I in Positions'Result =>
+             P.Get (Positions'Result, I) in 1 .. Length (Self)
 
            --  No two cursors have the same position. Note that we do not state
            --  that there is a cursor in the map for each position, as it is
            --  rarely needed.
 
            and then
-             (for all C2 in Positions'Result =>
-                (if Get (Positions'Result, C1) =
-                     Get (Positions'Result, C2)
-                 then C1 = C2)));
+             (for all J in Positions'Result =>
+                (if P.Get (Positions'Result, I) =
+                     P.Get (Positions'Result, J)
+                 then I = J)));
 
-      procedure Lift_Abstraction_Level (S : Map'Class) with
+      procedure Lift_Abstraction_Level (Self : Map'Class) with
         Import,
         Global => null,
-        Post   => (for all I in 1 .. Length (S) =>
-                       (for some Cu in Positions (S) =>
-                              Get (Keys (S),  Get (Positions (S), Cu)) =
-                          Get (Keys (S), I)));
+        Post   =>
+          (for all I in 1 .. Length (Self) =>
+             (for some Cu in Positions (Self) =>
+                  K.Get (Keys (Self),  P.Get (Positions (Self), Cu)) =
+                K.Get (Keys (Self), I)));
       --  Lift_Abstraction_Level is a ghost procedure that does nothing but
       --  assume that we can access to the same elements by iterating over
       --  positions or cursors.
@@ -134,127 +132,148 @@ package Formal_Hashed_Maps with SPARK_Mode is
       --  based view.
    end Formal_Model;
 
-   use Formal_Model;
-   use Key_Sequence;
-   use Cursor_Map;
-   use Element_Map;
+   package M renames Formal_Model.M;
+   package K renames Formal_Model.K;
+   package P renames Formal_Model.P;
 
-   function Key (S : Map'Class; C : Cursor) return Key_Type with
+   use type M.Map;
+   use type K.Sequence;
+   use type P.Map;
+
+   function Model (Self : Map'Class) return M.Map
+                   renames Formal_Model.Model;
+   function Element (Self : M.Map; Key : Key_Type) return Element_Type
+                   renames M.Get;
+   function Keys (Self : Map'Class) return K.Sequence
+                   renames Formal_Model.Keys;
+   function Positions (Self : Map'Class) return P.Map
+                   renames Formal_Model.Positions;
+
+   function Key (Self : Map'Class; Position : Cursor) return Key_Type with
      Import,
-     Pre  => Mem (Positions (S), C),
+     Pre  => P.Mem (Positions (Self), Position),
 
-     --  Query Positions to get the position of C in L and use it to fetch
-     --  the corresponding key in Keys.
+     --  Query Positions to get the position of Position in L and use it to
+     --  fetch the corresponding key in Keys.
 
-     Post => Key'Result = Get (Keys (S), Get (Positions (S), C));
+     Post => Key'Result =
+       K.Get (Keys (Self), P.Get (Positions (Self), Position));
 
-   function Element (S : Map'Class; K : Key_Type) return Element_Type with
+   function Element (Self : Map'Class; Key : Key_Type) return Element_Type with
      Import,
-     Pre  => Mem (Model (S), K),
-     Post => Element'Result = Get (Model (S), K);
+     Pre  => M.Mem (Model (Self), Key),
+     Post => Element'Result = Element (Model (Self), Key);
 
-   function Element (S : Map'Class; C : Cursor) return Element_Type with
+   function Element (Self : Map'Class; Position : Cursor) return Element_Type
+   with
      Import,
-     Pre  => Mem (Positions (S), C),
+     Pre  => P.Mem (Positions (Self), Position),
 
-     --  Query Positions to get the position of C in L, use it to fetch the
-     --  corresponding key in Keys, and then use this key to get the associated
-     --  element from Model.
+     --  Query Positions to get the position of Position in L, use it to fetch
+     --  the corresponding key in Keys, and then use this key to get the
+     --  associated element from Model.
 
      Post => Element'Result =
-       Get (Model (S), Get (Keys (S), Get (Positions (S), C)));
+       Element (Model (Self),
+                K.Get (Keys (Self), P.Get (Positions (Self), Position)));
 
    --  The subprograms used for iteration over cursors are axiomatized using
    --  Positions only. They are inverse of the Positions map as they allow
    --  to create a valid cursor per position in the container.
 
-   function First (S : Map'Class) return Cursor with
+   function First (Self : Map'Class) return Cursor with
      Import,
-     Post => (if Length (S) = 0 then First'Result = No_Element
-              else Mem (Positions (S), First'Result) and then
-                  Get (Positions (S), First'Result) = 1);
+     Post => (if Length (Self) = 0 then First'Result = No_Element
+              else P.Mem (Positions (Self), First'Result) and then
+                  P.Get (Positions (Self), First'Result) = 1);
 
-   procedure Next (S : Map'Class; C : in out Cursor) with
+   procedure Next (Self : Map'Class; Position : in out Cursor) with
      Import,
-     Pre  => Mem (Positions (S), C),
-     Post => (if Get (Positions (S), C'Old) = Length (S)
-              then C = No_Element
-              else Mem (Positions (S), C)
-                and then Get (Positions (S), C) =
-                  Get (Positions (S), C'Old) + 1);
+     Pre  => P.Mem (Positions (Self), Position),
+     Post => (if P.Get (Positions (Self), Position'Old) = Length (Self)
+              then Position = No_Element
+              else P.Mem (Positions (Self), Position)
+                and then P.Get (Positions (Self), Position) =
+                  P.Get (Positions (Self), Position'Old) + 1);
 
-   function Has_Element (S : Map'Class; C : Cursor) return Boolean with
+   function Has_Element (Self : Map'Class; Position : Cursor) return Boolean
+   with
      Import,
-     Post => Has_Element'Result = Mem (Positions (S), C);
+     Post => Has_Element'Result = P.Mem (Positions (Self), Position);
 
-   function Contains (S : Map'Class; K : Key_Type) return Boolean with
+   function Contains (Self : Map'Class; Key : Key_Type) return Boolean with
      Import,
-     Post => Contains'Result = Mem (Model (S), K);
+     Post => Contains'Result = M.Mem (Model (Self), Key);
 
-   function Find (S : Map'Class; K : Key_Type) return Cursor with
+   function Find (Self : Map'Class; Key : Key_Type) return Cursor with
      Import,
      Post =>
 
        --  Either K is not in the model and the result is No_Element
 
        (Find'Result = No_Element
-        and not Mem (Model (S), K))
+        and not M.Mem (Model (Self), Key))
 
-     --  or the result is a valid cursor and K is stored at its position in S.
+     --  or the result is a valid cursor and K is stored at its position in V.
 
      or else
-       (Mem (Model (S), K)
-        and Mem (Positions (S), Find'Result)
-        and Get (Keys (S), Get (Positions (S), Find'Result)) = K);
+       (M.Mem (Model (Self), Key)
+        and P.Mem (Positions (Self), Find'Result)
+        and K.Get (Keys (Self), P.Get (Positions (Self), Find'Result)) = Key);
 
-   procedure Include (S : in out Map'Class; K : Key_Type; E : Element_Type)
-   --  Insert a key K and an element E in S if K is not already in present.
+   procedure Include
+     (Self : in out Map'Class; Key : Key_Type; Element : Element_Type)
+   --  Insert a key K and an element Element in Self if K is not already in
+   --  present.
    --  Otherwise, replace the element associated to K by E.
 
    with
      Import,
-     Pre  => (Length (S) < Capacity (S) and then K /= None)
-       or else Mem (Model (S), K),
-     Post => Capacity (S) = Capacity (S)'Old
+     Pre  => (Length (Self) < Capacity (Self) and then Key /= None)
+       or else M.Mem (Model (Self), Key),
+     Post => Capacity (Self) = Capacity (Self)'Old
 
-     --  If E is already in M, then K now maps to E in Model.
+     --  If Element is already in M, then K now maps to Element in Model.
 
-     and (if Mem (Model (S)'Old, K) then
-            Length (S) = Length (S)'Old
-            and Is_Replace (Model (S)'Old, K, E, Model (S))
+     and (if M.Mem (Model (Self)'Old, Key) then
+            Length (Self) = Length (Self)'Old
+            and M.Is_Replace (Model (Self)'Old, Key, Element, Model (Self))
 
             --  Keys and cursors are preserved
 
-            and Keys (S) = Keys (S)'Old
-            and Positions (S) = Positions (S)'Old
+            and Keys (Self) = Keys (Self)'Old
+            and Positions (Self) = Positions (Self)'Old
 
-          --  If E is not in S, then E is a new element of its model.
+          --  If Element is not in Self, then Element is a new element of its
+          --  model.
 
-          else Length (S) = Length (S)'Old + 1
-            and Is_Add (Model (S)'Old, K, E, Model (S))
+          else Length (Self) = Length (Self)'Old + 1
+            and M.Is_Add (Model (Self)'Old, Key, Element, Model (Self))
 
-            --  Cursors that were valid in S are still valid and continue
+            --  Cursors that were valid in Self are still valid and continue
             --  designating the same element.
 
-            and (for all C in Positions (S)'Old =>
-                 Mem (Positions (S), C) and
-                 Get (Keys (S), Get (Positions (S), C)) =
-                 Get (Keys (S)'Old, Get (Positions (S)'Old, C)))
+            and (for all Position in Positions (Self)'Old =>
+                 P.Mem (Positions (Self), Position) and
+                 K.Get (Keys (Self), P.Get (Positions (Self), Position)) =
+                   K.Get (Keys (Self)'Old,
+                          P.Get (Positions (Self)'Old, Position)))
 
-            --  Cursors that are valid in S were already valid in S except for
-            --  the newly inserted cursor.
-            --  Nothing is said about the order of keys in S after the call.
+            --  Cursors that are valid in Self were already valid in Self
+            --  except for the newly inserted cursor.
+            --  Nothing is said about the order of keys in Self after the call.
 
-            and (for all C in Positions (S) =>
-                   Mem (Positions (S)'Old, C) or
-                     Get (Keys (S), Get (Positions (S), C)) = K));
+            and (for all Position in Positions (Self) =>
+                   P.Mem (Positions (Self)'Old, Position) or
+                     K.Get (Keys (Self),
+                            P.Get (Positions (Self), Position)) = Key));
 
-   procedure Clear (S : in out Map'Class)
+   procedure Clear (Self : in out Map'Class)
    with
        Import,
-       Post => Capacity (S) = Capacity (S)'Old
-     and then Length (S) = 0
-     and then Is_Empty (Model (S));
+       Post => Capacity (Self) = Capacity (Self)'Old
+     and then Length (Self) = 0
+     and then M.Is_Empty (Model (Self));
 
 private
    pragma SPARK_Mode (Off);

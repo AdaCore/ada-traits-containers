@@ -170,7 +170,7 @@ package body Use_Lists with SPARK_Mode is
 
    procedure From_Lower_To_Higher (L : List) is
    begin
-      Lift_Abstraction_Level (L);
+      Formal_Model.Lift_Abstraction_Level (L);
    end From_Lower_To_Higher;
 
 end Use_Lists;

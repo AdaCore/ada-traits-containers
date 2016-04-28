@@ -1,32 +1,34 @@
 package body Formal_Vectors with SPARK_Mode => Off is
 
-   function Length (V : Vector'Class) return Natural is
-     (Element_Vectors.Vectors.Length (V));
+   function Length (Self : Vector'Class) return Natural is
+     (Element_Vectors.Vectors.Length (Self));
 
    function To_Index (Position : Cursor) return Index_Type is
      (Element_Vectors.Vectors.To_Index (Position));
 
    package body Formal_Model is
-      function Valid_Cursors (V : Vector'Class) return Set is
-         Cu : Cursor := Cursor (First (Element_Vectors.Vector (V)));
+      use M;
+      use V;
+      function Valid_Cursors (Self : Vector'Class) return Set is
+         Cu : Cursor := Cursor (First (Element_Vectors.Vector (Self)));
          R  : Set;
       begin
-         while Element_Vectors.Vectors.Has_Element (V, Cu) loop
+         while Element_Vectors.Vectors.Has_Element (Self, Cu) loop
             R := Add (R, Cu);
-            Cu := Element_Vectors.Vectors.Next (V, Cu);
+            Cu := Element_Vectors.Vectors.Next (Self, Cu);
          end loop;
          return R;
       end Valid_Cursors;
 
-      function Model (V : Vector'Class) return Sequence is
+      function Model (Self : Vector'Class) return Sequence is
          R  : Sequence;
       begin
-         if Element_Vectors.Vectors.Is_Empty (V) then
+         if Element_Vectors.Vectors.Is_Empty (Self) then
             return R;
          end if;
 
-         for I in Index_Type'First .. Element_Vectors.Vectors.Last (V) loop
-            R := Add (R, Element_Vectors.Vectors.Element (V, I));
+         for I in Index_Type'First .. Element_Vectors.Vectors.Last (Self) loop
+            R := Add (R, Element_Vectors.Vectors.Element (Self, I));
          end loop;
          return R;
       end Model;
@@ -56,8 +58,13 @@ package body Formal_Vectors with SPARK_Mode => Off is
      (Element_Vectors.Vectors.Is_Empty (Self));
 
    function Last (Self : Vector'Class) return Extended_Index is
-     (if Element_Vectors.Vectors.Is_Empty (Self) then Extended_Index'First
-      else Element_Vectors.Vectors.Last (Self));
+   begin
+      if Element_Vectors.Vectors.Is_Empty (Self) then
+         return Index_Type'Pred (Index_Type'First);
+      else
+         return Element_Vectors.Vectors.Last (Self);
+      end if;
+   end Last;
 
    procedure Append
      (Self    : in out Vector'Class;

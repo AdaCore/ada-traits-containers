@@ -7,10 +7,9 @@ package Use_Maps with SPARK_Mode is
      (Integer, Natural, 0);
    use My_Maps;
    use type My_Maps.Cursor;
-   use My_Maps.Formal_Model;
-   use My_Maps.Formal_Model.Cursor_Map;
-   use My_Maps.Formal_Model.Key_Sequence;
-   use My_Maps.Formal_Model.Element_Map;
+   use My_Maps.Formal_Model.P;
+   use My_Maps.Formal_Model.K;
+   use My_Maps.Formal_Model.M;
 
    function My_Contains (S : My_Maps.Map; K : Positive) return Boolean is
      (Find (S, K) /= No_Element) with
@@ -46,7 +45,7 @@ package Use_Maps with SPARK_Mode is
      and (for all K in Model (R) => Mem (Model (S), K))
      and (for all K in Model (S) =>
               Mem (Model (R), K)
-          and then Get (Model (R), K)  = F (Get (Model (S), K)));
+          and then Element (Model (R), K)  = F (Element (Model (S), K)));
 
    procedure Apply_F_3 (S : in out My_Maps.Map) with
      Post => Capacity (S) = Capacity (S)'Old
@@ -61,7 +60,7 @@ package Use_Maps with SPARK_Mode is
      and Length (S) = Length (S)'Old
      and Keys (S) = Keys (S)'Old
      and (for all K in Model (S) =>
-              Get (Model (S), K)  = F (Get (Model (S)'Old, K)));
+              Element (Model (S), K)  = F (Element (Model (S)'Old, K)));
 
    --  Checks wether two maps have a disjoint set of keys.
 
@@ -90,7 +89,7 @@ package Use_Maps with SPARK_Mode is
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
-                    Q (Get (Model (S), Get (Keys (S), I)))),
+                    Q (Element (Model (S), Get (Keys (S), I)))),
      Post   => (for all E of Model (S) => Q (E));
 
    procedure From_Model_To_Keys (S : My_Maps.Map) with
@@ -98,39 +97,39 @@ package Use_Maps with SPARK_Mode is
      Global => null,
      Pre    => (for all E of Model (S) => Q (E)),
      Post   => (for all I in 1 .. Length (S) =>
-                    Q (Get (Model (S), Get (Keys (S), I))));
+                    Q (Element (Model (S), Get (Keys (S), I))));
 
    procedure From_Keys_To_Cursors (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
-                    Q (Get (Model (S), Get (Keys (S), I)))),
+                    Q (Element (Model (S), Get (Keys (S), I)))),
      Post   => (for all Cu in Positions (S) =>
-                    Q (Get (Model (S), Get (Keys (S),
+                    Q (Element (Model (S), Get (Keys (S),
                   Get (Positions (S), Cu)))));
 
    procedure From_Cursors_To_Keys (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all Cu in Positions (S) =>
-                    Q (Get (Model (S), Get (Keys (S),
+                    Q (Element (Model (S), Get (Keys (S),
                   Get (Positions (S), Cu))))),
      Post   => (for all I in 1 .. Length (S) =>
-                    Q (Get (Model (S), Get (Keys (S), I))));
+                    Q (Element (Model (S), Get (Keys (S), I))));
 
    procedure From_Model_To_Cursors (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all E of Model (S) => Q (E)),
      Post   => (for all Cu in Positions (S) =>
-                    Q (Get (Model (S), Get (Keys (S),
+                    Q (Element (Model (S), Get (Keys (S),
                   Get (Positions (S), Cu)))));
 
    procedure From_Cursors_To_Model (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all Cu in Positions (S) =>
-                  Q (Get (Model (S), Get (Keys (S),
+                  Q (Element (Model (S), Get (Keys (S),
                     Get (Positions (S), Cu))))),
      Post   => (for all E of Model (S) => Q (E));
 end Use_Maps;

@@ -23,10 +23,10 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
      Default_Initial_Condition => Length (List) = 0;
    --  Lists are empty when default initialized
 
-   function Capacity (L : List'Class) return Natural;
+   function Capacity (Self : List'Class) return Natural;
 
-   function Length (L : List'Class) return Natural with
-     Post => Length'Result <= Capacity (L);
+   function Length (Self : List'Class) return Natural with
+     Post => Length'Result <= Capacity (Self);
    --  The length of a list is always smaller than its capacity
 
    package Formal_Model is
@@ -35,24 +35,20 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
       --  complains that the parent type of a Ghost type extension shall be
       --  Ghost (see OA30-006).
 
-      package Cursor_Map is new Functional_Maps
+      package P is new Functional_Maps
         (Element_Type => Positive,
          Key_Type     => Cursor,
          No_Key       => No_Element);
-      package Element_Sequence is new Functional_Sequences
+      package M is new Functional_Sequences
         (Index_Type   => Positive,
          Element_Type => Element_Type);
-      use Element_Sequence;
-      use Cursor_Map;
 
-      function Model (L : List'Class) return Sequence with
-        Post => Length (Model'Result) = Length (L);
-      function Element (S : Sequence; I : Positive) return Element_Type
-                        renames Element_Sequence.Get;
+      function Model (Self : List'Class) return M.Sequence with
+        Post => M.Length (Model'Result) = Length (Self);
       --  The highlevel model of a list is a sequence of elements. Cursors are
       --  not represented in this model.
 
-      function Positions (L : List'Class) return Map with
+      function Positions (Self : List'Class) return P.Map with
       --  The Positions map is used to model cursors. It only contains valid
       --  cursors and map them to their position in the container.
 
@@ -60,25 +56,26 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
 
           --  Positions of cursors are smaller than the container's length.
 
-          (for all C1 in Positions'Result =>
-             Get (Positions'Result, C1) in 1 .. Length (L)
+          (for all I in Positions'Result =>
+             P.Get (Positions'Result, I) in 1 .. Length (Self)
 
            --  No two cursors have the same position. Note that we do not state
            --  that there is a cursor in the map for each position, as it is
            --  rarely needed.
 
            and then
-             (for all C2 in Positions'Result =>
-                (if Get (Positions'Result, C1) =
-                     Get (Positions'Result, C2)
-                       then C1 = C2)));
+             (for all J in Positions'Result =>
+                (if P.Get (Positions'Result, I) =
+                     P.Get (Positions'Result, J)
+                       then I = J)));
 
-      procedure Lift_Abstraction_Level (L : List'Class) with
+      procedure Lift_Abstraction_Level (Self : List'Class) with
         Global => null,
-        Post   => (for all I in 1 .. Length (L) =>
-                       (for some Cu in Positions (L) =>
-                              Element (Model (L), Get (Positions (L), Cu)) =
-                          Element (Model (L), I)));
+        Post   =>
+          (for all I in 1 .. Length (Self) =>
+             (for some Cu in Positions (Self) =>
+                  M.Get (Model (Self), P.Get (Positions (Self), Cu)) =
+                M.Get (Model (Self), I)));
       --  Lift_Abstraction_Level is a ghost procedure that does nothing but
       --  assume that we can access to the same elements by iterating over
       --  positions or cursors.
@@ -87,142 +84,170 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
       --  based view.
    end Formal_Model;
 
-   use Formal_Model;
-   use Element_Sequence;
-   use Cursor_Map;
+   package M renames Formal_Model.M;
+   package P renames Formal_Model.P;
 
-   function Element (L : List'Class; C : Cursor) return Element_Type with
-     Pre  => Mem (Positions (L), C),
+   use type M.Sequence;
+   use type P.Map;
+
+   function Model (Self : List'Class) return M.Sequence
+                   renames Formal_Model.Model;
+   function Element (S : M.Sequence; I : Positive) return Element_Type
+                   renames M.Get;
+   function Positions (Self : List'Class) return P.Map
+                   renames Formal_Model.Positions;
+
+   function Element (Self : List'Class; Position : Cursor) return Element_Type
+   with
+     Pre  => P.Mem (Positions (Self), Position),
      Post =>
 
-       --  Query Positions to get the position of C in L and use it to fetch
-       --  the corresponding element in Model.
+       --  Query Positions to get the position of Position in Self and use it
+       --  to fetch the corresponding element in Model.
 
-       Element'Result = Element (Model (L), Get (Positions (L), C));
+     Element'Result = Element (Model (Self),
+                               P.Get (Positions (Self), Position));
 
    --  The subprograms used for iteration over cursors are axiomatized using
    --  Positions only. They are inverse of the Positions map as they allow
    --  to create a valid cursor per position in the container.
 
-   function First (L : List'Class) return Cursor with
-     Post => (if Length (L) = 0 then First'Result = No_Element
-              else Mem (Positions (L), First'Result) and then
-                  Get (Positions (L), First'Result) = 1);
+   function First (Self : List'Class) return Cursor with
+     Post => (if Length (Self) = 0 then First'Result = No_Element
+              else P.Mem (Positions (Self), First'Result) and then
+                  P.Get (Positions (Self), First'Result) = 1);
 
-   procedure Next (L : List'Class; C : in out Cursor) with
-     Pre  => Mem (Positions (L), C),
-     Post => (if Get (Positions (L), C'Old) = Length (L)
-              then C = No_Element
-              else Mem (Positions (L), C)
-                and then Get (Positions (L), C) =
-                  Get (Positions (L), C'Old) + 1);
+   procedure Next (Self : List'Class; Position : in out Cursor) with
+     Pre  => P.Mem (Positions (Self), Position),
+     Post => (if P.Get (Positions (Self), Position'Old) = Length (Self)
+              then Position = No_Element
+              else P.Mem (Positions (Self), Position)
+                and then P.Get (Positions (Self), Position) =
+                  P.Get (Positions (Self), Position'Old) + 1);
 
-   function Last (L : List'Class) return Cursor with
+   function Last (Self : List'Class) return Cursor with
      Import,
-     Post => (if Length (L) = 0 then Last'Result = No_Element
-              else Mem (Positions (L), Last'Result) and then
-                  Get (Positions (L), Last'Result) = Length (L));
+     Post => (if Length (Self) = 0 then Last'Result = No_Element
+              else P.Mem (Positions (Self), Last'Result) and then
+                  P.Get (Positions (Self), Last'Result) = Length (Self));
 
-   function Has_Element (L : List'Class; C : Cursor) return Boolean with
-     Post => Has_Element'Result = Mem (Positions (L), C);
+   function Has_Element (Self : List'Class; Position : Cursor) return Boolean
+   with
+     Post => Has_Element'Result = P.Mem (Positions (Self), Position);
 
-   function Find (L : List'Class; E : Element_Type) return Cursor with
+   function Find (Self : List'Class; Element : Element_Type) return Cursor with
      Import,
      Post =>
 
-       --  Either E is not in the model and the result is No_Element
+       --  Either Element is not in the model and the result is No_Element
 
        (Find'Result = No_Element
-        and (for all I in 1 .. Length (L) => Element (Model (L), I) /= E))
+        and (for all I in 1 .. Length (Self) =>
+            Formal_Doubly_Linked_Lists.Element (Model (Self), I) /= Element))
 
-     --  or the result is a valid cursor, E is stored at its position in L and
-     --  there is no previous occurrence of E in L.
+     --  or the result is a valid cursor, Element is stored at its position in
+     --  Self and there is no previous occurrence of Element in L.
 
      or else
-       (Mem (Positions (L), Find'Result)
-        and Element (Model (L), Get (Positions (L), Find'Result)) = E
-        and (for all I in 1 .. Get (Positions (L), Find'Result) - 1 =>
-               Element (Model (L), I) /= E));
+       (P.Mem (Positions (Self), Find'Result)
+        and Formal_Doubly_Linked_Lists.Element
+          (Model (Self), P.Get (Positions (Self), Find'Result)) = Element
+        and (for all I in 1 .. P.Get (Positions (Self), Find'Result) - 1 =>
+               Formal_Doubly_Linked_Lists.Element (Model (Self), I)
+                /= Element));
 
-   procedure Append (L : in out List'Class; E : Element_Type) with
-     Pre  => Length (L) < Capacity (L),
-     Post => Capacity (L) = Capacity (L)'Old
-     and Length (L) = Length (L)'Old + 1
+   procedure Append (Self : in out List'Class; Element : Element_Type) with
+     Pre  => Length (Self) < Capacity (Self),
+     Post => Capacity (Self) = Capacity (Self)'Old
+     and Length (Self) = Length (Self)'Old + 1
 
-     --  Positions contains a new mapping from the last cursor of L to Length.
+     --  Positions contains a new mapping from the last cursor of Self to
+     --  Length.
 
-     and Is_Add (Positions (L)'Old, Last (L), Length (L), Positions (L))
+     and P.Is_Add
+       (Positions (Self)'Old, Last (Self), Length (Self), Positions (Self))
 
-     --  Model contains a new element E at the end.
+     --  Model contains a new element Element at the end.
 
-     and Is_Add (Model (L)'Old, E, Model (L));
+     and M.Is_Add (Model (Self)'Old, Element, Model (Self));
 
-   procedure Insert (L : in out List'Class; C : Cursor; E : Element_Type) with
-   --  Insert E before the valid cursor C in L.
+   procedure Insert
+     (Self : in out List'Class; Position : Cursor; Element : Element_Type)
+   with
+   --  Insert Element before the valid cursor Position in L.
 
      Import,
-     Pre  => Length (L) < Capacity (L) and then Has_Element (L, C),
-     Post => Capacity (L) = Capacity (L)'Old
-     and Length (L) = Length (L)'Old + 1
+     Pre  => Length (Self) < Capacity (Self)
+     and then Has_Element (Self, Position),
+     Post => Capacity (Self) = Capacity (Self)'Old
+     and Length (Self) = Length (Self)'Old + 1
 
-     --  Every cursor previously valid in L is still valid.
+     --  Every cursor previously valid in Self is still valid.
 
-     and (for all D in Positions (L)'Old =>
-              Mem (Positions (L), D) and
+     and (for all D in Positions (Self)'Old =>
+              P.Mem (Positions (Self), D) and
 
-              --  If it was located before C in L its position is preserved.
+            --  If it was located before Position in Self its position is
+            --  preserved.
 
-              (if Get (Positions (L)'Old, D) <
-                   Get (Positions (L)'Old, C)
-               then Get (Positions (L), D) = Get (Positions (L)'Old, D)
+              (if P.Get (Positions (Self)'Old, D) <
+                   P.Get (Positions (Self)'Old, Position)
+               then P.Get (Positions (Self), D) =
+                   P.Get (Positions (Self)'Old, D)
 
                --  Otherwise it is shifted by 1.
 
-               else Get (Positions (L), D) =
-                 Get (Positions (L)'Old, D) + 1))
+               else P.Get (Positions (Self), D) =
+                 P.Get (Positions (Self)'Old, D) + 1))
 
-     --  Every cursor valid in L was previously valid except for the newly
+     --  Every cursor valid in Self was previously valid except for the newly
      --  inserted cursor.
 
-     and (for all D in Positions (L) =>
-              Mem (Positions (L)'Old, D) or
-              Get (Positions (L), D) = Get (Positions (L)'Old, C))
+     and (for all D in Positions (Self) =>
+              P.Mem (Positions (Self)'Old, D) or
+            P.Get (Positions (Self), D) =
+              P.Get (Positions (Self)'Old, Position))
 
-     --  The elements of L before C are preserved.
+     --  The elements of Self before Position are preserved.
 
-     and (for all I in 1 .. Get (Positions (L)'Old, C) - 1 =>
-              Element (Model (L), I) =
-              Element (Model (L)'Old, I))
+     and (for all I in 1 .. P.Get (Positions (Self)'Old, Position) - 1 =>
+              Formal_Doubly_Linked_Lists.Element (Model (Self), I) =
+              Formal_Doubly_Linked_Lists.Element (Model (Self)'Old, I))
 
      --  Other elements are shifted by 1.
 
-     and (for all I in Get (Positions (L)'Old, C) + 1 .. Length (L) =>
-              Element (Model (L), I) =
-            Element (Model (L)'Old, I - 1))
+     and (for all I in
+            P.Get (Positions (Self)'Old, Position) + 1 .. Length (Self) =>
+              Formal_Doubly_Linked_Lists.Element (Model (Self), I) =
+            Formal_Doubly_Linked_Lists. Element (Model (Self)'Old, I - 1))
 
-     --  E is stored at the previous position of C in L.
+     --  Element is stored at the previous position of Position in L.
 
-     and Element (Model (L), Get (Positions (L)'Old, C)) = E;
+     and Formal_Doubly_Linked_Lists.Element
+       (Model (Self), P.Get (Positions (Self)'Old, Position)) = Element;
 
    procedure Replace_Element
-     (L : in out List'Class; C : Cursor; E : Element_Type) with
+     (Self : in out List'Class; Position : Cursor; Element : Element_Type) with
      Import,
-     Pre  => Has_Element (L, C),
-     Post => Capacity (L) = Capacity (L)'Old
-     and Length (L) = Length (L)'Old
+     Pre  => Has_Element (Self, Position),
+     Post => Capacity (Self) = Capacity (Self)'Old
+     and Length (Self) = Length (Self)'Old
 
      --  Cursors are preserved.
 
-     and Positions (L)'Old = Positions (L)
+     and Positions (Self)'Old = Positions (Self)
 
-     --  The element at the position of C in L is replaced by E.
+     --  The element at the position of Position in Self is replaced by E.
 
-     and Is_Replace (Model (L)'Old, Get (Positions (L), C), E, Model (L));
+     and M.Is_Replace (Model (Self)'Old,
+                       P.Get (Positions (Self), Position),
+                       Element,
+                       Model (Self));
 
-   procedure Clear (L : in out List'Class)
+   procedure Clear (Self : in out List'Class)
    with
-       Post => Capacity (L) = Capacity (L)'Old
-     and then Length (L) = 0;
+       Post => Capacity (Self) = Capacity (Self)'Old
+     and then Length (Self) = 0;
 
 private
    pragma SPARK_Mode (Off);

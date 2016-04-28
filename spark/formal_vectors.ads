@@ -6,14 +6,15 @@ with Functional_Sets;
 
 generic
    type Index_Type is (<>);
-   --  ??? Maybe we want to restrict Index_Type to make proof easier.
-   --  Here we need to use 'Pos and 'Val, how will it work in practice ?
+   --  To avoid Constraint_Error being raised at runtime, Index_Type'Base
+   --  should have at least one more element at the left than Index_Type.
 
    type Element_Type (<>) is private;
 package Formal_Vectors with SPARK_Mode is
 
    subtype Extended_Index is Index_Type'Base range
      Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
+   --  Index_Type with one more element to the left.
 
    package Element_Vectors is new Conts.Vectors.Indefinite_Unbounded_SPARK
      (Index_Type          => Index_Type,
@@ -44,8 +45,11 @@ package Formal_Vectors with SPARK_Mode is
       else Count_Type'Last);
    --  Maximal capacity of a vector. It is the minimum of the size of the
    --  index range and the last possible Count_Type.
+   --  Actual capacity of a vector is not modeled. It is mostly irrelevant
+   --  since it cannot be querried and it does not affect the behavior of other
+   --  subprograms.
 
-   function Length (V : Vector'Class) return Natural with
+   function Length (Self : Vector'Class) return Natural with
      Global => null,
      Post   => Length'Result <= Max_Capacity;
    --  The length of a vector is always smaller than its capacity
@@ -65,24 +69,20 @@ package Formal_Vectors with SPARK_Mode is
       --  complains that the parent type of a Ghost type extension shall be
       --  Ghost (see OA30-006).
 
-      package Cursor_Set is new Functional_Sets
+      package V is new Functional_Sets
         (Element_Type => Cursor,
          No_Element   => No_Element);
-      package Element_Sequence is new Functional_Sequences
+      package M is new Functional_Sequences
         (Index_Type   => Index_Type,
          Element_Type => Element_Type);
-      use Element_Sequence;
-      use Cursor_Set;
 
-      function Model (V : Vector'Class) return Sequence with
+      function Model (Self : Vector'Class) return M.Sequence with
         Global => null,
-        Post   => Length (Model'Result) = Length (V);
-      function Element (S : Sequence; I : Index_Type) return Element_Type
-                        renames Element_Sequence.Get;
-      --  The highlevel model of a vector is a sequence of elements. Cursors
-      --  are not represented in this model.
+        Post   => M.Length (Model'Result) = Length (Self);
+      --  The highlevel model of a vector is a sequence of elements indexed by
+      --  Index_Type. Cursors are not represented in this model.
 
-      function Valid_Cursors (V : Vector'Class) return Set with
+      function Valid_Cursors (Self : Vector'Class) return V.Set with
       --  Valid_Cursors is the set of cursors that are valid in V.
 
         Global => null,
@@ -90,22 +90,33 @@ package Formal_Vectors with SPARK_Mode is
 
           --  Positions of cursors are smaller than the container's length.
 
-          (for all C1 in Valid_Cursors'Result =>
-             To_Index (C1) in Index_Type'First .. Last (V)
+          (for all I in Valid_Cursors'Result =>
+             To_Index (I) in Index_Type'First .. Last (Self)
 
            --  There is no more than one cursor per position in the container.
 
            and then
-             (for all C2 in Valid_Cursors'Result =>
-                  (if To_Index (C1) = To_Index (C2) then C1 = C2)));
+             (for all J in Valid_Cursors'Result =>
+                  (if To_Index (I) = To_Index (J) then I = J)));
    end Formal_Model;
 
-   use Formal_Model;
-   use Element_Sequence;
-   use Cursor_Set;
+   package M renames Formal_Model.M;
+   package V renames Formal_Model.V;
+
+   use type M.Sequence;
+   use type V.Set;
+
+   function Model (Self : Vector'Class) return M.Sequence
+                   renames Formal_Model.Model;
+   function Element (S : M.Sequence; I : Index_Type) return Element_Type
+                   renames M.Get;
+   function Valid_Cursors (Self : Vector'Class) return V.Set
+                   renames Formal_Model.Valid_Cursors;
 
    function Element
      (Self : Vector'Class; Position : Index_Type) return Element_Type
+   --  Fetch the corresponding element in Model.
+
    with
        Global => null,
        Pre    => Position <= Last (Self),
@@ -113,7 +124,9 @@ package Formal_Vectors with SPARK_Mode is
 
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type)
-     with
+   --  Make sure the
+
+   with
        Global => null,
        Pre    => Capacity <= Max_Capacity,
        Post   => Length (Self) = Length (Self)'Old
@@ -142,9 +155,9 @@ package Formal_Vectors with SPARK_Mode is
        (for all I in
           Index_Type'First .. Index_Type'Min (Length, Last (Self)'Old) =>
             Formal_Vectors.Element (Self, I) =
-            Formal_Model.Element (Model (Self)'Old, I))
+            Formal_Vectors.Element (Model (Self)'Old, I))
      and then (for all I in Last (Self)'Old .. Last (Self) =>
-                   Formal_Model.Element (Model (Self), I) = Element);
+                   Formal_Vectors.Element (Model (Self), I) = Element);
 
    function Is_Empty (Self : Vector'Class) return Boolean with
      Global => null,
@@ -161,10 +174,10 @@ package Formal_Vectors with SPARK_Mode is
      and then
        (for all I in Index_Type'First .. Last (Self)'Old =>
             Formal_Vectors.Element (Self, I) =
-            Formal_Model.Element (Model (Self)'Old, I))
+            Formal_Vectors.Element (Model (Self)'Old, I))
      and then (for all I in Last (Self)'Old .. Last (Self) =>
                          Formal_Vectors.Element (Self, I) = Element)
-     and then Inc (Valid_Cursors (Self)'Old, Valid_Cursors (Self));
+     and then V.Inc (Valid_Cursors (Self)'Old, Valid_Cursors (Self));
 
    procedure Replace_Element
      (Self     : in out Vector'Class;
@@ -176,7 +189,7 @@ package Formal_Vectors with SPARK_Mode is
      and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old
      and then
        (if Index in Index_Type'First .. Last (Self)
-        then Is_Replace
+        then M.Is_Replace
           (Model (Self)'Old, Index, New_Item, Model (Self))
         else Model (Self) = Model (Self)'Old);
 
@@ -242,27 +255,27 @@ package Formal_Vectors with SPARK_Mode is
      Global => null,
      Post   => (if Length (Self) = 0 then First'Result = No_Element
               else To_Index (First'Result) = Index_Type'First
-                and then Mem (Valid_Cursors (Self), First'Result));
+                and then V.Mem (Valid_Cursors (Self), First'Result));
    function Element
      (Self : Vector'Class; Position : Cursor) return Element_Type
    with
      Global => null,
-     Pre    => Mem (Valid_Cursors (Self), Position),
+     Pre    => V.Mem (Valid_Cursors (Self), Position),
      Post   => Element'Result = Element (Self, To_Index (Position));
    function Has_Element
      (Self : Vector'Class; Position : Cursor) return Boolean
    with
        Global => null,
-       Post   => Has_Element'Result = Mem (Valid_Cursors (Self), Position);
+       Post   => Has_Element'Result = V.Mem (Valid_Cursors (Self), Position);
    function Next
      (Self : Vector'Class; Position : Cursor) return Cursor
      with
        Global => null,
        Post   =>
        (if To_Index (Position) < Last (Self)
-        and then Mem (Valid_Cursors (Self), Position)
+        and then V.Mem (Valid_Cursors (Self), Position)
         then To_Index (Next'Result) = Index_Type'Succ (To_Index (Position))
-        and Mem (Valid_Cursors (Self), Position)
+        and V.Mem (Valid_Cursors (Self), Position)
         else Next'Result = No_Element);
    function Previous
      (Self : Vector'Class; Position : Cursor) return Cursor
@@ -270,9 +283,9 @@ package Formal_Vectors with SPARK_Mode is
        Global => null,
        Post   =>
        (if To_Index (Position) > Index_Type'First
-        and then Mem (Valid_Cursors (Self), Position)
+        and then V.Mem (Valid_Cursors (Self), Position)
         then To_Index (Previous'Result) = Index_Type'Pred (To_Index (Position))
-        and Mem (Valid_Cursors (Self), Position)
+        and V.Mem (Valid_Cursors (Self), Position)
         else Previous'Result = No_Element);
 
    procedure Next (Self : Vector'Class; Position : in out Cursor)
@@ -282,7 +295,7 @@ package Formal_Vectors with SPARK_Mode is
        Post   =>
        (if To_Index (Position)'Old < Last (Self)
         then To_Index (Position) = Index_Type'Succ (To_Index (Position)'Old)
-        and Mem (Valid_Cursors (Self), Position)
+        and V.Mem (Valid_Cursors (Self), Position)
         else Position = No_Element);
 
 private

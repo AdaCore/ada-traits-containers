@@ -16,9 +16,8 @@ package Use_Vectors with SPARK_Mode is
        (Index_Type => Index_Type, Element_Type => Integer);
    use My_Vectors;
    use type My_Vectors.Cursor;
-   use My_Vectors.Formal_Model;
-   use My_Vectors.Formal_Model.Cursor_Set;
-   use My_Vectors.Formal_Model.Element_Sequence;
+   use My_Vectors.V;
+   use My_Vectors.M;
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
@@ -52,7 +51,7 @@ package Use_Vectors with SPARK_Mode is
    --  Double_Size double the size of a vector by duplicating every element.
 
    procedure Double_Size (V : in out Vector) with
-     Pre  => Max_Capacity / 2 >= Length (V) ,
+     Pre  => Max_Capacity / 2 >= Length (V),
      Post => Length (V) = 2 * Length (V)'Old
      and (for all I in Index_Type'First .. Last (V)'Old =>
        Element (V, I) = Element (Model (V)'Old, I)
@@ -61,11 +60,11 @@ package Use_Vectors with SPARK_Mode is
 
    --  My_Find iterates to find an element.
 
-   function My_Find (V : Vector; E : Integer) return Extended_Index with
+   function My_Find (V : Vector; E : Integer) return Index_Type'Base with
      Contract_Cases =>
        ((for all I in Index_Type'First .. Last (V) =>
           Element (Model (V), I) /= E) =>
-            My_Find'Result = Extended_Index'First,
+            My_Find'Result = Index_Type'First - 1,
         others => My_Find'Result in Index_Type'First .. Last (V)
         and then Element (Model (V), My_Find'Result) = E
         and then (for all I in Index_Type'First .. My_Find'Result - 1 =>
@@ -92,4 +91,11 @@ package Use_Vectors with SPARK_Mode is
      and (for all J in I .. I + 4 => Element (Model (V), J) = 0)
      and (for all J in I + 5 .. Last (V) =>
               Element (Model (V), J) = Element (Model (V)'Old, J - 5));
+
+   type My_Enum_Base is (Zero, One, Two, Three);
+   subtype My_Enum is My_Enum_Base range One .. Three;
+
+   package Enum_Vectors is new
+     Formal_Vectors
+       (Index_Type => My_Enum, Element_Type => Integer);
 end Use_Vectors;

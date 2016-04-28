@@ -130,14 +130,14 @@ package body Use_Sets with SPARK_Mode is
 
    procedure From_Cursors_To_Elements (S : My_Sets.Set) is
    begin
-      Lift_Abstraction_Level (S);
+      Formal_Model.Lift_Abstraction_Level (S);
    end From_Cursors_To_Elements;
 
    procedure From_Model_To_Cursors (S : My_Sets.Set) is null;
 
    procedure From_Cursors_To_Model (S : My_Sets.Set)  is
    begin
-      Lift_Abstraction_Level (S);
+      Formal_Model.Lift_Abstraction_Level (S);
    end From_Cursors_To_Model;
 
 end Use_Sets;

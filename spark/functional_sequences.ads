@@ -9,6 +9,12 @@ generic
    type Element_Type (<>) is private;
 package Functional_Sequences with SPARK_Mode is
 
+   subtype Extended_Index is Index_Type'Base range
+     Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
+   --  Index_Type with one more element to the left.
+   --  This type is never used but it forces GNATprove to check that there is
+   --  room for one more element at the left of Index_Type.
+
    type Sequence is private
      with Default_Initial_Condition => Natural'(Length (Sequence)) = 0;
    --  Sequences are empty when default initialized.

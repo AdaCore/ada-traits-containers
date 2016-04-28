@@ -9,10 +9,9 @@ package Use_Ordered_Sets with SPARK_Mode is
       None         => Integer'First);
    use My_Sets;
    use type My_Sets.Cursor;
-   use My_Sets.Formal_Model;
-   use My_Sets.Formal_Model.Cursor_Map;
-   use My_Sets.Formal_Model.Element_Sequence;
-   use My_Sets.Formal_Model.Element_Set;
+   use My_Sets.Formal_Model.P;
+   use My_Sets.Formal_Model.E;
+   use My_Sets.Formal_Model.M;
 
    function My_Contains (S : My_Sets.Set; E : Integer) return Boolean is
      (Find (S, E) /= No_Element) with
