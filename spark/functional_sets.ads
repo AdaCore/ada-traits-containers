@@ -20,7 +20,9 @@ package Functional_Sets with SPARK_Mode is
    --  For in quantification over sets iterates over elements.
 
    --  Sets are axiomatized using Mem which encodes whether an element is
-   --  contained in a set. We could also add Length:
+   --  contained in a set. We could also add Length.
+   --  ??? Currently we do not consider potential overflows of the container's
+   --  implementation.
 
    function Mem (S : Set; E : Element_Type) return Boolean with
      Global => null,

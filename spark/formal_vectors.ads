@@ -7,7 +7,7 @@ with Functional_Sets;
 generic
    type Index_Type is (<>);
    --  To avoid Constraint_Error being raised at runtime, Index_Type'Base
-   --  should have at least one more element at the left than Index_Type.
+   --  should have at least one more element to the left than Index_Type.
 
    type Element_Type (<>) is private;
 package Formal_Vectors with SPARK_Mode is
@@ -62,6 +62,8 @@ package Formal_Vectors with SPARK_Mode is
    function To_Index (Position : Cursor) return Index_Type with
      Global => null,
      Pre    => Position /= No_Element;
+   --  In vectors, cursors cannot change position in a container.
+   --  They are associated with a unique index by To_Index.
 
    package Formal_Model is
 
@@ -83,7 +85,9 @@ package Formal_Vectors with SPARK_Mode is
       --  Index_Type. Cursors are not represented in this model.
 
       function Valid_Cursors (Self : Vector'Class) return V.Set with
-      --  Valid_Cursors is the set of cursors that are valid in V.
+      --  Valid_Cursors is the set of cursors that are valid in Self.
+      --  No need to store their position in Self as it can be retrieved with
+      --  To_Index.
 
         Global => null,
         Post   =>
@@ -124,7 +128,8 @@ package Formal_Vectors with SPARK_Mode is
 
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type)
-   --  Make sure the
+   --  Make sure there is enough space for at least Count_Type elements in
+   --  Self.
 
    with
        Global => null,
@@ -134,6 +139,9 @@ package Formal_Vectors with SPARK_Mode is
      and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old;
 
    procedure Shrink_To_Fit (Self : in out Vector'Class)
+   --  Resize the vector to fit its number of elements.
+   --  This has no effect on models.
+
    with
        Global => null,
        Post   => Length (Self) = Length (Self)'Old
@@ -144,18 +152,30 @@ package Formal_Vectors with SPARK_Mode is
      (Self    : in out Vector'Class;
       Length  : Index_Type;
       Element : Element_Type)
-     with
-       Global => null,
-       Pre    =>
+   --  Resize the container so that it contains Length elements.
+   --  If Length is smaller than the current container length, Self is
+   --     reduced to its first Length elements, destroying the other elements.
+   --  If Length is greater than the current container length, new elements
+   --     are added as needed, as copied of Element.
+   with
+     Global => null,
+     Pre    =>
          Index_Type'Pos (Length) - Index_Type'Pos (Index_Type'First) + 1
-           <= Max_Capacity,
-       Post   => Formal_Vectors.Length (Self) =
+             <= Max_Capacity,
+     Post   => Formal_Vectors.Length (Self) =
              Index_Type'Pos (Length) - Index_Type'Pos (Index_Type'First) + 1
+
+     --  Elements of Self that were located before the index Length are
+     --  preserved.
+
      and then
        (for all I in
           Index_Type'First .. Index_Type'Min (Length, Last (Self)'Old) =>
             Formal_Vectors.Element (Self, I) =
             Formal_Vectors.Element (Model (Self)'Old, I))
+
+     --  If elements were happended to Self then they are equal to Element.
+
      and then (for all I in Last (Self)'Old .. Last (Self) =>
                    Formal_Vectors.Element (Model (Self), I) = Element);
 
@@ -167,28 +187,42 @@ package Formal_Vectors with SPARK_Mode is
      (Self    : in out Vector'Class;
       Element : Element_Type;
       Count   : Count_Type := 1)
-     with
-       Global => null,
-       Pre    => Length (Self) <= Max_Capacity - Count,
-       Post   => Length (Self) = Length (Self)'Old + Count
+   --  Append Count copies of Element to the vector.
+
+   with
+     Global => null,
+     Pre    => Length (Self) <= Max_Capacity - Count,
+     Post   => Length (Self) = Length (Self)'Old + Count
+
+     --  Elements that were already in Self are preserved.
+
      and then
        (for all I in Index_Type'First .. Last (Self)'Old =>
             Formal_Vectors.Element (Self, I) =
             Formal_Vectors.Element (Model (Self)'Old, I))
+
+     --  Appended elements are equal to Element.
+
      and then (for all I in Last (Self)'Old .. Last (Self) =>
                          Formal_Vectors.Element (Self, I) = Element)
+
+     --  Cursors that were valid in Self are preserved.
+
      and then V.Inc (Valid_Cursors (Self)'Old, Valid_Cursors (Self));
 
    procedure Replace_Element
      (Self     : in out Vector'Class;
       Index    : Index_Type;
       New_Item : Element_Type)
+   --  Replace the element at the given position.
+   --  Nothing is done if Index is not a valid index in the container.
+
    with
-       Global => null,
-       Post   => Length (Self) = Length (Self)'Old
+     Global => null,
+     Post   => Length (Self) = Length (Self)'Old
      and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old
      and then
-       (if Index in Index_Type'First .. Last (Self)
+       (if Index <= Last (Self)
         then M.Is_Replace
           (Model (Self)'Old, Index, New_Item, Model (Self))
         else Model (Self) = Model (Self)'Old);
@@ -196,39 +230,53 @@ package Formal_Vectors with SPARK_Mode is
    procedure Swap
      (Self        : in out Vector'Class;
       Left, Right : Index_Type)
-     with
-       Global => null,
-       Pre    => Left in Index_Type'First .. Last (Self)
-     and then Right in Index_Type'First .. Last (Self),
-       Post   =>  Length (Self) = Length (Self)'Old
+   --  Efficiently swap the elements at the two positions.
+
+   with
+     Global => null,
+     Pre    => Left <= Last (Self) and then Right <= Last (Self),
+     Post   =>  Length (Self) = Length (Self)'Old
+     and then Element (Self, Left) = Element (Model (Self)'Old, Right)
+     and then Element (Self, Right) = Element (Model (Self)'Old, Left)
+
+     --  Valid cursors are preserved
+
      and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old
+
+     --  Elements that have not been swapped are preserved.
+
      and then
        (for all I in Index_Type'First .. Last (Self) =>
           (if I /= Left and I /= Right then
-                 Element (Self, I) = Element (Model (Self)'Old, I)))
-     and then Element (Self, Left) =
-       Element (Model (Self)'Old, Right)
-     and then Element (Self, Right) =
-       Element (Model (Self)'Old, Left);
+                 Element (Self, I) = Element (Model (Self)'Old, I)));
 
    procedure Clear (Self : in out Vector'Class) with
      Global => null,
      Post   => Length (Self) = 0;
 
    procedure Delete (Self : in out Vector'Class; Index : Index_Type)
+   --  Remove an element from the vector.
+
    with
-       Global => null,
-       Pre    => Index in Index_Type'First .. Last (Self),
-       Post   => Length (Self) = Length (Self)'Old - 1
+     Global => null,
+     Pre    => Index <= Last (Self),
+     Post   => Length (Self) = Length (Self)'Old - 1
+
+     --  Elements located before Index are preserved.
+
      and then
        (for all I in Index_Type'First .. Index_Type'Pred (Index) =>
               Element (Self, I) = Element (Model (Self)'Old, I))
+
+     --  Elements located after Index are shifted.
+
      and then
        (for all I in Index .. Last (Self) =>
               Element (Self, I) =
           Element (Model (Self)'Old, Index_Type'Succ (I)));
 
    procedure Delete_Last (Self : in out Vector'Class) with
+   --  Remove the last element of the vector.
      Global => null,
      Pre    => Length (Self) > 0,
      Post   => Length (Self) = Length (Self)'Old - 1
@@ -246,10 +294,7 @@ package Formal_Vectors with SPARK_Mode is
      (Self : in out Vector'Class; Source : Vector'Class)
    with
        Global => null,
-       Post   => Length (Self) = Length (Source)
-     and then
-       (for all I in Index_Type'First .. Last (Self) =>
-              Element (Self, I) = Element (Source, I));
+       Post   => Model (Self) = Model (Source);
 
    function First (Self : Vector'Class) return Cursor with
      Global => null,
@@ -288,11 +333,11 @@ package Formal_Vectors with SPARK_Mode is
         and V.Mem (Valid_Cursors (Self), Position)
         else Previous'Result = No_Element);
 
-   procedure Next (Self : Vector'Class; Position : in out Cursor)
-      with Inline,
-           Global => null,
-           Pre    => Has_Element (Self, Position),
-       Post   =>
+   procedure Next (Self : Vector'Class; Position : in out Cursor) with
+     Inline,
+     Global => null,
+     Pre    => Has_Element (Self, Position),
+     Post   =>
        (if To_Index (Position)'Old < Last (Self)
         then To_Index (Position) = Index_Type'Succ (To_Index (Position)'Old)
         and V.Mem (Valid_Cursors (Self), Position)

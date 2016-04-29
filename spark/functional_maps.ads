@@ -24,7 +24,9 @@ package Functional_Maps with SPARK_Mode is
 
    --  Maps are axiomatized using Mem and Get encoding respectively the
    --  presence of a key in a map and an accessor to elements associated to its
-   --  keys. We could also add Length:
+   --  keys. We could also add Length.
+   --  ??? Currently we do not consider potential overflows of the container
+   --  implementation.
 
    function Mem (M : Map; K : Key_Type) return Boolean with
      Global => null,

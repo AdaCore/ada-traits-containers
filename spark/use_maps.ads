@@ -1,10 +1,18 @@
 pragma Ada_2012;
+with Conts; use Conts;
 with Formal_Hashed_Maps;
 pragma Elaborate_All (Formal_Hashed_Maps);
 
 package Use_Maps with SPARK_Mode is
+
+   function Hash (Id : Natural) return Hash_Type is (Hash_Type (Id));
+
    package My_Maps is new Formal_Hashed_Maps
-     (Integer, Natural, 0);
+     (Element_Type => Integer,
+      Key_Type     => Natural,
+      Hash         => Hash,
+      None         => 0);
+
    use My_Maps;
    use type My_Maps.Cursor;
    use My_Maps.Formal_Model.P;

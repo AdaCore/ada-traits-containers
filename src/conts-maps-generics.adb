@@ -23,7 +23,7 @@ pragma Ada_2012;
 with Ada.Unchecked_Deallocation;
 with Ada.Containers; use Ada.Containers;
 
-package body Conts.Maps.Generics is
+package body Conts.Maps.Generics with SPARK_Mode => Off is
 
    Min_Size : constant Hash_Type := 2 ** 3;
    --  Minimum size for maps. Must be a power of 2.

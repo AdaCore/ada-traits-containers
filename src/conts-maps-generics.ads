@@ -60,7 +60,7 @@ generic
    --  used for now-deleted elements.
    --  Capacity is the maximum number of elements that can be stored.
 
-package Conts.Maps.Generics is
+package Conts.Maps.Generics with SPARK_Mode is
 
    subtype Key_Type is Keys.Element_Type;
    subtype Element_Type is Elements.Element_Type;
@@ -80,29 +80,40 @@ package Conts.Maps.Generics is
       function Value
         (P : Pair_Type) return Elements.Constant_Returned_Type with Inline;
 
-      function Capacity (Self : Base_Map'Class) return Count_Type;
+      function Capacity (Self : Base_Map'Class) return Count_Type with
+        Global => null;
       procedure Resize
         (Self     : in out Base_Map'Class;
-         New_Size : Hash_Type);
+         New_Size : Hash_Type)
+      with
+        Global => null;
       procedure Set
         (Self     : in out Base_Map'Class;
          Key      : Keys.Element_Type;
-         Value    : Elements.Element_Type);
+         Value    : Elements.Element_Type)
+      with
+        Global => null;
       function Get
         (Self     : Base_Map'Class;
          Key      : Keys.Element_Type)
-         return Elements.Constant_Returned_Type;
-      procedure Clear (Self : in out Base_Map'Class);
+         return Elements.Constant_Returned_Type
+      with
+        Global => null;
+      procedure Clear (Self : in out Base_Map'Class) with
+        Global => null;
       procedure Delete
         (Self     : in out Base_Map'Class;
-         Key      : Keys.Element_Type);
+         Key      : Keys.Element_Type)
+      with
+        Global => null;
       function Pair
         (Self : Base_Map'Class; Position : Cursor) return Pair_Type
          with Inline, Global => null;
       function Element
         (Self : Base_Map'Class; Position : Cursor)
          return Constant_Returned_Type
-         is (Value (Pair (Self, Position)));
+      is (Value (Pair (Self, Position)))
+      with Global => null;
       function As_Element
         (Self : Base_Map'Class; Position : Cursor) return Element_Type
          is (Elements.To_Element (Value (Pair (Self, Position))))
@@ -136,6 +147,7 @@ package Conts.Maps.Generics is
       --  using an explicit cursor.
 
    private
+      pragma SPARK_Mode (Off);
       procedure Adjust (Self : in out Base_Map);
       procedure Finalize (Self : in out Base_Map);
       --  In case the mp is a controlled type, but irrelevant when Self

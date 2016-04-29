@@ -28,7 +28,9 @@ package Functional_Sequences with SPARK_Mode is
    --  the length of a sequence and an accessor to its Nth element:
 
    function Length (S : Sequence) return Natural with
-     Global => null;
+     Global => null,
+     Post => (Index_Type'Pos (Index_Type'First) - 1) + Length'Result <=
+        Index_Type'Pos (Index_Type'Last);
    function Get (S : Sequence; N : Index_Type) return Element_Type with
      Global => null,
      Pre    => N in Index_Type'First ..
