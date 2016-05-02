@@ -47,6 +47,9 @@ package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;
 
+   function Copy (Self : Vector'Class) return Vector'Class;
+   --  Return a deep copy of Self
+
    function To_Index (Position : Cursor) return Index_Type
      renames Vectors.To_Index;
    procedure Swap

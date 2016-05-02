@@ -424,6 +424,7 @@ class Map(Tests):
         unbounded,
         name,        # test name
         filename,    # suffix for filename
+        limited=False, # Whether we need explicit Copy and Clear
         comments=None, # instance of Comments
         favorite=False, # Whether this should be highlighted in the results
         ada2012=False
@@ -477,6 +478,12 @@ class Map(Tests):
             prefix='',      # Prefix for Element, Next and Has_Element
             adaptors='',    # Creating adaptors for standard containers
             append=append.format(set=set))
+
+        if limited:
+            # Need an explicit copy, since ":=" is not defined for limited types
+            self.args['copy'] = '.Copy'
+            self.args['clear'] = '\n      V.Clear;'
+            self.args['clear_copy'] = '\n         V_Copy.Clear;'
 
         if not unbounded:
             self.args['discriminant'] = ' (Capacity => Items_Count, ' + \
@@ -613,6 +620,17 @@ List("Unbounded_String",
      comments=Comments(
          cursorloop="Maybe because of the atomic counters or controlled elements")
     ).gen(adaptor="Constant_Returned")
+List("String",
+     "package Container is new Conts.Lists.Indefinite_Unbounded_SPARK" + cs
+     + '\n   function Predicate (P : Container.Constant_Returned) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
+     "with Conts.Lists.Indefinite_Unbounded_SPARK;",
+     unbounded=True, limited=True,
+     name="Limited Unbounded_SPARK of Indef_SPARK",
+     filename="indef_unbounded_spark",
+     favorite=True,
+     comments=Comments(cursorloop="Cost if for copying the string")).gen(
+         adaptor="Constant_Returned")
 #List("String",
 #     "package Container renames Conts.Lists.Strings;",
 #     "with Conts.Lists.Strings;",
@@ -684,11 +702,19 @@ Vector("Integer",
        name="Def Bounded",
        filename="def_bounded"
       ).gen(adaptor="Constant_Returned")
+Vector("Integer",
+     "package Container is new Conts.Vectors.Indefinite_Unbounded_SPARK" + lp,
+     "with Conts.Vectors.Indefinite_Unbounded_SPARK;",
+       unbounded=True, limited=True,
+       name="Limited Indef_SPARK Unbounded_SPARK",
+       filename="indef_unbounded_spark"
+      ).gen(adaptor="Element")
 
 # String vectors
 
 p = " (Positive, String);"
 cp = " (Positive, String, Ada.Finalization.Controlled);"
+lp = " (Positive, String, Conts.Limited_Base);"
 
 Vector("String",
      "package Container is new Ada.Containers.Indefinite_Vectors" + p
@@ -722,6 +748,15 @@ Vector("String",
        name="Indef Unbounded",
        filename="indef_unbounded",
        favorite=True).gen(
+         adaptor="Constant_Returned")
+Vector("String",
+     "package Container is new Conts.Vectors.Indefinite_Unbounded_SPARK" + lp
+     + '\n   function Predicate (P : Container.Constant_Returned) return Boolean\n'
+     + '      is (Perf_Support.Predicate (P)) with Inline;',
+     "with Conts.Vectors.Indefinite_Unbounded_SPARK;",
+       unbounded=True, limited=True,
+       name="Limited Indef_SPARK Unbounded_SPARK",
+       filename="indef_unbounded_spark").gen(
          adaptor="Constant_Returned")
 
 # Integer-Integer maps
@@ -827,6 +862,16 @@ Map("StrStr",
     unbounded=True,
     name="Hashed Linear Probing Indef-Indef Unbounded",
     filename="hashed_linear_probing_indef_indef_unbounded",
+    favorite=True).gen(adaptor="Pair")
+Map("StrStr",
+    'package Container is new Conts.Maps.Indef_Indef_Unbounded_SPARK\n'
+    + '   (String, String, Conts.Limited_Base, Ada.Strings.Hash);'
+    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
+    + '   is (Predicate (Container.Value (P))) with Inline;',
+    'with Conts.Maps.Indef_Indef_Unbounded_SPARK, Ada.Strings.Hash;',
+    unbounded=True, limited=True,
+    name="Limited Hashed Indef_SPARK-Indef_SPARK Unbounded_SPARK",
+    filename="hashed_indef_indef_unbounded_spark",
     favorite=True).gen(adaptor="Pair")
 
 run_all = open("tests/generated/perf-run_all.adb", "w")

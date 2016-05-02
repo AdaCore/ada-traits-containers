@@ -69,6 +69,9 @@ package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
    subtype Map is Impl.Map;
    subtype Returned is Impl.Returned_Type;
 
+   function Copy (Self : Map'Class) return Map'Class;
+   --  Return a deep copy of Self
+
    subtype Pair_Type is Impl.Pair_Type;
    function Key
      (P : Pair_Type) return Keys.Traits.Constant_Returned renames Impl.Key;

@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2015-2016, AdaCore                     --
+--                     Copyright (C) 2016, AdaCore                          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -19,39 +19,19 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Unbounded lists of unconstrained elements.
---  Cursors are indexes into an array, to be able to write post-conditions
---  and for added safety
-
 pragma Ada_2012;
-with Conts.Elements.Indefinite_SPARK;
-with Conts.Lists.Storage.Unbounded_SPARK;
-with Conts.Lists.Generics;
 
-generic
-   type Element_Type (<>) is private;
-   --  Element_Type must not be a controlled type that needs to be
-   --  Adjusted when it is moved in memory, since the list will use the
-   --  realloc() system call.
+package body Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode => Off is
 
-package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
+   ----------
+   -- Copy --
+   ----------
 
-   package Elements is new Conts.Elements.Indefinite_SPARK
-      (Element_Type, Pool => Conts.Global_Pool);
-   package Storage is new Conts.Lists.Storage.Unbounded_SPARK
-      (Elements            => Elements.Traits,
-       Container_Base_Type => Limited_Base);
-   package Lists is new Conts.Lists.Generics (Storage.Traits);
-   subtype Constant_Returned is Elements.Traits.Constant_Returned;
+   function Copy (Self : Map'Class) return Map'Class is
+   begin
+      return Result : Map do
+         Result.Assign (Self);
+      end return;
+   end Copy;
 
-   subtype Cursor is Lists.Cursor;
-   subtype List is Lists.List;
-
-   function Copy (Self : List'Class) return List'Class;
-   --  Return a deep copy of Self
-   --  Complexity: O(n)
-
-   package Cursors renames Lists.Cursors;
-   package Maps renames Lists.Maps;
-
-end Conts.Lists.Indefinite_Unbounded_SPARK;
+end Conts.Maps.Indef_Indef_Unbounded_SPARK;

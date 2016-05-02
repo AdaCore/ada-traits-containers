@@ -82,6 +82,8 @@ package Conts.Maps.Generics with SPARK_Mode is
 
       function Capacity (Self : Base_Map'Class) return Count_Type with
         Global => null;
+      procedure Assign
+        (Self : in out Base_Map'Class; Source : Base_Map'Class);
       procedure Resize
         (Self     : in out Base_Map'Class;
          New_Size : Hash_Type)

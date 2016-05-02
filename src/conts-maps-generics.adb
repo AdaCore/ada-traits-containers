@@ -128,6 +128,20 @@ package body Conts.Maps.Generics with SPARK_Mode => Off is
       end Internal_Insert;
 
       ------------
+      -- Assign --
+      ------------
+
+      procedure Assign (Self : in out Base_Map'Class; Source : Base_Map'Class)
+      is
+
+      begin
+         Self.Used := Source.Used;
+         Self.Fill := Source.Fill;
+         Self.Table := Source.Table;
+         Self.Adjust;
+      end Assign;
+
+      ------------
       -- Adjust --
       ------------
 
