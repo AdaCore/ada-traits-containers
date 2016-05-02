@@ -72,10 +72,10 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
 
    procedure Resize
      (Self     : in out Map'Class;
-      New_Size : Hash_Type)
+      New_Size : Count_Type)
    is
    begin
-      Element_Maps.Impl.Resize (Self, New_Size);
+      Element_Maps.Impl.Resize (Self, Hash_Type (New_Size));
    end Resize;
 
    procedure Delete

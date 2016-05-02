@@ -42,6 +42,19 @@ package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
    function "=" (Left : Key_Type; Right : Keys.Traits.Stored) return Boolean
      is (Left = Keys.Impl.To_Element_Type (Right)) with Inline;
 
+   function Safe_Resize_2_3
+     (Used     : Hash_Type;
+      Fill     : Count_Type;
+      Capacity : Count_Type) return Hash_Type
+   is (Hash_Type'Min
+       ((if Hash_Type (Fill) > (Hash_Type (Capacity) * 2) / 3
+         then (if Used > 100_000 then Used * 2 else Used * 4)
+         else 0),
+        Hash_Type (Count_Type'Last)))
+   with
+     Pre  => Used < Hash_Type (Count_Type'Last),
+     Post => Safe_Resize_2_3'Result in 0 .. Hash_Type (Count_Type'Last);
+
    package Impl is new Conts.Maps.Generics
      (Keys                => Keys.Traits,
       Elements            => Elements.Traits,
@@ -49,7 +62,8 @@ package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
       "="                 => "=",
       Probing             => Conts.Maps.Perturbation_Probing,
       Pool                => Conts.Global_Pool,
-      Container_Base_Type => Container_Base_Type);
+      Container_Base_Type => Container_Base_Type,
+      Resize_Strategy     => Safe_Resize_2_3);
 
    subtype Cursor is Impl.Cursor;
    subtype Map is Impl.Map;

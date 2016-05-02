@@ -38,34 +38,28 @@ package Use_Maps with SPARK_Mode is
    --  that keys are preserved.
 
    procedure Apply_F (S : My_Maps.Map; R : in out My_Maps.Map) with
-     Pre  => Capacity (R) >= Length (S),
-     Post => Capacity (R) = Capacity (R)'Old
-     and Length (R) = Length (S)
+     Post => Length (R) = Length (S)
      and (for all E of Model (S) =>
               (for some G of Model (R) => G = F (E)))
      and (for all G of Model (R) =>
               (for some E of Model (S) => G = F (E)));
 
    procedure Apply_F_2 (S : My_Maps.Map; R : in out My_Maps.Map) with
-     Pre  => Capacity (R) >= Length (S),
-     Post => Capacity (R) = Capacity (R)'Old
-     and Length (R) = Length (S)
+     Post => Length (R) = Length (S)
      and (for all K in Model (R) => Mem (Model (S), K))
      and (for all K in Model (S) =>
               Mem (Model (R), K)
           and then Element (Model (R), K)  = F (Element (Model (S), K)));
 
    procedure Apply_F_3 (S : in out My_Maps.Map) with
-     Post => Capacity (S) = Capacity (S)'Old
-     and Length (S) = Length (S)'Old
+     Post => Length (S) = Length (S)'Old
      and (for all E of Model (S)'Old =>
               (for some G of Model (S) => G = F (E)))
      and (for all G of Model (S) =>
               (for some E of Model (S)'Old => G = F (E)));
 
    procedure Apply_F_4 (S : in out My_Maps.Map) with
-     Post => Capacity (S) = Capacity (S)'Old
-     and Length (S) = Length (S)'Old
+     Post => Length (S) = Length (S)'Old
      and Keys (S) = Keys (S)'Old
      and (for all K in Model (S) =>
               Element (Model (S), K)  = F (Element (Model (S)'Old, K)));
@@ -85,7 +79,7 @@ package Use_Maps with SPARK_Mode is
    procedure Union_P (S1 : in out My_Maps.Map; S2 : My_Maps.Map) with
      Pre  => (for all E of Model (S1) => P (E))
      and (for all E of Model (S2) => P (E))
-     and Capacity (S1) - Length (S1) >= Length (S2),
+     and Count_Type'Last - Length (S1) > Length (S2),
      Post => (for all E of Model (S1) => P (E));
 
    --  Test links between high-level model, lower-level position based model

@@ -47,8 +47,8 @@ package Formal_Hashed_Maps with SPARK_Mode is
    function Length (Self : Map'Class) return Natural with
      Import,
      Global => null,
-     Post   => Length'Result <= Capacity (Self);
-   --  The length of a map is always smaller than its capacity
+     Post   => Length'Result < Capacity (Self);
+   --  The length of a map is always strictly smaller than its capacity
 
    package Formal_Model is
 
@@ -166,55 +166,43 @@ package Formal_Hashed_Maps with SPARK_Mode is
 
    with
      Global => null,
-     Pre    => (Length (Self) < Capacity (Self) and then Key /= None)
-       or else M.Mem (Model (Self), Key),
-     Post   => Capacity (Self) = Capacity (Self)'Old
+     Pre    => Key /= None
+       and then (M.Mem (Model (Self), Key)
+                 or else Length (Self) < Count_Type'Last - 1),
+     Post   =>
 
-     --  If Key is already in Self, then Key now maps to Element in Model.
+   --  If Key is already in Self, then Key now maps to Element in Model.
 
-     and (if M.Mem (Model (Self)'Old, Key) then
-            Length (Self) = Length (Self)'Old
-            and M.Is_Replace (Model (Self)'Old, Key, Element, Model (Self))
+    (if M.Mem (Model (Self)'Old, Key)
+     then Capacity (Self) = Capacity (Self)'Old
+      and Length (Self) = Length (Self)'Old
+      and M.Is_Replace (Model (Self)'Old, Key, Element, Model (Self))
 
-            --  Keys and cursors are preserved
+      --  Keys and cursors are preserved
 
-            and Keys (Self) = Keys (Self)'Old
-            and Positions (Self) = Positions (Self)'Old
+      and Keys (Self) = Keys (Self)'Old
+      and Positions (Self) = Positions (Self)'Old
 
-          --  If Key was not in Self, then Element is a new element of its
-          --  model.
+     --  If Key was not in Self, then Element is a new element of its
+     --  model.
 
-          else Length (Self) = Length (Self)'Old + 1
-            and M.Is_Add (Model (Self)'Old, Key, Element, Model (Self))
-
-            --  Cursors that were valid in Self are still valid and continue
-            --  designating the same element.
-
-            and (for all Position in Positions (Self)'Old =>
-                 P.Mem (Positions (Self), Position) and
-                 K.Get (Keys (Self), P.Get (Positions (Self), Position)) =
-                   K.Get (Keys (Self)'Old,
-                          P.Get (Positions (Self)'Old, Position)))
-
-            --  Cursors that are valid in Self were already valid in Self
-            --  except for the newly inserted cursor.
-            --  Nothing is said about the order of keys in Self after the call.
-
-            and (for all Position in Positions (Self) =>
-                   P.Mem (Positions (Self)'Old, Position) or
-                     K.Get (Keys (Self),
-                            P.Get (Positions (Self), Position)) = Key));
+     else Capacity (Self) >= Capacity (Self)'Old
+      and Length (Self) = Length (Self)'Old + 1
+      and M.Is_Add (Model (Self)'Old, Key, Element, Model (Self)));
+   --  ??? Are cursors preserved ?
 
    procedure Resize
      (Self     : in out Map'Class;
-      New_Size : Hash_Type)
+      New_Size : Count_Type)
+   --  Change the capacity of the container.
+   --  It does not change the high level model of Self.
+   --  ??? Are cursors preserved ?
+
    with
      Global => null,
      Post   => Length (Self) = Length (Self)'Old
-     and then Model (Self) = Model (Self)'Old;
-   --  Change the capacity of the container.
-   --  It does not change the high level model of Self.
-   --  ??? what about the rest ? Are cursors / iteration order preserved ?
+     and Model (Self) = Model (Self)'Old
+     and Capacity (Self) >= New_Size;
 
    procedure Delete
      (Self : in out Map'Class;

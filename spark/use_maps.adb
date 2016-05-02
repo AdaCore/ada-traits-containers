@@ -20,7 +20,6 @@ package body Use_Maps with SPARK_Mode is
    begin
       Clear (R);
       while Has_Element (S, Cu) loop
-         pragma Loop_Invariant (Capacity (R) = Capacity (R)'Loop_Entry);
          pragma Loop_Invariant (Length (R) = Get (Positions (S), Cu) - 1);
          pragma Loop_Invariant
            (for all I in 1 .. Get (Positions (S), Cu) - 1 =>
@@ -45,7 +44,6 @@ package body Use_Maps with SPARK_Mode is
    begin
       Clear (R);
       while Has_Element (S, Cu) loop
-         pragma Loop_Invariant (Capacity (R) = Capacity (R)'Loop_Entry);
          pragma Loop_Invariant (Length (R) = Get (Positions (S), Cu) - 1);
          pragma Loop_Invariant
            (for all I in 1 .. Get (Positions (S), Cu) - 1 =>
@@ -120,7 +118,6 @@ package body Use_Maps with SPARK_Mode is
       Cu : Cursor := First (S2);
    begin
       while Has_Element (S2, Cu) loop
-         pragma Loop_Invariant (Capacity (S1) = Capacity (S1)'Loop_Entry);
          pragma Loop_Invariant
            (Length (S1) < Length (S1)'Loop_Entry + Get (Positions (S2), Cu));
          pragma Loop_Invariant (for all E of Model (S1) => P (E));
