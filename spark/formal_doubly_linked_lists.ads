@@ -2,6 +2,7 @@ pragma Ada_2012;
 with Conts.Lists.Indefinite_Unbounded_SPARK;
 with Functional_Sequences;
 with Functional_Maps;
+with Conts; use Conts;
 
 generic
    type Element_Type (<>) is private;
@@ -157,8 +158,10 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
                 /= Element));
 
    procedure Append (Self : in out List'Class; Element : Element_Type) with
-     Pre  => Length (Self) < Capacity (Self),
-     Post => Capacity (Self) = Capacity (Self)'Old
+     Pre  => Length (Self) < Count_Type'Last,
+     Post => (if Length (Self)'Old < Capacity (Self)'Old
+              then Capacity (Self) = Capacity (Self)'Old
+              else Capacity (Self) > Capacity (Self)'Old)
      and Length (Self) = Length (Self)'Old + 1
 
      --  Positions contains a new mapping from the last cursor of Self to
@@ -177,9 +180,11 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
    --  Insert Element before the valid cursor Position in L.
 
      Import,
-     Pre  => Length (Self) < Capacity (Self)
+     Pre  => Length (Self) < Count_Type'Last
      and then Has_Element (Self, Position),
-     Post => Capacity (Self) = Capacity (Self)'Old
+     Post => (if Length (Self)'Old < Capacity (Self)'Old
+              then Capacity (Self) = Capacity (Self)'Old
+              else Capacity (Self) > Capacity (Self)'Old)
      and Length (Self) = Length (Self)'Old + 1
 
      --  Every cursor previously valid in Self is still valid.

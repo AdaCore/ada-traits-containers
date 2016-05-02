@@ -1,6 +1,7 @@
 pragma Ada_2012;
 with Formal_Doubly_Linked_Lists;
 pragma Elaborate_All (Formal_Doubly_Linked_Lists);
+with Conts; use Conts;
 
 package Use_Lists with SPARK_Mode is
    package My_Lists is new
@@ -21,9 +22,7 @@ package Use_Lists with SPARK_Mode is
    --  to know that the cursors are preserved.
 
    procedure Incr_All (L1 : List; L2 : in out List) with
-     Pre  => Capacity (L2) >= Capacity (L1),
-     Post => Capacity (L2) = Capacity (L2)'Old
-     and Length (L2) = Length (L1)
+     Post => Length (L2) = Length (L1)
      and (for all N in 1 .. Length (L1) =>
               Is_Incr (Element (Model (L1), N),
                        Element (Model (L2), N)));
@@ -48,18 +47,16 @@ package Use_Lists with SPARK_Mode is
    --  they are inserted just before each duplicated element.
 
    procedure Double_Size (L : in out List) with
-     Pre  => Capacity (L) / 2 >= Length (L),
-     Post => Capacity (L) = Capacity (L)'Old
-     and Length (L) = 2 * Length (L)'Old
+     Pre  => Count_Type'Last / 2 >= Length (L),
+     Post => Length (L) = 2 * Length (L)'Old
      and (for all I in 1 .. Length (L)'Old =>
        Element (Model (L), I) = Element (Model (L)'Old, I)
        and Element (Model (L), I + Length (L)'Old) =
            Element (Model (L)'Old, I));
 
    procedure Double_Size_2 (L : in out List) with
-     Pre  => Capacity (L) / 2 >= Length (L),
-     Post => Capacity (L) = Capacity (L)'Old
-     and Length (L) = 2 * Length (L)'Old
+     Pre  => Count_Type'Last / 2 >= Length (L),
+     Post => Length (L) = 2 * Length (L)'Old
      and (for all I in 1 .. Length (L)'Old =>
        Element (Model (L), 2 * I - 1) = Element (Model (L)'Old, I)
        and Element (Model (L), 2 * I) =
@@ -84,7 +81,7 @@ package Use_Lists with SPARK_Mode is
    --  Insert_5 inserts 0 5 times just before Cu.
 
    procedure Insert_5 (L : in out List; Cu : Cursor) with
-     Pre  => Has_Element (L, Cu) and Capacity (L) - 5 >= Length (L),
+     Pre  => Has_Element (L, Cu) and Count_Type'Last - 5 >= Length (L),
      Post => Length (L) = Length (L)'Old + 5
      and (for all I in 1 .. Get (Positions (L)'Old, Cu) - 1 =>
         Element (Model (L), I) = Element (Model (L)'Old, I))

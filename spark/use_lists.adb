@@ -5,7 +5,6 @@ package body Use_Lists with SPARK_Mode is
    begin
       Clear (L2);
       while Has_Element (L1, Cu) loop
-         pragma Loop_Invariant (Capacity (L2) = Capacity (L2)'Loop_Entry);
          pragma Loop_Invariant
            (for all N in 1 .. Length (L2) =>
                 Is_Incr (Element (Model (L1), N),
@@ -70,7 +69,6 @@ package body Use_Lists with SPARK_Mode is
    begin
       for I in 1 .. Lgth loop
          pragma Loop_Invariant (Has_Element (L, Cu));
-         pragma Loop_Invariant (Capacity (L) = Capacity (L)'Loop_Entry);
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry + I - 1);
          pragma Loop_Invariant
            (for all I in 1 .. Length (L)'Loop_Entry =>
@@ -91,7 +89,6 @@ package body Use_Lists with SPARK_Mode is
       N  : Natural := 0 with Ghost;
    begin
       while Has_Element (L, Cu) loop
-         pragma Loop_Invariant (Capacity (L) = Capacity (L)'Loop_Entry);
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry + N);
          pragma Loop_Invariant
            (for all I in 1 .. N =>
