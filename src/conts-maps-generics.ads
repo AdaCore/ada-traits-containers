@@ -142,7 +142,8 @@ package Conts.Maps.Generics with SPARK_Mode is
          is (Has_Element (Self, Position)) with Inline;
       function Next_Primitive
         (Self : Base_Map; Position : Cursor) return Cursor
-         is (Next (Self, Position)) with Inline;
+      is (Next (Self, Position)) with Inline,
+      Pre'Class => Has_Element (Self, Position);
       --  These are only needed because the Iterable aspect expects a parameter
       --  of type Map instead of Map'Class. But then it means that the loop
       --  is doing a lot of dynamic dispatching, and is twice as slow as a loop

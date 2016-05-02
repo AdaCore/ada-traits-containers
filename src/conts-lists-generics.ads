@@ -92,13 +92,15 @@ package Conts.Lists.Generics with SPARK_Mode is
          is (First (Self)) with Inline;
       function Element_Primitive
         (Self : Base_List; Position : Cursor) return Constant_Returned_Type
-         is (Element (Self, Position)) with Inline;
+      is (Element (Self, Position)) with Inline,
+      Pre'Class => Has_Element (Self, Position);
       function Has_Element_Primitive
         (Self : Base_List; Position : Cursor) return Boolean
          is (Has_Element (Self, Position)) with Inline;
       function Next_Primitive
         (Self : Base_List; Position : Cursor) return Cursor
-         is (Next (Self, Position)) with Inline;
+      is (Next (Self, Position)) with Inline,
+      Pre'Class => Has_Element (Self, Position);
       --  These are only needed because the Iterable aspect expects a parameter
       --  of type List instead of List'Class. But then it means that the loop
       --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
@@ -196,7 +198,9 @@ package Conts.Lists.Generics with SPARK_Mode is
 
    function Constant_Reference
      (Self : List; Position : Cursor) return Constant_Returned_Type
-     is (Element (Self, Position)) with Inline;
+   is (Element (Self, Position))
+   with Inline,
+   Pre'Class => Has_Element (Self, Position);
 
    --------------------
    -- Cursors traits --
@@ -219,7 +223,9 @@ package Conts.Lists.Generics with SPARK_Mode is
 
    function As_Element
      (Self : Base_List'Class; Position : Cursor) return Element_Type
-     is (Storage.Elements.To_Element (Element (Self, Position)));
+   is (Storage.Elements.To_Element (Element (Self, Position)))
+   with
+   Pre => Has_Element (Self, Position);
 
    package Maps is
       package Element is new Conts.Properties.Read_Only_Maps
