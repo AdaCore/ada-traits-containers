@@ -51,11 +51,11 @@ package body Functional_Maps with SPARK_Mode => Off is
      (Mem (M, K)
       and then Mem (Result, K)
       and then Get (Result, K) = E
-      and then (for all KK in M => Mem (Result, KK)
+      and then (for all KK of M => Mem (Result, KK)
                 and then
                   (if K /= KK
                    then Get (Result, KK) = Get (M, KK)))
-      and then (for all K in Result => Mem (M, K)));
+      and then (for all K of Result => Mem (M, K)));
 
    function Replace (M : Map; K : Key_Type; E : Element_Type) return Map
    is
@@ -70,11 +70,11 @@ package body Functional_Maps with SPARK_Mode => Off is
    function Is_Add
      (M : Map; K : Key_Type; E : Element_Type; Result : Map) return Boolean
    is
-     (K /= No_Key and then not Mem (M, K)
+     (not Mem (M, K)
       and then Mem (Result, K) and then Get (Result, K) = E
-      and then (for all K in M => Mem (Result, K)
+      and then (for all K of M => Mem (Result, K)
                 and then Get (Result, K) = Get (M, K))
-      and then (for all KK in Result => KK = K or Mem (M, KK)));
+      and then (for all KK of Result => KK = K or Mem (M, KK)));
 
    function Add (M : Map; K : Key_Type; E : Element_Type) return Map
    is
@@ -87,10 +87,11 @@ package body Functional_Maps with SPARK_Mode => Off is
       end return;
    end Add;
 
-   function First_Key (M : Map) return Key_Type is
-     (if Is_Empty (M.Keys) then No_Key else Element (M.Keys, 1));
-   function Next_Key (M : Map; K : Key_Type) return Key_Type is
-     (if Find_Key (M, K) in 1 .. Natural (Length (M.Keys)) - 1
-      then Element (M.Keys, Find_Key (M, K) + 1)
-      else No_Key);
+   function Iter_First (M : Map) return Private_Key is (First (M.Keys));
+   function Iter_Has_Element (M : Map; K : Private_Key) return Boolean
+   is (Has_Element (M.Keys, K));
+   function Iter_Next (M : Map; K : Private_Key) return Private_Key
+   is (Next (M.Keys, K));
+   function Iter_Element (M : Map; K : Private_Key) return Key_Type
+   is (Element (M.Keys, K));
 end Functional_Maps;

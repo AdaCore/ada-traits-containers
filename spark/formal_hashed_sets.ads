@@ -5,9 +5,7 @@ with Functional_Sets;
 
 generic
    type Element_Type (<>) is private;
-   None : Element_Type;
-   --  Special element that cannot be contained in sets
-
+   with function "=" (Left, Right : Element_Type) return Boolean is <>;
 package Formal_Hashed_Sets with SPARK_Mode is
 
    package Element_Sets is
@@ -34,7 +32,11 @@ package Formal_Hashed_Sets with SPARK_Mode is
    No_Element : Cursor renames Element_Sets.No_Element;
 
    type Set is tagged limited private with
-     Default_Initial_Condition => Length (Set) = 0;
+     Default_Initial_Condition => Length (Set) = 0,
+     Iterable => (First       => First_Primitive,
+                  Next        => Next_Primitive,
+                  Has_Element => Has_Element_Primitive,
+                  Element     => Element_Primitive);
    --  Sets are empty when default initialized
 
    function Capacity (Self : Set'Class) return Natural with
@@ -53,19 +55,19 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
       package P is new Functional_Maps
         (Element_Type => Positive,
-         Key_Type     => Cursor,
-         No_Key       => No_Element);
+         Key_Type     => Cursor);
       package E is new Functional_Sequences
         (Index_Type   => Positive,
          Element_Type => Element_Type);
       package M is new Functional_Sets
-        (Element_Type => Element_Type,
-         No_Element   => None);
+        (Element_Type => Element_Type);
 
       function Model (Self : Set'Class) return M.Set with
         Import;
       --  The highlevel model of a set is a set of elements. Neither cursors
       --  nor order of elements are represented in this model.
+
+      pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
 
       function Elements (Self : Set'Class) return E.Sequence with
       --  The Elements sequence represents the underlying list structure of
@@ -74,14 +76,14 @@ package Formal_Hashed_Sets with SPARK_Mode is
         Import,
         Post => E.Length (Elements'Result) = Length (Self)
 
-        --  It only contains elements contained in Model.
+        --  It only contains elements contained of Model.
 
         and then (for all I in 1 .. Length (Self) =>
                       M.Mem (Model (Self), E.Get (Elements'Result, I)))
 
-        --  It contains all the elements contained in Model.
+        --  It contains all the elements contained of Model.
 
-        and then (for all Elt in Model (Self) =>
+        and then (for all Elt of Model (Self) =>
                       (for some I in 1 .. Length (Self) =>
                              E.Get (Elements'Result, I) = Elt))
 
@@ -98,11 +100,12 @@ package Formal_Hashed_Sets with SPARK_Mode is
       --  cursors and map them to their position in the container.
 
         Import,
-        Post =>
+        Post => not P.Mem (Positions'Result, No_Element)
 
-          --  Positions of cursors are smaller than the container's length.
+        --  Positions of cursors are smaller than the container's length.
 
-          (for all I in Positions'Result =>
+        and then
+          (for all I of Positions'Result =>
              P.Get (Positions'Result, I) in 1 .. Length (Self)
 
            --  No two cursors have the same position. Note that we do not state
@@ -110,7 +113,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
            --  rarely needed.
 
            and then
-             (for all J in Positions'Result =>
+             (for all J of Positions'Result =>
                 (if P.Get (Positions'Result, I) =
                      P.Get (Positions'Result, J)
                  then I = J)));
@@ -120,7 +123,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
         Global => null,
         Post   =>
           (for all I in 1 .. Length (Self) =>
-             (for some Position in Positions (Self) =>
+             (for some Position of Positions (Self) =>
                 E.Get (Elements (Self),  P.Get (Positions (Self), Position)) =
                 E.Get (Elements (Self), I)));
       --  Lift_Abstraction_Level is a ghost procedure that does nothing but
@@ -151,7 +154,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
      Import,
      Pre  => P.Mem (Positions (Self), Position),
 
-     --  Query Positions to get the position of Position in L and use it to
+     --  Query Positions to get the position of Position of L and use it to
      --  fetch the corresponding element in Elements.
 
      Post => Element'Result =
@@ -208,7 +211,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
    --  Insert an element Element in Self if Element is not already in present.
 
      Import,
-     Pre  => (Length (Self) < Capacity (Self) and then Element /= None)
+     Pre  => Length (Self) < Capacity (Self)
      or else M.Mem (Model (Self), Element),
      Post => Capacity (Self) = Capacity (Self)'Old
 
@@ -230,7 +233,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
             --  designating the same element.
 
             and
-            (for all Position in Positions (Self)'Old =>
+            (for all Position of Positions (Self)'Old =>
                  P.Mem (Positions (Self), Position) and
                E.Get (Elements (Self), P.Get (Positions (Self), Position)) =
                  E.Get (Elements (Self)'Old,
@@ -241,7 +244,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
             --  Nothing is said about the order of elements in Self after the
             --  call.
 
-            and (for all Position in Positions (Self) =>
+            and (for all Position of Positions (Self) =>
                    P.Mem (Positions (Self)'Old, Position) or
                      E.Get (Elements (Self),
                             P.Get (Positions (Self), Position)) = Element));
@@ -268,7 +271,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
             --  Cursors that are valid in Self were already valid and continue
             --  designating the same element.
 
-            and (for all Position in Positions (Self) =>
+            and (for all Position of Positions (Self) =>
                    P.Mem (Positions (Self)'Old, Position) and
                      E.Get (Elements (Self),
                             P.Get (Positions (Self), Position)) =
@@ -280,7 +283,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
             --  Nothing is said about the order of elements in Self after the
             --  call.
 
-            and (for all Position in Positions (Self)'Old =>
+            and (for all Position of Positions (Self)'Old =>
                    P.Mem (Positions (Self), Position) or
                      E.Get (Elements (Self)'Old,
                             P.Get (Positions (Self)'Old, Position)) =
@@ -309,7 +312,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
      --  designating the same element.
      --  Nothing is said about the order of elements in Self after the call.
 
-     and (for all Position in Positions (Self)'Old =>
+     and (for all Position of Positions (Self)'Old =>
               P.Mem (Positions (Self), Position)
           and E.Get (Elements (Self), P.Get (Positions (Self), Position)) =
             E.Get (Elements (Self)'Old,
@@ -336,7 +339,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
      --  designating the same element.
      --  Nothing is said about the order of elements in Self after the call.
 
-     and (for all Position in Positions (Self) =>
+     and (for all Position of Positions (Self) =>
               P.Mem (Positions (Self)'Old, Position)
           and E.Get (Elements (Self), P.Get (Positions (Self), Position)) =
             E.Get (Elements (Self)'Old,
@@ -344,10 +347,30 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
    procedure Clear (Self : in out Set'Class)
    with
-       Import,
-       Post => Capacity (Self) = Capacity (Self)'Old
+     Import,
+     Post => Capacity (Self) = Capacity (Self)'Old
      and then Length (Self) = 0
      and then M.Is_Empty (Model (Self));
+
+   function First_Primitive (Self : Set) return Cursor with Import;
+   function Element_Primitive
+     (Self : Set; Position : Cursor) return Element_Type
+   with
+     Import,
+     Pre'Class => Has_Element (Self, Position),
+     Post'Class => Has_Element (Self, Position)
+       and then Element_Primitive'Result = Element (Self, Position);
+   function Has_Element_Primitive
+     (Self : Set; Position : Cursor) return Boolean
+   with
+     Import,
+     Post'Class =>
+       Has_Element_Primitive'Result = Has_Element (Self, Position);
+   function Next_Primitive
+     (Self : Set; Position : Cursor) return Cursor
+   with
+     Import,
+     Pre'Class => Has_Element (Self, Position);
 
 private
    pragma SPARK_Mode (Off);

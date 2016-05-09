@@ -105,4 +105,16 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
 
    function Has_Element (Self : Map'Class; Position : Cursor) return Boolean is
         (Element_Maps.Impl.Has_Element (Self, Position));
+
+   function First_Primitive (Self : Map) return Cursor
+   is (Element_Maps.Impl.First (Self));
+   function Element_Primitive
+     (Self : Map; Position : Cursor) return Key_Type
+   is (Key (Self, Position));
+   function Has_Element_Primitive
+     (Self : Map; Position : Cursor) return Boolean
+   is (Element_Maps.Impl.Has_Element (Self, Position));
+   function Next_Primitive
+     (Self : Map; Position : Cursor) return Cursor
+   is (Element_Maps.Impl.Next (Self, Position));
 end Formal_Hashed_Maps;

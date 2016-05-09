@@ -144,4 +144,16 @@ package body Use_Vectors with SPARK_Mode is
       end loop;
    end Insert_5;
 
+   function P (E : Integer) return Boolean is
+   begin
+      return E >= 0;
+   end P;
+
+   procedure From_Higher_To_Lower (V : Vector) is null;
+
+   procedure From_Lower_To_Higher (V : Vector) is
+   begin
+      Formal_Model.Lift_Abstraction_Level (V);
+   end From_Lower_To_Higher;
+
 end Use_Vectors;

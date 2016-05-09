@@ -62,8 +62,7 @@ package Use_Vectors with SPARK_Mode is
 
    function My_Find (V : Vector; E : Integer) return Index_Type'Base with
      Contract_Cases =>
-       ((for all I in Index_Type'First .. Last (V) =>
-          Element (Model (V), I) /= E) =>
+       ((for all F of V => F /= E) =>
             My_Find'Result = Index_Type'First - 1,
         others => My_Find'Result in Index_Type'First .. Last (V)
         and then Element (Model (V), My_Find'Result) = E
@@ -98,4 +97,28 @@ package Use_Vectors with SPARK_Mode is
    package Enum_Vectors is new
      Formal_Vectors
        (Index_Type => My_Enum, Element_Type => Integer);
+
+   --  Test links between high level, position based model of a container and
+   --  lower level, cursor based model.
+
+   function P (E : Integer) return Boolean;
+   --  Any property P on an Integer E.
+
+   procedure From_Higher_To_Lower (V : Vector) with
+     Ghost,
+     Global => null,
+     Pre    => (for all E of V => P (E)),
+     Post   => (for all Cu of Valid_Cursors (V) =>
+                  P (Element (Model (V), To_Index (Cu))));
+   --  Test that the link can be done from a property on the elements of a
+   --  high level view of a container and its low level view.
+
+   procedure From_Lower_To_Higher (V : Vector) with
+     Ghost,
+     Global => null,
+     Pre    => (for all Cu of Valid_Cursors (V) =>
+                    P (Element (Model (V), To_Index (Cu)))),
+     Post   => (for all E of V => P (E));
+   --  Test that the link can be done from a property on the elements of a
+   --  low level view of a container and its high level view.
 end Use_Vectors;

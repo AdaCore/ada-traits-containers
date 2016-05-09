@@ -3,24 +3,19 @@ with Conts.Vectors.Indefinite_Unbounded;
 
 generic
    type Key_Type (<>) is private;
-   No_Key : Key_Type;
-   --  Special key which cannot be contained in any map. This is needed to
-   --  use the Iterable aspect without introducing indirections (which would
-   --  be bad for proof).
-   --  ??? Can we imagine a way to remove it ?
-
    type Element_Type (<>)  is private;
+   with function "=" (Left, Right : Key_Type) return Boolean is <>;
 package Functional_Maps with SPARK_Mode is
 
    type Map is private with
      Default_Initial_Condition => Is_Empty (Map),
-     Iterable                  => (First       => First_Key,
-                                   Next        => Next_Key,
-                                   Has_Element => Mem,
-                                   Element     => Get);
+     Iterable                  => (First       => Iter_First,
+                                   Next        => Iter_Next,
+                                   Has_Element => Iter_Has_Element,
+                                   Element     => Iter_Element);
    --  Maps are empty when default initialized.
-   --  For in quantification over maps iterates over keys.
-   --  For of quantification over maps iterates over elements.
+   --  For in quantification over maps should not be used.
+   --  For of quantification over maps iterates over keys.
 
    --  Maps are axiomatized using Mem and Get encoding respectively the
    --  presence of a key in a map and an accessor to elements associated to its
@@ -29,8 +24,7 @@ package Functional_Maps with SPARK_Mode is
    --  implementation.
 
    function Mem (M : Map; K : Key_Type) return Boolean with
-     Global => null,
-     Post   => (if K = No_Key then not Mem'Result);
+     Global => null;
    function Get (M : Map; K : Key_Type) return Element_Type with
      Global => null,
      Pre    => Mem (M, K);
@@ -40,7 +34,7 @@ package Functional_Maps with SPARK_Mode is
 
      Global => null,
      Post   => Inc'Result =
-       (for all K in M1 => Mem (M2, K)
+       (for all K of M1 => Mem (M2, K)
         and then Get (M2, K) = Get (M1, K));
 
    function "=" (M1, M2 : Map) return Boolean with
@@ -48,16 +42,16 @@ package Functional_Maps with SPARK_Mode is
 
      Global => null,
      Post   => "="'Result =
-       ((for all K in M1 => Mem (M2, K)
+       ((for all K of M1 => Mem (M2, K)
         and then Get (M2, K) = Get (M1, K))
-        and (for all K in M2 => Mem (M1, K)));
+        and (for all K of M2 => Mem (M1, K)));
 
    pragma Warnings (Off, "unused variable");
    function Is_Empty (M : Map) return Boolean with
    --  A map is empty if it contains no key.
 
      Global => null,
-     Post   => Is_Empty'Result = (for all K in M => False);
+     Post   => Is_Empty'Result = (for all K of M => False);
    pragma Warnings (On, "unused variable");
 
    function Is_Add
@@ -67,11 +61,11 @@ package Functional_Maps with SPARK_Mode is
    with
      Global => null,
      Post   => Is_Add'Result =
-         (K /= No_Key and then not Mem (M, K)
+         (not Mem (M, K)
           and then Mem (Result, K) and then Get (Result, K) = E
-          and then (for all K in M => Mem (Result, K)
+          and then (for all K of M => Mem (Result, K)
                     and then Get (Result, K) = Get (M, K))
-          and then (for all KK in Result => KK = K or Mem (M, KK)));
+          and then (for all KK of Result => KK = K or Mem (M, KK)));
 
    function Add (M : Map; K : Key_Type; E : Element_Type) return Map with
    --  Returns M augmented with the mapping K -> E.
@@ -80,7 +74,7 @@ package Functional_Maps with SPARK_Mode is
    --  proof.
 
      Global => null,
-     Pre    => K /= No_Key and then not Mem (M, K),
+     Pre    => not Mem (M, K),
      Post   => Is_Add (M, K, E, Add'Result);
 
    function Is_Replace
@@ -94,11 +88,11 @@ package Functional_Maps with SPARK_Mode is
          (Mem (M, K)
           and then Mem (Result, K)
           and then Get (Result, K) = E
-          and then (for all KK in M => Mem (Result, KK)
+          and then (for all KK of M => Mem (Result, KK)
                     and then
                       (if K /= KK
                          then Get (Result, KK) = Get (M, KK)))
-          and then (for all K in Result => Mem (M, K)));
+          and then (for all K of Result => Mem (M, K)));
 
    function Replace (M : Map; K : Key_Type; E : Element_Type) return Map with
    --  Returns M where the element associated to K has been replaced by E.
@@ -111,12 +105,21 @@ package Functional_Maps with SPARK_Mode is
      Post   => Is_Replace (M, K, E, Replace'Result);
 
    --  For quantification purpose
-   --  ??? Those are really inefficient. Do we want to do something about it ?
-   function First_Key (M : Map) return Key_Type with
+   --  Do not use them in practice
+   --  ??? Is there a way to prevent users from using those ?
+   type Private_Key is private;
+
+   function Iter_First (M : Map) return Private_Key with
      Global => null;
-   function Next_Key (M : Map; K : Key_Type) return Key_Type with
+   function Iter_Has_Element (M : Map; K : Private_Key) return Boolean with
+     Global => null;
+   function Iter_Next (M : Map; K : Private_Key) return Private_Key with
      Global => null,
-     Pre    => Mem (M, K);
+     Pre    => Iter_Has_Element (M, K);
+   function Iter_Element (M : Map; K : Private_Key) return Key_Type with
+     Global => null,
+     Pre    => Iter_Has_Element (M, K);
+   pragma Annotate (GNATprove, Iterable_For_Proof, "Contains", Mem);
 private
    pragma SPARK_Mode (Off);
 
@@ -142,4 +145,6 @@ private
       Keys     : Key_Lists.Vector;
       Elements : Element_Lists.Vector;
    end record;
+
+   type Private_Key is new Key_Lists.Cursor;
 end Functional_Maps;

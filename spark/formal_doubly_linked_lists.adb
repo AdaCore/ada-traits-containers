@@ -61,7 +61,22 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
       Element_Lists.Lists.Next (Self, Position);
    end Next;
 
+   function Next (Self : List'Class; Position : Cursor) return Cursor is
+     (Element_Lists.Lists.Next (Self, Position));
+
    function First (Self : List'Class) return Cursor is
       (Cursor (Element_Lists.Lists.First (Self)));
+
+   function First_Primitive (Self : List) return Cursor
+   is (Element_Lists.Lists.First (Self));
+   function Element_Primitive
+     (Self : List; Position : Cursor) return Element_Type
+   is (Element_Lists.Lists.Element (Self, Position));
+   function Has_Element_Primitive
+     (Self : List; Position : Cursor) return Boolean
+   is (Element_Lists.Lists.Has_Element (Self, Position));
+   function Next_Primitive
+     (Self : List; Position : Cursor) return Cursor
+   is (Element_Lists.Lists.Next (Self, Position));
 
 end Formal_Doubly_Linked_Lists;

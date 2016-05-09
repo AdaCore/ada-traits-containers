@@ -4,8 +4,7 @@ pragma Elaborate_All (Formal_Hashed_Sets);
 
 package Use_Sets with SPARK_Mode is
    package My_Sets is new Formal_Hashed_Sets
-     (Element_Type => Integer,
-      None         => Integer'First);
+     (Element_Type => Integer);
    use My_Sets;
    use type My_Sets.Cursor;
    use My_Sets.P;
@@ -30,9 +29,9 @@ package Use_Sets with SPARK_Mode is
    procedure Apply_F (S : My_Sets.Set; R : in out My_Sets.Set) with
      Pre  => Capacity (R) >= Length (S),
      Post => Capacity (R) = Capacity (R)'Old
-     and (for all E in Model (S) => Mem (Model (R), F (E)))
-     and (for all G in Model (R) =>
-              (for some E in Model (S) => G = F (E)));
+     and (for all E of S => Mem (Model (R), F (E)))
+     and (for all G of R =>
+              (for some E of Model (S) => G = F (E)));
 
    --  Checks wether two sets are disjoint. Specify it using either the
    --  intersection or a quantified expression.
@@ -43,7 +42,7 @@ package Use_Sets with SPARK_Mode is
 
    function Are_Disjoint_2 (S1, S2 : My_Sets.Set) return Boolean with
      Post => Are_Disjoint_2'Result =
-       (for all E in Model (S2) => not Mem (Model (S1), E));
+       (for all E of S2 => not Mem (Model (S1), E));
 
    --  Checks that the union of two sets for which P is true only contains
    --  elements for which P is true.
@@ -52,10 +51,10 @@ package Use_Sets with SPARK_Mode is
      (E >= 0);
 
    procedure Union_P (S1 : in out My_Sets.Set; S2 : My_Sets.Set) with
-     Pre  => (for all E in Model (S1) => P (E))
-     and (for all E in Model (S2) => P (E))
+     Pre  => (for all E of S1 => P (E))
+     and (for all E of S2 => P (E))
      and Capacity (S1) - Length (S1) >= Length (S2),
-     Post => (for all E in Model (S1) => P (E));
+     Post => (for all E of S1 => P (E));
 
    --  Move the content of a set into another set. The first version excludes
    --  already included element from the first set during the iteration
@@ -76,54 +75,68 @@ package Use_Sets with SPARK_Mode is
      Post => Length (S) <= Length (S)'Old + 5
      and Inc (Model (S)'Old, Model (S))
      and (for all E in 1 .. 5 => Mem (Model (S), E))
-     and (for all E in Model (S) => Mem (Model (S)'Old, E) or E in 1 .. 5);
+     and (for all E of S => Mem (Model (S)'Old, E) or E in 1 .. 5);
 
    --  Test links between high-level model, lower-level position based model
    --  and lowest-level, cursor based model of a set.
 
    function Q (E : Integer) return Boolean;
+   --  Any property Q on an Integer E.
 
    procedure From_Elements_To_Model (S : My_Sets.Set) with
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
                     Q (Get (Elements (S), I))),
-     Post   => (for all E in Model (S) => Q (E));
+     Post   => (for all E of S => Q (E));
+   --  Test that the link can be done from a property on the elements of a
+   --  low level, position based view of a container and its high level view.
 
    procedure From_Model_To_Elements (S : My_Sets.Set) with
      Ghost,
      Global => null,
-     Pre    => (for all E in Model (S) => Q (E)),
+     Pre    => (for all E of S => Q (E)),
      Post   => (for all I in 1 .. Length (S) =>
                     Q (Get (Elements (S), I)));
+   --  Test that the link can be done from a property on the elements of a
+   --  high level view of a container and its lower level, position based view.
 
    procedure From_Elements_To_Cursors (S : My_Sets.Set) with
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
                     Q (Get (Elements (S), I))),
-     Post   => (for all Cu in Positions (S) =>
+     Post   => (for all Cu of Positions (S) =>
                     Q (Get (Elements (S), Get (Positions (S), Cu))));
+   --  Test that the link can be done from a property on the elements of a
+   --  position based view of a container and its lowest level, cursor aware
+   --  view.
 
    procedure From_Cursors_To_Elements (S : My_Sets.Set) with
      Ghost,
      Global => null,
-     Pre    => (for all Cu in Positions (S) =>
+     Pre    => (for all Cu of Positions (S) =>
                     Q (Get (Elements (S), Get (Positions (S), Cu)))),
      Post   => (for all I in 1 .. Length (S) =>
                     Q (Get (Elements (S), I)));
+   --  Test that the link can be done from a property on the elements of a
+   --  cursor aware view of a container and its position based view.
 
    procedure From_Model_To_Cursors (S : My_Sets.Set) with
      Ghost,
      Global => null,
-     Pre    => (for all E in Model (S) => Q (E)),
-     Post   => (for all Cu in Positions (S) =>
+     Pre    => (for all E of S => Q (E)),
+     Post   => (for all Cu of Positions (S) =>
                     Q (Get (Elements (S), Get (Positions (S), Cu))));
+   --  Test that the link can be done from a property on the elements of a
+   --  high level view of a container and its lowest level, cursor aware view.
 
    procedure From_Cursors_To_Model (S : My_Sets.Set) with
      Ghost,
      Global => null,
-     Pre    => (for all Cu in Positions (S) =>
+     Pre    => (for all Cu of Positions (S) =>
                     Q (Get (Elements (S), Get (Positions (S), Cu)))),
-     Post   => (for all E in Model (S) => Q (E));
+     Post   => (for all E of S => Q (E));
+   --  Test that the link can be done from a property on the elements of a
+   --  low level, cursor aware view of a container and its high level view.
 end Use_Sets;

@@ -26,7 +26,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
            (for all I in 1 .. Get (Positions (S), Cu) - 1 =>
               Mem (Model (R), F (Get (Elements (S), I))));
          pragma Loop_Invariant
-           (for all G in Model (R) =>
+           (for all G of Model (R) =>
               (for some I in 1 .. Get (Positions (S), Cu) - 1 =>
                    G = F (Get (Elements (S), I))));
          Include (R, F (Element (S, Cu)));
@@ -122,7 +122,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
            (for all I in 1 .. Length (S2) =>
                 Mem (Model (S2), Get (Elements (S1), I)));
          pragma Loop_Invariant
-           (for all E in Model (S2) =>
+           (for all E of Model (S2) =>
                 (for some I in 1 .. Length (S2) =>
                        Get (Elements (S1), I) = E));
          Include (S2, Element (S1, Cu));
@@ -178,5 +178,28 @@ package body Use_Ordered_Sets with SPARK_Mode is
       Include (S, 3);
       Include (S, 4);
    end Insert_4;
+
+   function Q (E : Integer) return Boolean is
+   begin
+      return E >= 0;
+   end Q;
+
+   procedure From_Elements_To_Model (S : My_Sets.Set) is null;
+
+   procedure From_Model_To_Elements (S : My_Sets.Set) is null;
+
+   procedure From_Elements_To_Cursors (S : My_Sets.Set) is null;
+
+   procedure From_Cursors_To_Elements (S : My_Sets.Set) is
+   begin
+      Formal_Model.Lift_Abstraction_Level (S);
+   end From_Cursors_To_Elements;
+
+   procedure From_Model_To_Cursors (S : My_Sets.Set) is null;
+
+   procedure From_Cursors_To_Model (S : My_Sets.Set)  is
+   begin
+      Formal_Model.Lift_Abstraction_Level (S);
+   end From_Cursors_To_Model;
 
 end Use_Ordered_Sets;

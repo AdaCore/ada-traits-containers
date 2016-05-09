@@ -1,7 +1,7 @@
 pragma Ada_2012;
 package body Functional_Sequences with SPARK_Mode => Off is
    use Element_Lists.Vectors;
-   function Get (S : Sequence; N : Index_Type) return Element_Type is
+   function Get (S : Sequence; N : Extended_Index) return Element_Type is
      (Element (S, N));
    function Length (S : Sequence) return Natural is
      (Element_Lists.Vectors.Length (S));
@@ -63,4 +63,11 @@ package body Functional_Sequences with SPARK_Mode => Off is
          Append (SS, E);
       end return;
    end Add;
+
+   function Iter_First (S : Sequence) return Extended_Index
+   is (Index_Type'First);
+   function Iter_Next (S : Sequence; I : Extended_Index) return Extended_Index
+   is
+     (if I = Extended_Index'Last then Extended_Index'First
+      else Extended_Index'Succ (I));
 end Functional_Sequences;

@@ -55,7 +55,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
          Element : Storage.Elements.Element_Type);
       function Length (Self : Base_Vector'Class) return Count_Type
         with Inline => True, Global => null;
-      procedure Clear (Self : in out Base_Vector'Class);
+      procedure Clear (Self : in out Base_Vector'Class) with Global => null;
       procedure Append
         (Self    : in out Base_Vector'Class;
          Element : Element_Type;

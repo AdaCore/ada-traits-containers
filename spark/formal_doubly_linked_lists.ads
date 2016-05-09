@@ -21,7 +21,11 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
    No_Element : Cursor renames Element_Lists.Lists.No_Element;
 
    type List is tagged limited private with
-     Default_Initial_Condition => Length (List) = 0;
+     Default_Initial_Condition => Length (List) = 0,
+     Iterable => (First       => First_Primitive,
+                  Next        => Next_Primitive,
+                  Has_Element => Has_Element_Primitive,
+                  Element     => Element_Primitive);
    --  Lists are empty when default initialized
 
    function Capacity (Self : List'Class) return Natural;
@@ -38,8 +42,7 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
 
       package P is new Functional_Maps
         (Element_Type => Positive,
-         Key_Type     => Cursor,
-         No_Key       => No_Element);
+         Key_Type     => Cursor);
       package M is new Functional_Sequences
         (Index_Type   => Positive,
          Element_Type => Element_Type);
@@ -49,23 +52,26 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
       --  The highlevel model of a list is a sequence of elements. Cursors are
       --  not represented in this model.
 
+      pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
+
       function Positions (Self : List'Class) return P.Map with
       --  The Positions map is used to model cursors. It only contains valid
       --  cursors and map them to their position in the container.
 
-        Post =>
+        Post => not P.Mem (Positions'Result, No_Element)
 
           --  Positions of cursors are smaller than the container's length.
 
-          (for all I in Positions'Result =>
-             P.Get (Positions'Result, I) in 1 .. Length (Self)
+          and then
+            (for all I of Positions'Result =>
+               P.Get (Positions'Result, I) in 1 .. Length (Self)
 
            --  No two cursors have the same position. Note that we do not state
            --  that there is a cursor in the map for each position, as it is
            --  rarely needed.
 
            and then
-             (for all J in Positions'Result =>
+             (for all J of Positions'Result =>
                 (if P.Get (Positions'Result, I) =
                      P.Get (Positions'Result, J)
                        then I = J)));
@@ -74,8 +80,8 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
         Global => null,
         Post   =>
           (for all I in 1 .. Length (Self) =>
-             (for some Cu in Positions (Self) =>
-                  M.Get (Model (Self), P.Get (Positions (Self), Cu)) =
+             (for some Position of Positions (Self) =>
+                  M.Get (Model (Self), P.Get (Positions (Self), Position)) =
                 M.Get (Model (Self), I)));
       --  Lift_Abstraction_Level is a ghost procedure that does nothing but
       --  assume that we can access to the same elements by iterating over
@@ -125,6 +131,14 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
               else P.Mem (Positions (Self), Position)
                 and then P.Get (Positions (Self), Position) =
                   P.Get (Positions (Self), Position'Old) + 1);
+
+   function Next (Self : List'Class; Position : Cursor) return Cursor with
+     Pre  => P.Mem (Positions (Self), Position),
+     Post => (if P.Get (Positions (Self), Position) = Length (Self)
+              then Next'Result = No_Element
+              else P.Mem (Positions (Self), Next'Result)
+                and then P.Get (Positions (Self), Next'Result) =
+                  P.Get (Positions (Self), Position) + 1);
 
    function Last (Self : List'Class) return Cursor with
      Import,
@@ -189,7 +203,7 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
 
      --  Every cursor previously valid in Self is still valid.
 
-     and (for all D in Positions (Self)'Old =>
+     and (for all D of Positions (Self)'Old =>
               P.Mem (Positions (Self), D) and
 
             --  If it was located before Position in Self its position is
@@ -208,7 +222,7 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
      --  Every cursor valid in Self was previously valid except for the newly
      --  inserted cursor.
 
-     and (for all D in Positions (Self) =>
+     and (for all D of Positions (Self) =>
               P.Mem (Positions (Self)'Old, D) or
             P.Get (Positions (Self), D) =
               P.Get (Positions (Self)'Old, Position))
@@ -253,6 +267,25 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
    with
        Post => Capacity (Self) = Capacity (Self)'Old
      and then Length (Self) = 0;
+
+   function First_Primitive (Self : List) return Cursor;
+   function Element_Primitive
+     (Self : List; Position : Cursor) return Element_Type
+   with
+     Inline,
+     Pre'Class => P.Mem (Positions (Self), Position),
+     Post'Class => P.Mem (Positions (Self), Position)
+           and then Element_Primitive'Result =
+             Element (Model (Self), P.Get (Positions (Self), Position));
+   function Has_Element_Primitive
+     (Self : List; Position : Cursor) return Boolean
+   with Post'Class =>
+       Has_Element_Primitive'Result = P.Mem (Positions (Self), Position);
+   function Next_Primitive
+     (Self : List; Position : Cursor) return Cursor
+   with
+     Inline,
+     Pre'Class => P.Mem (Positions (Self), Position);
 
 private
    pragma SPARK_Mode (Off);

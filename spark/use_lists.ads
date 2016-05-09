@@ -97,20 +97,23 @@ package Use_Lists with SPARK_Mode is
    --  lower level, cursor based model.
 
    function P (E : Integer) return Boolean;
+   --  Any property P on an Integer E.
 
    procedure From_Higher_To_Lower (L : List) with
      Ghost,
      Global => null,
-     Pre    => (for all I in 1 .. Length (L) =>
-                    P (Element (Model (L), I))),
-     Post   => (for all Cu in Positions (L) =>
-                    P (Element (Model (L), Get (Positions (L), Cu))));
+     Pre    => (for all E of L => P (E)),
+     Post   => (for all Cu of Positions (L) =>
+                  P (Element (Model (L), Get (Positions (L), Cu))));
+   --  Test that the link can be done from a property on the elements of a
+   --  high level view of a container and its low level view.
 
    procedure From_Lower_To_Higher (L : List) with
      Ghost,
      Global => null,
-     Pre    => (for all Cu in Positions (L) =>
+     Pre    => (for all Cu of Positions (L) =>
                     P (Element (Model (L), Get (Positions (L), Cu)))),
-     Post   => (for all I in 1 .. Length (L) =>
-                    P (Element (Model (L), I)));
+     Post   => (for all E of L => P (E));
+   --  Test that the link can be done from a property on the elements of a
+   --  low level view of a container and its high level view.
 end Use_Lists;

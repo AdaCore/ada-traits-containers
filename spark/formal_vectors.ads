@@ -31,7 +31,11 @@ package Formal_Vectors with SPARK_Mode is
    No_Element : Cursor renames Element_Vectors.Vectors.No_Element;
 
    type Vector is tagged limited private with
-     Default_Initial_Condition => Length (Vector) = 0;
+     Default_Initial_Condition => Length (Vector) = 0,
+     Iterable => (First       => First_Primitive,
+                  Next        => Next_Primitive,
+                  Has_Element => Has_Element_Primitive,
+                  Element     => Element_Primitive);
    --  Vectors are empty when default initialized
 
    Max_Capacity : constant Count_Type :=
@@ -72,8 +76,7 @@ package Formal_Vectors with SPARK_Mode is
       --  Ghost (see OA30-006).
 
       package V is new Functional_Sets
-        (Element_Type => Cursor,
-         No_Element   => No_Element);
+        (Element_Type => Cursor);
       package M is new Functional_Sequences
         (Index_Type   => Index_Type,
          Element_Type => Element_Type);
@@ -84,24 +87,41 @@ package Formal_Vectors with SPARK_Mode is
       --  The highlevel model of a vector is a sequence of elements indexed by
       --  Index_Type. Cursors are not represented in this model.
 
+      pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
+
       function Valid_Cursors (Self : Vector'Class) return V.Set with
       --  Valid_Cursors is the set of cursors that are valid in Self.
       --  No need to store their position in Self as it can be retrieved with
       --  To_Index.
 
         Global => null,
-        Post   =>
+        Post   => not V.Mem (Valid_Cursors'Result, No_Element)
 
-          --  Positions of cursors are smaller than the container's length.
+        --  Positions of cursors are smaller than the container's length.
 
-          (for all I in Valid_Cursors'Result =>
+        and then
+          (for all I of Valid_Cursors'Result =>
              To_Index (I) in Index_Type'First .. Last (Self)
 
            --  There is no more than one cursor per position in the container.
 
            and then
-             (for all J in Valid_Cursors'Result =>
+             (for all J of Valid_Cursors'Result =>
                   (if To_Index (I) = To_Index (J) then I = J)));
+
+      procedure Lift_Abstraction_Level (Self : Vector'Class) with
+        Global => null,
+        Post   =>
+          (for all I in Index_Type'First .. Last (Self) =>
+             (for some Position of Valid_Cursors (Self) =>
+                  M.Get (Model (Self), To_Index (Position)) =
+                M.Get (Model (Self), I)));
+      --  Lift_Abstraction_Level is a ghost procedure that does nothing but
+      --  assume that we can access to the same elements by iterating over
+      --  positions or cursors.
+      --  This information is not generally useful except when switching from
+      --  a lowlevel, cursor aware view of a container, to a highlevel position
+      --  based view.
    end Formal_Model;
 
    package M renames Formal_Model.M;
@@ -342,6 +362,24 @@ package Formal_Vectors with SPARK_Mode is
         then To_Index (Position) = Index_Type'Succ (To_Index (Position)'Old)
         and V.Mem (Valid_Cursors (Self), Position)
         else Position = No_Element);
+
+   function First_Primitive (Self : Vector) return Cursor;
+   function Element_Primitive
+     (Self : Vector; Position : Cursor) return Element_Type
+   with
+     Inline,
+     Pre'Class => Has_Element (Self, Position),
+     Post'Class => Has_Element (Self, Position)
+       and then Element_Primitive'Result = Element (Self, Position);
+   function Has_Element_Primitive
+     (Self : Vector; Position : Cursor) return Boolean
+   with Post'Class =>
+       Has_Element_Primitive'Result = Has_Element (Self, Position);
+   function Next_Primitive
+     (Self : Vector; Position : Cursor) return Cursor
+   with
+     Inline,
+     Pre'Class => Has_Element (Self, Position);
 
 private
    pragma SPARK_Mode (Off);

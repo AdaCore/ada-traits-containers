@@ -9,9 +9,6 @@ generic
    type Key_Type (<>) is private;
    with function Hash (Key : Key_Type) return Hash_Type;
    with function "=" (Left, Right : Key_Type) return Boolean is <>;
-   None : Key_Type;
-   --  Special key that cannot be contained in sets
-
 package Formal_Hashed_Maps with SPARK_Mode is
 
    package Element_Maps is new Conts.Maps.Indef_Indef_Unbounded_SPARK
@@ -31,7 +28,11 @@ package Formal_Hashed_Maps with SPARK_Mode is
    No_Element : Cursor renames Element_Maps.Impl.No_Element;
 
    type Map is tagged limited private with
-     Default_Initial_Condition => Length (Map) = 0;
+     Default_Initial_Condition => Length (Map) = 0,
+     Iterable => (First       => First_Primitive,
+                  Next        => Next_Primitive,
+                  Has_Element => Has_Element_Primitive,
+                  Element     => Element_Primitive);
    --  Maps are empty when default initialized
 
    subtype Pair_Type is Element_Maps.Pair_Type;
@@ -58,20 +59,20 @@ package Formal_Hashed_Maps with SPARK_Mode is
 
       package P is new Functional_Maps
         (Element_Type => Positive,
-         Key_Type     => Cursor,
-         No_Key       => No_Element);
+         Key_Type     => Cursor);
       package K is new Functional_Sequences
         (Element_Type => Key_Type,
          Index_Type   => Positive);
       package M is new Functional_Maps
         (Element_Type => Element_Type,
-         Key_Type     => Key_Type,
-         No_Key       => None);
+         Key_Type     => Key_Type);
 
       function Model (Self : Map'Class) return M.Map with
         Global => null;
       --  The highlevel model of a map is a map from keys to elements. Neither
       --  cursors nor order of elements are represented in this model.
+
+      pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
 
       function Keys (Self : Map'Class) return K.Sequence with
       --  The Keys sequence represents the underlying list structure of maps
@@ -87,7 +88,7 @@ package Formal_Hashed_Maps with SPARK_Mode is
 
         --  It contains all the keys contained in Model.
 
-        and then (for all Key in Model (Self) =>
+        and then (for all Key of Model (Self) =>
                       (for some I in 1 .. Length (Self) =>
                              K.Get (Keys'Result, I) = Key))
 
@@ -104,11 +105,12 @@ package Formal_Hashed_Maps with SPARK_Mode is
       --  cursors and map them to their position in the container.
 
         Global => null,
-        Post   =>
+        Post   => not P.Mem (Positions'Result, No_Element)
 
-          --  Positions of cursors are smaller than the container's length.
+        --  Positions of cursors are smaller than the container's length.
 
-          (for all I in Positions'Result =>
+        and then
+          (for all I of Positions'Result =>
              P.Get (Positions'Result, I) in 1 .. Length (Self)
 
            --  No two cursors have the same position. Note that we do not state
@@ -116,16 +118,16 @@ package Formal_Hashed_Maps with SPARK_Mode is
            --  rarely needed.
 
            and then
-             (for all J in Positions'Result =>
+             (for all J of Positions'Result =>
                 (if P.Get (Positions'Result, I) =
                      P.Get (Positions'Result, J)
-                 then I = J)));
+                     then I = J)));
 
       procedure Lift_Abstraction_Level (Self : Map'Class) with
         Global => null,
         Post   =>
           (for all I in 1 .. Length (Self) =>
-             (for some Cu in Positions (Self) =>
+             (for some Cu of Positions (Self) =>
                   K.Get (Keys (Self),  P.Get (Positions (Self), Cu)) =
                 K.Get (Keys (Self), I)));
       --  Lift_Abstraction_Level is a ghost procedure that does nothing but
@@ -166,9 +168,8 @@ package Formal_Hashed_Maps with SPARK_Mode is
 
    with
      Global => null,
-     Pre    => Key /= None
-       and then (M.Mem (Model (Self), Key)
-                 or else Length (Self) < Count_Type'Last - 1),
+     Pre    => M.Mem (Model (Self), Key)
+       or else Length (Self) < Count_Type'Last - 1,
      Post   =>
 
    --  If Key is already in Self, then Key now maps to Element in Model.
@@ -226,7 +227,7 @@ package Formal_Hashed_Maps with SPARK_Mode is
             --  Cursors that are valid in Self were already valid and
             --  designating the same element.
 
-            and (for all Position in Positions (Self) =>
+            and (for all Position of Positions (Self) =>
                  P.Mem (Positions (Self)'Old, Position) and
                  K.Get (Keys (Self), P.Get (Positions (Self), Position)) =
                    K.Get (Keys (Self)'Old,
@@ -236,7 +237,7 @@ package Formal_Hashed_Maps with SPARK_Mode is
             --  except for the newly deleted cursor.
             --  Nothing is said about the order of keys in Self after the call.
 
-            and (for all Position in Positions (Self)'Old =>
+            and (for all Position of Positions (Self)'Old =>
                    P.Mem (Positions (Self), Position) or
                      K.Get (Keys (Self)'Old,
                             P.Get (Positions (Self)'Old, Position)) = Key)
@@ -339,6 +340,24 @@ package Formal_Hashed_Maps with SPARK_Mode is
    with
      Global => null,
      Post   => Has_Element'Result = P.Mem (Positions (Self), Position);
+
+   function First_Primitive (Self : Map) return Cursor;
+   function Element_Primitive
+     (Self : Map; Position : Cursor) return Key_Type
+   with
+     Inline,
+     Pre'Class => Has_Element (Self, Position),
+     Post'Class => Has_Element (Self, Position)
+       and then Element_Primitive'Result = Key (Self, Position);
+   function Has_Element_Primitive
+     (Self : Map; Position : Cursor) return Boolean
+   with Post'Class =>
+       Has_Element_Primitive'Result = Has_Element (Self, Position);
+   function Next_Primitive
+     (Self : Map; Position : Cursor) return Cursor
+   with
+     Inline,
+     Pre'Class => Has_Element (Self, Position);
 
 private
    pragma SPARK_Mode (Off);

@@ -32,6 +32,8 @@ package body Formal_Vectors with SPARK_Mode => Off is
          end loop;
          return R;
       end Model;
+
+      procedure Lift_Abstraction_Level (Self : Vector'Class) is null;
    end Formal_Model;
 
    procedure Reserve_Capacity
@@ -150,5 +152,17 @@ package body Formal_Vectors with SPARK_Mode => Off is
    begin
       Element_Vectors.Vectors.Next (Self, Position);
    end Next;
+
+   function First_Primitive (Self : Vector) return Cursor
+   is (Element_Vectors.Vectors.First (Self));
+   function Element_Primitive
+     (Self : Vector; Position : Cursor) return Element_Type
+   is (Element_Vectors.Vectors.Element (Self, Position));
+   function Has_Element_Primitive
+     (Self : Vector; Position : Cursor) return Boolean
+   is (Element_Vectors.Vectors.Has_Element (Self, Position));
+   function Next_Primitive
+     (Self : Vector; Position : Cursor) return Cursor
+   is (Element_Vectors.Vectors.Next (Self, Position));
 
 end Formal_Vectors;
