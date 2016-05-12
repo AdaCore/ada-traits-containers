@@ -1,8 +1,7 @@
 pragma Ada_2012;
 package body Functional_Sequences with SPARK_Mode => Off is
-   use Element_Lists.Vectors;
    function Get (S : Sequence; N : Extended_Index) return Element_Type is
-     (Element (S, N));
+     (Element_Lists.Vectors.Element (S, N));
    function Length (S : Sequence) return Natural is
      (Element_Lists.Vectors.Length (S));
 
@@ -22,8 +21,8 @@ package body Functional_Sequences with SPARK_Mode => Off is
              (Index_Type'Val
                   ((Index_Type'Pos (Index_Type'First) - 1) +
                      Element_Lists.Vectors.Length (S)))
-      and then Length (Element_Lists.Vector (Result)) =
-        Length (Element_Lists.Vector (S))
+      and then Element_Lists.Vectors.Length (Result) =
+        Element_Lists.Vectors.Length (S)
       and then Get (Result, N) = E
       and then
         (for all M in  Index_Type'First ..
@@ -37,15 +36,15 @@ package body Functional_Sequences with SPARK_Mode => Off is
    is
    begin
       return SS : Sequence do
-         Assign (SS, S);
-         Replace_Element (SS, N, E);
+         Element_Lists.Vectors.Assign (SS, S);
+         Element_Lists.Vectors.Replace_Element (SS, N, E);
       end return;
    end Replace;
 
    function Is_Add
      (S : Sequence; E : Element_Type; Result : Sequence) return Boolean is
-     (Length (Element_Lists.Vector (Result)) =
-        Length (Element_Lists.Vector (S)) + 1
+     (Element_Lists.Vectors.Length (Result) =
+        Element_Lists.Vectors.Length (S) + 1
       and then Get (Result, Index_Type'Val
                     ((Index_Type'Pos (Index_Type'First) - 1) +
                        Element_Lists.Vectors.Length (Result))) = E
@@ -59,8 +58,8 @@ package body Functional_Sequences with SPARK_Mode => Off is
    function Add (S : Sequence; E : Element_Type) return Sequence is
    begin
       return SS : Sequence do
-         Assign (SS, S);
-         Append (SS, E);
+         Element_Lists.Vectors.Assign (SS, S);
+         Element_Lists.Vectors.Append (SS, E);
       end return;
    end Add;
 
@@ -70,4 +69,10 @@ package body Functional_Sequences with SPARK_Mode => Off is
    is
      (if I = Extended_Index'Last then Extended_Index'First
       else Extended_Index'Succ (I));
+   function Iter_Has_Element (S : Sequence; I : Extended_Index) return Boolean
+   is
+     (I in Index_Type'First ..
+        (Index_Type'Val
+             ((Index_Type'Pos (Index_Type'First) - 1) +
+                  Element_Lists.Vectors.Length (S))));
 end Functional_Sequences;

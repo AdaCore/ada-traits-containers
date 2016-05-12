@@ -10,7 +10,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
          if Element (S, Cu) = E then
             return Cu;
          end if;
-         Next (S, Cu);
+         Cu := Next (S, Cu);
       end loop;
       return No_Element;
    end My_Find;
@@ -20,17 +20,16 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       Clear (R);
       while Has_Element (S, Cu) loop
-         pragma Loop_Invariant (Capacity (R) = Capacity (R)'Loop_Entry);
          pragma Loop_Invariant (Length (R) <= Get (Positions (S), Cu) - 1);
          pragma Loop_Invariant
            (for all I in 1 .. Get (Positions (S), Cu) - 1 =>
-              Mem (Model (R), F (Get (Elements (S), I))));
+              Contains (R, F (Get (Elements (S), I))));
          pragma Loop_Invariant
            (for all G of Model (R) =>
               (for some I in 1 .. Get (Positions (S), Cu) - 1 =>
                    G = F (Get (Elements (S), I))));
          Include (R, F (Element (S, Cu)));
-         Next (S, Cu);
+         Cu := Next (S, Cu);
       end loop;
    end Apply_F;
 
@@ -40,11 +39,11 @@ package body Use_Ordered_Sets with SPARK_Mode is
       while Has_Element (S1, Cu) loop
          pragma Loop_Invariant
            (for all I in 1 .. Get (Positions (S1), Cu) - 1 =>
-              not Mem (Model (S2), Get (Elements (S1), I)));
+              not Contains (S2, Get (Elements (S1), I)));
          if Contains (S2, Element (S1, Cu)) then
             return False;
          end if;
-         Next (S1, Cu);
+         Cu := Next (S1, Cu);
       end loop;
       return True;
    end Are_Disjoint;
@@ -59,7 +58,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
          if Contains (S2, Element (S1, Cu)) then
             return False;
          end if;
-         Next (S1, Cu);
+         Cu := Next (S1, Cu);
       end loop;
       return True;
    end Are_Disjoint_2;
@@ -75,7 +74,6 @@ package body Use_Ordered_Sets with SPARK_Mode is
       Clear (S2);
       while Has_Element (S1, Cu) loop
          pragma Loop_Invariant (Capacity (S1) = Capacity (S1)'Loop_Entry);
-         pragma Loop_Invariant (Capacity (S2) = Capacity (S2)'Loop_Entry);
          pragma Loop_Invariant
            (Length (S1) = Length (S1)'Loop_Entry - Length (S2));
          pragma Loop_Invariant
@@ -94,7 +92,6 @@ package body Use_Ordered_Sets with SPARK_Mode is
       Clear (S2);
       while Has_Element (S1, Cu) loop
          pragma Loop_Invariant (Capacity (S1) = Capacity (S1)'Loop_Entry);
-         pragma Loop_Invariant (Capacity (S2) = Capacity (S2)'Loop_Entry);
          pragma Loop_Invariant (Get (Positions (S1), Cu) = 1);
          pragma Loop_Invariant
            (Length (S1) = Length (S1)'Loop_Entry - Length (S2));
@@ -116,7 +113,6 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       Clear (S2);
       while Has_Element (S1, Cu) loop
-         pragma Loop_Invariant (Capacity (S2) = Capacity (S2)'Loop_Entry);
          pragma Loop_Invariant (Get (Positions (S1), Cu) = Length (S2) + 1);
          pragma Loop_Invariant
            (for all I in 1 .. Length (S2) =>
@@ -126,7 +122,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
                 (for some I in 1 .. Length (S2) =>
                        Get (Elements (S1), I) = E));
          Include (S2, Element (S1, Cu));
-         Next (S1, Cu);
+         Cu := Next (S1, Cu);
       end loop;
       Clear (S1);
    end Move_3;
@@ -136,13 +132,12 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       Clear (S2);
       while Has_Element (S1, Cu) loop
-         pragma Loop_Invariant (Capacity (S2) = Capacity (S2)'Loop_Entry);
          pragma Loop_Invariant (Get (Positions (S1), Cu) = Length (S2) + 1);
          pragma Loop_Invariant
            (for all I in 1 .. Length (S2) =>
                 Get (Elements (S2), I) = Get (Elements (S1), I));
          Include (S2, Element (S1, Cu));
-         Next (S1, Cu);
+         Cu := Next (S1, Cu);
       end loop;
       Clear (S1);
    end Move_4;
@@ -152,7 +147,6 @@ package body Use_Ordered_Sets with SPARK_Mode is
       N  : Natural := 0 with Ghost;
    begin
       while Has_Element (S, Cu) loop
-         pragma Loop_Invariant (Capacity (S) = Capacity (S)'Loop_Entry);
          pragma Loop_Invariant (Length (S) = Length (S)'Loop_Entry + N);
          pragma Loop_Invariant
            (for all I in 1 .. N =>
@@ -165,19 +159,21 @@ package body Use_Ordered_Sets with SPARK_Mode is
               Get (Elements (S)'Loop_Entry, I - N));
          pragma Loop_Invariant (Get (Positions (S), Cu) = 2 * N + 1);
          Include (S, Element (S, Cu) + 1);
-         Next (S, Cu);
-         Next (S, Cu);
+         pragma Assert
+           (Get (Positions (S), Find (S, Element (S, Cu) + 1)) = 2 * N + 2);
+         Cu := Next (S, Next (S, Cu));
          N := N + 1;
       end loop;
    end Double_Size;
 
-   procedure Insert_4 (S : in out My_Sets.Set) is
+   procedure Insert_Count (S : in out My_Sets.Set) is
    begin
       Include (S, 1);
       Include (S, 2);
       Include (S, 3);
       Include (S, 4);
-   end Insert_4;
+      Include (S, 5);
+   end Insert_Count;
 
    function Q (E : Integer) return Boolean is
    begin

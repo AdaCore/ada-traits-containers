@@ -2,6 +2,7 @@ pragma Ada_2012;
 with Functional_Sequences;
 with Functional_Maps;
 with Functional_Sets;
+with Conts;
 
 generic
    type Element_Type (<>) is private;
@@ -37,21 +38,18 @@ package Formal_Hashed_Sets with SPARK_Mode is
                   Next        => Next_Primitive,
                   Has_Element => Has_Element_Primitive,
                   Element     => Element_Primitive);
-   --  Sets are empty when default initialized
+   --  Sets are empty when default initialized.
+   --  Iteration over sets can be done over cursors or over elements.
 
    function Capacity (Self : Set'Class) return Natural with
      Import;
 
    function Length (Self : Set'Class) return Natural with
      Import,
-     Post => Length'Result <= Capacity (Self);
-   --  The length of a set is always smaller than its capacity
+     Post => Length'Result < Capacity (Self);
+   --  The length of a set is always strictly smaller than its capacity
 
-   package Formal_Model is
-
-      --  This package should be Ghost if possible. Currently, the compiler
-      --  complains that the parent type of a Ghost type extension shall be
-      --  Ghost (see OA30-006).
+   package Formal_Model with Ghost is
 
       package P is new Functional_Maps
         (Element_Type => Positive,
@@ -78,14 +76,13 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
         --  It only contains elements contained of Model.
 
-        and then (for all I in 1 .. Length (Self) =>
-                      M.Mem (Model (Self), E.Get (Elements'Result, I)))
+        and then (for all Elt of Elements'Result =>
+                      M.Mem (Model (Self), Elt))
 
         --  It contains all the elements contained of Model.
 
         and then (for all Elt of Model (Self) =>
-                      (for some I in 1 .. Length (Self) =>
-                             E.Get (Elements'Result, I) = Elt))
+                      (for some F of Elements'Result => F = Elt))
 
         --  It has no duplicate.
 
@@ -114,18 +111,16 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
            and then
              (for all J of Positions'Result =>
-                (if P.Get (Positions'Result, I) =
-                     P.Get (Positions'Result, J)
+                (if P.Get (Positions'Result, I) = P.Get (Positions'Result, J)
                  then I = J)));
 
       procedure Lift_Abstraction_Level (Self : Set'Class) with
         Import,
         Global => null,
         Post   =>
-          (for all I in 1 .. Length (Self) =>
-             (for some Position of Positions (Self) =>
-                E.Get (Elements (Self),  P.Get (Positions (Self), Position)) =
-                E.Get (Elements (Self), I)));
+          (for all Elt of Elements (Self) =>
+             (for some I of Positions (Self) =>
+                E.Get (Elements (Self),  P.Get (Positions (Self), I)) = Elt));
       --  Lift_Abstraction_Level is a ghost procedure that does nothing but
       --  assume that we can access to the same elements by iterating over
       --  positions or cursors.
@@ -147,18 +142,33 @@ package Formal_Hashed_Sets with SPARK_Mode is
    function Elements (Self : Set'Class) return E.Sequence
                    renames Formal_Model.Elements;
    function Positions (Self : Set'Class) return P.Map
-                   renames Formal_Model.Positions;
+                       renames Formal_Model.Positions;
+
+   --  The following functions are modeled directly in the formal model.
+
+   function Has_Element (Self : Set'Class; Position : Cursor) return Boolean
+    with
+     Import,
+     Post => Has_Element'Result = P.Mem (Positions (Self), Position);
+   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Has_Element);
+
+   function Contains (Self : Set'Class; Element : Element_Type) return Boolean
+   with
+     Import,
+     Post => Contains'Result = M.Mem (Model (Self), Element);
+   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Contains);
 
    function Element (Self : Set'Class; Position : Cursor) return Element_Type
    with
      Import,
-     Pre  => P.Mem (Positions (Self), Position),
+     Pre  => Has_Element (Self, Position),
 
      --  Query Positions to get the position of Position of L and use it to
      --  fetch the corresponding element in Elements.
 
      Post => Element'Result =
        E.Get (Elements (Self), P.Get (Positions (Self), Position));
+   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Element);
 
    --  The subprograms used for iteration over cursors are axiomatized using
    --  Positions only. They are inverse of the Positions map as they allow
@@ -166,135 +176,127 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
    function First (Self : Set'Class) return Cursor with
      Import,
-     Post => (if Length (Self) = 0 then First'Result = No_Element
-              else P.Mem (Positions (Self), First'Result) and then
-                  P.Get (Positions (Self), First'Result) = 1);
+     Contract_Cases =>
+       (Length (Self) = 0 => First'Result = No_Element,
+        others            => Has_Element (Self, First'Result)
+        and then P.Get (Positions (Self), First'Result) = 1);
 
-   procedure Next (Self : Set'Class; Position : in out Cursor) with
+   function Next (Self : Set'Class; Position : Cursor) return Cursor with
      Import,
-     Pre  => P.Mem (Positions (Self), Position),
-     Post => (if P.Get (Positions (Self), Position'Old) = Length (Self)
-              then Position = No_Element
-              else P.Mem (Positions (Self), Position)
-                and then P.Get (Positions (Self), Position) =
-                  P.Get (Positions (Self), Position'Old) + 1);
-
-   function Has_Element (Self : Set'Class; Position : Cursor) return Boolean
-    with
-     Import,
-     Post => Has_Element'Result = P.Mem (Positions (Self), Position);
-
-   function Contains (Self : Set'Class; Element : Element_Type) return Boolean
-   with
-     Import,
-     Post => Contains'Result = M.Mem (Model (Self), Element);
+     Pre            => Has_Element (Self, Position),
+     Contract_Cases =>
+       (P.Get (Positions (Self), Position) = Length (Self) =>
+              Next'Result = No_Element,
+        others                                             =>
+          Has_Element (Self, Next'Result)
+        and then P.Get (Positions (Self), Next'Result) =
+          P.Get (Positions (Self), Position) + 1);
 
    function Find (Self : Set'Class; Element : Element_Type) return Cursor with
      Import,
-     Post =>
+     Contract_Cases =>
 
-       --  Either Element is not in the model and the result is No_Element
+     --  Either the result is a valid cursor and Element is stored at its
+     --  position in S
 
-       (Find'Result = No_Element
-        and not M.Mem (Model (Self), Element))
+     (Contains (Self, Element) => Has_Element (Self, Find'Result)
+      and Formal_Hashed_Sets.Element (Self, Find'Result) = Element,
 
-     --  or the result is a valid cursor and Element is stored at its position
-     --  in S.
+      --  or Element is not in the model and the result is No_Element.
 
-     or else
-       (M.Mem (Model (Self), Element)
-        and P.Mem (Positions (Self), Find'Result)
-        and E.Get (Elements (Self), P.Get (Positions (Self), Find'Result)) =
-          Element);
+      others                   => Find'Result = No_Element);
 
    procedure Include (Self : in out Set'Class; Element : Element_Type) with
-   --  Insert an element Element in Self if Element is not already in present.
+   --  Insert an element Element in Self if Element is not already present.
 
      Import,
-     Pre  => Length (Self) < Capacity (Self)
-     or else M.Mem (Model (Self), Element),
-     Post => Capacity (Self) = Capacity (Self)'Old
+     Pre            => Length (Self) < Conts.Count_Type'Last - 1
+     or else Contains (Self, Element),
+     Contract_Cases =>
 
      --  If Element is already in Self, then the model is unchanged.
 
-     and (if M.Mem (Model (Self)'Old, Element) then
-            Length (Self) = Length (Self)'Old
-            and Model (Self) = Model (Self)'Old
-            and Elements (Self) = Elements (Self)'Old
-            and Positions (Self) = Positions (Self)'Old
+     (Contains (Self, Element) =>
+          Capacity (Self) = Capacity (Self)'Old
+      and Length (Self) = Length (Self)'Old
+      and Model (Self) = Model (Self)'Old
+      and Elements (Self) = Elements (Self)'Old
+      and Positions (Self) = Positions (Self)'Old,
 
-            --  If Element is not in Self, then Element is a new element of its
-            --  model.
+        --  If Element is not in Self, then Element is a new element of its
+        --  model.
 
-          else Length (Self) = Length (Self)'Old + 1
-            and M.Is_Add (Model (Self)'Old, Element, Model (Self))
+      others                   =>
+          Capacity (Self) >= Capacity (Self)'Old
+      and Length (Self) = Length (Self)'Old + 1
+      and M.Is_Add (Model (Self)'Old, Element, Model (Self))
 
-            --  Cursors that were valid in Self are still valid and continue
-            --  designating the same element.
+      --  Cursors that were valid in Self are still valid and continue
+      --  designating the same element.
 
-            and
-            (for all Position of Positions (Self)'Old =>
-                 P.Mem (Positions (Self), Position) and
-               E.Get (Elements (Self), P.Get (Positions (Self), Position)) =
-                 E.Get (Elements (Self)'Old,
-                        P.Get (Positions (Self)'Old, Position)))
+      and
+        (for all Position of Positions (Self)'Old =>
+             Has_Element (Self, Position)
+         and Formal_Hashed_Sets.Element (Self, Position) =
+             E.Get (Elements (Self)'Old,
+                    P.Get (Positions (Self)'Old, Position)))
 
-            --  Cursors that are valid in Self were already valid in Self
-            --  except for the newly inserted cursor.
-            --  Nothing is said about the order of elements in Self after the
-            --  call.
+      --  Cursors that are valid in Self were already valid in Self
+      --  except for the newly inserted cursor.
+      --  Nothing is said about the order of elements in Self after the
+      --  call.
 
-            and (for all Position of Positions (Self) =>
-                   P.Mem (Positions (Self)'Old, Position) or
-                     E.Get (Elements (Self),
-                            P.Get (Positions (Self), Position)) = Element));
+      and (for all Position of Positions (Self) =>
+          P.Mem (Positions (Self)'Old, Position)
+            or Formal_Hashed_Sets.Element (Self, Position) = Element));
 
    procedure Exclude (Self : in out Set'Class; Element : Element_Type) with
    --  Remove an element Element of Self if it is present.
 
      Import,
-     Post => Capacity (Self) = Capacity (Self)'Old
+     Post           => Capacity (Self) = Capacity (Self)'Old,
+     Contract_Cases =>
 
-     --  If Element is not in Self, then the model is unchanged.
+     --  If Element is in Self, then it is removed from its model.
 
-     and (if not M.Mem (Model (Self)'Old, Element) then
-            Length (Self) = Length (Self)'Old
-            and Model (Self) = Model (Self)'Old
-            and Elements (Self) = Elements (Self)'Old
-            and Positions (Self) = Positions (Self)'Old
+     (Contains (Self, Element) =>
+          Length (Self) = Length (Self)'Old - 1
+      and M.Is_Add (Model (Self), Element, Model (Self)'Old)
 
-          --  If Element is in Self, then Element is removed from its model.
+      --  Cursors that are valid in Self were already valid and continue
+      --  designating the same element.
 
-          else Length (Self) = Length (Self)'Old - 1
-            and M.Is_Add (Model (Self), Element, Model (Self)'Old)
+      and (for all Position of Positions (Self) =>
+          P.Mem (Positions (Self)'Old, Position)
+        and Formal_Hashed_Sets.Element (Self, Position) =
+          E.Get (Elements (Self)'Old,
+            P.Get (Positions (Self)'Old, Position)))
 
-            --  Cursors that are valid in Self were already valid and continue
-            --  designating the same element.
+      --  Cursors that were valid in Self are still valid in Self except
+      --  for the removed cursor.
+      --  Nothing is said about the order of elements in Self after the
+      --  call.
 
-            and (for all Position of Positions (Self) =>
-                   P.Mem (Positions (Self)'Old, Position) and
-                     E.Get (Elements (Self),
-                            P.Get (Positions (Self), Position)) =
-                     E.Get (Elements (Self)'Old,
-                            P.Get (Positions (Self)'Old, Position)))
+      and (for all Position of Positions (Self)'Old =>
+          Has_Element (Self, Position)
+        or E.Get (Elements (Self)'Old,
+          P.Get (Positions (Self)'Old, Position)) =
+          Element),
 
-            --  Cursors that were valid in Self are still valid in Self except
-            --  for the removed cursor.
-            --  Nothing is said about the order of elements in Self after the
-            --  call.
+      --  If Element is not in Self, then the model is unchanged.
 
-            and (for all Position of Positions (Self)'Old =>
-                   P.Mem (Positions (Self), Position) or
-                     E.Get (Elements (Self)'Old,
-                            P.Get (Positions (Self)'Old, Position)) =
-                     Element));
+      others                  =>
+        Length (Self) = Length (Self)'Old
+      and Model (Self) = Model (Self)'Old
+      and Elements (Self) = Elements (Self)'Old
+      and Positions (Self) = Positions (Self)'Old);
 
    procedure Union (Self : in out Set'Class; Source : Set'Class) with
    --  Include in Self all the elements of Source
 
      Import,
-     Pre  => Length (Source) <= Capacity (Self) - Length (Self),
-     Post => Capacity (Self) = Capacity (Self)'Old
+     Pre  => Length (Source) < Conts.Count_Type'Last - Length (Self),
+     Post => Capacity (Self) >= Capacity (Self)'Old
 
      --  The model of Self is the union of the previous model of Self and the
      --  model of Source.
@@ -313,10 +315,10 @@ package Formal_Hashed_Sets with SPARK_Mode is
      --  Nothing is said about the order of elements in Self after the call.
 
      and (for all Position of Positions (Self)'Old =>
-              P.Mem (Positions (Self), Position)
-          and E.Get (Elements (Self), P.Get (Positions (Self), Position)) =
-            E.Get (Elements (Self)'Old,
-                   P.Get (Positions (Self)'Old, Position)));
+              Has_Element (Self, Position)
+          and Element (Self, Position) =
+              E.Get (Elements (Self)'Old,
+                     P.Get (Positions (Self)'Old, Position)));
 
    procedure Intersection (Self : in out Set'Class; Source : Set'Class) with
    --  Exclude from Self all the elements of Source
@@ -329,7 +331,7 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
      and M.Is_Intersection (Model (Self)'Old, Model (Source), Model (Self))
 
-     --  The length of Self can only have shrinked. We could be more precise by
+     --  The length of Self can only be decreased. We could be more precise by
      --  stating that at most Length (Source) elements have been removed from
      --  Self.
 
@@ -341,9 +343,9 @@ package Formal_Hashed_Sets with SPARK_Mode is
 
      and (for all Position of Positions (Self) =>
               P.Mem (Positions (Self)'Old, Position)
-          and E.Get (Elements (Self), P.Get (Positions (Self), Position)) =
-            E.Get (Elements (Self)'Old,
-                   P.Get (Positions (Self)'Old, Position)));
+          and Element (Self, Position) =
+              E.Get (Elements (Self)'Old,
+                     P.Get (Positions (Self)'Old, Position)));
 
    procedure Clear (Self : in out Set'Class)
    with
@@ -353,19 +355,27 @@ package Formal_Hashed_Sets with SPARK_Mode is
      and then M.Is_Empty (Model (Self));
 
    function First_Primitive (Self : Set) return Cursor with Import;
+
    function Element_Primitive
      (Self : Set; Position : Cursor) return Element_Type
    with
      Import,
      Pre'Class => Has_Element (Self, Position),
-     Post'Class => Has_Element (Self, Position)
-       and then Element_Primitive'Result = Element (Self, Position);
+     Post =>
+           Element_Primitive'Result =
+             E.Get (Elements (Self), P.Get (Positions (Self), Position));
+   pragma Annotate
+     (GNATprove, Inline_For_Proof, Entity => Element_Primitive);
+
    function Has_Element_Primitive
      (Self : Set; Position : Cursor) return Boolean
    with
      Import,
-     Post'Class =>
-       Has_Element_Primitive'Result = Has_Element (Self, Position);
+     Post =>
+       Has_Element_Primitive'Result = P.Mem (Positions (Self), Position);
+   pragma Annotate
+     (GNATprove, Inline_For_Proof, Entity => Has_Element_Primitive);
+
    function Next_Primitive
      (Self : Set; Position : Cursor) return Cursor
    with

@@ -149,14 +149,16 @@ package body Use_Lists with SPARK_Mode is
       end loop;
    end Update_Range_To_Zero;
 
-   procedure Insert_5 (L : in out List; Cu : Cursor) is
+   procedure Insert_Count (L : in out List; Cu : Cursor) is
    begin
       Insert (L, Cu, 0);
       Insert (L, Cu, 0);
       Insert (L, Cu, 0);
       Insert (L, Cu, 0);
       Insert (L, Cu, 0);
-   end Insert_5;
+      Insert (L, Cu, 0);
+      Insert (L, Cu, 0);
+   end Insert_Count;
 
    function P (E : Integer) return Boolean is
    begin

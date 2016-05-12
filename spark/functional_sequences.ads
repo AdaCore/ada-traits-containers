@@ -16,15 +16,12 @@ package Functional_Sequences with SPARK_Mode is
    --  room for one more element at the left of Index_Type.
 
    type Sequence is private
-     with Default_Initial_Condition => Natural'(Length (Sequence)) = 0,
+     with Default_Initial_Condition => Length (Sequence) = 0,
      Iterable => (First       => Iter_First,
                   Has_Element => Iter_Has_Element,
                   Next        => Iter_Next,
                   Element     => Get);
    --  Sequences are empty when default initialized.
-   --  The qualification is required for Length not to be mistaken to
-   --  Element_Lists.Length (though I don't know how this could happen,
-   --  Sequence being private...)
    --  Quantification over sequences can be done using the regular
    --  quantification over its range or directky on its elements using for of.
 
@@ -34,9 +31,11 @@ package Functional_Sequences with SPARK_Mode is
    function Length (S : Sequence) return Natural with
      Global => null,
      Post => (Index_Type'Pos (Index_Type'First) - 1) + Length'Result <=
-        Index_Type'Pos (Index_Type'Last);
+       Index_Type'Pos (Index_Type'Last);
+
    function Get (S : Sequence; N : Extended_Index) return Element_Type
    --  Get ranges over Extended_Index so that it can be used for iteration.
+
    with
      Global => null,
      Pre    => N in Index_Type'First ..
@@ -115,10 +114,13 @@ package Functional_Sequences with SPARK_Mode is
 
    function Iter_First (S : Sequence) return Extended_Index;
    function Iter_Has_Element (S : Sequence; I : Extended_Index) return Boolean
-   is
-     (I in Index_Type'First ..
-        (Index_Type'Val
-             ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))));
+   with
+     Post => Iter_Has_Element'Result =
+         (I in Index_Type'First ..
+            (Index_Type'Val
+               ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))));
+   pragma Annotate (GNATprove, Inline_For_Proof, Iter_Has_Element);
+
    function Iter_Next (S : Sequence; I : Extended_Index) return Extended_Index
      with
        Pre => Iter_Has_Element (S, I);

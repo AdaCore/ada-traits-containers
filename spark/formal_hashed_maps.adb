@@ -1,9 +1,4 @@
 package body Formal_Hashed_Maps with SPARK_Mode => Off is
-   function Key   (P : Pair_Type) return Key_Type is
-     (Element_Maps.Impl.Key (P));
-
-   function Value (P : Pair_Type) return Element_Type is
-      (Element_Maps.Impl.Value (P));
 
    function Capacity (Self : Map'Class) return Natural is
       (Element_Maps.Impl.Capacity (Self));
@@ -19,7 +14,8 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
       begin
          while Element_Maps.Impl.Has_Element (Self, Cu) loop
             declare
-               P : constant Pair_Type := Element_Maps.Impl.Pair (Self, Cu);
+               P : constant Element_Maps.Impl.Pair_Type :=
+                 Element_Maps.Impl.Pair (Self, Cu);
             begin
                R := Add (R, Element_Maps.Impl.Key (P),
                          Element_Maps.Impl.Value (P));
@@ -35,7 +31,8 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
       begin
          while Element_Maps.Impl.Has_Element (Self, Cu) loop
             declare
-               P : constant Pair_Type := Element_Maps.Impl.Pair (Self, Cu);
+               P : constant Element_Maps.Impl.Pair_Type :=
+                 Element_Maps.Impl.Pair (Self, Cu);
             begin
                R := Add (R, Element_Maps.Impl.Key (P));
             end;
@@ -93,9 +90,6 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
 
    function Element (Self : Map'Class; Position : Cursor) return Element_Type
    is (Element_Maps.Impl.Element (Self, Position));
-
-   function Pair (Self : Map'Class; Position : Cursor) return Pair_Type is
-    (Element_Maps.Impl.Pair (Self, Position));
 
    function First (Self : Map'Class) return Cursor is
       (Element_Maps.Impl.First (Self));

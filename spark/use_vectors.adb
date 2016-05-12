@@ -84,7 +84,7 @@ package body Use_Vectors with SPARK_Mode is
       for Current in Index_Type'First .. Lst loop
          pragma Loop_Invariant
            (for all I in Index_Type'First .. Current - 1 =>
-              Element (Model (V), I) /= E);
+              Element (V, I) /= E);
          if Element (V, Current) = E then
             return Current;
          end if;
@@ -100,18 +100,18 @@ package body Use_Vectors with SPARK_Mode is
            (Valid_Cursors (V) = Valid_Cursors (V)'Loop_Entry);
          pragma Loop_Invariant
            (for all I in Fst .. Current - 1 =>
-                Element (Model (V), I) = 0);
+                Element (V, I) = 0);
          pragma Loop_Invariant
            (for all I in Index_Type'First .. Fst - 1 =>
-              Element (Model (V), I) = Element (Model (V)'Loop_Entry, I));
+              Element (V, I) = Element (Model (V)'Loop_Entry, I));
          pragma Loop_Invariant
            (for all I in Current .. Last (V) =>
-                Element (Model (V), I) = Element (Model (V)'Loop_Entry, I));
+                Element (V, I) = Element (Model (V)'Loop_Entry, I));
          Replace_Element (V, Current, 0);
       end loop;
    end Update_Range_To_Zero;
 
-   procedure Insert_5 (V : in out Vector; I : Index_Type) is
+   procedure Insert_Count (V : in out Vector; I : Index_Type) is
       Loc : Vector;
       J   : Index_Type;
    begin
@@ -126,23 +126,25 @@ package body Use_Vectors with SPARK_Mode is
       Append (V, 0);
       Append (V, 0);
       Append (V, 0);
+      Append (V, 0);
+      Append (V, 0);
 
       J := I;
       while J <= Last (Loc) loop
          Append (V, Element (Loc, J));
          pragma Loop_Invariant (J in I .. Last (Loc));
-         pragma Loop_Invariant (Length (V) = J + 6 - Index_Type'First);
+         pragma Loop_Invariant (Length (V) = J + Count + 1 - Index_Type'First);
          pragma Loop_Invariant
            (for all K in Index_Type'First .. I - 1 =>
-              Element (Model (V), K) = Element (Model (Loc), K));
+              Element (V, K) = Element (Loc, K));
          pragma Loop_Invariant
-           (for all K in I + 5 .. Last (V) =>
-                Element (Model (V), K) = Element (Model (Loc), K - 5));
+           (for all K in I + Count .. Last (V) =>
+                Element (V, K) = Element (Loc, K - Count));
          pragma Loop_Invariant
-           (for all K in I .. I + 4 => Element (Model (V), K) = 0);
+           (for all K in I .. I + Count => Element (V, K) = 0);
          J := J + 1;
       end loop;
-   end Insert_5;
+   end Insert_Count;
 
    function P (E : Integer) return Boolean is
    begin

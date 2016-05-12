@@ -36,7 +36,8 @@ package Formal_Vectors with SPARK_Mode is
                   Next        => Next_Primitive,
                   Has_Element => Has_Element_Primitive,
                   Element     => Element_Primitive);
-   --  Vectors are empty when default initialized
+   --  Vectors are empty when default initialized.
+   --  Iteration over vectors can be done over cursors or over elements.
 
    Max_Capacity : constant Count_Type :=
      (if Index_Type'Pos (Index_Type'Last) < Index_Type'Pos (Index_Type'First)
@@ -49,31 +50,27 @@ package Formal_Vectors with SPARK_Mode is
       else Count_Type'Last);
    --  Maximal capacity of a vector. It is the minimum of the size of the
    --  index range and the last possible Count_Type.
-   --  Actual capacity of a vector is not modeled. It is mostly irrelevant
-   --  since it cannot be querried and it does not affect the behavior of other
-   --  subprograms.
+   --  ??? Actual capacity of a vector is not modeled. Do we want to add it?
 
    function Length (Self : Vector'Class) return Natural with
      Global => null,
      Post   => Length'Result <= Max_Capacity;
-   --  The length of a vector is always smaller than its capacity
+   --  The length of a vector is always smaller than Max_Capacity.
 
    function Last (Self : Vector'Class) return Extended_Index with
      Global => null,
      Post   => Last'Result =
-      Index_Type'Val ((Index_Type'Pos (Index_Type'First) - 1) + Length (Self));
+       Index_Type'Val ((Index_Type'Pos (Index_Type'First) - 1)
+                       + Length (Self));
+   --  On an empty vector, Last returns Extended_Index'First.
 
    function To_Index (Position : Cursor) return Index_Type with
      Global => null,
      Pre    => Position /= No_Element;
-   --  In vectors, cursors cannot change position in a container.
-   --  They are associated with a unique index by To_Index.
+   --  In vectors, cursors cannot change positions. They are associated with a
+   --  unique index by To_Index.
 
-   package Formal_Model is
-
-      --  This package should be Ghost if possible. Currently, the compiler
-      --  complains that the parent type of a Ghost type extension shall be
-      --  Ghost (see OA30-006).
+   package Formal_Model with Ghost is
 
       package V is new Functional_Sets
         (Element_Type => Cursor);
@@ -97,7 +94,7 @@ package Formal_Vectors with SPARK_Mode is
         Global => null,
         Post   => not V.Mem (Valid_Cursors'Result, No_Element)
 
-        --  Positions of cursors are smaller than the container's length.
+        --  Positions of cursors are smaller than the container's last index.
 
         and then
           (for all I of Valid_Cursors'Result =>
@@ -112,10 +109,9 @@ package Formal_Vectors with SPARK_Mode is
       procedure Lift_Abstraction_Level (Self : Vector'Class) with
         Global => null,
         Post   =>
-          (for all I in Index_Type'First .. Last (Self) =>
-             (for some Position of Valid_Cursors (Self) =>
-                  M.Get (Model (Self), To_Index (Position)) =
-                M.Get (Model (Self), I)));
+          (for all Elt of Model (Self) =>
+             (for some I of Valid_Cursors (Self) =>
+                  M.Get (Model (Self), To_Index (I)) = Elt));
       --  Lift_Abstraction_Level is a ghost procedure that does nothing but
       --  assume that we can access to the same elements by iterating over
       --  positions or cursors.
@@ -137,6 +133,8 @@ package Formal_Vectors with SPARK_Mode is
    function Valid_Cursors (Self : Vector'Class) return V.Set
                    renames Formal_Model.Valid_Cursors;
 
+   --  The following functions are modeled directly in the formal model.
+
    function Element
      (Self : Vector'Class; Position : Index_Type) return Element_Type
    --  Fetch the corresponding element in Model.
@@ -145,6 +143,28 @@ package Formal_Vectors with SPARK_Mode is
        Global => null,
        Pre    => Position <= Last (Self),
        Post   => Element'Result = Element (Model (Self), Position);
+   pragma Annotate
+     (GNATprove, Inline_For_Proof, Entity => Element);
+
+   function Has_Element
+     (Self : Vector'Class; Position : Cursor) return Boolean
+   with
+       Global => null,
+       Post   => Has_Element'Result = V.Mem (Valid_Cursors (Self), Position);
+   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Has_Element);
+
+   function Element
+     (Self : Vector'Class; Position : Cursor) return Element_Type
+   with
+     Global => null,
+     Pre    => Has_Element (Self, Position),
+     Post   => Element'Result = Element (Model (Self), To_Index (Position));
+   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Element);
+
+   function Last_Element (Self : Vector'Class) return Element_Type with
+     Global => null,
+     Pre    => Length (Self) > 0,
+     Post   => Last_Element'Result = Element (Self, Last (Self));
 
    procedure Reserve_Capacity
      (Self : in out Vector'Class; Capacity : Count_Type)
@@ -161,12 +181,12 @@ package Formal_Vectors with SPARK_Mode is
    procedure Shrink_To_Fit (Self : in out Vector'Class)
    --  Resize the vector to fit its number of elements.
    --  This has no effect on models.
+   --  ??? are cursors preserved?
 
    with
        Global => null,
        Post   => Length (Self) = Length (Self)'Old
-     and then Model (Self) = Model (Self)'Old
-     and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old;
+     and then Model (Self) = Model (Self)'Old;
 
    procedure Resize
      (Self    : in out Vector'Class;
@@ -177,6 +197,8 @@ package Formal_Vectors with SPARK_Mode is
    --     reduced to its first Length elements, destroying the other elements.
    --  If Length is greater than the current container length, new elements
    --     are added as needed, as copied of Element.
+   --  ??? are cursors preserved?
+
    with
      Global => null,
      Pre    =>
@@ -194,10 +216,10 @@ package Formal_Vectors with SPARK_Mode is
             Formal_Vectors.Element (Self, I) =
             Formal_Vectors.Element (Model (Self)'Old, I))
 
-     --  If elements were happended to Self then they are equal to Element.
+     --  If elements were appended to Self then they are equal to Element.
 
      and then (for all I in Last (Self)'Old .. Last (Self) =>
-                   Formal_Vectors.Element (Model (Self), I) = Element);
+                   Formal_Vectors.Element (Self, I) = Element);
 
    function Is_Empty (Self : Vector'Class) return Boolean with
      Global => null,
@@ -208,6 +230,7 @@ package Formal_Vectors with SPARK_Mode is
       Element : Element_Type;
       Count   : Count_Type := 1)
    --  Append Count copies of Element to the vector.
+   --  ??? are cursors preserved?
 
    with
      Global => null,
@@ -224,11 +247,7 @@ package Formal_Vectors with SPARK_Mode is
      --  Appended elements are equal to Element.
 
      and then (for all I in Last (Self)'Old .. Last (Self) =>
-                         Formal_Vectors.Element (Self, I) = Element)
-
-     --  Cursors that were valid in Self are preserved.
-
-     and then V.Inc (Valid_Cursors (Self)'Old, Valid_Cursors (Self));
+                         Formal_Vectors.Element (Self, I) = Element);
 
    procedure Replace_Element
      (Self     : in out Vector'Class;
@@ -243,8 +262,7 @@ package Formal_Vectors with SPARK_Mode is
      and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old
      and then
        (if Index <= Last (Self)
-        then M.Is_Replace
-          (Model (Self)'Old, Index, New_Item, Model (Self))
+        then M.Is_Replace (Model (Self)'Old, Index, New_Item, Model (Self))
         else Model (Self) = Model (Self)'Old);
 
    procedure Swap
@@ -255,7 +273,7 @@ package Formal_Vectors with SPARK_Mode is
    with
      Global => null,
      Pre    => Left <= Last (Self) and then Right <= Last (Self),
-     Post   =>  Length (Self) = Length (Self)'Old
+     Post   => Length (Self) = Length (Self)'Old
      and then Element (Self, Left) = Element (Model (Self)'Old, Right)
      and then Element (Self, Right) = Element (Model (Self)'Old, Left)
 
@@ -276,6 +294,7 @@ package Formal_Vectors with SPARK_Mode is
 
    procedure Delete (Self : in out Vector'Class; Index : Index_Type)
    --  Remove an element from the vector.
+   --  ??? are cursors preserved?
 
    with
      Global => null,
@@ -297,18 +316,13 @@ package Formal_Vectors with SPARK_Mode is
 
    procedure Delete_Last (Self : in out Vector'Class) with
    --  Remove the last element of the vector.
+   --  ??? are cursors preserved?
+
      Global => null,
      Pre    => Length (Self) > 0,
      Post   => Length (Self) = Length (Self)'Old - 1
-     and then
-       (for all I in Index_Type'First .. Last (Self) =>
-              Element (Self, I) = Element (Model (Self)'Old, I));
-
-   function Last_Element (Self : Vector'Class) return Element_Type with
-     Global => null,
-     Pre    => Length (Self) > 0,
-     Post   =>
-       Last_Element'Result = Element (Self, Last (Self));
+     and then (for all I in Index_Type'First .. Last (Self) =>
+                   Element (Self, I) = Element (Model (Self)'Old, I));
 
    procedure Assign
      (Self : in out Vector'Class; Source : Vector'Class)
@@ -316,65 +330,67 @@ package Formal_Vectors with SPARK_Mode is
        Global => null,
        Post   => Model (Self) = Model (Source);
 
+   --  The subprograms used for iteration over cursors are axiomatized using
+   --  Positions only. They are inverse of the Positions map as they allow
+   --  to create a valid cursor per position in the container.
+
    function First (Self : Vector'Class) return Cursor with
-     Global => null,
-     Post   => (if Length (Self) = 0 then First'Result = No_Element
-              else To_Index (First'Result) = Index_Type'First
-                and then V.Mem (Valid_Cursors (Self), First'Result));
-   function Element
-     (Self : Vector'Class; Position : Cursor) return Element_Type
-   with
-     Global => null,
-     Pre    => V.Mem (Valid_Cursors (Self), Position),
-     Post   => Element'Result = Element (Self, To_Index (Position));
-   function Has_Element
-     (Self : Vector'Class; Position : Cursor) return Boolean
-   with
-       Global => null,
-       Post   => Has_Element'Result = V.Mem (Valid_Cursors (Self), Position);
+     Global         => null,
+     Contract_Cases =>
+       (Length (Self) = 0 => First'Result = No_Element,
+        others            => To_Index (First'Result) = Index_Type'First
+        and then Has_Element (Self, First'Result));
+
    function Next
      (Self : Vector'Class; Position : Cursor) return Cursor
-     with
-       Global => null,
-       Post   =>
-       (if To_Index (Position) < Last (Self)
-        and then V.Mem (Valid_Cursors (Self), Position)
-        then To_Index (Next'Result) = Index_Type'Succ (To_Index (Position))
-        and V.Mem (Valid_Cursors (Self), Position)
-        else Next'Result = No_Element);
+   with
+     Global           => null,
+     Pre              => Has_Element (Self, Position),
+     Contract_Cases   =>
+       (To_Index (Position) < Last (Self) =>
+              To_Index (Next'Result) = Index_Type'Succ (To_Index (Position))
+        and Has_Element (Self, Next'Result),
+        others                            => Next'Result = No_Element);
+
    function Previous
      (Self : Vector'Class; Position : Cursor) return Cursor
-     with
-       Global => null,
-       Post   =>
-       (if To_Index (Position) > Index_Type'First
-        and then V.Mem (Valid_Cursors (Self), Position)
-        then To_Index (Previous'Result) = Index_Type'Pred (To_Index (Position))
-        and V.Mem (Valid_Cursors (Self), Position)
-        else Previous'Result = No_Element);
+   with
+     Global           => null,
+     Pre              => Has_Element (Self, Position),
+     Contract_Cases   =>
+       (To_Index (Position) > Index_Type'First =>
+             To_Index (Previous'Result) = Index_Type'Pred (To_Index (Position))
+        and Has_Element (Self, Previous'Result),
+        others                            => Previous'Result = No_Element);
 
    procedure Next (Self : Vector'Class; Position : in out Cursor) with
-     Inline,
-     Global => null,
-     Pre    => Has_Element (Self, Position),
-     Post   =>
-       (if To_Index (Position)'Old < Last (Self)
-        then To_Index (Position) = Index_Type'Succ (To_Index (Position)'Old)
-        and V.Mem (Valid_Cursors (Self), Position)
-        else Position = No_Element);
+     Global           => null,
+     Pre              => Has_Element (Self, Position),
+     Contract_Cases   =>
+       (To_Index (Position) < Last (Self) =>
+              To_Index (Position) = Index_Type'Succ (To_Index (Position'Old))
+        and Has_Element (Self, Position),
+        others                            => Position = No_Element);
 
    function First_Primitive (Self : Vector) return Cursor;
+
    function Element_Primitive
      (Self : Vector; Position : Cursor) return Element_Type
    with
      Inline,
      Pre'Class => Has_Element (Self, Position),
-     Post'Class => Has_Element (Self, Position)
-       and then Element_Primitive'Result = Element (Self, Position);
+     Post      => Element_Primitive'Result =
+       Element (Model (Self), To_Index (Position));
+   pragma Annotate
+     (GNATprove, Inline_For_Proof, Entity => Element_Primitive);
+
    function Has_Element_Primitive
      (Self : Vector; Position : Cursor) return Boolean
-   with Post'Class =>
-       Has_Element_Primitive'Result = Has_Element (Self, Position);
+   with Post =>
+       Has_Element_Primitive'Result = V.Mem (Valid_Cursors (Self), Position);
+   pragma Annotate
+     (GNATprove, Inline_For_Proof, Entity => Has_Element_Primitive);
+
    function Next_Primitive
      (Self : Vector; Position : Cursor) return Cursor
    with
