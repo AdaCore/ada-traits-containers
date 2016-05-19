@@ -1,6 +1,6 @@
 package body Formal_Vectors with SPARK_Mode => Off is
 
-   function Length (Self : Vector'Class) return Natural is
+   function Length (Self : Vector'Class) return Count_Type is
      (Element_Vectors.Vectors.Length (Self));
 
    function To_Index (Position : Cursor) return Index_Type is

@@ -21,6 +21,7 @@
 
 pragma Ada_2012;
 with Ada.Finalization;
+with Conts;                         use Conts;
 with Conts.Elements.Null_Elements;  use Conts.Elements.Null_Elements;
 with Conts.Graphs.Adjacency_List;
 with Conts.Graphs.Components; use Conts.Graphs.Components;

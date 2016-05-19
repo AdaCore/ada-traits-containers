@@ -27,8 +27,18 @@ with System.Pool_Global;
 
 package Conts with SPARK_Mode is
 
-   subtype Count_Type is Natural;
-   subtype Hash_Type is Ada.Containers.Hash_Type;
+   type Count_Type is range 0 .. 2 ** 31 - 1;
+   subtype Hash_Type is Ada.Containers.Hash_Type;    --  0 .. 2**32 - 1
+   --  Base types for the size of containers, and the hash values used
+   --  for some containers. We reuse the same values as for Ada.Containers,
+   --  but redefine the type here so that it is possible to change to
+   --  other values on specific architectures, for instance, without
+   --  breaking code that would assume this Count_Type to always be the
+   --  same as Ada.Containers.Count_Type.
+   --  For now, various places in the code assume that
+   --     Count_Type'Last * 2 <= Hash_Type'Last
+   --  since we often cast from the latter to the former to get a greater
+   --  range.
 
    type Limited_Base is abstract tagged limited null record;
    --  A type that can be used as the root of a container hierarchy when a

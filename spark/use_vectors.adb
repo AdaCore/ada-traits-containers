@@ -1,4 +1,6 @@
 pragma Ada_2012;
+with Conts;         use Conts;
+
 package body Use_Vectors with SPARK_Mode is
 
    procedure Incr_All (V1 : Vector; V2 : in out Vector) is
@@ -6,13 +8,13 @@ package body Use_Vectors with SPARK_Mode is
    begin
       Clear (V2);
       for I in Index_Type'First .. Lst loop
-         pragma Loop_Invariant (Length (V2) = I - Index_Type'First);
+         pragma Loop_Invariant (Integer (Length (V2)) = I - Index_Type'First);
          pragma Loop_Invariant
            (for all N in Index_Type'First .. Last (V2) =>
                 Is_Incr (Element (V1, N),
               Element (V2, N)));
 
-         if Element (V1, I) < Integer'Last then
+         if Element (V1, I) < Element_Type'Last then
             Append (V2, Element (V1, I) + 1);
          else
             Append (V2, Element (V1, I));
@@ -33,7 +35,7 @@ package body Use_Vectors with SPARK_Mode is
            (for all N in I .. Last (V) =>
                 Element (Model (V)'Loop_Entry, N) =
                 Element (V, N));
-         if Element (V, I) < Integer'Last then
+         if Element (V, I) < Element_Type'Last then
             Replace_Element (V, I, Element (V, I) + 1);
          end if;
       end loop;
@@ -54,7 +56,7 @@ package body Use_Vectors with SPARK_Mode is
                 Element (V, N));
          pragma Loop_Invariant
            (Valid_Cursors (V)'Loop_Entry = Valid_Cursors (V));
-         if Element (V, Cu) < Integer'Last then
+         if Element (V, Cu) < Element_Type'Last then
             Replace_Element (V, To_Index (Cu), Element (V, Cu) + 1);
          end if;
          Next (V, Cu);
@@ -66,19 +68,20 @@ package body Use_Vectors with SPARK_Mode is
    begin
       for I in Index_Type'First .. Lst loop
          pragma Loop_Invariant
-           (Length (V) = Length (V)'Loop_Entry + (I - Index_Type'First));
+           (Integer (Length (V)) =
+            Integer (Length (V)'Loop_Entry) + (I - Index_Type'First));
          pragma Loop_Invariant
            (for all J in Index_Type'First .. Last (V)'Loop_Entry =>
               Element (V, J) = Element (Model (V)'Loop_Entry, J));
          pragma Loop_Invariant
            (for all J in Index_Type'First .. I - 1 =>
-              Element (V, J + Length (V)'Loop_Entry) =
+              Element (V, J + Integer (Length (V)'Loop_Entry)) =
                 Element (Model (V)'Loop_Entry, J));
          Append (V, Element (V, I));
       end loop;
    end Double_Size;
 
-   function My_Find (V : Vector; E : Integer) return Index_Type'Base is
+   function My_Find (V : Vector; E : Element_Type) return Index_Type'Base is
       Lst : Index_Type'Base := Last (V);
    begin
       for Current in Index_Type'First .. Lst loop
@@ -133,7 +136,8 @@ package body Use_Vectors with SPARK_Mode is
       while J <= Last (Loc) loop
          Append (V, Element (Loc, J));
          pragma Loop_Invariant (J in I .. Last (Loc));
-         pragma Loop_Invariant (Length (V) = J + Count + 1 - Index_Type'First);
+         pragma Loop_Invariant
+           (Integer (Length (V)) = J + Count + 1 - Index_Type'First);
          pragma Loop_Invariant
            (for all K in Index_Type'First .. I - 1 =>
               Element (V, K) = Element (Loc, K));
@@ -146,7 +150,7 @@ package body Use_Vectors with SPARK_Mode is
       end loop;
    end Insert_Count;
 
-   function P (E : Integer) return Boolean is
+   function P (E : Element_Type) return Boolean is
    begin
       return E >= 0;
    end P;

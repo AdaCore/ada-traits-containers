@@ -1,6 +1,6 @@
 package body Use_Ordered_Sets with SPARK_Mode is
 
-   function My_Find (S : My_Sets.Set; E : Integer) return Cursor is
+   function My_Find (S : My_Sets.Set; E : Element_Type) return Cursor is
       Cu : Cursor := First (S);
    begin
       while Has_Element (S, Cu) loop
@@ -144,7 +144,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
 
    procedure Double_Size (S : in out My_Sets.Set) is
       Cu : Cursor := First (S);
-      N  : Natural := 0 with Ghost;
+      N  : Count_Type := 0 with Ghost;
    begin
       while Has_Element (S, Cu) loop
          pragma Loop_Invariant (Length (S) = Length (S)'Loop_Entry + N);
@@ -175,7 +175,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
       Include (S, 5);
    end Insert_Count;
 
-   function Q (E : Integer) return Boolean is
+   function Q (E : Element_Type) return Boolean is
    begin
       return E >= 0;
    end Q;

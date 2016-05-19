@@ -181,7 +181,7 @@ package body Conts.Graphs.DFS is
          use type Vertex;
 
          VC    : Graphs.Vertex_Cursors.Cursor;
-         Count : Natural := 0;
+         Count : Count_Type := 0;
       begin
          --  Initialize
 

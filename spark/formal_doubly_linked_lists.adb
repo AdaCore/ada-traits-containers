@@ -1,10 +1,10 @@
 pragma Ada_2012;
 package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
 
-   function Length (Self : List'Class) return Natural is
+   function Length (Self : List'Class) return Count_Type is
      (Element_Lists.Lists.Length (Self));
 
-   function Capacity (Self : List'Class) return Natural is
+   function Capacity (Self : List'Class) return Count_Type is
      (Element_Lists.Lists.Capacity (Self));
 
    package body Formal_Model is
@@ -14,7 +14,7 @@ package body Formal_Doubly_Linked_Lists with SPARK_Mode => Off is
       function Positions (Self : List'Class) return P.Map is
          Cu : Cursor := Cursor (Element_Lists.Lists.First (Self));
          R  : Map;
-         I  : Positive := 1;
+         I  : Count_Type := 1;
       begin
          while Element_Lists.Lists.Has_Element (Self, Cu) loop
             R := Add (R, Cu, I);

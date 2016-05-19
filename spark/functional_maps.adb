@@ -3,11 +3,11 @@ package body Functional_Maps with SPARK_Mode => Off is
    use Key_Lists.Vectors;
    use Element_Lists.Vectors;
 
-   function Find_Key (M : Map; K : Key_Type) return Natural;
+   function Find_Key (M : Map; K : Key_Type) return Count_Type;
    --  Helper function.
    --  Searches for a key in the map and returns the appropriate index.
 
-   function Find_Key (M : Map; K : Key_Type) return Natural is
+   function Find_Key (M : Map; K : Key_Type) return Count_Type is
    begin
       for I in 1 .. Length (M.Keys) loop
          if Element (M.Keys, I) = K then
@@ -24,9 +24,9 @@ package body Functional_Maps with SPARK_Mode => Off is
      (Element (M.Elements, Find_Key (M, K)));
 
    function Inc (M1, M2 : Map) return Boolean is
-      I2 : Positive;
+      I2 : Count_Type;
    begin
-      for I1 in 1 .. Natural (Length (M1.Keys)) loop
+      for I1 in 1 .. Length (M1.Keys) loop
          I2 := Find_Key (M2, Element (M1.Keys, I1));
          if I2 = 0
            or else Element (M2.Elements, I2) /= Element (M1.Elements, I1)

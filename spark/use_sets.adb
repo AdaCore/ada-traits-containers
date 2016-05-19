@@ -1,6 +1,6 @@
 package body Use_Sets with SPARK_Mode is
 
-   function My_Find (S : My_Sets.Set; E : Integer) return Cursor is
+   function My_Find (S : My_Sets.Set; E : Element_Type) return Cursor is
       Cu : Cursor := First (S);
    begin
       while Has_Element (S, Cu) loop
@@ -115,7 +115,7 @@ package body Use_Sets with SPARK_Mode is
       Include (S, 6);
    end Insert_Count;
 
-   function Q (E : Integer) return Boolean is
+   function Q (E : Element_Type) return Boolean is
    begin
       return E >= 0;
    end Q;

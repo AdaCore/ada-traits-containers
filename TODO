@@ -177,8 +177,6 @@ can be edited with any text editor.
    We might be referencing freed memory, if the pair is stored by the user
    and elements removed from the container meanwhile
 
-** TODO: Resize should take a Count_Type, not Hash_Type
-
 * Graphs
 
 ** MAYBE Graph layout algorithms (see the one in =Gtkada.Canvas_View=)

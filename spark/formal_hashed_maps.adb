@@ -1,6 +1,6 @@
 package body Formal_Hashed_Maps with SPARK_Mode => Off is
 
-   function Capacity (Self : Map'Class) return Natural is
+   function Capacity (Self : Map'Class) return Count_Type is
       (Element_Maps.Impl.Capacity (Self));
 
    package body Formal_Model is
@@ -44,7 +44,7 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
       function Positions (Self : Map'Class) return P.Map is
          R  : P.Map;
          Cu : Cursor := Element_Maps.Impl.First (Self);
-         I  : Natural := 0;
+         I  : Count_Type := 0;
       begin
          while Element_Maps.Impl.Has_Element (Self, Cu) loop
             I := I + 1;
@@ -72,7 +72,7 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
       New_Size : Count_Type)
    is
    begin
-      Element_Maps.Impl.Resize (Self, Hash_Type (New_Size));
+      Element_Maps.Impl.Resize (Self, New_Size);
    end Resize;
 
    procedure Delete

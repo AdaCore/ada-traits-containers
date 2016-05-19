@@ -36,10 +36,10 @@ package Formal_Hashed_Maps with SPARK_Mode is
    --  Maps are empty when default initialized.
    --  Iteration over maps can be done over cursors or over keys.
 
-   function Capacity (Self : Map'Class) return Natural with
+   function Capacity (Self : Map'Class) return Count_Type with
      Global => null;
 
-   function Length (Self : Map'Class) return Natural with
+   function Length (Self : Map'Class) return Count_Type with
      Import,
      Global => null,
      Post   => Length'Result < Capacity (Self);
@@ -48,11 +48,11 @@ package Formal_Hashed_Maps with SPARK_Mode is
    package Formal_Model with Ghost is
 
       package P is new Functional_Maps
-        (Element_Type => Positive,
+        (Element_Type => Count_Type,
          Key_Type     => Cursor);
       package K is new Functional_Sequences
         (Element_Type => Key_Type,
-         Index_Type   => Positive);
+         Index_Type   => Count_Type);
       package M is new Functional_Maps
         (Element_Type => Element_Type,
          Key_Type     => Key_Type);

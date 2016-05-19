@@ -52,7 +52,7 @@ package Formal_Vectors with SPARK_Mode is
    --  index range and the last possible Count_Type.
    --  ??? Actual capacity of a vector is not modeled. Do we want to add it?
 
-   function Length (Self : Vector'Class) return Natural with
+   function Length (Self : Vector'Class) return Count_Type with
      Global => null,
      Post   => Length'Result <= Max_Capacity;
    --  The length of a vector is always smaller than Max_Capacity.

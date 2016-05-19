@@ -45,9 +45,9 @@ generic
    --  Keys.To_Element.
 
    with function Resize_Strategy
-     (Used     : Hash_Type;
+     (Used     : Count_Type;
       Fill     : Count_Type;
-      Capacity : Count_Type) return Hash_Type is Resize_2_3;
+      Capacity : Count_Type) return Count_Type is Resize_2_3;
    --  This function decides whether the hash-table needs to be resized.
    --  Resizing is a costly operation, so should be performed as rarely
    --  as possible. On the other hand, a table should have plenty of empty
@@ -86,40 +86,36 @@ package Conts.Maps.Generics with SPARK_Mode is
         (Self : in out Base_Map'Class; Source : Base_Map'Class);
       procedure Resize
         (Self     : in out Base_Map'Class;
-         New_Size : Hash_Type)
-      with
-        Global => null;
+         New_Size : Count_Type)
+        with Global => null;
       procedure Set
         (Self     : in out Base_Map'Class;
          Key      : Keys.Element_Type;
          Value    : Elements.Element_Type)
-      with
-        Global => null;
+        with Global => null;
       function Get
         (Self     : Base_Map'Class;
          Key      : Keys.Element_Type)
          return Elements.Constant_Returned_Type
-      with
-        Global => null;
+        with Global => null;
       procedure Clear (Self : in out Base_Map'Class) with
         Global => null;
       procedure Delete
         (Self     : in out Base_Map'Class;
          Key      : Keys.Element_Type)
-      with
-        Global => null;
+        with Global => null;
       function Pair
         (Self : Base_Map'Class; Position : Cursor) return Pair_Type
-         with Inline, Global => null;
+        with Inline, Global => null;
       function Element
         (Self : Base_Map'Class; Position : Cursor)
          return Constant_Returned_Type
-      is (Value (Pair (Self, Position)))
-      with Global => null;
+        is (Value (Pair (Self, Position)))
+        with Global => null;
       function As_Element
         (Self : Base_Map'Class; Position : Cursor) return Element_Type
          is (Elements.To_Element (Value (Pair (Self, Position))))
-         with Inline, Global => null;
+        with Inline, Global => null;
       function First (Self : Base_Map'Class) return Cursor
         with Inline, Global => null;
       function Has_Element
@@ -142,8 +138,9 @@ package Conts.Maps.Generics with SPARK_Mode is
          is (Has_Element (Self, Position)) with Inline;
       function Next_Primitive
         (Self : Base_Map; Position : Cursor) return Cursor
-      is (Next (Self, Position)) with Inline,
-      Pre'Class => Has_Element (Self, Position);
+        is (Next (Self, Position))
+        with Inline,
+             Pre'Class => Has_Element (Self, Position);
       --  These are only needed because the Iterable aspect expects a parameter
       --  of type Map instead of Map'Class. But then it means that the loop
       --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
@@ -200,7 +197,7 @@ package Conts.Maps.Generics with SPARK_Mode is
       No_Element : constant Cursor := (Index => Hash_Type'Last);
 
       type Base_Map is new Container_Base_Type with record
-         Used   : Hash_Type := 0;
+         Used   : Count_Type := 0;
          --  Number of slots occupied by keys
 
          Fill   : Count_Type := 0;
@@ -229,7 +226,7 @@ package Conts.Maps.Generics with SPARK_Mode is
 
    procedure Resize
      (Self     : in out Base_Map'Class;
-      New_Size : Hash_Type) renames Impl.Resize;
+      New_Size : Count_Type) renames Impl.Resize;
    --  Change the capacity of the container.
    --  If you know you are going to insert n items, calling Resize (n) is
    --  likely to improve the performance by limiting the number of times the

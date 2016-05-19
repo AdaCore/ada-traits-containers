@@ -2,7 +2,8 @@ pragma Ada_2012;
 package body Functional_Sequences with SPARK_Mode => Off is
    function Get (S : Sequence; N : Extended_Index) return Element_Type is
      (Element_Lists.Vectors.Element (S, N));
-   function Length (S : Sequence) return Natural is
+
+   function Length (S : Sequence) return Count_Type is
      (Element_Lists.Vectors.Length (S));
 
    function "=" (S1, S2 : Sequence) return Boolean is

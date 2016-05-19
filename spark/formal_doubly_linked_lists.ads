@@ -29,19 +29,19 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
    --  Lists are empty when default initialized.
    --  Iteration over lists can be done over cursors or over elements.
 
-   function Capacity (Self : List'Class) return Natural;
+   function Capacity (Self : List'Class) return Count_Type;
 
-   function Length (Self : List'Class) return Natural with
+   function Length (Self : List'Class) return Count_Type with
      Post => Length'Result <= Capacity (Self);
    --  The length of a list is always smaller than its capacity
 
    package Formal_Model with Ghost is
 
       package P is new Functional_Maps
-        (Element_Type => Positive,
+        (Element_Type => Count_Type,
          Key_Type     => Cursor);
       package M is new Functional_Sequences
-        (Index_Type   => Positive,
+        (Index_Type   => Count_Type,
          Element_Type => Element_Type);
 
       function Model (Self : List'Class) return M.Sequence with
@@ -94,7 +94,7 @@ package Formal_Doubly_Linked_Lists with SPARK_Mode is
 
    function Model (Self : List'Class) return M.Sequence
                    renames Formal_Model.Model;
-   function Element (S : M.Sequence; I : Positive) return Element_Type
+   function Element (S : M.Sequence; I : Count_Type) return Element_Type
                    renames M.Get;
    function Positions (Self : List'Class) return P.Map
                    renames Formal_Model.Positions;

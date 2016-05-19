@@ -25,7 +25,7 @@ with Ada.Containers; use Ada.Containers;
 
 package body Conts.Maps.Generics with SPARK_Mode => Off is
 
-   Min_Size : constant Hash_Type := 2 ** 3;
+   Min_Size : constant Count_Type := 2 ** 3;
    --  Minimum size for maps. Must be a power of 2.
 
    package body Impl is
@@ -263,16 +263,16 @@ package body Conts.Maps.Generics with SPARK_Mode => Off is
 
       procedure Resize
         (Self     : in out Base_Map'Class;
-         New_Size : Hash_Type)
+         New_Size : Count_Type)
       is
-         Size      : Hash_Type := Min_Size;
+         Size      : Hash_Type := Hash_Type (Min_Size);
          Tmp       : Slot_Table_Access;
          Candidate : Hash_Type;
          Prob      : Probing;
       begin
          --  Find smallest valid size greater than New_Size
 
-         while Size < New_Size loop
+         while Size < Hash_Type (New_Size) loop
             Size := Size * 2;
          end loop;
 
@@ -322,8 +322,8 @@ package body Conts.Maps.Generics with SPARK_Mode => Off is
          Value    : Elements.Element_Type)
       is
          H        : constant Hash_Type := Hash (Key);
-         Used     : constant Hash_Type := Self.Used;
-         New_Size : Hash_Type;
+         Used     : constant Count_Type := Self.Used;
+         New_Size : Count_Type;
       begin
          --  At least one empty slot
          pragma Assert (Self.Fill <= Self.Capacity);

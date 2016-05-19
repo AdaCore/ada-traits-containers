@@ -3,11 +3,11 @@ pragma Ada_2012;
 package body Functional_Sets with SPARK_Mode => Off is
    use Element_Lists.Vectors;
 
-   function Find_Element (S : Set; E : Element_Type) return Natural;
+   function Find_Element (S : Set; E : Element_Type) return Count_Type;
    --  Helper function.
    --  Searches for an element in the set and returns the appropriate index.
 
-   function Find_Element (S : Set; E : Element_Type) return Natural is
+   function Find_Element (S : Set; E : Element_Type) return Count_Type is
    begin
       for I in 1 .. Length (S) loop
          if Element (S, I) = E then
@@ -21,9 +21,9 @@ package body Functional_Sets with SPARK_Mode => Off is
       (Find_Element (S, E) > 0);
 
    function Inc (S1, S2 : Set) return Boolean is
-      I2 : Natural;
+      I2 : Count_Type;
    begin
-      for I1 in 1 .. Natural (Length (S1)) loop
+      for I1 in 1 .. Length (S1) loop
          I2 := Find_Element (S2, Element (S1, I1));
          if I2 = 0 then
             return False;

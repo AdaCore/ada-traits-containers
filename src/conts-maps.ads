@@ -85,16 +85,18 @@ package Conts.Maps is
    ---------------------
 
    function Resize_2_3
-     (Used     : Hash_Type;
+     (Used     : Count_Type;
       Fill     : Count_Type;
-      Capacity : Count_Type) return Hash_Type
-     is (Hash_Type'Min
-          ((if Hash_Type (Fill) * 3 > Hash_Type (Capacity) * 2
-            then (if Used > 100_000 then Used * 2 else Used * 4) else 0),
-           Hash_Type (Count_Type'Last)))
-     with Inline,
-          Pre  => Used < Hash_Type (Count_Type'Last),
-          Post => Resize_2_3'Result in 0 .. Hash_Type (Count_Type'Last);
+      Capacity : Count_Type) return Count_Type
+     is (Count_Type
+           (Hash_Type'Min
+              ((if Hash_Type (Fill) > (Hash_Type (Capacity) * 2) / 3
+                then (if Used > 100_000
+                      then Hash_Type (Used) * 2
+                      else Hash_Type (Used) * 4)
+                else 0),   --  no resizing in this case
+                Hash_Type (Count_Type'Last))))
+     with Inline;
    --  This strategy attempts to keep the table at most 2/3. If this isn't the
    --  case, the size of the table is multiplied by 4 (which trades memory for
    --  efficiency by limiting the number of mallocs). However, when the table
@@ -105,6 +107,9 @@ package Conts.Maps is
    --
    --  The actual size allocated for the table will be the nearest power of 2
    --  greater than the returned value.
+   --
+   --  See Conts.Maps.Generics.Resize_Strategy for more information on the
+   --  parameters.
 
 private
 

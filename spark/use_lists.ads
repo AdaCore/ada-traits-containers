@@ -4,8 +4,9 @@ pragma Elaborate_All (Formal_Doubly_Linked_Lists);
 with Conts; use Conts;
 
 package Use_Lists with SPARK_Mode is
+   type Element_Type is new Integer;
    package My_Lists is new
-     Formal_Doubly_Linked_Lists (Element_Type => Integer);
+     Formal_Doubly_Linked_Lists (Element_Type => Element_Type);
    use My_Lists;
    use type My_Lists.Cursor;
    use My_Lists.P;
@@ -13,8 +14,8 @@ package Use_Lists with SPARK_Mode is
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   function Is_Incr (I1, I2 : Integer) return Boolean is
-      (if I1 = Integer'Last then I2 = Integer'Last else I2 = I1 + 1);
+   function Is_Incr (I1, I2 : Element_Type) return Boolean is
+      (if I1 = Element_Type'Last then I2 = Element_Type'Last else I2 = I1 + 1);
 
    procedure Incr_All (L1 : List; L2 : in out List) with
      Post => Length (L2) = Length (L1)
@@ -62,7 +63,7 @@ package Use_Lists with SPARK_Mode is
    --  Same as before except that new elements are inserted just before each
    --  duplicated element.
 
-   function My_Find (L : List; E : Integer) return Cursor with
+   function My_Find (L : List; E : Element_Type) return Cursor with
      Post => My_Find'Result = Find (L, E);
    --  Iterate to find an element.
 
@@ -99,7 +100,7 @@ package Use_Lists with SPARK_Mode is
    --  Test links between high level, position based model of a container and
    --  lower level, cursor based model.
 
-   function P (E : Integer) return Boolean;
+   function P (E : Element_Type) return Boolean;
    --  Any property P on an Integer E.
 
    procedure From_Higher_To_Lower (L : List) with

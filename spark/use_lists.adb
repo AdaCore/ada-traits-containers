@@ -11,7 +11,7 @@ package body Use_Lists with SPARK_Mode is
                          Element (Model (L2), N)));
          pragma Loop_Invariant
            (Get (Positions (L1), Cu) = Length (L2) + 1);
-         if Element (L1, Cu) < Integer'Last then
+         if Element (L1, Cu) < Element_Type'Last then
             Append (L2, Element (L1, Cu) + 1);
          else
             Append (L2, Element (L1, Cu));
@@ -34,7 +34,7 @@ package body Use_Lists with SPARK_Mode is
            (for all N in Get (Positions (L), Cu) .. Length (L) =>
                 Element (Model (L)'Loop_Entry, N) =
                 Element (Model (L), N));
-         if Element (L, Cu) < Integer'Last then
+         if Element (L, Cu) < Element_Type'Last then
             Replace_Element (L, Cu, Element (L, Cu) + 1);
          end if;
          Next (L, Cu);
@@ -56,7 +56,7 @@ package body Use_Lists with SPARK_Mode is
                 Element (Model (L)'Loop_Entry, N) =
                 Element (Model (L), N));
          pragma Loop_Invariant (Positions (L)'Loop_Entry = Positions (L));
-         if Element (L, Cu) < Integer'Last then
+         if Element (L, Cu) < Element_Type'Last then
             Replace_Element (L, Cu, Element (L, Cu) + 1);
          end if;
          Next (L, Cu);
@@ -65,7 +65,7 @@ package body Use_Lists with SPARK_Mode is
 
    procedure Double_Size (L : in out List) is
       Cu   : Cursor := First (L);
-      Lgth : Natural := Length (L);
+      Lgth : Count_Type := Length (L);
    begin
       for I in 1 .. Lgth loop
          pragma Loop_Invariant (Has_Element (L, Cu));
@@ -86,7 +86,7 @@ package body Use_Lists with SPARK_Mode is
 
    procedure Double_Size_2 (L : in out List) is
       Cu : Cursor := First (L);
-      N  : Natural := 0 with Ghost;
+      N  : Count_Type := 0 with Ghost;
    begin
       while Has_Element (L, Cu) loop
          pragma Loop_Invariant (Length (L) = Length (L)'Loop_Entry + N);
@@ -107,7 +107,7 @@ package body Use_Lists with SPARK_Mode is
       end loop;
    end Double_Size_2;
 --
-   function My_Find (L : List; E : Integer) return Cursor is
+   function My_Find (L : List; E : Element_Type) return Cursor is
       Cu : Cursor := First (L);
    begin
       while Has_Element (L, Cu) loop
@@ -160,7 +160,7 @@ package body Use_Lists with SPARK_Mode is
       Insert (L, Cu, 0);
    end Insert_Count;
 
-   function P (E : Integer) return Boolean is
+   function P (E : Element_Type) return Boolean is
    begin
       return E >= 0;
    end P;

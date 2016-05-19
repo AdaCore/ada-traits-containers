@@ -1,25 +1,26 @@
 pragma Ada_2012;
+with Conts;     use Conts;
 with Formal_Hashed_Sets;
 pragma Elaborate_All (Formal_Hashed_Sets);
 
 package Use_Sets with SPARK_Mode is
-   package My_Sets is new Formal_Hashed_Sets
-     (Element_Type => Integer);
+   type Element_Type is new Natural;
+   package My_Sets is new Formal_Hashed_Sets (Element_Type => Element_Type);
    use My_Sets;
    use type My_Sets.Cursor;
    use My_Sets.P;
    use My_Sets.E;
    use My_Sets.M;
 
-   function My_Contains (S : My_Sets.Set; E : Integer) return Boolean is
+   function My_Contains (S : My_Sets.Set; E : Element_Type) return Boolean is
      (Find (S, E) /= No_Element) with
    Post => My_Contains'Result = Contains (S, E);
 
-   function My_Find (S : My_Sets.Set; E : Integer) return Cursor with
+   function My_Find (S : My_Sets.Set; E : Element_Type) return Cursor with
      Post => My_Find'Result = Find (S, E);
    --  Iterate through the set to find E.
 
-   function F (E : Integer) return Integer is
+   function F (E : Element_Type) return Element_Type is
       (if E in -100 .. 100 then E * 2 else E);
 
    procedure Apply_F (S : My_Sets.Set; R : in out My_Sets.Set) with
@@ -40,7 +41,7 @@ package Use_Sets with SPARK_Mode is
    --  Same as before except that it is specified it using a quantified
    --  expression instead of set intersection.
 
-   function P (E : Integer) return Boolean is
+   function P (E : Element_Type) return Boolean is
      (E >= 0);
 
    procedure Union_P (S1 : in out My_Sets.Set; S2 : My_Sets.Set) with
@@ -70,13 +71,13 @@ package Use_Sets with SPARK_Mode is
      Pre  => Capacity (S) - Count > Length (S),
      Post => Length (S) <= Length (S)'Old + Count
      and Inc (Model (S)'Old, Model (S))
-     and (for all E in 1 .. Count => Contains (S, E))
+     and (for all E in 1 .. Element_Type'(Count) => Contains (S, E))
      and (for all E of S => Mem (Model (S)'Old, E) or E in 1 .. Count);
 
    --  Test links between high-level model, lower-level position based model
    --  and lowest-level, cursor based model of a set.
 
-   function Q (E : Integer) return Boolean;
+   function Q (E : Element_Type) return Boolean;
    --  Any property Q on an Integer E.
 
    procedure From_Elements_To_Model (S : My_Sets.Set) with

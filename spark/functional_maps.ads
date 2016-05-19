@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Conts;            use Conts;
 with Conts.Vectors.Indefinite_Unbounded;
 
 generic
@@ -133,12 +134,12 @@ private
 
    package Element_Lists is new Conts.Vectors.Indefinite_Unbounded
      (Element_Type        => Element_Type,
-      Index_Type          => Positive,
+      Index_Type          => Count_Type,
       Container_Base_Type => Neither_Controlled_Nor_Limited);
 
    package Key_Lists is new Conts.Vectors.Indefinite_Unbounded
      (Element_Type        => Key_Type,
-      Index_Type          => Positive,
+      Index_Type          => Count_Type,
       Container_Base_Type => Neither_Controlled_Nor_Limited);
 
    type Map is record

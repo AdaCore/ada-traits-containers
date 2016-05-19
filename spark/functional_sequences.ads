@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Conts;           use Conts;
 with Conts.Vectors.Indefinite_Unbounded;
 
 generic
@@ -28,7 +29,7 @@ package Functional_Sequences with SPARK_Mode is
    --  Sequences are axiomatized using Length and Get providing respectively
    --  the length of a sequence and an accessor to its Nth element:
 
-   function Length (S : Sequence) return Natural with
+   function Length (S : Sequence) return Count_Type with
      Global => null,
      Post => (Index_Type'Pos (Index_Type'First) - 1) + Length'Result <=
        Index_Type'Pos (Index_Type'Last);
@@ -107,7 +108,7 @@ package Functional_Sequences with SPARK_Mode is
    --  whenever possible both for execution and for proof.
 
      Global => null,
-     Pre    => Length (S) < Natural'Last
+     Pre    => Length (S) < Count_Type'Last
      and then ((Index_Type'Pos (Index_Type'First) - 1) + Length (S)) <
        Index_Type'Pos (Index_Type'Last),
      Post   => Is_Add (S, E, Add'Result);

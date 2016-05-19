@@ -2,7 +2,7 @@ pragma Ada_2012;
 with Functional_Sequences;
 with Functional_Maps;
 with Functional_Sets;
-with Conts;
+with Conts;                 use Conts;
 
 generic
    type Element_Type (<>) is private;
@@ -43,10 +43,10 @@ package Formal_Ordered_Sets with SPARK_Mode is
    --  Sets are empty when default initialized.
    --  Iteration over sets can be done over cursors or over elements.
 
-   function Capacity (Self : Set'Class) return Natural with
-     Import;
+   function Capacity (Self : Set'Class) return Count_Type
+      with Import;
 
-   function Length (Self : Set'Class) return Natural with
+   function Length (Self : Set'Class) return Count_Type with
      Import,
      Post => Length'Result < Capacity (Self);
    --  The length of a set is always strictly smaller than its capacity
@@ -54,10 +54,10 @@ package Formal_Ordered_Sets with SPARK_Mode is
    package Formal_Model with Ghost is
 
       package P is new Functional_Maps
-        (Element_Type => Positive,
+        (Element_Type => Count_Type,
          Key_Type     => Cursor);
       package E is new Functional_Sequences
-        (Index_Type   => Positive,
+        (Index_Type   => Count_Type,
          Element_Type => Element_Type);
       package M is new Functional_Sets
         (Element_Type => Element_Type);

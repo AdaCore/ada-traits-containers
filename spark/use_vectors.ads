@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with Formal_Vectors;
+with Conts;              use Conts;
 pragma Elaborate_All (Formal_Vectors);
 
 package Use_Vectors with SPARK_Mode is
@@ -11,9 +12,10 @@ package Use_Vectors with SPARK_Mode is
 
    subtype Index_Type is Integer range First_Index .. Last_Index;
 
+   type Element_Type is new Integer;
    package My_Vectors is new
      Formal_Vectors
-       (Index_Type => Index_Type, Element_Type => Integer);
+       (Index_Type => Index_Type, Element_Type => Element_Type);
    use My_Vectors;
    use type My_Vectors.Cursor;
    use My_Vectors.V;
@@ -21,8 +23,8 @@ package Use_Vectors with SPARK_Mode is
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   function Is_Incr (I1, I2 : Integer) return Boolean is
-      (if I1 = Integer'Last then I2 = Integer'Last else I2 = I1 + 1);
+   function Is_Incr (I1, I2 : Element_Type) return Boolean is
+      (if I1 = Element_Type'Last then I2 = Element_Type'Last else I2 = I1 + 1);
 
    procedure Incr_All (V1 : Vector; V2 : in out Vector) with
      Post => Length (V2) = Length (V1)
@@ -53,12 +55,12 @@ package Use_Vectors with SPARK_Mode is
      Post => Length (V) = 2 * Length (V)'Old
      and (for all I in Index_Type'First .. Last (V)'Old =>
        Element (V, I) = Element (Model (V)'Old, I)
-       and Element (V, I + Length (V)'Old) =
+       and Element (V, I + Integer (Length (V)'Old)) =
            Element (Model (V)'Old, I));
    --  Double the size of list by duplicating every element. New elements are
    --  appended to the list.
 
-   function My_Find (V : Vector; E : Integer) return Index_Type'Base
+   function My_Find (V : Vector; E : Element_Type) return Index_Type'Base
    --  Iterate to find an element E in V.
 
    with
@@ -105,7 +107,7 @@ package Use_Vectors with SPARK_Mode is
    --  Test links between high level, position based model of a container and
    --  lower level, cursor based model.
 
-   function P (E : Integer) return Boolean;
+   function P (E : Element_Type) return Boolean;
    --  Any property P on an Integer E.
 
    procedure From_Higher_To_Lower (V : Vector) with

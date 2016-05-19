@@ -115,7 +115,7 @@ package Conts.Lists.Generics with SPARK_Mode is
 
       type Base_List is new Storage.Container with record
          Head, Tail : Storage.Node_Access := Storage.Null_Access;
-         Size       : Natural := 0;
+         Size       : Count_Type := 0;
       end record;
 
       type Cursor is record
