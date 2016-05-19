@@ -13,7 +13,7 @@ project Tests is
    package Compiler extends Shared.Compiler is
       for Switches ("s-memory.adb") use ("-gnatg")
          & Compiler'Switches ("Ada");
-      for Switches ("C++") use ("-I" & Shared.Boost_Include)
+      for Switches ("C++") use Shared.Boost_Include
          & Compiler'Switches ("C++");
    end Compiler;
    package Builder extends Shared.Builder is

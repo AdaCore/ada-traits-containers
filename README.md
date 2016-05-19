@@ -48,7 +48,7 @@ Set the variable ```Boost_Include''' to point to the install prefix
 for Boost:
 
 ```
-   Boost_Include := "/usr/include";
+   Boost_Include := ("-I/usr/include");
 ```
 
 Finally, compile and run the test with

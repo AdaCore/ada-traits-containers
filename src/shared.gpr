@@ -9,7 +9,8 @@ abstract project Shared is
 
    So_Ext := ".dylib";
 
-   Boost_Include := "/usr/include";
+   Boost_Include := ("-I/usr/include",
+                     "-I/opt/local/include");   --  OSX, macports
    --  Install directory for Boost (for tests only)
 
    package Naming is
