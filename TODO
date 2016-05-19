@@ -9,6 +9,9 @@ can be edited with any text editor.
 
 * General organization of packages
 
+** TODO use SPARK_Pre and SPARK_Post, merge all packages and generate two sets
+   via a python script. To avoid duplication of code.
+
 ** TODO Replace storage_pools package with higher-level package
    For unbounded vectors, for instance, we want to use directly =System.Memory=
    so that we can also use =realloc=. This is not compatible with storage
@@ -50,6 +53,9 @@ can be edited with any text editor.
 
 ** MAYBE should we implement the Random packages as input cursors ?
 
+** TODO: conts.Random.Rand should be a procedure, not a function
+   For SPARK
+
 ** TODO ranges
    Similar to the C++ concept, these are ways to apply algorithms to whole
    containers of subsets of them, and dynamically filter them for instance.
@@ -84,10 +90,14 @@ can be edited with any text editor.
 
 ** TODO =Equal=
    Compares two containers, ignore order when relevant.
+
 ** MAYBE Should we have a version of the algorithms with two cursors as input ?
    This should allow working on a subset of a container. The second cursor
    might be, as in C++, past the last element of the sequence, to simplify the
    handling of containers like forward-lists.
+
+** TODO =Zip=
+   Take values from multiple containers and create tuples
 
 * Cursors
 
@@ -110,9 +120,6 @@ can be edited with any text editor.
 ** TODO Implement single-linked lists
    They are much more efficient when they satisfy the user need, as experiments
    showed.
-
-** TODO Implement =Conts.Vectors.Nodes.Unbounded_SPARK= as a vector
-   This would avoid code duplication
 
 ** MAYBE Implement a version of =Storage= that perform database queries ?
    This would let users manipulate a database as if they were manipulating
@@ -145,6 +152,8 @@ can be edited with any text editor.
    the simpler packages all need to override Constant_Indexing, which cannot
    be defined in vectors-generics.ads.
 
+** TODO: what should Last return on empty vector ?
+
 * Strings
 
 ** TODO One possible storage is vectors
@@ -163,6 +172,15 @@ can be edited with any text editor.
    For instance, can we have a Find taking an =Unbounded_String= when
    the map is created with a =String=, to save explicit and costly conversions?
    http://erdani.com/publications/cuj-2006-02.pdf
+
+** TODO: should we resize just before inserting, rather than just after ?
+   This would ease pre and post conditions
+
+** TOOD: do not return a pair for the cursor
+   We might be referencing freed memory, if the pair is stored by the user
+   and elements removed from the container meanwhile
+
+** TODO: Resize should take a Count_Type, not Hash_Type
 
 * Graphs
 
