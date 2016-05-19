@@ -62,7 +62,7 @@ pragma Warnings (On, "unit * is not referenced");
 procedure {test_name}
    (Stdout : not null access Output'Class)
 is
-   {instance}
+   {suppress}{instance}
    use Container;{adaptors}
 
    procedure Run (V2 : in out Container.{type});
@@ -294,14 +294,18 @@ class Tests(object):
 
     def gen(self, adaptor="Constant_Returned", adaptors="{type}_Adaptors",
             disable_checks=False):
+
+        self.args['suppress'] = ""
+        if disable_checks:
+            self.args['suppress'] = "pragma Suppress (Container_Checks);\n   "
+
         if self.ada2012:
             adapt = adaptors.format(**self.args)
-            suppress = "pragma Suppress (Container_Checks);\n" if disable_checks else ""
 
             self.args['adaptors'] = """
-   %spackage Adaptors is new Conts.Adaptors.%s (Container);
+   package Adaptors is new Conts.Adaptors.%s (Container);
    function Count_If is new Conts.Algorithms.Count_If
-      (Adaptors.Cursors.Forward, Adaptors.Maps.%s);""" % (suppress, adapt, adaptor)
+      (Adaptors.Cursors.Forward, Adaptors.Maps.%s);""" % (adapt, adaptor)
 
         else:
             self.args['prefix'] = 'V2.'
