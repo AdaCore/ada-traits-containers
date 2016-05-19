@@ -17,8 +17,8 @@ check_spark:
 
 # Prove our files
 prove:
-	gnatprove -Pspark/spark.gpr -u use_sets.adb use_lists.adb use_maps.adb use_ordered_sets.adb use_vectors.adb --dbg-proof-only --level=3
-	# gnatprove -P spark/spark.gpr -U --level=3
+	gnatprove -Pspark/spark.gpr -u use_sets.adb use_lists.adb use_maps.adb use_ordered_sets.adb use_vectors.adb --dbg-proof-only --prover=z3,cvc4,alt-ergo -j0
+	# gnatprove -P spark/spark.gpr -U --prover=z3,cvc4,alt-ergo -j0
 
 
 valgrind:
