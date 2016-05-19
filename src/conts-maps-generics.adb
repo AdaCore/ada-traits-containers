@@ -40,13 +40,6 @@ package body Conts.Maps.Generics with SPARK_Mode => Off is
       --  Probe the table and look for the place where the element with that
       --  key would be inserted (or already exists).
 
-      procedure Internal_Insert
-        (Self  : in out Base_Map'Class;
-         Key   : Keys.Element_Type;
-         H     : Hash_Type;
-         Value : Elements.Element_Type);
-      --  Internal insert function.
-
       ---------------
       -- Find_Slot --
       ---------------
@@ -90,42 +83,6 @@ package body Conts.Maps.Generics with SPARK_Mode => Off is
             return Candidate;
          end if;
       end Find_Slot;
-
-      ---------------------
-      -- Internal_Insert --
-      ---------------------
-
-      procedure Internal_Insert
-        (Self  : in out Base_Map'Class;
-         Key   : Keys.Element_Type;
-         H     : Hash_Type;
-         Value : Elements.Element_Type)
-      is
-         Index    : constant Hash_Type := Find_Slot (Self, Key, H);
-         S        : Slot renames Self.Table (Index);
-         Old_Kind : constant Slot_Kind := S.Kind;
-      begin
-         case Old_Kind is
-         when Empty =>
-            S := (Hash  => H,
-                  Kind  => Full,
-                  Key   => Keys.To_Stored (Key),
-                  Value => Elements.To_Stored (Value));
-            Self.Used := Self.Used + 1;
-            Self.Fill := Self.Fill + 1;
-
-         when Dummy =>
-            S := (Hash  => H,
-                  Kind  => Full,
-                  Key   => Keys.To_Stored (Key),
-                  Value => Elements.To_Stored (Value));
-            Self.Used := Self.Used + 1;
-
-         when Full =>
-            Elements.Release (S.Value);
-            S.Value := Elements.To_Stored (Value);
-         end case;
-      end Internal_Insert;
 
       ------------
       -- Assign --
@@ -325,16 +282,53 @@ package body Conts.Maps.Generics with SPARK_Mode => Off is
          Used     : constant Count_Type := Self.Used;
          New_Size : Count_Type;
       begin
-         --  At least one empty slot
+         --  Need at least one empty slot
          pragma Assert (Self.Fill <= Self.Capacity);
+
+         --  If the table was never allocated, do it now
 
          if Self.Table = null then
             Resize (Self, Min_Size);
          end if;
 
-         Internal_Insert (Self, Key, H, Value);
+         --  Do the actual insert. Find_Slot expects to find an empy slot
+         --  eventually, and the less full the table the more chance of
+         --  finding this slot early on. But we can't systematically resize
+         --  now, because replacing an element, for instance, doesn't need
+         --  any resizing (so we would be wasting time or worse grow the table
+         --  for nothing), nor does reusing a Dummy slot.
+         --  So we really can only resize after the call to Find_Slot, which
+         --  means we might be resizing even though the user won't be adding a
+         --  new element ever after.
 
-         --  We might need to resize if we just added a key
+         declare
+            Index    : constant Hash_Type := Find_Slot (Self, Key, H);
+            S        : Slot renames Self.Table (Index);
+         begin
+            case S.Kind is
+            when Empty =>
+               S := (Hash  => H,
+                     Kind  => Full,
+                     Key   => Keys.To_Stored (Key),
+                     Value => Elements.To_Stored (Value));
+               Self.Used := Self.Used + 1;
+               Self.Fill := Self.Fill + 1;
+
+            when Dummy =>
+               S := (Hash  => H,
+                     Kind  => Full,
+                     Key   => Keys.To_Stored (Key),
+                     Value => Elements.To_Stored (Value));
+               Self.Used := Self.Used + 1;
+
+            when Full =>
+               Elements.Release (S.Value);
+               S.Value := Elements.To_Stored (Value);
+            end case;
+         end;
+
+         --  If the table is now too full, we need to resize it for the next
+         --  time we want to insert an element.
 
          if Self.Used > Used then
             New_Size := Resize_Strategy
