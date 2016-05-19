@@ -29,18 +29,20 @@ package body Conts with SPARK_Mode is
    -- Ranged_Random --
    -------------------
 
-   function Ranged_Random (Self : Random.Generator) return Random.Discrete is
+   procedure Ranged_Random
+      (Self : in out Random.Generator; Result : out Random.Discrete)
+   is
       use Random;
    begin
       --  These tests are performed statically by the compiler.
       --  Special case to avoid division by zero below
       if Min = Max then
-         return Min;
+         Result := Min;
 
       elsif Min = Discrete'First
         and then Max = Discrete'Last
       then
-         return Random.Random (Self);
+         Random.Random (Self, Result => Result);
 
       elsif Discrete'Base'Size > 32 then
          declare
@@ -59,14 +61,16 @@ package body Conts with SPARK_Mode is
             N : constant Unsigned_64 :=
               Conv_To_Unsigned (Max) - Conv_To_Unsigned (Min) + 1;
             Slop : constant Unsigned_64 := Unsigned_64'Last rem N + 1;
+            X2   : Discrete;
             X    : Unsigned_64;
 
          begin
             loop
-               X := Discrete'Pos (Random.Random (Self));
+               Random.Random (Self, Result => X2);
+               X := Discrete'Pos (X2);
                exit when Slop = N or else X <= Unsigned_64'Last - Slop;
             end loop;
-            return Conv_To_Result (Conv_To_Unsigned (Min) + X rem N);
+            Result := Conv_To_Result (Conv_To_Unsigned (Min) + X rem N);
          end;
 
       else
@@ -75,16 +79,34 @@ package body Conts with SPARK_Mode is
               Unsigned_32 (Discrete'Pos (Max) - Discrete'Pos (Min) + 1);
             Slop : constant Unsigned_32 := Unsigned_32'Last rem N + 1;
             X    : Unsigned_32;
+            X2   : Discrete;
          begin
             loop
-               X := Discrete'Pos (Random.Random (Self));
+               Random.Random (Self, Result => X2);
+               X := Discrete'Pos (X2);
                exit when Slop = N or else X <= Unsigned_32'Last - Slop;
             end loop;
 
-            return Discrete'Val
+            Result := Discrete'Val
               (Discrete'Pos (Min) + Unsigned_32'Pos (X rem N));
          end;
       end if;
    end Ranged_Random;
+
+   --------------------
+   -- Default_Random --
+   --------------------
+
+   package body Default_Random is
+
+      ------------
+      -- Random --
+      ------------
+
+      procedure Random (Gen : in out Generator; Result : out Discrete_Type) is
+      begin
+         Result := Ada_Random.Random (Gen);
+      end Random;
+   end Default_Random;
 
 end Conts;

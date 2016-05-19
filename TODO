@@ -53,9 +53,6 @@ can be edited with any text editor.
 
 ** MAYBE should we implement the Random packages as input cursors ?
 
-** TODO: conts.Random.Rand should be a procedure, not a function
-   For SPARK
-
 ** TODO ranges
    Similar to the C++ concept, these are ways to apply algorithms to whole
    containers of subsets of them, and dynamically filter them for instance.

@@ -70,7 +70,7 @@ package Conts.Algorithms is
          Left, Right : Cursors.Index) is <>;
    procedure Shuffle
      (Self : in out Cursors.Container;
-      Gen  : Random.Generator)
+      Gen  : in out Random.Generator)
       with Global => null;
    --  Generates a random permutation of Self.
    --  If you 'use' the package for your container (vector for instance), then

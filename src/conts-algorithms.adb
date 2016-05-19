@@ -67,7 +67,7 @@ package body Conts.Algorithms is
 
    procedure Shuffle
      (Self : in out Cursors.Container;
-      Gen  : Random.Generator)
+      Gen  : in out Random.Generator)
    is
       use Cursors;
       First         : constant Cursors.Index := Cursors.First (Self);
@@ -83,9 +83,9 @@ package body Conts.Algorithms is
          declare
             --  The cost of the instance is limited (just a few instructions)
             --  thanks to inlining.
-            function Rand is new Conts.Ranged_Random (Random, First, C);
+            procedure Rand is new Conts.Ranged_Random (Random, First, C);
          begin
-            G := Rand (Gen);
+            Rand (Gen, Result => G);
             Swap (Self, G, C);
             C := C - 1;
          end;
