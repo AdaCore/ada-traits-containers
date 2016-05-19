@@ -52,12 +52,13 @@ package Formal_Ordered_Sets with SPARK_Mode is
    --  The length of a set is always strictly smaller than its capacity
 
    package Formal_Model with Ghost is
+      subtype Positive_Count_Type is Count_Type range 1 .. Count_Type'Last;
 
       package P is new Functional_Maps
-        (Element_Type => Count_Type,
+        (Element_Type => Positive_Count_Type,
          Key_Type     => Cursor);
       package E is new Functional_Sequences
-        (Index_Type   => Count_Type,
+        (Index_Type   => Positive_Count_Type,
          Element_Type => Element_Type);
       package M is new Functional_Sets
         (Element_Type => Element_Type);
