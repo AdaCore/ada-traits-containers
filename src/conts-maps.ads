@@ -88,10 +88,13 @@ package Conts.Maps is
      (Used     : Hash_Type;
       Fill     : Count_Type;
       Capacity : Count_Type) return Hash_Type
-     is (if Fill * 3 > Capacity * 2
-         then (if Used > 100_000 then Used * 2 else Used * 4)
-         else 0)
-     with Inline;
+     is (Hash_Type'Min
+          ((if Hash_Type (Fill) * 3 > Hash_Type (Capacity) * 2
+            then (if Used > 100_000 then Used * 2 else Used * 4) else 0),
+           Hash_Type (Count_Type'Last)))
+     with Inline,
+          Pre  => Used < Hash_Type (Count_Type'Last),
+          Post => Resize_2_3'Result in 0 .. Hash_Type (Count_Type'Last);
    --  This strategy attempts to keep the table at most 2/3. If this isn't the
    --  case, the size of the table is multiplied by 4 (which trades memory for
    --  efficiency by limiting the number of mallocs). However, when the table
