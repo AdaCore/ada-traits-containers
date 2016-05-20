@@ -34,6 +34,7 @@
 pragma Ada_2012;
 with Conts.Cursors;
 with Conts.Lists.Storage;
+with Conts.Lists.Impl;
 with Conts.Properties;
 
 generic
@@ -47,86 +48,12 @@ package Conts.Lists.Generics with SPARK_Mode is
    subtype Stored_Type is Storage.Elements.Stored_Type;
    subtype Constant_Returned_Type is Storage.Elements.Constant_Returned_Type;
 
-   package Impl is
-      type Base_List is new Storage.Container with private;
-      --  We do not define the Iterable aspect here: this is not allowed,
-      --  since the parent type is a generic formal parameter. Instead, we
-      --  have to define it in the instantiations of Generic_List.
-
-      type Cursor is private;
-      No_Element : constant Cursor;
-
-      function Length (Self : Base_List'Class) return Count_Type
-        with Inline => True, Global => null;
-      function Capacity (Self : Base_List'Class) return Count_Type
-        is (Storage.Capacity (Self))
-        with Inline => True, Global => null;
-      procedure Clear (Self : in out Base_List'Class);
-      procedure Assign
-        (Self : in out Base_List'Class; Source : Base_List'Class);
-      procedure Append (Self : in out Base_List'Class; Element : Element_Type)
-        with Global => null,
-             Pre    => Length (Self) + 1 <= Capacity (Self);
-      function First (Self : Base_List'Class) return Cursor
-        with Inline, Global => null;
-      function Has_Element
-        (Self : Base_List'Class; Position : Cursor) return Boolean
-        with Inline, Global => null;
-      function Element
-        (Self : Base_List'Class; Position : Cursor)
-         return Constant_Returned_Type
-        with Inline, Global => null,
-             Pre    => Has_Element (Self, Position);
-      function Next
-        (Self : Base_List'Class; Position : Cursor) return Cursor
-        with Inline, Global => null,
-             Pre    => Has_Element (Self, Position);
-      function Previous
-        (Self : Base_List'Class; Position : Cursor) return Cursor
-        with Inline, Global => null,
-             Pre    => Has_Element (Self, Position);
-      --  Actual implementation for the subprograms renamed below. See the
-      --  descriptions below.
-
-      function First_Primitive (Self : Base_List) return Cursor
-         is (First (Self)) with Inline;
-      function Element_Primitive
-        (Self : Base_List; Position : Cursor) return Constant_Returned_Type
-      is (Element (Self, Position)) with Inline,
-      Pre'Class => Has_Element (Self, Position);
-      function Has_Element_Primitive
-        (Self : Base_List; Position : Cursor) return Boolean
-         is (Has_Element (Self, Position)) with Inline;
-      function Next_Primitive
-        (Self : Base_List; Position : Cursor) return Cursor
-      is (Next (Self, Position)) with Inline,
-      Pre'Class => Has_Element (Self, Position);
-      --  These are only needed because the Iterable aspect expects a parameter
-      --  of type List instead of List'Class. But then it means that the loop
-      --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
-      --  using an explicit cursor.
-
-   private
-      pragma SPARK_Mode (Off);
-      procedure Adjust (Self : in out Base_List);
-      procedure Finalize (Self : in out Base_List);
-      --  In case the list is a controlled type, but irrelevant when the list
-      --  is not controlled.
-
-      type Base_List is new Storage.Container with record
-         Head, Tail : Storage.Node_Access := Storage.Null_Access;
-         Size       : Count_Type := 0;
-      end record;
-
-      type Cursor is record
-         Current : Storage.Node_Access;
-      end record;
-      No_Element : constant Cursor := (Current => Storage.Null_Access);
-   end Impl;
+   package Impl is new Conts.Lists.Impl (Storage);
 
    subtype Base_List is Impl.Base_List;
    subtype Cursor is Impl.Cursor;
    No_Element : constant Cursor := Impl.No_Element;
+   use type Cursor;
 
    procedure Append (Self : in out Base_List'Class; Element : Element_Type)
      renames Impl.Append;
@@ -176,7 +103,14 @@ package Conts.Lists.Generics with SPARK_Mode is
 
    procedure Next (Self : Base_List'Class; Position : in out Cursor)
       with Inline, Global => null,
-           Pre    => Has_Element (Self, Position);
+           Pre    => Has_Element (Self, Position),
+     Contract_Cases =>
+       (Impl.P_Get (Impl.Positions (Self), Position) = Length (Self) =>
+              Position = No_Element,
+        others                                             =>
+          Has_Element (Self, Position)
+        and then Impl.P_Get (Impl.Positions (Self), Position) =
+          Impl.P_Get (Impl.Positions (Self), Position'Old) + 1);
 
    --  ??? Should we provide a Copy function ?
    --  This cannot be provided in this generic package, since the type could
@@ -201,6 +135,16 @@ package Conts.Lists.Generics with SPARK_Mode is
    is (Element (Self, Position))
    with Inline,
    Pre'Class => Has_Element (Self, Position);
+
+   use type Impl.M.Sequence;
+
+   function Model (Self : List'Class) return Impl.M.Sequence with
+     Ghost,
+     Post => Model'Result = Impl.Model (Self);
+   pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
+
+   function Element (S : Impl.M.Sequence; I : Count_Type) return Element_Type
+                     renames Impl.Element;
 
    --------------------
    -- Cursors traits --

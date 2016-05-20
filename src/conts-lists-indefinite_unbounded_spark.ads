@@ -47,6 +47,11 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
    subtype Cursor is Lists.Cursor;
    subtype List is Lists.List;
 
+   subtype Element_Sequence is Lists.Impl.M.Sequence with Ghost;
+   subtype Cursor_Position_Map is Lists.Impl.P_Map with Ghost;
+
+   use type Element_Sequence;
+
    function Copy (Self : List'Class) return List'Class;
    --  Return a deep copy of Self
    --  Complexity: O(n)

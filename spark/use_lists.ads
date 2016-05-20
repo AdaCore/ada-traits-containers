@@ -1,16 +1,16 @@
 pragma Ada_2012;
-with Formal_Doubly_Linked_Lists;
-pragma Elaborate_All (Formal_Doubly_Linked_Lists);
+with  Conts.Lists.Indefinite_Unbounded_SPARK;
+pragma Elaborate_All (Conts.Lists.Indefinite_Unbounded_SPARK);
 with Conts; use Conts;
 
 package Use_Lists with SPARK_Mode is
    type Element_Type is new Integer;
    package My_Lists is new
-     Formal_Doubly_Linked_Lists (Element_Type => Element_Type);
-   use My_Lists;
+     Conts.Lists.Indefinite_Unbounded_SPARK (Element_Type => Element_Type);
    use type My_Lists.Cursor;
-   use My_Lists.P;
-   use My_Lists.M;
+   use My_Lists.Lists;
+   use type My_Lists.Element_Sequence;
+   use all type My_Lists.Cursor_Position_Map;
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
@@ -57,14 +57,15 @@ package Use_Lists with SPARK_Mode is
      Pre  => Count_Type'Last / 2 >= Length (L),
      Post => Length (L) = 2 * Length (L)'Old
      and (for all I in 1 .. Length (L)'Old =>
-       Element (Model (L), 2 * I - 1) = Element (Model (L)'Old, I)
+              Element (Model (L), 2 * I - 1) =
+            Element (Model (L)'Old, I)
        and Element (Model (L), 2 * I) =
             Element (Model (L)'Old, I));
    --  Same as before except that new elements are inserted just before each
    --  duplicated element.
 
    function My_Find (L : List; E : Element_Type) return Cursor with
-     Post => My_Find'Result = Find (L, E);
+     Post => My_Find'Result = Impl.Find (L, E);
    --  Iterate to find an element.
 
    procedure Update_Range_To_Zero (L : in out List; Fst, Lst : Cursor)
@@ -72,12 +73,15 @@ package Use_Lists with SPARK_Mode is
 
    with
      Pre  => Has_Element (L, Fst) and then Has_Element (L, Lst)
-     and then Get (Positions (L), Lst) >= Get (Positions (L), Fst),
+     and then P_Get (Positions (L), Lst) >=
+       P_Get (Positions (L), Fst),
      Post => Positions (L) = Positions (L)'Old
      and (for all I in 1 .. Length (L) =>
-              (if I in Get (Positions (L), Fst) .. Get (Positions (L), Lst)
+              (if I in P_Get (Positions (L), Fst) ..
+                   P_Get (Positions (L), Lst)
                then Element (Model (L), I) = 0
-                 else Element (Model (L), I) = Element (Model (L)'Old, I)));
+                 else Element (Model (L), I) =
+                   Element (Model (L)'Old, I)));
 
    Count : constant := 7;
 
@@ -87,15 +91,19 @@ package Use_Lists with SPARK_Mode is
    with
      Pre  => Has_Element (L, Cu) and Count_Type'Last - Count >= Length (L),
      Post => Length (L) = Length (L)'Old + Count
-     and (for all I in 1 .. Get (Positions (L)'Old, Cu) - 1 =>
-        Element (Model (L), I) = Element (Model (L)'Old, I))
-     and (for all I in Get (Positions (L)'Old, Cu) ..
-            Get (Positions (L)'Old, Cu) + Count - 1 =>
+     and (for all I in 1 .. P_Get (Positions (L)'Old, Cu) - 1 =>
+            Element (Model (L), I) =
+              Element (Model (L)'Old, I))
+     and (for all I in P_Get (Positions (L)'Old, Cu) ..
+            P_Get (Positions (L)'Old, Cu) + Count - 1 =>
         Element (Model (L), I) = 0)
-     and (for all I in Get (Positions (L)'Old, Cu) + Count .. Length (L) =>
-              Element (Model (L), I) = Element (Model (L)'Old, I - Count))
-     and Mem (Positions (L), Cu)
-     and Get (Positions (L), Cu) = Get (Positions (L)'Old, Cu) + Count;
+     and (for all I in P_Get (Positions (L)'Old, Cu) + Count ..
+            Length (L) =>
+              Element (Model (L), I) =
+            Element (Model (L)'Old, I - Count))
+     and P_Mem (Positions (L), Cu)
+     and P_Get (Positions (L), Cu) =
+       P_Get (Positions (L)'Old, Cu) + Count;
 
    --  Test links between high level, position based model of a container and
    --  lower level, cursor based model.
