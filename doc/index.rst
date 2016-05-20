@@ -17,6 +17,7 @@ Contents:
    elements
    vectors
    lists
+   maps
    graphs
    graph_algorithms
    design_considerations

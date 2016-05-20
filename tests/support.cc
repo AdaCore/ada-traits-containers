@@ -359,7 +359,7 @@ void test_cpp_int_int_map (void * output) {
       }
 
       count = 0;
-      start_test (output, "for-of loop", SAME_GROUP);
+      start_test (output, "for-in/of loop", SAME_GROUP);
       for (auto& e : v) {
          if (e.second <= 2) {
             count ++;
@@ -441,7 +441,7 @@ void test_cpp_int_int_unordered_map (void * output) {
       }
 
       count = 0;
-      start_test (output, "for-of loop", SAME_GROUP);
+      start_test (output, "for-in/of loop", SAME_GROUP);
       for (auto& e : v) {
          if (e.second <= 2) {
             count ++;
@@ -524,7 +524,7 @@ void test_cpp_str_str_map (void * output) {
       }
 
       count = 0;
-      start_test (output, "for-of loop", SAME_GROUP);
+      start_test (output, "for-in/of loop", SAME_GROUP);
       for (auto& e : v) {
          if (startsWithStr(e.second)) { // value
             count ++;
@@ -607,7 +607,7 @@ void test_cpp_str_str_unordered_map (void * output) {
       }
 
       count = 0;
-      start_test (output, "for-of loop", SAME_GROUP);
+      start_test (output, "for-in/of loop", SAME_GROUP);
       for (auto& e : v) {
          if (startsWithStr(e.second)) { // value
             count ++;

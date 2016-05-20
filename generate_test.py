@@ -212,7 +212,7 @@ end {test_name};"""
 
     # for-of loop for map
 
-    map_for_of_loop = wrap("for-of loop", """
+    map_for_of_loop = wrap("for-in/of loop", """
 
       --  Doing iteration on keys would be slower, with an extra lookup
       --     for Key of V2 loop
@@ -224,7 +224,7 @@ end {test_name};"""
          end if;
       end loop;""", group=False)
 
-    map_ada2012_for_of_loop = wrap("for-of loop", """
+    map_ada2012_for_of_loop = wrap("for-in/of loop", """
       for E of V2 loop
          if Predicate (E) then
             Co := Co + 1;
