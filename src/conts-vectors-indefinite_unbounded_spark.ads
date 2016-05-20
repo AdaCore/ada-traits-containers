@@ -43,6 +43,7 @@ package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
    subtype Vector is Vectors.Vector;
    subtype Cursor is Vectors.Cursor;
    subtype Constant_Returned is Elements.Traits.Constant_Returned;
+   subtype Extended_Index is Vectors.Extended_Index;
 
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;

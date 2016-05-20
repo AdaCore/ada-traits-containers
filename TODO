@@ -151,6 +151,12 @@ can be edited with any text editor.
 
 ** TODO: what should Last return on empty vector ?
 
+** TODO: can we allow enumeration types for =Index_Type= ?
+   perhaps via a generic package that would convert back and forth from the
+   enumeration to a Natural, and would let users use the enumeration directly
+   in the subprograms. A similar benefit for graph's adjacency lists.
+   See also `support for different key types when searching` for maps, below
+
 * Strings
 
 ** TODO One possible storage is vectors
@@ -203,6 +209,9 @@ can be edited with any text editor.
     We can access In_Edges in addition to Out_Edges.
     We can provide a =Revert_Graph= wrapper that reverses the direction
     of edges, which is useful for some algorithms
+
+*** TODO can we allow enumeration types for Vertex_Type
+    This requires a similar change in vectors.
 
 * Priority queues
 

@@ -29,7 +29,8 @@ with Ada.Text_IO;             use Ada.Text_IO;
 
 procedure Test_Components is
 
-   type Vertex is (A, B, C, D, E, F, G, H);
+   type Vertex_With_Null is (Null_V, A, B, C, D, E, F, G, H);
+   subtype Vertex is Vertex_With_Null range A .. Vertex_With_Null'Last;
 
    package Graphs is new Conts.Graphs.Adjacency_List
      (Vertex_Type         => Vertex,

@@ -28,9 +28,21 @@ with Conts.Vectors.Storage;
 
 generic
    type Index_Type is (<>);
+   --  Because Last needs to return a meaningful value for empty vectors,
+   --  (Index_Type'First - 1) must be a valid value in Index_Type'Base.
+   --  This means that the index type cannot be Integer.
+   --  Nor can it be an enumeration type. However, this would not be a good
+   --  use case for vectors anyway, since the number of elements is known at
+   --  compile time and a standard Ada array would be more efficient.
+
    with package Storage is new Conts.Vectors.Storage.Traits (<>);
 
 package Conts.Vectors.Generics with SPARK_Mode is
+
+   subtype Extended_Index is Index_Type'Base range
+     Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
+   --  Index_Type with one more element to the left, used to represent
+   --  invalid indexes
 
    subtype Element_Type is Storage.Elements.Element_Type;
    subtype Returned_Type is Storage.Elements.Returned_Type;
@@ -104,7 +116,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
         (Self : Base_Vector'Class; Position : Cursor) return Cursor
         with Inline, Global => null,
         Pre    => Has_Element (Self, Position);
-      function Last (Self : Base_Vector'Class) return Index_Type
+      function Last (Self : Base_Vector'Class) return Extended_Index
         with Inline => True, Global => null;
       --  Actual implementation for the subprograms renamed below. See the
       --  descriptions below.
@@ -151,7 +163,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
          --  Last assigned element
       end record;
 
-      function Last (Self : Base_Vector'Class) return Index_Type
+      function Last (Self : Base_Vector'Class) return Extended_Index
          is (To_Index (Self.Last));
       function To_Index (Position : Count_Type) return Index_Type
          is (Index_Type'Val
@@ -213,9 +225,13 @@ package Conts.Vectors.Generics with SPARK_Mode is
      renames Impl.Is_Empty;
    --  Whether the vector is empty
 
-   function Last (Self : Base_Vector'Class) return Index_Type
+   function Last (Self : Base_Vector'Class) return Extended_Index
      renames Impl.Last;
-   --  Return the index of the last element in the vector
+   --  Return the index of the last element in the vector.
+   --  For a null vector, this returns (Index_Type'First - 1), so that it is
+   --  always possible to write:
+   --      for Idx in Index_Type'First .. Self.Last loop
+   --      end loop;
 
    procedure Append
      (Self    : in out Base_Vector'Class;

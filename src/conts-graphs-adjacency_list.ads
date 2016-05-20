@@ -33,7 +33,10 @@ with Conts.Graphs.DFS;
 generic
    type Vertex_Type is (<>);
    --  The type used to represent vertices. These are indices into an internal
-   --  vector of vertices, but could be any integer type, enumeration,...
+   --  vector of vertices, but could be any integer type, ...
+   --  Just like for vectors's index_type, this package expects that
+   --    (Vertex_Type'First - 1) is valid in Vertex_Type'Base.
+   --  This prevents Integer or enumeration types from being used.
 
    with package Vertex_Properties is new Conts.Elements.Traits (<>);
    with package Edge_Properties is new Conts.Elements.Traits (<>);
@@ -45,6 +48,11 @@ generic
 
 package Conts.Graphs.Adjacency_List is
 
+   subtype Extended_Vertex is Vertex_Type'Base range
+     Vertex_Type'Pred (Vertex_Type'First) .. Vertex_Type'Last;
+   --  Index_Type with one more element to the left, used to represent
+   --  invalid indexes
+
    subtype Vertex is Vertex_Type;
    --  Make this type visible to all packages using instances.
 
@@ -54,7 +62,7 @@ package Conts.Graphs.Adjacency_List is
       function Length (Self : Graph) return Count_Type;
       --  Return the number of elements in the graph
 
-      Null_Vertex : constant Vertex;
+      Null_Vertex : constant Extended_Vertex;
 
       type Edge is private;
 
@@ -92,7 +100,7 @@ package Conts.Graphs.Adjacency_List is
       --  Remove all vertices and edges from the graph
 
    private
-      Null_Vertex : constant Vertex := Vertex'Last;
+      Null_Vertex : constant Extended_Vertex := Extended_Vertex'Last;
 
       type Edge_Index is new Natural;
 

@@ -12,10 +12,6 @@ generic
    type Element_Type (<>) is private;
 package Formal_Vectors with SPARK_Mode is
 
-   subtype Extended_Index is Index_Type'Base range
-     Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
-   --  Index_Type with one more element to the left.
-
    package Element_Vectors is new Conts.Vectors.Indefinite_Unbounded_SPARK
      (Index_Type          => Index_Type,
       Element_Type        => Element_Type,
@@ -24,6 +20,7 @@ package Formal_Vectors with SPARK_Mode is
    --  instantiated in the private part but then the Cursor type could not be
    --  used to instanciate the Functional_Maps package for the Formal_Model.
 
+   subtype Extended_Index is Element_Vectors.Extended_Index;
    subtype Cursor is Element_Vectors.Cursor;
    use all type Element_Vectors.Cursor;
    pragma Unevaluated_Use_Of_Old (Allow);

@@ -106,8 +106,15 @@ information:
    ``Index_Type``
 
        This is the type used to reference elements in the vector. It will
-       often be an integer type (natural or positive for instance), but
-       could also be any discrete type like an enumeration.
+       often be an integer type (natural or positive for instance).
+       It is invalid for this type to be either `Integer`, or an enumeration
+       type because the package needs a way to indicate an invalid index,
+       for instance when using `Last` on an empty vector.
+       To use an enumeration type, you will in fact need a subtype for which
+       the base type has one more element, as in::
+
+           type Base_Enum is (Invalid, A, B, C, D, E);
+           subtype Enum is Base_Enum range A .. Base_Enum'Last;
 
    ``Storage``
 
