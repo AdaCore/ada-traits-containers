@@ -7,6 +7,7 @@ This script is used to generate test for the various container combinations.
 # Comments #
 ############
 
+
 class Comments(object):
     def __init__(self, **kwargs):
         self.comments = kwargs
@@ -14,6 +15,7 @@ class Comments(object):
     def __getattr__(self, key):
         return self.comments.get(key, '')
 
+    
 #############
 # Templates #
 #############
@@ -35,6 +37,7 @@ def wrap(name, text, group=True, expected=True):
     if expected:
         r += """\n      Assert (Co, {expected}, "%(name)s");""" % repl
     return r
+
 
 class Templates(object):
     """
@@ -201,7 +204,7 @@ end {test_name};"""
     map_cursor_loop = wrap("cursor loop", """
       It := V2.First;
       while {prefix}Has_Element (It) loop
-         if Predicate ({prefix}Element (It)) then
+         if {cursor_loop_predicate} ({prefix}Element (It)) then
             Co := Co + 1;
          end if;
          It := {prefix}Next (It);
@@ -210,6 +213,18 @@ end {test_name};"""
     # for-of loop for map
 
     map_for_of_loop = wrap("for-of loop", """
+
+      --  Doing iteration on keys would be slower, with an extra lookup
+      --     for Key of V2 loop
+      --        if Predicate (V2.Get (Key)) then
+      --  So instead we iterate on cursors                           
+      for C in V2 loop
+         if {cursor_loop_predicate} (V2.Element (C)) then
+            Co := Co + 1;
+         end if;
+      end loop;""", group=False)
+
+    map_ada2012_for_of_loop = wrap("for-of loop", """
       for E of V2 loop
          if Predicate (E) then
             Co := Co + 1;
@@ -225,7 +240,7 @@ end {test_name};"""
 
     map_find = wrap("find", """
       for C in 1 .. Items_Count loop
-         if Predicate (V2{get}) then
+         if {find_predicate} (V2{get}) then
             Co := Co + 1;
          end if;
       end loop;""", group=True)
@@ -255,15 +270,19 @@ end {test_name};"""
                     Templates.int_str_indexing_loop)
 
     @staticmethod
-    def maps(elem_type):
+    def maps(elem_type, std_ada=False):
         if elem_type == "intint":
             return (Templates.map_fill, Templates.map_copy,
-                    Templates.map_cursor_loop, Templates.map_for_of_loop,
+                    Templates.map_cursor_loop,
+                    Templates.map_for_of_loop
+                       if not std_ada else Templates.map_ada2012_for_of_loop,                    
                     Templates.map_count_if, Templates.int_int_indexing_loop,
                     Templates.map_find)
         else:
             return (Templates.map_fill, Templates.map_copy,
-                    Templates.map_cursor_loop, Templates.map_for_of_loop,
+                    Templates.map_cursor_loop,
+                    Templates.map_for_of_loop
+                       if not std_ada else Templates.map_ada2012_for_of_loop,                    
                     Templates.map_count_if, Templates.str_str_indexing_loop,
                     Templates.map_find)
 
@@ -293,11 +312,16 @@ class Tests(object):
             """   Run_Test ("{filename}", {test_name}'Access);""".format(**self.args))
 
     def gen(self, adaptor="Constant_Returned", adaptors="{type}_Adaptors",
-            disable_checks=False):
+            disable_checks=False, 
+            cursor_loop_predicate="Predicate",
+            find_predicate="Predicate"):
 
         self.args['suppress'] = ""
         if disable_checks:
             self.args['suppress'] = "pragma Suppress (Container_Checks);\n   "
+            
+        self.args['cursor_loop_predicate'] = cursor_loop_predicate
+        self.args['find_predicate'] = find_predicate
 
         if self.ada2012:
             adapt = adaptors.format(**self.args)
@@ -326,14 +350,14 @@ class List(Tests):
     def __init__(
         self,
         elem_type,   # "integer", "string",...
-        instance,    # instantiation for the container "package Container is ..."
+        instance,  # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
         unbounded,
         name,        # test name
         filename,    # suffix for filename
-        limited=False, # Whether we need explicit Copy and Clear
-        comments=None, # instance of Comments
-        favorite=False, # Whether this should be highlighted in the results
+        limited=False,  # Whether we need explicit Copy and Clear
+        comments=None,  # instance of Comments
+        favorite=False,  # Whether this should be highlighted in the results
         ada2012=False
     ):
         self.elem_type = elem_type.lower()
@@ -401,7 +425,7 @@ class List(Tests):
             append=append)
 
         if limited:
-            # Need an explicit copy, since ":=" is not defined for limited types
+            # Need an explicit copy since ":=" is not defined for limited types
             self.args['copy'] = '.Copy'
             self.args['clear'] = '\n      V.Clear;'
             self.args['clear_copy'] = '\n         V_Copy.Clear;'
@@ -409,11 +433,13 @@ class List(Tests):
         if not unbounded:
             self.args['discriminant'] = ' (Capacity => Items_Count)'
 
-        self.args['test_name'] = "{type}_{elem_type}_{filename}".format(**self.args)
+        self.args['test_name'] = "{type}_{elem_type}_{filename}".format(
+            **self.args)
 
     def tests(self):
         return Templates.lists(self.elem_type)
 
+    
 #######
 # Map #
 #######
@@ -423,17 +449,17 @@ class Map(Tests):
     def __init__(
         self,
         elem_type,   # "intint", "strstr",...
-        instance,    # instantiation for the container "package Container is ..."
+        instance,  # instantiation for the container "package Container is ..."
         withs,       # extra withs for the body
         unbounded,
-        name,        # test name
-        filename,    # suffix for filename
-        limited=False, # Whether we need explicit Copy and Clear
-        comments=None, # instance of Comments
-        favorite=False, # Whether this should be highlighted in the results
+        name,            # test name
+        filename,        # suffix for filename
+        limited=False,   # Whether we need explicit Copy and Clear
+        comments=None,   # instance of Comments
+        favorite=False,  # Whether this should be highlighted in the results
         ada2012=False
     ):
-        type="Map"
+        type = "Map"
         category = '%s %s' % (elem_type, type)
 
         self.elem_type = elem_type.lower()
@@ -476,6 +502,8 @@ class Map(Tests):
             call_count_if='',
             discriminant='',
             favorite=favorite,
+            cursor_loop_predicate='Predicate',
+            find_predicate='Predicate',
             comments=comments or Comments(),
             clear='',       # Explicit clear the container
             clear_copy='',  # Explicit clear the copy of the container
@@ -484,7 +512,7 @@ class Map(Tests):
             append=append.format(set=set))
 
         if limited:
-            # Need an explicit copy, since ":=" is not defined for limited types
+            # Need an explicit copy since ":=" is not defined for limited types
             self.args['copy'] = '.Copy'
             self.args['clear'] = '\n      V.Clear;'
             self.args['clear_copy'] = '\n         V_Copy.Clear;'
@@ -493,11 +521,13 @@ class Map(Tests):
             self.args['discriminant'] = ' (Capacity => Items_Count, ' + \
                 ' Modulus => Default_Modulus (Items_Count))'
 
-        self.args['test_name'] = "{type}_{elem_type}_{filename}".format(**self.args)
+        self.args['test_name'] = "{type}_{elem_type}_{filename}".format(
+            **self.args)
 
     def tests(self):
-        return Templates.maps(self.elem_type)
+        return Templates.maps(self.elem_type, std_ada=self.ada2012)
 
+    
 ##########
 # Vector #
 ##########
@@ -789,9 +819,9 @@ Map("IntInt",
          adaptors="Hashed_Maps_Adaptors")
 Map("IntInt",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
-     + '   (Conts.Hash_Type (K)) with Inline;\n'
-     + 'package Container is new Ada.Containers.Bounded_Hashed_Maps'
-     + ' (Integer, Integer, Hash, "=");',
+     + '      (Conts.Hash_Type (K)) with Inline;\n'
+     + '   package Container is new Ada.Containers.Bounded_Hashed_Maps\n'
+     + '      (Integer, Integer, Hash, "=");',
     "with Ada.Containers.Bounded_Hashed_Maps;",
     unbounded=False, ada2012=True,
     name="Ada12 hashed definite bounded",
@@ -801,28 +831,24 @@ Map("IntInt",
          adaptors="Bounded_Hashed_Maps_Adaptors")
 Map("IntInt",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
-    + '   (Conts.Hash_Type (K)) with Inline;\n'
-    + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
-    + '   (Integer, Integer, Ada.Finalization.Controlled, Hash);'
-    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
-    + '   is (Predicate (Container.Value (P))) with Inline;',
+    + '      (Conts.Hash_Type (K)) with Inline;\n'
+    + '   package Container is new Conts.Maps.Def_Def_Unbounded\n'
+    + '      (Integer, Integer, Ada.Finalization.Controlled, Hash);\n',
     'with Conts.Maps.Def_Def_Unbounded;',
     unbounded=True,
     name="Hashed Def Def Unbounded",
     filename="hashed_def_def_unbounded",
-    favorite=True).gen(adaptor="Pair")
+    favorite=True).gen(adaptor="Constant_Returned")
 Map("IntInt",
     'function Hash (K : Integer) return Conts.Hash_Type is\n'
-    + '   (Conts.Hash_Type (K)) with Inline;\n'
-    + 'package Container is new Conts.Maps.Def_Def_Unbounded\n'
-    + '   (Integer, Integer, Ada.Finalization.Controlled, Hash);'
-    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
-    + '   is (Predicate (Container.Value (P))) with Inline;',
+    + '      (Conts.Hash_Type (K)) with Inline;\n'
+    + '   package Container is new Conts.Maps.Def_Def_Unbounded\n'
+    + '      (Integer, Integer, Ada.Finalization.Controlled, Hash);\n',
     'with Conts.Maps.Def_Def_Unbounded;',
     unbounded=True,
     name="Hashed Linear Probing Def Def Unbounded",
     filename="hashed_linear_probing_def_def_unbounded",
-    favorite=True).gen(adaptor="Pair")
+    favorite=True).gen(adaptor="Constant_Returned")
 
 # String-String maps
 
@@ -849,34 +875,44 @@ Map("StrStr",
          adaptors="Indefinite_Hashed_Maps_Adaptors")
 Map("StrStr",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
-    + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
-    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
-    + '   is (Predicate (Container.Value (P))) with Inline;',
+    + '      (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);\n'
+    + '   function Predicate (P : Container.Constant_Returned_Type) return Boolean\n'
+    + '      is (Perf_Support.Predicate (P)) with Inline;\n'
+    + '   function Ref_Predicate (P : Container.Constant_Returned_Type) return Boolean\n'
+    + '      renames Predicate;',
     'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
     unbounded=True,
     name="Hashed Indef-Indef Unbounded",
     filename="hashed_indef_indef_unbounded",
-    favorite=True).gen(adaptor="Pair")
+    favorite=True).gen(
+        adaptor="Constant_Returned",
+        cursor_loop_predicate='Ref_Predicate',
+        find_predicate='Ref_Predicate')
 Map("StrStr",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded\n'
-    + '   (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);'
-    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
-    + '   is (Predicate (Container.Value (P))) with Inline;',
-    'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
+    + '      (String, String, Ada.Finalization.Controlled, Ada.Strings.Hash);\n'
+    + '   function Predicate (P : Container.Constant_Returned_Type) return Boolean\n'
+    + '      is (Perf_Support.Predicate (P)) with Inline;'
+    + '   function Ref_Predicate (P : Container.Constant_Returned_Type) return Boolean\n'
+    + '      renames Predicate;',
+        'with Conts.Maps.Indef_Indef_Unbounded, Ada.Strings.Hash;',
     unbounded=True,
     name="Hashed Linear Probing Indef-Indef Unbounded",
     filename="hashed_linear_probing_indef_indef_unbounded",
-    favorite=True).gen(adaptor="Pair")
+    favorite=True).gen(
+        adaptor="Constant_Returned",
+        cursor_loop_predicate='Ref_Predicate',
+        find_predicate='Ref_Predicate')
 Map("StrStr",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded_SPARK\n'
-    + '   (String, String, Conts.Limited_Base, Ada.Strings.Hash);'
-    + 'function Predicate (P : Container.Pair_Type) return Boolean\n'
-    + '   is (Predicate (Container.Value (P))) with Inline;',
+    + '      (String, String, Conts.Limited_Base, Ada.Strings.Hash);\n'
+    + '   function Predicate (P : Container.Constant_Returned_Type) return Boolean\n'
+    + '      is (Perf_Support.Predicate (P)) with Inline;',
     'with Conts.Maps.Indef_Indef_Unbounded_SPARK, Ada.Strings.Hash;',
     unbounded=True, limited=True,
     name="Limited Hashed Indef_SPARK-Indef_SPARK Unbounded_SPARK",
     filename="hashed_indef_indef_unbounded_spark",
-    favorite=True).gen(adaptor="Pair")
+    favorite=True).gen(adaptor="Constant_Returned")
 
 run_all = open("tests/generated/perf-run_all.adb", "w")
 run_all.write("\n".join(all_tests_withs))

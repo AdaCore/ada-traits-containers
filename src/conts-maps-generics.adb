@@ -189,17 +189,31 @@ package body Conts.Maps.Generics with SPARK_Mode => Off is
          return C;
       end Next;
 
-      ----------
-      -- Pair --
-      ----------
+      ---------
+      -- Key --
+      ---------
 
-      function Pair
-        (Self : Base_Map'Class; Position : Cursor) return Pair_Type
+      function Key
+        (Self : Base_Map'Class; Position : Cursor)
+         return Constant_Returned_Key_Type
       is
          P : Slot renames Self.Table (Position.Index);
       begin
-         return (Key => P.Key, Value => P.Value);
-      end Pair;
+         return Keys.To_Constant_Returned (P.Key);
+      end Key;
+
+      -------------
+      -- Element --
+      -------------
+
+      function Element
+        (Self : Base_Map'Class; Position : Cursor)
+         return Constant_Returned_Type
+      is
+         P : Slot renames Self.Table (Position.Index);
+      begin
+         return Elements.To_Constant_Returned (P.Value);
+      end Element;
 
       --------------
       -- Capacity --

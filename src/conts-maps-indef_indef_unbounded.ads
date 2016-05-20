@@ -53,16 +53,12 @@ package Conts.Maps.Indef_Indef_Unbounded is
       Pool                => Conts.Global_Pool,
       Container_Base_Type => Container_Base_Type);
 
+   subtype Constant_Returned_Type is Impl.Constant_Returned_Type;
+   subtype Constant_Returned_Key_Type is Impl.Constant_Returned_Key_Type;
+
    subtype Cursor is Impl.Cursor;
    subtype Map is Impl.Map;
    subtype Returned is Impl.Returned_Type;
-
-   subtype Pair_Type is Impl.Pair_Type;
-   function Key
-     (P : Pair_Type) return Keys.Traits.Constant_Returned renames Impl.Key;
-   function Value
-     (P : Pair_Type) return Elements.Traits.Constant_Returned
-      renames Impl.Value;
 
    package Cursors renames Impl.Cursors;
    package Maps renames Impl.Maps;

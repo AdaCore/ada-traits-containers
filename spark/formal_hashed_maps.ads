@@ -32,7 +32,7 @@ package Formal_Hashed_Maps with SPARK_Mode is
      Iterable => (First       => First_Primitive,
                   Next        => Next_Primitive,
                   Has_Element => Has_Element_Primitive,
-                  Element     => Element_Primitive);
+                  Element     => Key_Primitive);
    --  Maps are empty when default initialized.
    --  Iteration over maps can be done over cursors or over keys.
 
@@ -330,16 +330,15 @@ package Formal_Hashed_Maps with SPARK_Mode is
 
    function First_Primitive (Self : Map) return Cursor;
 
-   function Element_Primitive
+   function Key_Primitive
      (Self : Map; Position : Cursor) return Key_Type
    with
      Inline,
      Pre'Class => Has_Element (Self, Position),
      Post =>
-           Element_Primitive'Result =
+           Key_Primitive'Result =
              K.Get (Keys (Self), P.Get (Positions (Self), Position));
-   pragma Annotate
-     (GNATprove, Inline_For_Proof, Entity => Element_Primitive);
+   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Key_Primitive);
 
    function Has_Element_Primitive
      (Self : Map; Position : Cursor) return Boolean
