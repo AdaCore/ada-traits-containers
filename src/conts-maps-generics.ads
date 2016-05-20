@@ -66,6 +66,7 @@ package Conts.Maps.Generics with SPARK_Mode is
    subtype Element_Type is Elements.Element_Type;
    subtype Returned_Type is Elements.Returned_Type;
    subtype Constant_Returned_Type is Elements.Constant_Returned_Type;
+   subtype Constant_Returned_Key_Type is Keys.Constant_Returned_Type;
 
    package Impl is
 
@@ -73,12 +74,9 @@ package Conts.Maps.Generics with SPARK_Mode is
 
       type Cursor is private;
       No_Element : constant Cursor;
-
-      type Pair_Type is private;
-      function Key
-        (P : Pair_Type) return Keys.Constant_Returned_Type with Inline;
-      function Value
-        (P : Pair_Type) return Elements.Constant_Returned_Type with Inline;
+      --  A cursor is only valid until the next change to the map. As soon as
+      --  an element is added or removed, the cursor should no longer be used.
+      --  For performance reasons, this is not checked.
 
       function Capacity (Self : Base_Map'Class) return Count_Type with
         Global => null;
@@ -104,17 +102,21 @@ package Conts.Maps.Generics with SPARK_Mode is
         (Self     : in out Base_Map'Class;
          Key      : Keys.Element_Type)
         with Global => null;
-      function Pair
-        (Self : Base_Map'Class; Position : Cursor) return Pair_Type
+      function Key
+        (Self : Base_Map'Class; Position : Cursor)
+         return Constant_Returned_Key_Type
+        with Inline, Global => null;
+      function As_Key
+        (Self : Base_Map'Class; Position : Cursor) return Key_Type
+        is (Keys.To_Element (Self.Key (Position)))
         with Inline, Global => null;
       function Element
         (Self : Base_Map'Class; Position : Cursor)
          return Constant_Returned_Type
-        is (Value (Pair (Self, Position)))
-        with Global => null;
+        with Inline, Global => null;
       function As_Element
         (Self : Base_Map'Class; Position : Cursor) return Element_Type
-         is (Elements.To_Element (Value (Pair (Self, Position))))
+         is (Elements.To_Element (Self.Element (Position)))
         with Inline, Global => null;
       function First (Self : Base_Map'Class) return Cursor
         with Inline, Global => null;
@@ -130,9 +132,10 @@ package Conts.Maps.Generics with SPARK_Mode is
 
       function First_Primitive (Self : Base_Map) return Cursor
          is (First (Self)) with Inline;
-      function Element_Primitive
-        (Self : Base_Map; Position : Cursor) return Pair_Type
-         is (Pair (Self, Position)) with Inline;
+      function Key_Primitive
+        (Self : Base_Map; Position : Cursor) return Constant_Returned_Key_Type
+         is (Key (Self, Position))
+         with Inline;
       function Has_Element_Primitive
         (Self : Base_Map; Position : Cursor) return Boolean
          is (Has_Element (Self, Position)) with Inline;
@@ -152,16 +155,6 @@ package Conts.Maps.Generics with SPARK_Mode is
       procedure Finalize (Self : in out Base_Map);
       --  In case the mp is a controlled type, but irrelevant when Self
       --  is not controlled.
-
-      type Pair_Type is record
-         Key   : Keys.Stored_Type;
-         Value : Elements.Stored_Type;
-      end record;
-
-      function Key   (P : Pair_Type) return Keys.Constant_Returned_Type
-         is (Keys.To_Constant_Returned (P.Key));
-      function Value (P : Pair_Type) return Elements.Constant_Returned_Type
-         is (Elements.To_Constant_Returned (P.Value));
 
       type Slot_Kind is (Empty, Dummy, Full);
       --  A node can have three statuses:
@@ -213,13 +206,6 @@ package Conts.Maps.Generics with SPARK_Mode is
    subtype Cursor is Impl.Cursor;
    No_Element : constant Cursor := Impl.No_Element;
 
-   subtype Pair_Type is Impl.Pair_Type;
-   function Key   (P : Pair_Type) return Keys.Constant_Returned_Type
-     renames Impl.Key;
-   function Value (P : Pair_Type) return Elements.Constant_Returned_Type
-     renames Impl.Value;
-   --  This record contains both the key and the value of an element stored
-
    function Capacity (Self : Base_Map'Class) return Count_Type
      renames Impl.Capacity;
    --  Return the current capacity of the container.
@@ -257,15 +243,19 @@ package Conts.Maps.Generics with SPARK_Mode is
    procedure Clear (Self : in out Base_Map'Class) renames Impl.Clear;
    --  Remove all elements from the map
 
-   function Pair
-     (Self : Base_Map'Class; Position : Cursor) return Pair_Type
-     renames Impl.Pair;
+   function Key
+     (Self : Base_Map'Class; Position : Cursor)
+      return Constant_Returned_Key_Type
+     renames Impl.Key;
    function Element
      (Self : Base_Map'Class; Position : Cursor) return Constant_Returned_Type
      renames Impl.Element;
+   function As_Key
+     (Self : Base_Map'Class; Position : Cursor) return Keys.Element_Type
+     renames Impl.As_Key;
    function As_Element
      (Self : Base_Map'Class; Position : Cursor) return Elements.Element_Type
-     renames Impl.As_Element;
+      renames Impl.As_Element;
 
    function First (Self : Base_Map'Class) return Cursor
      renames Impl.First;
@@ -285,7 +275,14 @@ package Conts.Maps.Generics with SPARK_Mode is
           Iterable => (First       => First_Primitive,
                        Next        => Next_Primitive,
                        Has_Element => Has_Element_Primitive,
-                       Element     => Element_Primitive);
+                       Element     => Key_Primitive);
+   --  Iteration can be done with either:
+   --      for K of Self loop        --  get the keys
+   --          Self.Get (K)          --  extra lookup to get the element
+   --  or
+   --      for C of Self loop        --  get a cursor
+   --          Self.Key (C)          --  get the key (fast)
+   --          Self.Element (C);     --  get the element (fast)
 
    function Constant_Reference
      (Self : Map; Key : Key_Type) return Constant_Returned_Type
@@ -309,13 +306,16 @@ package Conts.Maps.Generics with SPARK_Mode is
    -------------------------
 
    package Maps is
-      package Pair is new Conts.Properties.Read_Only_Maps
-        (Base_Map'Class, Cursor, Pair_Type, Pair);
+      package Key is new Conts.Properties.Read_Only_Maps
+        (Base_Map'Class, Cursor, Key_Type, As_Key);
       package Element is new Conts.Properties.Read_Only_Maps
         (Base_Map'Class, Cursor, Element_Type, As_Element);
       package Constant_Returned is new Conts.Properties.Read_Only_Maps
         (Base_Map'Class, Cursor, Elements.Constant_Returned,
          Conts.Maps.Generics.Element);
+      package Constant_Returned_Key is new Conts.Properties.Read_Only_Maps
+        (Base_Map'Class, Cursor, Keys.Constant_Returned,
+         Conts.Maps.Generics.Key);
    end Maps;
 
 end Conts.Maps.Generics;

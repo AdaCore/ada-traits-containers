@@ -13,13 +13,9 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
          Cu : Cursor := Element_Maps.Impl.First (Self);
       begin
          while Element_Maps.Impl.Has_Element (Self, Cu) loop
-            declare
-               P : constant Element_Maps.Impl.Pair_Type :=
-                 Element_Maps.Impl.Pair (Self, Cu);
-            begin
-               R := Add (R, Element_Maps.Impl.Key (P),
-                         Element_Maps.Impl.Value (P));
-            end;
+            R := Add (R,
+                      Element_Maps.Impl.As_Key (Self, Cu),
+                      Element_Maps.Impl.As_Element (Self, Cu));
             Cu := Element_Maps.Impl.Next (Self, Cu);
          end loop;
          return R;
@@ -30,12 +26,7 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
          Cu : Cursor := Element_Maps.Impl.First (Self);
       begin
          while Element_Maps.Impl.Has_Element (Self, Cu) loop
-            declare
-               P : constant Element_Maps.Impl.Pair_Type :=
-                 Element_Maps.Impl.Pair (Self, Cu);
-            begin
-               R := Add (R, Element_Maps.Impl.Key (P));
-            end;
+            R := Add (R, Element_Maps.Impl.As_Key (Self, Cu));
             Cu := Element_Maps.Impl.Next (Self, Cu);
          end loop;
          return R;
@@ -101,14 +92,14 @@ package body Formal_Hashed_Maps with SPARK_Mode => Off is
         (Element_Maps.Impl.Has_Element (Self, Position));
 
    function First_Primitive (Self : Map) return Cursor
-   is (Element_Maps.Impl.First (Self));
-   function Element_Primitive
+     is (Element_Maps.Impl.First (Self));
+   function Key_Primitive
      (Self : Map; Position : Cursor) return Key_Type
-   is (Key (Self, Position));
+     is (As_Key (Self, Position));
    function Has_Element_Primitive
      (Self : Map; Position : Cursor) return Boolean
-   is (Element_Maps.Impl.Has_Element (Self, Position));
+     is (Element_Maps.Impl.Has_Element (Self, Position));
    function Next_Primitive
      (Self : Map; Position : Cursor) return Cursor
-   is (Element_Maps.Impl.Next (Self, Position));
+     is (Element_Maps.Impl.Next (Self, Position));
 end Formal_Hashed_Maps;

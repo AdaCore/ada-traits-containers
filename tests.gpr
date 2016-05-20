@@ -5,9 +5,9 @@ with "gnatcoll";
 
 project Tests is
    for Source_Dirs use ("tests/", "tests/generated", "tests/graphs",
-                        "tests/maps");
+                        "tests/maps", ".");
    for Object_Dir use "tests/obj";
-   for Languages use ("Ada", "C++");
+   for Languages use ("Ada", "C++", "Python");
    for Main use ("perf.adb", "test_components.adb", "test_maps.adb");
 
    package Compiler extends Shared.Compiler is

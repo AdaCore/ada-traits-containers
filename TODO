@@ -170,10 +170,6 @@ can be edited with any text editor.
    the map is created with a =String=, to save explicit and costly conversions?
    http://erdani.com/publications/cuj-2006-02.pdf
 
-** TOOD: do not return a pair for the cursor
-   We might be referencing freed memory, if the pair is stored by the user
-   and elements removed from the container meanwhile
-
 * Graphs
 
 ** MAYBE Graph layout algorithms (see the one in =Gtkada.Canvas_View=)
