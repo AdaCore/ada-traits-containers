@@ -21,12 +21,13 @@
 
 pragma Ada_2012;
 with Conts;          use Conts;
-with Conts.Vectors.Indefinite_Unbounded;
+private with Conts.Functional.Base;
 
 generic
    type Element_Type (<>) is private;
    with function "=" (Left, Right : Element_Type) return Boolean is <>;
-package Functional_Sets with SPARK_Mode is
+package Conts.Functional.Sets with SPARK_Mode is
+   pragma Warnings (Off, "unused variable");
 
    type Set is private with
      Default_Initial_Condition => Is_Empty (Set),
@@ -39,18 +40,20 @@ package Functional_Sets with SPARK_Mode is
    --  For of quantification over sets iterates over elements.
 
    --  Sets are axiomatized using Mem which encodes whether an element is
-   --  contained in a set. We could also add Length.
-   --  ??? Currently we do not consider potential overflows of the container's
-   --  implementation.
+   --  contained in a set.  The length of a set is also added to protect Add
+   --  against overflows but it is not actually modeled.
 
    function Mem (S : Set; E : Element_Type) return Boolean with
      Global => null;
 
-   function Inc (S1, S2 : Set) return Boolean with
+   function Length (S : Set) return Count_Type with
+     Global => null;
+
+   function "<=" (S1, S2 : Set) return Boolean with
    --  Set inclusion.
 
      Global => null,
-     Post   => Inc'Result = (for all E of S1 => Mem (S2, E));
+     Post   => "<="'Result = (for all E of S1 => Mem (S2, E));
 
    function "=" (S1, S2 : Set) return Boolean with
    --  Extensional equality over sets.
@@ -60,13 +63,11 @@ package Functional_Sets with SPARK_Mode is
        "="'Result = ((for all E of S1 => Mem (S2, E))
                      and (for all E of S2 => Mem (S1, E)));
 
-   pragma Warnings (Off, "unused variable");
    function Is_Empty (S : Set) return Boolean with
    --  A set is empty if it contains no element.
 
      Global => null,
      Post   => Is_Empty'Result = (for all E of S => False);
-   pragma Warnings (On, "unused variable");
 
    function Is_Add (S : Set; E : Element_Type; Result : Set) return Boolean
    --  Returns True if Result is S augmented with E.
@@ -84,8 +85,9 @@ package Functional_Sets with SPARK_Mode is
    --  whenever possible both for execution and for proof.
 
      Global => null,
-     Pre    => not Mem (S, E),
-     Post   => Is_Add (S, E, Add'Result);
+     Pre    => not Mem (S, E) and Length (S) < Count_Type'Last,
+     Post   => Length (Add'Result) = Length (S) + 1
+     and Is_Add (S, E, Add'Result);
 
    function Is_Intersection (S1, S2, Result : Set) return Boolean with
    --  Returns True if Result is the intersection of S1 and S2.
@@ -97,6 +99,15 @@ package Functional_Sets with SPARK_Mode is
         and (for all E of S1 =>
                (if Mem (S2, E) then Mem (Result, E))));
 
+   function Num_Overlaps (S1, S2 : Set) return Count_Type with
+   --  Number of elements that are both in S1 and S2.
+
+     Global => null,
+     Post   => Num_Overlaps'Result <= Length (S1)
+     and Num_Overlaps'Result <= Length (S2)
+     and (if Num_Overlaps'Result = 0 then
+            (for all E of S1 => not Mem (S2, E)));
+
    function Intersection (S1, S2 : Set) return Set with
    --  Returns the intersection of S1 and S2.
    --  Intersection (S1, S2, Result) should be used instead of
@@ -104,7 +115,8 @@ package Functional_Sets with SPARK_Mode is
    --  for proof.
 
      Global => null,
-     Post   => Is_Intersection (S1, S2, Intersection'Result);
+     Post   => Length (Intersection'Result) = Num_Overlaps (S1, S2)
+     and Is_Intersection (S1, S2, Intersection'Result);
 
    function Is_Union (S1, S2, Result : Set) return Boolean with
    --  Returns True if Result is the union of S1 and S2.
@@ -122,11 +134,16 @@ package Functional_Sets with SPARK_Mode is
    --  proof.
 
      Global => null,
-     Post   => Is_Union (S1, S2, Union'Result);
+     Pre    => Length (S1) - Num_Overlaps (S1, S2) <=
+     Count_Type'Last - Length (S2),
+     Post   => Length (Union'Result) = Length (S1) - Num_Overlaps (S1, S2)
+     + Length (S2)
+     and Is_Union (S1, S2, Union'Result);
 
-   --  For quantification purpose
-   --  Do not use them in practice
-   --  ??? Is there a way to prevent users from using those ?
+   ---------------------------
+   --  Iteration Primitives --
+   ---------------------------
+
    type Private_Key is private;
 
    function Iter_First (S : Set) return Private_Key with
@@ -143,20 +160,24 @@ package Functional_Sets with SPARK_Mode is
 private
    pragma SPARK_Mode (Off);
 
-   type Neither_Controlled_Nor_Limited is tagged null record;
-
-   --  Functional sets are neither controlled nor limited. As a result,
-   --  no primitive should be provided to modify them. Note that we
-   --  should definitely not use limited types for those as we need to apply
-   --  'Old on them.
-   --  ??? Should we make them controlled to avoid memory leak ?
-
-   package Element_Lists is new Conts.Vectors.Indefinite_Unbounded
+   package Containers is new Conts.Functional.Base
      (Element_Type        => Element_Type,
-      Index_Type          => Count_Type,
-      Container_Base_Type => Neither_Controlled_Nor_Limited);
+      Index_Type          => Positive_Count_Type);
 
-   type Set is new Element_Lists.Vector with null record;
+   type Set is record
+      Content : Containers.Container;
+   end record;
 
-   type Private_Key is new Element_Lists.Cursor;
-end Functional_Sets;
+   type Private_Key is new Count_Type;
+
+   function Iter_First (S : Set) return Private_Key is (1);
+
+   function Iter_Has_Element (S : Set; K : Private_Key) return Boolean is
+     (Count_Type (K) in 1 .. Containers.Length (S.Content));
+
+   function Iter_Next (S : Set; K : Private_Key) return Private_Key is
+     (if K = Private_Key'Last then 0 else K + 1);
+
+   function Iter_Element (S : Set; K : Private_Key) return Element_Type is
+     (Containers.Get (S.Content, Count_Type (K)));
+end Conts.Functional.Sets;

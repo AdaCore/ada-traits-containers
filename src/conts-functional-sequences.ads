@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 with Conts;           use Conts;
-with Conts.Vectors.Indefinite_Unbounded;
+private with Conts.Functional.Base;
 
 generic
    type Index_Type is (<>);
@@ -29,7 +29,7 @@ generic
    --  should have at least one more element at the left than Index_Type.
 
    type Element_Type (<>) is private;
-package Functional_Sequences with SPARK_Mode is
+package Conts.Functional.Sequences with SPARK_Mode is
 
    subtype Extended_Index is Index_Type'Base range
      Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
@@ -75,7 +75,7 @@ package Functional_Sequences with SPARK_Mode is
              ((Index_Type'Pos (Index_Type'First) - 1) + Length (S1))) =>
             Get (S1, N) = Get (S2, N)));
 
-   function Is_Replace
+   function Is_Set
      (S : Sequence; N : Index_Type; E : Element_Type; Result : Sequence)
       return Boolean
    --  Returns True if Result is S where the Nth element has been replaced by
@@ -83,7 +83,7 @@ package Functional_Sequences with SPARK_Mode is
 
    with
      Global => null,
-       Post   => Is_Replace'Result =
+       Post   => Is_Set'Result =
          (N in Index_Type'First ..
           (Index_Type'Val
              ((Index_Type'Pos (Index_Type'First) - 1) + Length (S)))
@@ -94,11 +94,11 @@ package Functional_Sequences with SPARK_Mode is
                ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))) =>
               (if M /= N then Get (Result, M) = Get (S, M))));
 
-   function Replace
+   function Set
      (S : Sequence; N : Index_Type; E : Element_Type) return Sequence
    --  Returns S where the Nth element has been replaced by E.
-   --  Is_Replace (S, N, E, Result) should be instead of than
-   --  Result = Replace (S, N, E) whenever possible both for execution and for
+   --  Is_Set (S, N, E, Result) should be instead of than
+   --  Result = Set (S, N, E) whenever possible both for execution and for
    --  proof.
 
    with
@@ -106,7 +106,7 @@ package Functional_Sequences with SPARK_Mode is
      Pre    => N in Index_Type'First ..
           (Index_Type'Val
              ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))),
-     Post   => Is_Replace (S, N, E, Replace'Result);
+     Post   => Is_Set (S, N, E, Set'Result);
 
    function Is_Add
      (S : Sequence; E : Element_Type; Result : Sequence) return Boolean
@@ -134,6 +134,10 @@ package Functional_Sequences with SPARK_Mode is
        Index_Type'Pos (Index_Type'Last),
      Post   => Is_Add (S, E, Add'Result);
 
+   ---------------------------
+   --  Iteration Primitives --
+   ---------------------------
+
    function Iter_First (S : Sequence) return Extended_Index;
    function Iter_Has_Element (S : Sequence; I : Extended_Index) return Boolean
    with
@@ -150,18 +154,25 @@ package Functional_Sequences with SPARK_Mode is
 private
    pragma SPARK_Mode (Off);
 
-   type Neither_Controlled_Nor_Limited is tagged null record;
+   package Containers is new Conts.Functional.Base
+     (Index_Type   => Index_Type,
+      Element_Type => Element_Type);
 
-   --  Functional sequences are neither controlled nor limited. As a result,
-   --  no primitive should be provided to modify them. Note that we
-   --  should definitely not use limited types for those as we need to apply
-   --  'Old on them.
-   --  ??? Should we make them controlled to avoid memory leak ?
+   type Sequence is record
+      Content : Containers.Container;
+   end record;
 
-   package Element_Lists is new Conts.Vectors.Indefinite_Unbounded
-     (Element_Type        => Element_Type,
-      Index_Type          => Index_Type,
-      Container_Base_Type => Neither_Controlled_Nor_Limited);
+   function Iter_First (S :
+                        Sequence) return Extended_Index
+   is (Index_Type'First);
+   function Iter_Next (S : Sequence; I : Extended_Index) return Extended_Index
+   is
+     (if I = Extended_Index'Last then Extended_Index'First
+      else Extended_Index'Succ (I));
 
-   type Sequence is new Element_Lists.Vector with null record;
-end Functional_Sequences;
+   function Iter_Has_Element (S : Sequence; I : Extended_Index) return Boolean
+   is
+     (I in Index_Type'First ..
+        (Index_Type'Val
+             ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))));
+end Conts.Functional.Sequences;

@@ -9,9 +9,9 @@ package body Formal_Vectors with SPARK_Mode => Off is
    package body Formal_Model is
       use M;
       use V;
-      function Valid_Cursors (Self : Vector'Class) return Set is
+      function Valid_Cursors (Self : Vector'Class) return V.Set is
          Cu : Cursor := Cursor (First (Element_Vectors.Vector (Self)));
-         R  : Set;
+         R  : V.Set;
       begin
          while Element_Vectors.Vectors.Has_Element (Self, Cu) loop
             R := Add (R, Cu);

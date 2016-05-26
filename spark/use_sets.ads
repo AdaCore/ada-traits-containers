@@ -70,7 +70,7 @@ package Use_Sets with SPARK_Mode is
    with
      Pre  => Capacity (S) - Count > Length (S),
      Post => Length (S) <= Length (S)'Old + Count
-     and Inc (Model (S)'Old, Model (S))
+     and Model (S)'Old <= Model (S)
      and (for all E in 1 .. Element_Type'(Count) => Contains (S, E))
      and (for all E of S => Mem (Model (S)'Old, E) or E in 1 .. Count);
 

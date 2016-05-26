@@ -1,7 +1,7 @@
 pragma Ada_2012;
-with Functional_Sequences;
-with Functional_Maps;
-with Functional_Sets;
+with Conts.Functional.Sequences;
+with Conts.Functional.Maps;
+with Conts.Functional.Sets;
 with Conts;                 use Conts;
 
 generic
@@ -52,15 +52,14 @@ package Formal_Ordered_Sets with SPARK_Mode is
    --  The length of a set is always strictly smaller than its capacity
 
    package Formal_Model with Ghost is
-      subtype Positive_Count_Type is Count_Type range 1 .. Count_Type'Last;
 
-      package P is new Functional_Maps
+      package P is new Conts.Functional.Maps
         (Element_Type => Positive_Count_Type,
          Key_Type     => Cursor);
-      package E is new Functional_Sequences
+      package E is new Conts.Functional.Sequences
         (Index_Type   => Positive_Count_Type,
          Element_Type => Element_Type);
-      package M is new Functional_Sets
+      package M is new Conts.Functional.Sets
         (Element_Type => Element_Type);
 
       function Model (Self : Set'Class) return M.Set with

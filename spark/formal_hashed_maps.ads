@@ -1,6 +1,6 @@
 pragma Ada_2012;
-with Functional_Sequences;
-with Functional_Maps;
+with Conts.Functional.Sequences;
+with Conts.Functional.Maps;
 with Conts; use Conts;
 with Conts.Maps.Indef_Indef_Unbounded_SPARK;
 
@@ -46,15 +46,14 @@ package Formal_Hashed_Maps with SPARK_Mode is
    --  The length of a map is always strictly smaller than its capacity
 
    package Formal_Model with Ghost is
-      subtype Positive_Count_Type is Count_Type range 1 .. Count_Type'Last;
 
-      package P is new Functional_Maps
+      package P is new Conts.Functional.Maps
         (Element_Type => Positive_Count_Type,
          Key_Type     => Cursor);
-      package K is new Functional_Sequences
+      package K is new Conts.Functional.Sequences
         (Element_Type => Key_Type,
          Index_Type   => Positive_Count_Type);
-      package M is new Functional_Maps
+      package M is new Conts.Functional.Maps
         (Element_Type => Element_Type,
          Key_Type     => Key_Type);
 
@@ -207,7 +206,7 @@ package Formal_Hashed_Maps with SPARK_Mode is
      (Contains (Self, Key) =>
           Capacity (Self) = Capacity (Self)'Old
       and Length (Self) = Length (Self)'Old
-      and M.Is_Replace (Model (Self)'Old, Key, Element, Model (Self))
+      and M.Is_Set (Model (Self)'Old, Key, Element, Model (Self))
 
       --  Keys and cursors are preserved
 

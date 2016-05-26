@@ -1,8 +1,8 @@
 pragma Ada_2012;
 with Conts; use Conts;
 with Conts.Vectors.Indefinite_Unbounded_SPARK;
-with Functional_Sequences;
-with Functional_Sets;
+with Conts.Functional.Sequences;
+with Conts.Functional.Sets;
 
 generic
    type Index_Type is (<>);
@@ -69,9 +69,9 @@ package Formal_Vectors with SPARK_Mode is
 
    package Formal_Model with Ghost is
 
-      package V is new Functional_Sets
+      package V is new Conts.Functional.Sets
         (Element_Type => Cursor);
-      package M is new Functional_Sequences
+      package M is new Conts.Functional.Sequences
         (Index_Type   => Index_Type,
          Element_Type => Element_Type);
 
@@ -259,7 +259,7 @@ package Formal_Vectors with SPARK_Mode is
      and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old
      and then
        (if Index <= Last (Self)
-        then M.Is_Replace (Model (Self)'Old, Index, New_Item, Model (Self))
+        then M.Is_Set (Model (Self)'Old, Index, New_Item, Model (Self))
         else Model (Self) = Model (Self)'Old);
 
    procedure Swap

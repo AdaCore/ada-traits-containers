@@ -21,8 +21,8 @@
 
 pragma Ada_2012;
 with Conts.Lists.Storage;
-with Functional_Sequences;
-with Functional_Maps;
+with Conts.Functional.Sequences;
+with Conts.Functional.Maps;
 
 generic
    with package Storage is new Conts.Lists.Storage.Traits (<>);
@@ -63,8 +63,6 @@ package Conts.Lists.Impl with SPARK_Mode is
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   subtype Positive_Count_Type is Count_Type range 1 .. Count_Type'Last;
-
    type P_Map is private with Ghost,
      Iterable => (First => P_Iter_First,
                   Has_Element => P_Iter_Has_Element,
@@ -87,7 +85,7 @@ package Conts.Lists.Impl with SPARK_Mode is
 
    pragma Annotate (GNATprove, Iterable_For_Proof, "Contains", P_Mem);
 
-   package M is new Functional_Sequences
+   package M is new Conts.Functional.Sequences
      (Index_Type   => Positive_Count_Type,
       Element_Type => Element_Type);
    --  This instance should be ghost but it is not currently allowed by the RM.
@@ -333,10 +331,10 @@ package Conts.Lists.Impl with SPARK_Mode is
 
      --  The element at the position of Position in Self is replaced by E.
 
-     and M.Is_Replace (Model (Self)'Old,
-                       P_Get (Positions (Self), Position),
-                       Element,
-                       Model (Self));
+     and M.Is_Set (Model (Self)'Old,
+                   P_Get (Positions (Self), Position),
+                   Element,
+                   Model (Self));
 
    function First_Primitive (Self : Base_List) return Cursor
    is (First (Self)) with Inline;
@@ -386,7 +384,7 @@ private
    end record;
    No_Element : constant Cursor := (Current => Storage.Null_Access);
 
-   package P is new Functional_Maps
+   package P is new Conts.Functional.Maps
      (Element_Type => Positive_Count_Type,
       Key_Type     => Cursor);
    --  This instance should be ghost but it is not currently allowed by the RM.
