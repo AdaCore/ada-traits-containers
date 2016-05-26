@@ -160,6 +160,11 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
       end if;
    end Next;
 
+   procedure Next (Self : Base_List'Class; Position : in out Cursor) is
+   begin
+      Position := Next (Self, Position);
+   end Next;
+
    --------------
    -- Previous --
    --------------

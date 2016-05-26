@@ -681,7 +681,7 @@ List("String",
 
 p = " (Positive, Integer);"
 cp = " (Positive, Integer, Ada.Finalization.Controlled);"
-lp = " (Positive, Integer, Conts.Limited_Base);"
+lp = " (Positive, Integer);"
 
 Vector("Integer",
      "package Container is new Ada.Containers.Bounded_Vectors" + p,
@@ -748,7 +748,7 @@ Vector("Integer",
 
 p = " (Positive, String);"
 cp = " (Positive, String, Ada.Finalization.Controlled);"
-lp = " (Positive, String, Conts.Limited_Base);"
+lp = " (Positive, String);"
 
 Vector("String",
      "package Container is new Ada.Containers.Indefinite_Vectors" + p

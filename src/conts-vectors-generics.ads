@@ -25,6 +25,7 @@ pragma Ada_2012;
 with Conts.Cursors;
 with Conts.Properties;
 with Conts.Vectors.Storage;
+with Conts.Vectors.Impl;
 
 generic
    type Index_Type is (<>);
@@ -39,145 +40,20 @@ generic
 
 package Conts.Vectors.Generics with SPARK_Mode is
 
-   subtype Extended_Index is Index_Type'Base range
-     Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
-   --  Index_Type with one more element to the left, used to represent
-   --  invalid indexes
-
    subtype Element_Type is Storage.Elements.Element_Type;
    subtype Returned_Type is Storage.Elements.Returned_Type;
    subtype Constant_Returned_Type is Storage.Elements.Constant_Returned_Type;
    subtype Stored_Type is Storage.Elements.Stored_Type;
 
-   package Impl is
+   package Impl is new Conts.Vectors.Impl (Index_Type, Storage);
 
-      type Base_Vector is new Storage.Container with private;
-      --  Define the iterable aspect later, since this is not allowed when the
-      --  parent type is a generic formal.
-
-      type Cursor is private;
-      No_Element : constant Cursor;
-
-      procedure Reserve_Capacity
-        (Self : in out Base_Vector'Class; Capacity : Count_Type);
-      procedure Shrink_To_Fit (Self : in out Base_Vector'Class);
-      procedure Resize
-        (Self    : in out Base_Vector'Class;
-         Length  : Index_Type;
-         Element : Storage.Elements.Element_Type);
-      function Length (Self : Base_Vector'Class) return Count_Type
-        with Inline => True, Global => null;
-      procedure Clear (Self : in out Base_Vector'Class) with Global => null;
-      procedure Append
-        (Self    : in out Base_Vector'Class;
-         Element : Element_Type;
-         Count   : Count_Type := 1)
-        with Global => null,
-        Pre    => Length (Self) + Count <= Storage.Max_Capacity (Self);
-      procedure Assign
-        (Self : in out Base_Vector'Class; Source : Base_Vector'Class);
-      function Is_Empty (Self : Base_Vector'Class) return Boolean
-        is (Length (Self) = 0) with Inline;
-      procedure Replace_Element
-        (Self     : in out Base_Vector'Class;
-         Index    : Index_Type;
-         New_Item : Element_Type)
-        with Global => null, Pre => Index <= Last (Self);
-      procedure Delete (Self : in out Base_Vector'Class; Index : Index_Type)
-        with Pre => Index <= Last (Self);
-      procedure Delete_Last (Self : in out Base_Vector'Class)
-        with Global => null, Pre => Length (Self) /= 0;
-      function Last_Element
-        (Self : Base_Vector'Class) return Constant_Returned_Type
-        with Global => null, Pre => Length (Self) /= 0;
-      function First (Self : Base_Vector'Class) return Cursor
-        with Inline, Global => null;
-      function Element
-        (Self : Base_Vector'Class; Position : Index_Type)
-         return Constant_Returned_Type
-        with Inline;
-      function Reference
-        (Self : Base_Vector'Class; Position : Index_Type)
-         return Returned_Type
-        with Inline;
-      function Element
-        (Self : Base_Vector'Class; Position : Cursor)
-         return Constant_Returned_Type
-        with Inline, Global => null,
-             Pre    => Has_Element (Self, Position);
-      function Has_Element
-        (Self : Base_Vector'Class; Position : Cursor) return Boolean
-        with Inline, Global => null;
-      function Next
-        (Self : Base_Vector'Class; Position : Cursor) return Cursor
-        with Inline, Global => null,
-        Pre    => Has_Element (Self, Position);
-      function Previous
-        (Self : Base_Vector'Class; Position : Cursor) return Cursor
-        with Inline, Global => null,
-        Pre    => Has_Element (Self, Position);
-      function Last (Self : Base_Vector'Class) return Extended_Index
-        with Inline => True, Global => null;
-      --  Actual implementation for the subprograms renamed below. See the
-      --  descriptions below.
-
-      function First_Primitive (Self : Base_Vector) return Cursor
-         is (First (Self)) with Inline;
-      function Element_Primitive
-        (Self : Base_Vector; Position : Cursor) return Constant_Returned_Type
-      is (Element (Self, Position)) with Inline,
-      Pre'Class => Has_Element (Self, Position);
-      function Has_Element_Primitive
-        (Self : Base_Vector; Position : Cursor) return Boolean
-         is (Has_Element (Self, Position)) with Inline;
-      function Next_Primitive
-        (Self : Base_Vector; Position : Cursor) return Cursor
-         is (Next (Self, Position)) with Inline,
-      Pre'Class => Has_Element (Self, Position);
-      --  These are only needed because the Iterable aspect expects a parameter
-      --  of type List instead of List'Class. But then it means that the loop
-      --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
-      --  using an explicit cursor.
-
-      function To_Index (Position : Cursor) return Index_Type
-        with Inline, Global => null;
-      function To_Index (Position : Count_Type) return Index_Type;
-      --  Return the index corresponding to the cursor.
-
-   private
-      pragma SPARK_Mode (Off);
-      procedure Adjust (Self : in out Base_Vector);
-      procedure Finalize (Self : in out Base_Vector);
-      --  In case the list is a controlled type, but irrelevant when Self
-      --  is not controlled.
-
-      type Cursor is record
-         Index   : Count_Type;
-      end record;
-
-      No_Element : constant Cursor :=
-        (Index => Conts.Vectors.Storage.Min_Index - 1);
-
-      type Base_Vector is new Storage.Container with record
-         Last  : Count_Type := No_Element.Index;
-         --  Last assigned element
-      end record;
-
-      function Last (Self : Base_Vector'Class) return Extended_Index
-         is (To_Index (Self.Last));
-      function To_Index (Position : Count_Type) return Index_Type
-         is (Index_Type'Val
-             (Position - Conts.Vectors.Storage.Min_Index
-              + Count_Type (Index_Type'Pos (Index_Type'First))));
-      function To_Index (Position : Cursor) return Index_Type
-         is (To_Index (Position.Index));
-   end Impl;
-
+   subtype Extended_Index is Impl.Extended_Index;
    subtype Base_Vector is Impl.Base_Vector;
    subtype Cursor is Impl.Cursor;
    No_Element : constant Cursor := Impl.No_Element;
 
-   function To_Count (Idx : Index_Type) return Count_Type with Inline;
+   function To_Count (Idx : Index_Type) return Count_Type
+     renames Impl.To_Count;
    --  Converts from an index type to an index into the actual underlying
    --  array.
 
@@ -185,7 +61,9 @@ package Conts.Vectors.Generics with SPARK_Mode is
      renames Impl.To_Index;
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
-     is (To_Count (Idx) <= Count) with Inline;
+   is (To_Count (Idx) <= Count)
+   with Inline,
+     Pre => Idx in Index_Type'First .. Impl.To_Index (Impl.Last_Count);
 
    procedure Reserve_Capacity
      (Self : in out Base_Vector'Class; Capacity : Count_Type)
@@ -251,7 +129,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    procedure Swap
      (Self        : in out Base_Vector'Class;
       Left, Right : Index_Type)
-     with Pre => Left <= Self.Last and then Right <= Self.Last;
+     renames Impl.Swap;
    --  Efficiently swap the elements at the two positions.
    --  For large elements, this will be more efficient than retrieving them
    --  and storing them again (which might involve the secondary stack, or
@@ -315,9 +193,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Complexity: constant for all cursor operations.
 
    procedure Next (Self : Base_Vector'Class; Position : in out Cursor)
-      with Inline,
-           Global => null,
-           Pre    => Has_Element (Self, Position);
+      renames Impl.Next;
 
    ------------------
    -- for-of loops --
@@ -332,7 +208,19 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    function Constant_Reference
      (Self : Vector; Position : Index_Type) return Constant_Returned_Type
-     is (Element (Self, Position)) with Inline;
+   is (Element (Self, Position))
+   with Inline,
+     Pre'Class => Position <= Last (Self);
+
+   use type Impl.M.Sequence;
+
+   function Model (Self : Vector'Class) return Impl.M.Sequence is
+      (Impl.Model (Self))
+   with Ghost;
+   pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
+
+   function Element (S : Impl.M.Sequence; I : Index_Type) return Element_Type
+                     renames Impl.Element;
 
    -------------
    -- Cursors --
@@ -343,9 +231,14 @@ package Conts.Vectors.Generics with SPARK_Mode is
          is (Index_Type'First) with Inline;
       function "-" (Left, Right : Index_Type) return Integer
          is (Integer (To_Count (Left))
-             - Integer (To_Count (Right)));
+             - Integer (To_Count (Right)))
+      with Pre => Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
+        and Right in Index_Type'First .. Impl.To_Index (Impl.Last_Count);
       function "+" (Left : Index_Type; N : Integer) return Index_Type
-         is (Impl.To_Index (Count_Type (Integer (To_Count (Left)) + N)));
+         is (Impl.To_Index (Count_Type (Integer (To_Count (Left)) + N)))
+      with Pre => Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
+        and then N in Integer (1 - To_Count (Left)) ..
+          Integer (Impl.Last_Count - To_Count (Left));
 
       package Random_Access is new Conts.Cursors.Random_Access_Cursors
         (Container_Type => Base_Vector'Class,
@@ -382,13 +275,5 @@ package Conts.Vectors.Generics with SPARK_Mode is
         (Cursors.Forward.Container, Cursors.Forward.Cursor,
          Storage.Elements.Constant_Returned, Conts.Vectors.Generics.Element);
    end Maps;
-
-private
-
-   function To_Count (Idx : Index_Type) return Count_Type
-   is (Count_Type
-       (Conts.Vectors.Storage.Min_Index
-        + Count_Type'Base (Index_Type'Pos (Idx))
-        - Count_Type'Base (Index_Type'Pos (Index_Type'First))));
 
 end Conts.Vectors.Generics;

@@ -50,6 +50,8 @@ package Conts.Lists.Impl with SPARK_Mode is
    function Capacity (Self : Base_List'Class) return Count_Type
    is (Storage.Capacity (Self))
    with Inline => True, Global => null;
+   --  The capacity of a list cannot be modified, it is the maximal number of
+   --  elements that the list may contain.
 
    function Length (Self : Base_List'Class) return Count_Type
    with --  Inline => True, ??? bug with Default_Initial_Condition
@@ -185,6 +187,18 @@ package Conts.Lists.Impl with SPARK_Mode is
         and P_Get (Positions (Self), Previous'Result) =
           P_Get (Positions (Self), Position) - 1);
 
+   procedure Next (Self : Base_List'Class; Position : in out Cursor)
+   with Inline,
+     Global => null,
+     Pre    => Has_Element (Self, Position),
+     Contract_Cases =>
+       (Impl.P_Get (Impl.Positions (Self), Position) = Length (Self) =>
+              Position = No_Element,
+        others                                             =>
+          Has_Element (Self, Position)
+        and then Impl.P_Get (Impl.Positions (Self), Position) =
+          Impl.P_Get (Impl.Positions (Self), Position'Old) + 1);
+
    function Last (Self : Base_List'Class) return Cursor with
      Global         => null,
      Contract_Cases =>
@@ -223,9 +237,9 @@ package Conts.Lists.Impl with SPARK_Mode is
 
    procedure Append (Self : in out Base_List'Class; Element : Element_Type)
    with
-     Global         => null,
-     Pre            => Length (Self) < Capacity (Self),
-     Post           => Capacity (Self) = Capacity (Self)'Old
+     Global => null,
+     Pre    => Length (Self) < Capacity (Self),
+     Post   => Capacity (Self) = Capacity (Self)'Old
      and Length (Self) = Length (Self)'Old + 1
 
      --  Positions contains a new mapping from the last cursor of Self to
@@ -248,6 +262,7 @@ package Conts.Lists.Impl with SPARK_Mode is
 
    function Find (Self : Base_List'Class; Element : Element_Type) return Cursor
    with
+     Global         => null,
      Contract_Cases =>
 
      --  Either Element is not in the model and the result is No_Element
@@ -269,9 +284,10 @@ package Conts.Lists.Impl with SPARK_Mode is
      --  Insert Element before the valid cursor Position in L.
 
    with
-     Pre  => Length (Self) < Capacity (Self)
+     Global => null,
+     Pre    => Length (Self) < Capacity (Self)
      and then Has_Element (Self, Position),
-     Post => Length (Self) = Length (Self)'Old + 1
+     Post   => Length (Self) = Length (Self)'Old + 1
      and Capacity (Self) = Capacity (Self)'Old
 
      --  Every cursor previously valid in Self is still valid.
@@ -321,8 +337,9 @@ package Conts.Lists.Impl with SPARK_Mode is
    procedure Replace_Element
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
    with
-     Pre  => Has_Element (Self, Position),
-     Post => Capacity (Self) = Capacity (Self)'Old
+     Global => null,
+     Pre    => Has_Element (Self, Position),
+     Post   => Capacity (Self) = Capacity (Self)'Old
      and Length (Self) = Length (Self)'Old
 
      --  Cursors are preserved.

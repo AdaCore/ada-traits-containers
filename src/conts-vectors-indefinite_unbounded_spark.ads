@@ -29,14 +29,13 @@ with Conts.Vectors.Storage.Unbounded;
 generic
    type Index_Type is (<>);
    type Element_Type (<>) is private;
-   type Container_Base_Type is abstract tagged limited private;
 package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
 
    package Elements is new Conts.Elements.Indefinite_SPARK
       (Element_Type, Pool => Conts.Global_Pool);
    package Storage is new Conts.Vectors.Storage.Unbounded
       (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type,
+       Container_Base_Type => Limited_Base,
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
@@ -47,6 +46,11 @@ package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
 
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;
+
+   subtype Element_Sequence is Vectors.Impl.M.Sequence with Ghost;
+   subtype Cursor_Set is Vectors.Impl.V_Set with Ghost;
+
+   use type Element_Sequence;
 
    function Copy (Self : Vector'Class) return Vector'Class;
    --  Return a deep copy of Self

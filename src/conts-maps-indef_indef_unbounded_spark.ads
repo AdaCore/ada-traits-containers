@@ -40,7 +40,7 @@ package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
      (Element_Type, Pool => Conts.Global_Pool);
 
    function "=" (Left : Key_Type; Right : Keys.Traits.Stored) return Boolean
-     is (Left = Keys.Impl.To_Element_Type (Right)) with Inline;
+     is (Left = Keys.Impl.To_Constant_Reference_Type (Right)) with Inline;
 
    package Impl is new Conts.Maps.Generics
      (Keys                => Keys.Traits,

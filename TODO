@@ -157,6 +157,8 @@ can be edited with any text editor.
    in the subprograms. A similar benefit for graph's adjacency lists.
    See also `support for different key types when searching` for maps, below
 
+** TODO: Resize strategies for vectors may overflow Count_Type
+
 * Strings
 
 ** TODO One possible storage is vectors

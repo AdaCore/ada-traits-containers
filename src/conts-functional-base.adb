@@ -25,12 +25,12 @@ package body Conts.Functional.Base with SPARK_Mode => Off is
 
    function To_Count (Idx : Extended_Index) return Count_Type
    is (Count_Type
-       (Count_Type'Base (Extended_Index'Pos (Idx))
-        - Count_Type'Base (Extended_Index'Pos (Extended_Index'First))));
+       (Extended_Index'Pos (Idx)
+        - Extended_Index'Pos (Extended_Index'First)));
    function To_Index (Position : Count_Type) return Extended_Index
    is (Extended_Index'Val
        (Position
-        + Count_Type (Extended_Index'Pos (Extended_Index'First))));
+        + Extended_Index'Pos (Extended_Index'First)));
    --  Conversion functions between Index_Type and Count_Type
 
    function Find (C : Container; E : access Element_Type) return Count_Type;

@@ -55,13 +55,13 @@ package Conts.Lists.Storage with SPARK_Mode is
       --  Allocate a new node, that contains Element. Its next and previous
       --  siblings have been initialized to Null_Access.
       --  This procedure can return Null_Access is the new node could not be
-      --  allocated.
+      --  allocated. This should only happen when there is more than Capacity
+      --  elements in Self.
 
       with procedure Release_Node
          (Self : in out Container'Class; N : in out Node_Access) is null;
       --  Free the memroy for a specific node.
       --  This function should not free the element itself, this has already
-
       --  been handled by the container (this is so that a null procedure can
       --  be passed in the common case).
 

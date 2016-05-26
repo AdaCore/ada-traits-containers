@@ -102,15 +102,7 @@ package Conts.Lists.Generics with SPARK_Mode is
    --  Complexity: constant for all cursor operations.
 
    procedure Next (Self : Base_List'Class; Position : in out Cursor)
-      with Inline, Global => null,
-           Pre    => Has_Element (Self, Position),
-     Contract_Cases =>
-       (Impl.P_Get (Impl.Positions (Self), Position) = Length (Self) =>
-              Position = No_Element,
-        others                                             =>
-          Has_Element (Self, Position)
-        and then Impl.P_Get (Impl.Positions (Self), Position) =
-          Impl.P_Get (Impl.Positions (Self), Position'Old) + 1);
+      renames Impl.Next;
 
    --  ??? Should we provide a Copy function ?
    --  This cannot be provided in this generic package, since the type could
@@ -138,9 +130,9 @@ package Conts.Lists.Generics with SPARK_Mode is
 
    use type Impl.M.Sequence;
 
-   function Model (Self : List'Class) return Impl.M.Sequence with
-     Ghost,
-     Post => Model'Result = Impl.Model (Self);
+   function Model (Self : List'Class) return Impl.M.Sequence is
+      (Impl.Model (Self))
+   with Ghost;
    pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
 
    function Element (S : Impl.M.Sequence; I : Count_Type) return Element_Type

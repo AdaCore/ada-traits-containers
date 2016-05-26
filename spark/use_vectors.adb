@@ -137,7 +137,7 @@ package body Use_Vectors with SPARK_Mode is
          Append (V, Element (Loc, J));
          pragma Loop_Invariant (J in I .. Last (Loc));
          pragma Loop_Invariant
-           (Integer (Length (V)) = J + Count + 1 - Index_Type'First);
+           (Integer (Length (V)) = J - Index_Type'First + Count + 1);
          pragma Loop_Invariant
            (for all K in Index_Type'First .. I - 1 =>
               Element (V, K) = Element (Loc, K));
@@ -159,7 +159,7 @@ package body Use_Vectors with SPARK_Mode is
 
    procedure From_Lower_To_Higher (V : Vector) is
    begin
-      Formal_Model.Lift_Abstraction_Level (V);
+      Impl.Lift_Abstraction_Level (V);
    end From_Lower_To_Higher;
 
 end Use_Vectors;

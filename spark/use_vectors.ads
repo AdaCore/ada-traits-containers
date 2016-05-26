@@ -1,25 +1,33 @@
 pragma Ada_2012;
-with Formal_Vectors;
+with Conts.Vectors.Indefinite_Unbounded_SPARK;
 with Conts;              use Conts;
-pragma Elaborate_All (Formal_Vectors);
+pragma Elaborate_All (Conts.Vectors.Indefinite_Unbounded_SPARK);
 
 package Use_Vectors with SPARK_Mode is
    subtype Smaller is Integer range Integer'First + 1 .. Integer'Last;
-   First_Index : Smaller := 1;
-   Last_Index  : Integer := Integer'Last;
-   --  First and Last of Index_Type. Those are constants but are declared as
-   --  variables so that SPARK does not know their value.
+
+   package Nested is
+      Lst : constant Integer;
+   private
+      pragma SPARK_Mode (Off);
+      function Id (X : Integer) return Integer is (X);
+      Lst : constant Integer := Id (Integer'Last);
+   end Nested;
+
+   First_Index : constant Smaller := 1;
+   Last_Index  : constant Integer := Nested.Lst;
 
    subtype Index_Type is Integer range First_Index .. Last_Index;
 
    type Element_Type is new Integer;
    package My_Vectors is new
-     Formal_Vectors
-       (Index_Type => Index_Type, Element_Type => Element_Type);
-   use My_Vectors;
+     Conts.Vectors.Indefinite_Unbounded_SPARK
+       (Index_Type => Index_Type,
+        Element_Type => Element_Type);
    use type My_Vectors.Cursor;
-   use My_Vectors.V;
-   use My_Vectors.M;
+   use My_Vectors.Vectors;
+   use type My_Vectors.Element_Sequence;
+   use all type My_Vectors.Cursor_Set;
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
@@ -51,7 +59,7 @@ package Use_Vectors with SPARK_Mode is
    --  specification.
 
    procedure Double_Size (V : in out Vector) with
-     Pre  => Max_Capacity / 2 >= Length (V),
+     Pre  => Impl.Last_Count / 2 >= Length (V),
      Post => Length (V) = 2 * Length (V)'Old
      and (for all I in Index_Type'First .. Last (V)'Old =>
        Element (V, I) = Element (Model (V)'Old, I)
@@ -76,7 +84,7 @@ package Use_Vectors with SPARK_Mode is
    --  Replace every element between Fst and Lst with 0.
 
    with
-     Pre  => Fst <= Last (V) and then Lst <= Last (V) and then Fst <= Lst,
+     Pre  => Lst <= Last (V) and then Fst <= Lst,
      Post => Valid_Cursors (V) = Valid_Cursors (V)'Old
      and (for all I in Index_Type'First .. Last (V) =>
               (if I in Fst .. Lst
@@ -89,7 +97,7 @@ package Use_Vectors with SPARK_Mode is
    --  Insert 0 Count times just before I.
 
    with
-     Pre  => I <= Last (V) and Max_Capacity - Count >= Length (V),
+     Pre  => I <= Last (V) and Impl.Last_Count - Count >= Length (V),
      Post => Length (V) = Length (V)'Old + Count
      and (for all J in Index_Type'First .. I - 1 =>
         Element (V, J) = Element (Model (V)'Old, J))
@@ -101,7 +109,7 @@ package Use_Vectors with SPARK_Mode is
    subtype My_Enum is My_Enum_Base range One .. Three;
 
    package Enum_Vectors is new
-     Formal_Vectors
+     Conts.Vectors.Indefinite_Unbounded_SPARK
        (Index_Type => My_Enum, Element_Type => Integer);
 
    --  Test links between high level, position based model of a container and
