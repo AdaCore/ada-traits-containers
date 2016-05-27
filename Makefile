@@ -16,8 +16,10 @@ check_spark:
 	gnatprove -Pspark/spark.gpr -U --mode=check
 
 # Prove our files
+# Use Debug mode, so that optimization switches like Disable Overflow
+# are not used for gnatprove
 prove:
-	gnatprove -Pspark/spark.gpr -u use_sets.adb use_lists.adb use_maps.adb use_ordered_sets.adb use_vectors.adb --dbg-proof-only -j0 --level=2
+	BUILD=Debug gnatprove -Pspark/spark.gpr -u use_sets.adb use_lists.adb use_maps.adb use_ordered_sets.adb use_vectors.adb --dbg-proof-only -j0 --level=2
 	# gnatprove -P spark/spark.gpr -U -j0 --level=2
 
 
