@@ -131,7 +131,7 @@ package body Use_Maps with SPARK_Mode is
       Set (M, 2, 0);
       Set (M, 3, 0);
       Set (M, 4, 0);
-      Set (M, 5, 0);
+--        Set (M, 5, 0);
    end Insert_Count;
 
    function Q (E : Integer) return Boolean is

@@ -31,7 +31,7 @@ package Conts.Functional.Maps with SPARK_Mode is
    pragma Warnings (Off, "unused variable");
 
    type Map is private with
-     Default_Initial_Condition => Is_Empty (Map),
+     Default_Initial_Condition => Is_Empty (Map) and Length (Map) = 0,
      Iterable                  => (First       => Iter_First,
                                    Next        => Iter_Next,
                                    Has_Element => Iter_Has_Element,

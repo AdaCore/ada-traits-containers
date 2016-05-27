@@ -5,7 +5,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       while Has_Element (S, Cu) loop
          pragma Loop_Invariant
-           (for all I in 1 .. Get (Positions (S), Cu) - 1 =>
+           (for all I in 1 .. P_Get (Positions (S), Cu) - 1 =>
               Get (Elements (S), I) /= E);
          if Element (S, Cu) = E then
             return Cu;
@@ -20,13 +20,13 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       Clear (R);
       while Has_Element (S, Cu) loop
-         pragma Loop_Invariant (Length (R) <= Get (Positions (S), Cu) - 1);
+         pragma Loop_Invariant (Length (R) <= P_Get (Positions (S), Cu) - 1);
          pragma Loop_Invariant
-           (for all I in 1 .. Get (Positions (S), Cu) - 1 =>
+           (for all I in 1 .. P_Get (Positions (S), Cu) - 1 =>
               Contains (R, F (Get (Elements (S), I))));
          pragma Loop_Invariant
            (for all G of Model (R) =>
-              (for some I in 1 .. Get (Positions (S), Cu) - 1 =>
+              (for some I in 1 .. P_Get (Positions (S), Cu) - 1 =>
                    G = F (Get (Elements (S), I))));
          Include (R, F (Element (S, Cu)));
          Cu := Next (S, Cu);
@@ -38,7 +38,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       while Has_Element (S1, Cu) loop
          pragma Loop_Invariant
-           (for all I in 1 .. Get (Positions (S1), Cu) - 1 =>
+           (for all I in 1 .. P_Get (Positions (S1), Cu) - 1 =>
               not Contains (S2, Get (Elements (S1), I)));
          if Contains (S2, Element (S1, Cu)) then
             return False;
@@ -53,7 +53,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       while Has_Element (S1, Cu) loop
          pragma Loop_Invariant
-           (for all I in 1 .. Get (Positions (S1), Cu) - 1 =>
+           (for all I in 1 .. P_Get (Positions (S1), Cu) - 1 =>
               not Mem (Model (S2), Get (Elements (S1), I)));
          if Contains (S2, Element (S1, Cu)) then
             return False;
@@ -92,7 +92,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
       Clear (S2);
       while Has_Element (S1, Cu) loop
          pragma Loop_Invariant (Capacity (S1) = Capacity (S1)'Loop_Entry);
-         pragma Loop_Invariant (Get (Positions (S1), Cu) = 1);
+         pragma Loop_Invariant (P_Get (Positions (S1), Cu) = 1);
          pragma Loop_Invariant
            (Length (S1) = Length (S1)'Loop_Entry - Length (S2));
          pragma Loop_Invariant
@@ -113,7 +113,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       Clear (S2);
       while Has_Element (S1, Cu) loop
-         pragma Loop_Invariant (Get (Positions (S1), Cu) = Length (S2) + 1);
+         pragma Loop_Invariant (P_Get (Positions (S1), Cu) = Length (S2) + 1);
          pragma Loop_Invariant
            (for all I in 1 .. Length (S2) =>
                 Mem (Model (S2), Get (Elements (S1), I)));
@@ -132,7 +132,7 @@ package body Use_Ordered_Sets with SPARK_Mode is
    begin
       Clear (S2);
       while Has_Element (S1, Cu) loop
-         pragma Loop_Invariant (Get (Positions (S1), Cu) = Length (S2) + 1);
+         pragma Loop_Invariant (P_Get (Positions (S1), Cu) = Length (S2) + 1);
          pragma Loop_Invariant
            (for all I in 1 .. Length (S2) =>
                 Get (Elements (S2), I) = Get (Elements (S1), I));
@@ -157,10 +157,9 @@ package body Use_Ordered_Sets with SPARK_Mode is
            (for all I in 2 * N + 1 .. Length (S) =>
                 Get (Elements (S), I) =
               Get (Elements (S)'Loop_Entry, I - N));
-         pragma Loop_Invariant (Get (Positions (S), Cu) = 2 * N + 1);
+         pragma Loop_Invariant (P_Get (Positions (S), Cu) = 2 * N + 1);
+         pragma Assert (not Contains (S, Element (S, Cu) + 1));
          Include (S, Element (S, Cu) + 1);
-         pragma Assert
-           (Get (Positions (S), Find (S, Element (S, Cu) + 1)) = 2 * N + 2);
          Cu := Next (S, Next (S, Cu));
          N := N + 1;
       end loop;
@@ -188,14 +187,14 @@ package body Use_Ordered_Sets with SPARK_Mode is
 
    procedure From_Cursors_To_Elements (S : My_Sets.Set) is
    begin
-      Formal_Model.Lift_Abstraction_Level (S);
+      Lift_Abstraction_Level (S);
    end From_Cursors_To_Elements;
 
    procedure From_Model_To_Cursors (S : My_Sets.Set) is null;
 
    procedure From_Cursors_To_Model (S : My_Sets.Set)  is
    begin
-      Formal_Model.Lift_Abstraction_Level (S);
+      Lift_Abstraction_Level (S);
    end From_Cursors_To_Model;
 
 end Use_Ordered_Sets;

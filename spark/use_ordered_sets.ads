@@ -6,13 +6,10 @@ pragma Elaborate_All (Formal_Ordered_Sets);
 package Use_Ordered_Sets with SPARK_Mode is
    type Element_Type is new Integer;
    package My_Sets is new Formal_Ordered_Sets
-     (Element_Type => Element_Type,
-      "<"          => "<");
-   use My_Sets;
-   use type My_Sets.Cursor;
-   use My_Sets.Formal_Model.P;
-   use My_Sets.Formal_Model.E;
-   use My_Sets.Formal_Model.M;
+     (Element_Type => Element_Type);
+   use My_Sets.Impl;
+   use My_Sets.Impl.M;
+   use My_Sets.Impl.E;
 
    function My_Contains (S : My_Sets.Set; E : Element_Type) return Boolean is
      (Find (S, E) /= No_Element) with

@@ -30,7 +30,7 @@ package Conts.Functional.Sets with SPARK_Mode is
    pragma Warnings (Off, "unused variable");
 
    type Set is private with
-     Default_Initial_Condition => Is_Empty (Set),
+     Default_Initial_Condition => Is_Empty (Set) and Length (Set) = 0,
      Iterable                  => (First       => Iter_First,
                                    Next        => Iter_Next,
                                    Has_Element => Iter_Has_Element,

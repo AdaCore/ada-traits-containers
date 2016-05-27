@@ -6,11 +6,9 @@ pragma Elaborate_All (Formal_Hashed_Sets);
 package Use_Sets with SPARK_Mode is
    type Element_Type is new Natural;
    package My_Sets is new Formal_Hashed_Sets (Element_Type => Element_Type);
-   use My_Sets;
-   use type My_Sets.Cursor;
-   use My_Sets.P;
-   use My_Sets.E;
-   use My_Sets.M;
+   use My_Sets.Impl;
+   use My_Sets.Impl.M;
+   use My_Sets.Impl.E;
 
    function My_Contains (S : My_Sets.Set; E : Element_Type) return Boolean is
      (Find (S, E) /= No_Element) with

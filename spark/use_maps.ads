@@ -78,7 +78,7 @@ package Use_Maps with SPARK_Mode is
      Post => (for all K of S1 => P (Get (S1, K)));
    --  Compute the union of two maps for which P is true.
 
-   Count : constant := 5;
+   Count : constant := 4;
 
    procedure Insert_Count (M : in out My_Maps.Map)
    --  Insert 0 Count times at Keys 1 .. Count.
