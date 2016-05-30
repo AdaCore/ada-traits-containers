@@ -31,49 +31,43 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
    -- Formal Model --
    ------------------
 
-   use M;
-   use P;
-
-   function P_Iter_First (M : P_Map) return P_Private_Cursor is
-      (P_Private_Cursor (P.Iter_First (M.Content)));
-   function P_Iter_Next (M : P_Map; C : P_Private_Cursor)
-                         return P_Private_Cursor is
-      (P_Private_Cursor (P.Iter_Next (M.Content, P.Private_Key (C))));
-   function P_Iter_Has_Element (M : P_Map; C : P_Private_Cursor)
-                                return Boolean is
-      (P.Iter_Has_Element (M.Content, P.Private_Key (C)));
-   function P_Iter_Element (M : P_Map; C : P_Private_Cursor) return Cursor is
-      (P.Iter_Element (M.Content, P.Private_Key (C)));
-   function P_Mem (M : P_Map; C : Cursor) return Boolean is
-      (P.Mem (M.Content, C));
-   function P_Get (M : P_Map; C : Cursor) return Positive_Count_Type is
-      (P.Get (M.Content, C));
+   ---------------
+   -- Positions --
+   ---------------
 
    function Positions (Self : Base_List'Class) return P_Map is
       Position : Cursor := (Current => Self.Head);
-      R        : Map;
+      R        : P.Map;
       I        : Count_Type := 1;
    begin
       while Position.Current /= Null_Access loop
-         R := Add (R, Position, I);
+         R := P.Add (R, Position, I);
          Position := (Current => Get_Next (Self, Position.Current));
          I := I + 1;
       end loop;
       return P_Map'(Content => R);
    end Positions;
 
+   -----------
+   -- Model --
+   -----------
+
    function Model (Self : Base_List'Class) return M.Sequence is
       Position : Cursor := (Current => Self.Head);
-      R        : Sequence;
+      R        : M.Sequence;
    begin
       while Position.Current /= Null_Access loop
-         R := Add (R, Storage.Elements.To_Element
+         R := M.Add (R, Storage.Elements.To_Element
                      (Storage.Elements.To_Constant_Returned
                       (Get_Element (Self, Position.Current))));
          Position := (Current => Get_Next (Self, Position.Current));
       end loop;
       return R;
    end Model;
+
+   ----------------------------
+   -- Lift_Abstraction_Level --
+   ----------------------------
 
    procedure Lift_Abstraction_Level (Self : Base_List'Class) is null;
 

@@ -235,6 +235,18 @@ package Conts.Lists.Impl with SPARK_Mode is
      and Capacity (Self) = Capacity (Self)'Old
      and Model (Self) = Model (Source);
 
+   function P_Is_Add (P1, P2 : P_Map;
+                      K      : Cursor;
+                      E      : Positive_Count_Type) return Boolean
+   --  P2 is P1 with an additional mapping from K to E.
+
+   with Ghost,
+     Post => P_Is_Add'Result =
+         (not P_Mem (P1, K) and P_Mem (P2, K) and P_Get (P2, K) = E
+          and (for all I of P1 => P_Mem (P2, I)
+               and P_Get (P2, I) = P_Get (P1, I))
+          and (for all I of P2 => I = K or P_Mem (P1, I)));
+
    procedure Append (Self : in out Base_List'Class; Element : Element_Type)
    with
      Global => null,
@@ -245,20 +257,22 @@ package Conts.Lists.Impl with SPARK_Mode is
      --  Positions contains a new mapping from the last cursor of Self to
      --  Length.
 
-     and (not P_Mem (Positions (Self)'Old, Last (Self))
-          and P_Mem (Positions (Self), Last (Self))
-          and P_Get (Positions (Self), Last (Self)) = Length (Self)
-          and (for all Position of Positions (Self)'Old =>
-                 P_Mem (Positions (Self), Position)
-               and P_Get (Positions (Self), Position) =
-                 P_Get (Positions (Self)'Old, Position))
-          and (for all Position of Positions (Self) =>
-                 Position = Last (Self)
-               or P_Mem (Positions (Self)'Old, Position)))
+     and P_Is_Add
+         (Positions (Self)'Old, Positions (Self), Last (Self), Length (Self))
 
      --  Model contains a new element Element at the end.
 
      and M.Is_Add (Model (Self)'Old, Element, Model (Self));
+
+   function M_Not_Until
+     (S : M.Sequence; Lst : Positive_Count_Type; E : Element_Type)
+      return Boolean
+   --  E is not in S until Lst.
+
+   with Ghost,
+     Pre  => Lst <= M.Length (S),
+     Post => M_Not_Until'Result =
+     (for all I in 1 .. Lst => Element (S, I) /= E);
 
    function Find (Self : Base_List'Class; Element : Element_Type) return Cursor
    with
@@ -276,8 +290,45 @@ package Conts.Lists.Impl with SPARK_Mode is
         Has_Element (Self, Find'Result)
       and Impl.Element (Model (Self),
         P_Get (Positions (Self), Find'Result)) = Element
-      and (for all I in 1 .. P_Get (Positions (Self), Find'Result) - 1 =>
-            Impl.Element (Model (Self), I) /= Element));
+      and M_Not_Until
+        (Model (Self), P_Get (Positions (Self), Find'Result) - 1, Element));
+
+   function M_Elements_Equal
+     (S1, S2   : M.Sequence;
+      Fst, Lst : Positive_Count_Type;
+      Offset   : Count_Type'Base := 0)
+      return Boolean
+   --  The slice from Fst to Lst in S1 has been shifted by Offset in S2.
+
+   with Ghost,
+   Pre  => Lst <= M.Length (S1) and Offset in 1 - Fst .. M.Length (S2) - Lst,
+   Post => M_Elements_Equal'Result =
+     (for all I in Fst .. Lst => Element (S1, I) = Element (S2, I + Offset));
+   pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Equal);
+
+   function P_Insert_Position (P1, P2 : P_Map; Cut : Positive_Count_Type)
+                               return Boolean
+   --  P2 is the resul of inserting a cursor at position Cut in P1.
+
+   with Ghost,
+   Pre  => (for all I of P1 => P_Get (P1, I) < Count_Type'Last),
+   Post => P_Insert_Position'Result =
+
+   --  Every cursor valid in P1 is valid in P2.
+
+     ((for all I of P1 => P_Mem (P2, I)
+
+       --  If it was located before Cut its position is preserved.
+
+       and (if P_Get (P1, I) < Cut then P_Get (P2, I) = P_Get (P1, I)
+
+         --  Otherwise it is shifted by 1.
+
+           else P_Get (P2, I) = P_Get (P1, I) + 1))
+
+      --  Every cursor valid in P2 is valid P1 except the one at position Cut.
+
+     and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
 
    procedure Insert
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
@@ -290,44 +341,27 @@ package Conts.Lists.Impl with SPARK_Mode is
      Post   => Length (Self) = Length (Self)'Old + 1
      and Capacity (Self) = Capacity (Self)'Old
 
-     --  Every cursor previously valid in Self is still valid.
+     --  A new cursor has been inserted at position Position in Self.
 
-     and (for all I of Positions (Self)'Old =>
-              Has_Element (Self, I)
-
-          --  If it was located before Position in Self its position is
-          --  preserved.
-
-          and (if P_Get (Positions (Self)'Old, I) <
-                   P_Get (Positions (Self)'Old, Position)
-                 then P_Get (Positions (Self), I) =
-                   P_Get (Positions (Self)'Old, I)
-
-               --  Otherwise it is shifted by 1.
-
-                 else P_Get (Positions (Self), I) =
-                   P_Get (Positions (Self)'Old, I) + 1))
-
-     --  Every cursor valid in Self was previously valid except for the newly
-     --  inserted cursor.
-
-     and (for all I of Positions (Self) =>
-              P_Mem (Positions (Self)'Old, I) or
-            P_Get (Positions (Self), I) =
-              P_Get (Positions (Self)'Old, Position))
+     and P_Insert_Position
+       (Positions (Self)'Old, Positions (Self),
+        Cut => P_Get (Positions (Self)'Old, Position))
 
      --  The elements of Self located before Position are preserved.
 
-     and (for all I in 1 .. P_Get (Positions (Self)'Old, Position) - 1 =>
-            Impl.Element (Model (Self), I) =
-              Impl.Element (Model (Self)'Old, I))
+     and M_Elements_Equal (S1  => Model (Self),
+                           S2  => Model (Self)'Old,
+                           Fst => 1,
+                           Lst => P_Get (Positions (Self)'Old, Position) - 1)
 
      --  Other elements are shifted by 1.
 
-     and (for all I in
-            P_Get (Positions (Self)'Old, Position) + 1 .. Length (Self) =>
-              Impl.Element (Model (Self), I) =
-            Impl. Element (Model (Self)'Old, I - 1))
+     and M_Elements_Equal
+       (S1     => Model (Self),
+        S2     => Model (Self)'Old,
+        Fst    => P_Get (Positions (Self)'Old, Position) + 1,
+        Lst    => Length (Self),
+        Offset => -1)
 
      --  Element is stored at the previous position of Position in L.
 
@@ -401,6 +435,10 @@ private
    end record;
    No_Element : constant Cursor := (Current => Storage.Null_Access);
 
+   ------------------
+   -- Formal Model --
+   ------------------
+
    package P is new Conts.Functional.Maps
      (Element_Type => Positive_Count_Type,
       Key_Type     => Cursor);
@@ -412,5 +450,50 @@ private
    end record;
 
    type P_Private_Cursor is new P.Private_Key;
+
+   function P_Iter_First (M : P_Map) return P_Private_Cursor is
+      (P_Private_Cursor (P.Iter_First (M.Content)));
+   function P_Iter_Next (M : P_Map; C : P_Private_Cursor)
+                         return P_Private_Cursor is
+      (P_Private_Cursor (P.Iter_Next (M.Content, P.Private_Key (C))));
+   function P_Iter_Has_Element (M : P_Map; C : P_Private_Cursor)
+                                return Boolean is
+      (P.Iter_Has_Element (M.Content, P.Private_Key (C)));
+   function P_Iter_Element (M : P_Map; C : P_Private_Cursor) return Cursor is
+      (P.Iter_Element (M.Content, P.Private_Key (C)));
+   function P_Mem (M : P_Map; C : Cursor) return Boolean is
+      (P.Mem (M.Content, C));
+   function P_Get (M : P_Map; C : Cursor) return Positive_Count_Type is
+      (P.Get (M.Content, C));
+
+   function P_Is_Add (P1, P2 : P_Map;
+                      K      : Cursor;
+                      E      : Positive_Count_Type) return Boolean
+   is
+     (not P_Mem (P1, K) and P_Mem (P2, K) and P_Get (P2, K) = E
+      and (for all I of P1 => P_Mem (P2, I)
+           and P_Get (P2, I) = P_Get (P1, I))
+      and (for all I of P2 => I = K or P_Mem (P1, I)));
+
+   function P_Insert_Position (P1, P2 : P_Map; Cut : Positive_Count_Type)
+                               return Boolean
+   is
+     ((for all I of P1 => P_Mem (P2, I)
+      and (if P_Get (P1, I) < Cut then P_Get (P2, I) = P_Get (P1, I)
+           else P_Get (P2, I) = P_Get (P1, I) + 1))
+     and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
+
+   function M_Not_Until
+     (S : M.Sequence; Lst : Positive_Count_Type; E : Element_Type)
+      return Boolean
+   is (for all I in 1 .. Lst => Element (S, I) /= E);
+
+   function M_Elements_Equal
+     (S1, S2   : M.Sequence;
+      Fst, Lst : Positive_Count_Type;
+      Offset   : Count_Type'Base := 0)
+      return Boolean
+   is
+     (for all I in Fst .. Lst => Element (S1, I) = Element (S2, I + Offset));
 
 end Conts.Lists.Impl;
