@@ -359,7 +359,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
      --  Appended elements are equal to Element.
 
-     and then (for all I in Last (Self)'Old .. Last (Self) =>
+     and then (for all I in Index_Type'Succ (Last (Self)'Old) .. Last (Self) =>
                          Impl.Element (Model (Self), I) = Element);
 
    procedure Assign

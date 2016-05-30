@@ -145,7 +145,7 @@ package body Use_Vectors with SPARK_Mode is
            (for all K in I + Count .. Last (V) =>
                 Element (V, K) = Element (Loc, K - Count));
          pragma Loop_Invariant
-           (for all K in I .. I + Count => Element (V, K) = 0);
+           (for all K in I .. I + Count - 1 => Element (V, K) = 0);
          J := J + 1;
       end loop;
    end Insert_Count;
