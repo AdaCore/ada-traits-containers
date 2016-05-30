@@ -1,31 +1,31 @@
 pragma Ada_2012;
 with Conts; use Conts;
-with Formal_Hashed_Maps;
-pragma Elaborate_All (Formal_Hashed_Maps);
+with Conts.Maps.Indef_Indef_Unbounded_SPARK;
+pragma Elaborate_All (Conts.Maps.Indef_Indef_Unbounded_SPARK);
 
 package Use_Maps with SPARK_Mode is
 
    function Hash (Id : Natural) return Hash_Type is (Hash_Type (Id));
 
-   package My_Maps is new Formal_Hashed_Maps
+   package My_Maps is new Conts.Maps.Indef_Indef_Unbounded_SPARK
      (Element_Type => Integer,
       Key_Type     => Positive,
       Hash         => Hash);
 
-   use My_Maps;
    use type My_Maps.Cursor;
-   use My_Maps.Formal_Model.P;
-   use My_Maps.Formal_Model.K;
-   use My_Maps.Formal_Model.M;
+   use My_Maps.Impl;
+   use all type My_Maps.Model_Map;
+   use all type My_Maps.Key_Sequence;
+   use all type My_Maps.Cursor_Position_Map;
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
    function My_Contains (S : My_Maps.Map; K : Positive) return Boolean is
-     (Find (S, K) /= No_Element) with
-   Post => My_Contains'Result = Contains (S, K);
+     (Impl.Find (S, K) /= No_Element) with
+   Post => My_Contains'Result = Impl.Contains (S, K);
 
    function My_Find (S : My_Maps.Map; K : Positive) return Cursor with
-     Post => My_Find'Result = Find (S, K);
+   Post => My_Find'Result = Impl.Find (S, K);
    --  Iterate through the set to find K.
 
    function F (E : Integer) return Integer is
@@ -41,32 +41,32 @@ package Use_Maps with SPARK_Mode is
 
    procedure Apply_F_2 (S : My_Maps.Map; R : in out My_Maps.Map) with
      Post => Length (R) = Length (S)
-     and (for all K of R => Mem (Model (S), K))
-     and (for all K of S => Contains (R, K)
+     and (for all K of R => Mem (Impl.Model (S), K))
+     and (for all K of S => Mem (Impl.Model (R), K)
           and then Get (R, K)  = F (Get (S, K)));
-   --  Same as before except that we also want keys to be preserved.
+   --  Same as before except that we also want S_Keys to be preserved.
 
    procedure Apply_F_3 (S : in out My_Maps.Map) with
      Post => Length (S) = Length (S)'Old
-     and (for all K of Model (S)'Old =>
+     and (for all K of Impl.Model (S)'Old =>
               (for some L of S =>
-                     Get (S, L) = F (Element (Model (S)'Old, K))))
+                     Get (S, L) = F (Element (Impl.Model (S)'Old, K))))
      and (for all L of S =>
-              (for some K of Model (S)'Old =>
-                     Get (S, L) = F (Element (Model (S)'Old, K))));
+              (for some K of Impl.Model (S)'Old =>
+                     Get (S, L) = F (Element (Impl.Model (S)'Old, K))));
    --  Replace every element of S by its image through F.
 
    procedure Apply_F_4 (S : in out My_Maps.Map) with
      Post => Length (S) = Length (S)'Old
-     and Keys (S) = Keys (S)'Old
+     and S_Keys (S) = S_Keys (S)'Old
      and (for all K of S =>
-              Get (S, K)  = F (Element (Model (S)'Old, K)));
-   --  Same as before except that we also want keys to be preserved.
+              Get (S, K)  = F (Element (Impl.Model (S)'Old, K)));
+   --  Same as before except that we also want S_Keys to be preserved.
 
    function Are_Disjoint (S1, S2 : My_Maps.Map) return Boolean with
      Post => Are_Disjoint'Result =
-       (for all E of S2 => not Contains (S1, E));
-   --  Check wether two maps have a disjoint set of keys.
+       (for all E of S2 => not Mem (Impl.Model (S1), E));
+   --  Check wether two maps have a disjoint set of S_Keys.
 
    function P (E : Integer) return Boolean is
      (E >= 0);
@@ -78,60 +78,60 @@ package Use_Maps with SPARK_Mode is
      Post => (for all K of S1 => P (Get (S1, K)));
    --  Compute the union of two maps for which P is true.
 
-   Count : constant := 4;
+   Count : constant := 5;
 
    procedure Insert_Count (M : in out My_Maps.Map)
-   --  Insert 0 Count times at Keys 1 .. Count.
+   --  Insert 0 Count times at S_Keys 1 .. Count.
 
    with
      Pre  => Count_Type'Last - Count > Length (M),
      Post => Length (M) <= Length (M)'Old + Count
      and (for all K of M =>
-            (if K > Count then Mem (Model (M)'Old, K)
-                 and then Get (M, K) = Get (Model (M)'Old, K)))
-     and (for all K in 1 .. Count => Contains (M, K)
+            (if K > Count then Mem (Impl.Model (M)'Old, K)
+                 and then Get (M, K) = Impl.M.Get (Impl.Model (M)'Old, K)))
+     and (for all K in 1 .. Count => Mem (Impl.Model (M), K)
           and then Get (M, K) = 0);
 
-   --  Test links between high-level model, lower-level position based model
-   --  and lowest-level, cursor based model of a map.
+   --  Test links between high-level Model, lower-level position based Model
+   --  and lowest-level, cursor based Impl.Model of a map.
 
    function Q (E : Integer) return Boolean;
    --  Any property Q on an Integer E.
 
-   procedure From_Keys_To_Model (S : My_Maps.Map) with
+   procedure From_S_Keys_To_Model (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (Keys (S), I)))),
+                    Q (Get (S, Get (S_Keys (S), I)))),
      Post   => (for all K of S => Q (Get (S, K)));
    --  Test that the link can be done from a property on the elements of a
    --  low level, position based view of a container and its high level view.
 
-   procedure From_Model_To_Keys (S : My_Maps.Map) with
+   procedure From_Model_To_S_Keys (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all K of S => Q (Get (S, K))),
      Post   => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (Keys (S), I))));
+                    Q (Get (S, Get (S_Keys (S), I))));
    --  Test that the link can be done from a property on the elements of a
    --  high level view of a container and its lower level, position based view.
 
-   procedure From_Keys_To_Cursors (S : My_Maps.Map) with
+   procedure From_S_Keys_To_Cursors (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (Keys (S), I)))),
+                    Q (Get (S, Get (S_Keys (S), I)))),
      Post   => (for all Cu in S => Q (Element (S, Cu)));
    --  Test that the link can be done from a property on the elements of a
    --  position based view of a container and its lowest level, cursor aware
    --  view.
 
-   procedure From_Cursors_To_Keys (S : My_Maps.Map) with
+   procedure From_Cursors_To_S_Keys (S : My_Maps.Map) with
      Ghost,
      Global => null,
      Pre    => (for all Cu in S => Q (Element (S, Cu))),
      Post   => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (Keys (S), I))));
+                    Q (Get (S, Get (S_Keys (S), I))));
    --  Test that the link can be done from a property on the elements of a
    --  cursor aware view of a container and its position based view.
 

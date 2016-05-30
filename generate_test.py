@@ -905,7 +905,7 @@ Map("StrStr",
         find_predicate='Ref_Predicate')
 Map("StrStr",
     'package Container is new Conts.Maps.Indef_Indef_Unbounded_SPARK\n'
-    + '      (String, String, Conts.Limited_Base, Ada.Strings.Hash);\n'
+    + '      (String, String, Ada.Strings.Hash);\n'
     + '   function Predicate (P : Container.Constant_Returned_Type) return Boolean\n'
     + '      is (Perf_Support.Predicate (P)) with Inline;',
     'with Conts.Maps.Indef_Indef_Unbounded_SPARK, Ada.Strings.Hash;',

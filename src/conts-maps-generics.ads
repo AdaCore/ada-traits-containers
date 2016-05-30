@@ -23,6 +23,7 @@ pragma Ada_2012;
 with Conts.Cursors;
 with Conts.Elements;
 with Conts.Properties;
+with Conts.Maps.Impl;
 
 generic
    with package Keys is new Conts.Elements.Traits (<>);
@@ -68,147 +69,27 @@ package Conts.Maps.Generics with SPARK_Mode is
    subtype Constant_Returned_Type is Elements.Constant_Returned_Type;
    subtype Constant_Returned_Key_Type is Keys.Constant_Returned_Type;
 
-   package Impl is
+   package Impl is new Conts.Maps.Impl
+     (Keys                => Keys,
+      Elements            => Elements,
+      Container_Base_Type => Container_Base_Type,
+      Hash                => Hash,
+      Probing             => Probing,
+      Pool                => Pool,
+      "="                 => "=",
+      Resize_Strategy     => Resize_Strategy);
 
-      type Base_Map is new Container_Base_Type with private;
-
-      type Cursor is private;
-      No_Element : constant Cursor;
-      --  A cursor is only valid until the next change to the map. As soon as
-      --  an element is added or removed, the cursor should no longer be used.
-      --  For performance reasons, this is not checked.
-
-      function Capacity (Self : Base_Map'Class) return Count_Type with
-        Global => null;
-      procedure Assign
-        (Self : in out Base_Map'Class; Source : Base_Map'Class);
-      procedure Resize
-        (Self     : in out Base_Map'Class;
-         New_Size : Count_Type)
-        with Global => null;
-      procedure Set
-        (Self     : in out Base_Map'Class;
-         Key      : Keys.Element_Type;
-         Value    : Elements.Element_Type)
-        with Global => null;
-      function Get
-        (Self     : Base_Map'Class;
-         Key      : Keys.Element_Type)
-         return Elements.Constant_Returned_Type
-        with Global => null;
-      procedure Clear (Self : in out Base_Map'Class) with
-        Global => null;
-      procedure Delete
-        (Self     : in out Base_Map'Class;
-         Key      : Keys.Element_Type)
-        with Global => null;
-      function Key
-        (Self : Base_Map'Class; Position : Cursor)
-         return Constant_Returned_Key_Type
-        with Inline, Global => null;
-      function As_Key
-        (Self : Base_Map'Class; Position : Cursor) return Key_Type
-        is (Keys.To_Element (Self.Key (Position)))
-        with Inline, Global => null;
-      function Element
-        (Self : Base_Map'Class; Position : Cursor)
-         return Constant_Returned_Type
-        with Inline, Global => null;
-      function As_Element
-        (Self : Base_Map'Class; Position : Cursor) return Element_Type
-         is (Elements.To_Element (Self.Element (Position)))
-        with Inline, Global => null;
-      function First (Self : Base_Map'Class) return Cursor
-        with Inline, Global => null;
-      function Has_Element
-        (Self : Base_Map'Class; Position : Cursor) return Boolean
-        with Inline, Global => null;
-      function Next
-        (Self : Base_Map'Class; Position : Cursor) return Cursor
-        with Inline, Global => null,
-             Pre    => Has_Element (Self, Position);
-      --  Actual implementation for the subprograms renamed below. See the
-      --  descriptions below.
-
-      function First_Primitive (Self : Base_Map) return Cursor
-         is (First (Self)) with Inline;
-      function Key_Primitive
-        (Self : Base_Map; Position : Cursor) return Constant_Returned_Key_Type
-         is (Key (Self, Position))
-         with Inline;
-      function Has_Element_Primitive
-        (Self : Base_Map; Position : Cursor) return Boolean
-         is (Has_Element (Self, Position)) with Inline;
-      function Next_Primitive
-        (Self : Base_Map; Position : Cursor) return Cursor
-        is (Next (Self, Position))
-        with Inline,
-             Pre'Class => Has_Element (Self, Position);
-      --  These are only needed because the Iterable aspect expects a parameter
-      --  of type Map instead of Map'Class. But then it means that the loop
-      --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
-      --  using an explicit cursor.
-
-   private
-      pragma SPARK_Mode (Off);
-      procedure Adjust (Self : in out Base_Map);
-      procedure Finalize (Self : in out Base_Map);
-      --  In case the mp is a controlled type, but irrelevant when Self
-      --  is not controlled.
-
-      type Slot_Kind is (Empty, Dummy, Full);
-      --  A node can have three statuses:
-      --    * empty: it was never assigned
-      --      Hash is 0
-      --    * dummy: the node had been allocated, but was then deleted. It can
-      --      be reused as soon as possible
-      --      Hash is 0
-      --    * full: the node is currently in use.
-
-      type Slot is record
-         Key   : Keys.Stored_Type;
-         Value : Elements.Stored_Type;
-         Hash  : Hash_Type;
-         --  Cached value for the hash, to speed lookups in the table
-         --  (before we do more extensive comparison of the key), and
-         --  also to speed up the resizing.
-         Kind  : Slot_Kind := Empty;
-      end record;
-      pragma Pack (Slot);
-      --  The order of fields is important here to achieve a compact structure
-      --  and save memory.
-      --  On our example with 250000 items stored in the table, we end up
-      --  allocating/reallocating 15900kb instead of 19500kb.
-
-      type Slot_Table is array (Hash_Type range <>) of Slot;
-      type Slot_Table_Access is access Slot_Table;
-      for Slot_Table_Access'Storage_Pool use Pool.Pool.all;
-
-      type Cursor is record
-         Index : Hash_Type := Hash_Type'Last;
-      end record;
-      No_Element : constant Cursor := (Index => Hash_Type'Last);
-
-      type Base_Map is new Container_Base_Type with record
-         Used   : Count_Type := 0;
-         --  Number of slots occupied by keys
-
-         Fill   : Count_Type := 0;
-         --  Number of slots occupied by keys or dummy slots
-
-         Table  : Slot_Table_Access;
-         --  The slots table. This is always a power of 2, since we use the
-         --  size as a mask for hashes.
-      end record;
-   end Impl;
-
-   subtype Base_Map is Impl.Base_Map;
+   subtype Base_Map is Conts.Maps.Generics.Impl.Base_Map;
    subtype Cursor is Impl.Cursor;
    No_Element : constant Cursor := Impl.No_Element;
 
    function Capacity (Self : Base_Map'Class) return Count_Type
      renames Impl.Capacity;
    --  Return the current capacity of the container.
+
+   function Length (Self : Base_Map'Class) return Count_Type
+     renames Impl.Length;
+   --  Return the number of elements contained in the container.
 
    procedure Resize
      (Self     : in out Base_Map'Class;
@@ -266,6 +147,11 @@ package Conts.Maps.Generics with SPARK_Mode is
      (Self : Base_Map'Class; Position : Cursor) return Cursor
      renames Impl.Next;
 
+   function Element (S : Impl.M.Map; K : Key_Type) return Element_Type
+                     renames Impl.Element;
+   function S_Keys (Self : Base_Map'Class) return Impl.K.Sequence
+     renames Impl.S_Keys;
+
    ------------------
    -- for-of loops --
    ------------------
@@ -286,7 +172,14 @@ package Conts.Maps.Generics with SPARK_Mode is
 
    function Constant_Reference
      (Self : Map; Key : Key_Type) return Constant_Returned_Type
-     is (Get (Self, Key)) with Inline;
+   is (Get (Self, Key))
+   with Inline,
+   Pre'Class => Impl.M.Mem (Model (Self), Key);
+
+   function Model (Self : Map'Class) return Impl.M.Map is
+      (Impl.Model (Self))
+   with Ghost;
+   pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
 
    -------------
    -- Cursors --

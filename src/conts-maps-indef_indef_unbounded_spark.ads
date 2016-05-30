@@ -29,7 +29,6 @@ with Conts.Maps.Generics;
 generic
    type Key_Type (<>) is private;
    type Element_Type (<>) is private;
-   type Container_Base_Type is abstract tagged limited private;
    with function Hash (Key : Key_Type) return Hash_Type;
    with function "=" (Left, Right : Key_Type) return Boolean is <>;
 package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
@@ -49,7 +48,7 @@ package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
       "="                 => "=",
       Probing             => Conts.Maps.Perturbation_Probing,
       Pool                => Conts.Global_Pool,
-      Container_Base_Type => Container_Base_Type,
+      Container_Base_Type => Limited_Base,
       Resize_Strategy     => Resize_2_3);
 
    subtype Constant_Returned_Type is Impl.Constant_Returned_Type;
@@ -58,6 +57,10 @@ package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
    subtype Cursor is Impl.Cursor;
    subtype Map is Impl.Map;
    subtype Returned is Impl.Returned_Type;
+
+   subtype Model_Map is Impl.Impl.M.Map with Ghost;
+   subtype Key_Sequence is Impl.Impl.K.Sequence with Ghost;
+   subtype Cursor_Position_Map is Impl.Impl.P_Map with Ghost;
 
    function Copy (Self : Map'Class) return Map'Class;
    --  Return a deep copy of Self
