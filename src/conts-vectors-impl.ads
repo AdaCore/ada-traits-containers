@@ -303,6 +303,33 @@ package Conts.Vectors.Impl with SPARK_Mode is
      and then Model (Self) = Model (Self)'Old
      and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old;
 
+   function M_Elements_Equal
+     (S1, S2 : M.Sequence;
+      Fst    : Index_Type;
+      Lst    : Extended_Index)
+      return Boolean
+   --  The slice from Fst to Lst contains the same values in S1 and S2.
+
+   with Ghost,
+     Pre  => Lst <= M.Last (S1) and Lst <= M.Last (S2),
+     Post => M_Elements_Equal'Result =
+     (for all I in Fst .. Lst => Element (S1, I) = Element (S2, I));
+   pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Equal);
+
+   function M_Elements_Consts
+     (S   : M.Sequence;
+      Fst : Index_Type;
+      Lst : Extended_Index;
+      E   : Storage.Elements.Element_Type)
+      return Boolean
+   --  The slice from Fst to Lst contains only the value E.
+
+   with Ghost,
+     Pre  => Lst <= M.Last (S),
+     Post => M_Elements_Consts'Result =
+     (for all I in Fst .. Lst => Element (S, I) = E);
+   pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Consts);
+
    procedure Resize
      (Self    : in out Base_Vector'Class;
       Length  : Index_Type;
@@ -322,18 +349,20 @@ package Conts.Vectors.Impl with SPARK_Mode is
      --  Elements of Self that were located before the index Length are
      --  preserved.
 
-     and then
-       (for all I in
-          Index_Type'First .. Index_Type'Min (Length, Last (Self)'Old) =>
-            Impl.Element (Model (Self), I) =
-            Impl.Element (Model (Self)'Old, I))
+     and then M_Elements_Equal
+       (S1  => Model (Self),
+        S2  => Model (Self)'Old,
+        Fst => Index_Type'First,
+        Lst => Index_Type'Min (Length, Last (Self)'Old))
 
      --  If elements were appended to Self then they are equal to Element.
 
      and then
        (if Length > Last (Self)'Old then
-          (for all I in Index_Type'Succ (Last (Self)'Old) .. Last (Self) =>
-               Impl.Element (Model (Self), I) = Element));
+              M_Elements_Consts (S   => Model (Self),
+                                 Fst => Index_Type'Succ (Last (Self)'Old),
+                                 Lst => Last (Self),
+                                 E   => Element));
 
    procedure Clear (Self : in out Base_Vector'Class) with
      Global => null,
@@ -352,15 +381,18 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
      --  Elements that were already in Self are preserved.
 
-     and then
-       (for all I in Index_Type'First .. Last (Self)'Old =>
-            Impl.Element (Model (Self), I) =
-            Impl.Element (Model (Self)'Old, I))
+     and then M_Elements_Equal
+       (S1  => Model (Self),
+        S2  => Model (Self)'Old,
+        Fst => Index_Type'First,
+        Lst => Last (Self)'Old)
 
      --  Appended elements are equal to Element.
 
-     and then (for all I in Index_Type'Succ (Last (Self)'Old) .. Last (Self) =>
-                         Impl.Element (Model (Self), I) = Element);
+     and then M_Elements_Consts (S   => Model (Self),
+                                 Fst => Index_Type'Succ (Last (Self)'Old),
+                                 Lst => Last (Self),
+                                 E   => Element);
 
    procedure Assign
      (Self : in out Base_Vector'Class; Source : Base_Vector'Class)
@@ -389,6 +421,19 @@ package Conts.Vectors.Impl with SPARK_Mode is
         then M.Is_Set (Model (Self)'Old, Index, New_Item, Model (Self))
           else Model (Self) = Model (Self)'Old);
 
+   function M_Elements_Shifted
+     (S1, S2   : M.Sequence;
+      Fst, Lst : Index_Type)
+      return Boolean
+   --  The slice from Fst to Lst of S1 has been shifted by 1 in S2.
+
+   with Ghost,
+     Pre  => Lst <= M.Last (S1) and Lst < M.Last (S2),
+     Post => M_Elements_Shifted'Result =
+       (for all I in Fst .. Lst => Element (S1, I) =
+              Element (S2, Index_Type'Succ (I)));
+   pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Shifted);
+
    procedure Delete (Self : in out Base_Vector'Class; Index : Index_Type)
    --  Remove an element from the vector.
 
@@ -399,16 +444,19 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
      --  Elements located before Index are preserved.
 
-     and then
-       (for all I in Index_Type'First .. Index_Type'Pred (Index) =>
-              Element (Model (Self), I) = Element (Model (Self)'Old, I))
+     and then M_Elements_Equal
+       (S1  => Model (Self),
+        S2  => Model (Self)'Old,
+        Fst => Index_Type'First,
+        Lst => Index_Type'Pred (Index))
 
      --  Elements located after Index are shifted.
 
-     and then
-       (for all I in Index .. Last (Self) =>
-              Element (Model (Self), I) =
-              Element (Model (Self)'Old, Index_Type'Succ (I)));
+     and then M_Elements_Shifted
+       (S1  => Model (Self),
+        S2  => Model (Self)'Old,
+        Fst => Index,
+        Lst => Last (Self));
 
    procedure Delete_Last (Self : in out Base_Vector'Class) with
    --  Remove the last element of the vector.
@@ -417,8 +465,25 @@ package Conts.Vectors.Impl with SPARK_Mode is
      Global => null,
      Pre    => Length (Self) > 0,
      Post   => Length (Self) = Length (Self)'Old - 1
-     and then (for all I in Index_Type'First .. Last (Self) =>
-                   Element (Model (Self), I) = Element (Model (Self)'Old, I));
+     and then  M_Elements_Equal
+       (S1  => Model (Self),
+        S2  => Model (Self)'Old,
+        Fst => Index_Type'First,
+        Lst => Last (Self));
+
+   function M_Elements_Equal_Except
+     (S1, S2 : M.Sequence;
+      X, Y   : Index_Type)
+      return Boolean
+   --  S1 and S2 coincide except on X and Y.
+
+   with Ghost,
+     Pre  => M.Last (S1) = M.Last (S2),
+     Post => M_Elements_Equal_Except'Result =
+       (for all I in Index_Type'First .. M.Last (S1) =>
+          (if I /= X and I /= Y then
+                 Element (S1, I) = Element (S2, I)));
+   pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Equal_Except);
 
    procedure Swap
      (Self        : in out Base_Vector'Class;
@@ -438,10 +503,12 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
      --  Elements that have not been swapped are preserved.
 
-     and then
-       (for all I in Index_Type'First .. Last (Self) =>
-          (if I /= Left and I /= Right then
-                 Element (Model (Self), I) = Element (Model (Self)'Old, I)));
+     and then M_Elements_Equal_Except
+       (S1 => Model (Self),
+        S2 => Model (Self)'Old,
+        X  => Left,
+        Y  => Right);
+
    --  Actual implementation for the subprograms renamed in Generics. See the
    --  descriptions in Generics.
 
@@ -510,6 +577,10 @@ private
         + Count_Type'Base (Index_Type'Pos (Idx))
         - Count_Type'Base (Index_Type'Pos (Index_Type'First))));
 
+   ------------------
+   -- Formal Model --
+   ------------------
+
    package V is new Conts.Functional.Sets
      (Element_Type => Cursor);
    --  This instance should be ghost but it is not currently allowed by the RM.
@@ -520,4 +591,51 @@ private
    end record;
 
    type V_Private_Cursor is new V.Private_Key;
+
+   function V_Iter_First (S : V_Set) return V_Private_Cursor is
+     (V_Private_Cursor (V.Iter_First (S.Content)));
+   function V_Iter_Next (S : V_Set; C : V_Private_Cursor)
+                         return V_Private_Cursor is
+     (V_Private_Cursor (V.Iter_Next (S.Content, V.Private_Key (C))));
+   function V_Iter_Has_Element (S : V_Set; C : V_Private_Cursor)
+                                return Boolean is
+     (V.Iter_Has_Element (S.Content, V.Private_Key (C)));
+   function V_Iter_Element (S : V_Set; C : V_Private_Cursor) return Cursor is
+     (V.Iter_Element (S.Content, V.Private_Key (C)));
+   function V_Mem (S : V_Set; C : Cursor) return Boolean is
+     (V.Mem (S.Content, C));
+
+   function M_Elements_Consts
+     (S   : M.Sequence;
+      Fst : Index_Type;
+      Lst : Extended_Index;
+      E   : Storage.Elements.Element_Type)
+      return Boolean
+   is
+     (for all I in Fst .. Lst => Element (S, I) = E);
+
+   function M_Elements_Equal
+     (S1, S2 : M.Sequence;
+      Fst    : Index_Type;
+      Lst    : Extended_Index)
+      return Boolean
+   is
+     (for all I in Fst .. Lst => Element (S1, I) = Element (S2, I));
+
+   function M_Elements_Equal_Except
+     (S1, S2 : M.Sequence;
+      X, Y   : Index_Type)
+      return Boolean
+   is
+     (for all I in Index_Type'First .. M.Last (S1) =>
+          (if I /= X and I /= Y then
+                Element (S1, I) = Element (S2, I)));
+
+   function M_Elements_Shifted
+     (S1, S2   : M.Sequence;
+      Fst, Lst : Index_Type)
+      return Boolean
+   is
+     (for all I in Fst .. Lst => Element (S1, I) =
+          Element (S2, Index_Type'Succ (I)));
 end Conts.Vectors.Impl;

@@ -28,21 +28,9 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    -- Formal Model --
    ------------------
 
-   use M;
-   use V;
-
-   function V_Iter_First (S : V_Set) return V_Private_Cursor is
-     (V_Private_Cursor (V.Iter_First (S.Content)));
-   function V_Iter_Next (S : V_Set; C : V_Private_Cursor)
-                         return V_Private_Cursor is
-     (V_Private_Cursor (V.Iter_Next (S.Content, V.Private_Key (C))));
-   function V_Iter_Has_Element (S : V_Set; C : V_Private_Cursor)
-                                return Boolean is
-     (V.Iter_Has_Element (S.Content, V.Private_Key (C)));
-   function V_Iter_Element (S : V_Set; C : V_Private_Cursor) return Cursor is
-     (V.Iter_Element (S.Content, V.Private_Key (C)));
-   function V_Mem (S : V_Set; C : Cursor) return Boolean is
-     (V.Mem (S.Content, C));
+   -------------------
+   -- Valid_Cursors --
+   -------------------
 
    function Valid_Cursors (Self : Base_Vector'Class) return V_Set is
       R  : V.Set;
@@ -57,20 +45,24 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
       --  otherwise return a cursor per valid index.
 
       for I in Min_Index .. Self.Last loop
-         R := Add (R, (Index => I));
+         R := V.Add (R, (Index => I));
       end loop;
       return V_Set'(Content => R);
    end Valid_Cursors;
 
-   function Model (Self : Base_Vector'Class) return Sequence is
-      R  : Sequence;
+   -----------
+   -- Model --
+   -----------
+
+   function Model (Self : Base_Vector'Class) return M.Sequence is
+      R  : M.Sequence;
    begin
       if Self.Last = No_Element.Index then
          return R;
       end if;
 
       for I in Min_Index .. Self.Last loop
-         R := Add (R, Storage.Elements.To_Element
+         R := M.Add (R, Storage.Elements.To_Element
                    (Storage.Elements.To_Constant_Returned
                       (Storage.Get_Element (Self, I))));
       end loop;

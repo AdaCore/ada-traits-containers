@@ -78,6 +78,13 @@ package body Conts.Functional.Sequences with SPARK_Mode => Off is
                   ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))) =>
              (if M /= N then Get (Result, M) = Get (S, M))));
 
+   ----------
+   -- Last --
+   ----------
+
+   function Last (S : Sequence) return Extended_Index is
+     (Index_Type'Val ((Index_Type'Pos (Index_Type'First) - 1) + Length (S)));
+
    ------------
    -- Length --
    ------------

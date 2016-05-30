@@ -55,14 +55,17 @@ package Conts.Functional.Sequences with SPARK_Mode is
      Post => (Index_Type'Pos (Index_Type'First) - 1) + Length'Result <=
        Index_Type'Pos (Index_Type'Last);
 
+   function Last (S : Sequence) return Extended_Index with
+     Global => null,
+     Post => Last'Result =
+       Index_Type'Val ((Index_Type'Pos (Index_Type'First) - 1) + Length (S));
+
    function Get (S : Sequence; N : Extended_Index) return Element_Type
    --  Get ranges over Extended_Index so that it can be used for iteration.
 
    with
      Global => null,
-     Pre    => N in Index_Type'First ..
-          (Index_Type'Val
-             ((Index_Type'Pos (Index_Type'First) - 1) + Length (S)));
+     Pre    => N in Index_Type'First .. Last (S);
 
    function "=" (S1, S2 : Sequence) return Boolean with
    --  Extensional equality over sequences.
@@ -70,9 +73,7 @@ package Conts.Functional.Sequences with SPARK_Mode is
      Global => null,
      Post   => "="'Result =
        (Length (S1) = Length (S2)
-        and then (for all N in Index_Type'First ..
-          (Index_Type'Val
-             ((Index_Type'Pos (Index_Type'First) - 1) + Length (S1))) =>
+        and then (for all N in Index_Type'First .. Last (S1) =>
             Get (S1, N) = Get (S2, N)));
 
    function Is_Set
@@ -84,14 +85,10 @@ package Conts.Functional.Sequences with SPARK_Mode is
    with
      Global => null,
        Post   => Is_Set'Result =
-         (N in Index_Type'First ..
-          (Index_Type'Val
-             ((Index_Type'Pos (Index_Type'First) - 1) + Length (S)))
+         (N in Index_Type'First .. Last (S)
           and then Length (Result) = Length (S)
           and then Get (Result, N) = E
-          and then (for all M in Index_Type'First ..
-            (Index_Type'Val
-               ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))) =>
+          and then (for all M in Index_Type'First .. Last (S) =>
               (if M /= N then Get (Result, M) = Get (S, M))));
 
    function Set
@@ -103,9 +100,7 @@ package Conts.Functional.Sequences with SPARK_Mode is
 
    with
      Global => null,
-     Pre    => N in Index_Type'First ..
-          (Index_Type'Val
-             ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))),
+     Pre    => N in Index_Type'First .. Last (S),
      Post   => Is_Set (S, N, E, Set'Result);
 
    function Is_Add
@@ -116,11 +111,8 @@ package Conts.Functional.Sequences with SPARK_Mode is
      Global => null,
      Post   => Is_Add'Result =
          (Length (Result) = Length (S) + 1
-          and then Get (Result, Index_Type'Val
-            ((Index_Type'Pos (Index_Type'First) - 1) + Length (Result))) = E
-          and then (for all M in Index_Type'First ..
-            (Index_Type'Val
-               ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))) =>
+          and then Get (Result, Last (Result)) = E
+          and then (for all M in Index_Type'First .. Last (S) =>
               Get (Result, M) = Get (S, M)));
 
    function Add (S : Sequence; E : Element_Type) return Sequence with
@@ -129,9 +121,7 @@ package Conts.Functional.Sequences with SPARK_Mode is
    --  whenever possible both for execution and for proof.
 
      Global => null,
-     Pre    => Length (S) < Count_Type'Last
-     and then ((Index_Type'Pos (Index_Type'First) - 1) + Length (S)) <
-       Index_Type'Pos (Index_Type'Last),
+     Pre    => Length (S) < Count_Type'Last and Last (S) < Index_Type'Last,
      Post   => Is_Add (S, E, Add'Result);
 
    ---------------------------
@@ -141,10 +131,7 @@ package Conts.Functional.Sequences with SPARK_Mode is
    function Iter_First (S : Sequence) return Extended_Index;
    function Iter_Has_Element (S : Sequence; I : Extended_Index) return Boolean
    with
-     Post => Iter_Has_Element'Result =
-         (I in Index_Type'First ..
-            (Index_Type'Val
-               ((Index_Type'Pos (Index_Type'First) - 1) + Length (S))));
+     Post => Iter_Has_Element'Result = (I in Index_Type'First .. Last (S));
    pragma Annotate (GNATprove, Inline_For_Proof, Iter_Has_Element);
 
    function Iter_Next (S : Sequence; I : Extended_Index) return Extended_Index
