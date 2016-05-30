@@ -98,9 +98,9 @@ package Conts.Vectors.Impl with SPARK_Mode is
    --  In vectors, cursors cannot change positions. They are associated with a
    --  unique index by To_Index.
 
-   function To_Index (Position : Count_Type) return Index_Type with
+   function To_Index (Position : Count_Type) return Extended_Index with
      Global => null,
-     Pre    => Position in 1 .. Last_Count,
+     Pre    => Position in 0 .. Last_Count,
      Post   => To_Index'Result = Index_Type'Val
        (Position - Conts.Vectors.Storage.Min_Index
         + Count_Type'Base (Index_Type'Pos (Index_Type'First)));
@@ -499,7 +499,7 @@ private
    function To_Index (Position : Cursor) return Index_Type
    is (To_Index (Position.Index));
 
-   function To_Index (Position : Count_Type) return Index_Type
+   function To_Index (Position : Count_Type) return Extended_Index
    is (Index_Type'Val
        (Position - Conts.Vectors.Storage.Min_Index
         + Count_Type'Base (Index_Type'Pos (Index_Type'First))));
