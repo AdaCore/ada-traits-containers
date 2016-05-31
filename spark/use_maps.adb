@@ -24,11 +24,13 @@ package body Use_Maps with SPARK_Mode is
          pragma Loop_Invariant
            (for all I in 1 .. P_Get (Positions (S), Cu) - 1 =>
               (for some K of R =>
-                   Get (R, K) = F (Get (S, Get (S_Keys (S), I)))));
+                   As_Element (R, K) =
+                   F (As_Element (S, Get (S_Keys (S), I)))));
          pragma Loop_Invariant
            (for all K of R =>
                 (for some I in 1 .. P_Get (Positions (S), Cu) - 1 =>
-                     Get (R, K) = F (Get (S, Get (S_Keys (S), I)))));
+                     As_Element (R, K) =
+                     F (As_Element (S, Get (S_Keys (S), I)))));
          pragma Loop_Invariant
            (for all I in P_Get (Positions (S), Cu) .. Length (S) =>
                  not Mem (Model (R), Get (S_Keys (S), I)));
@@ -46,8 +48,8 @@ package body Use_Maps with SPARK_Mode is
          pragma Loop_Invariant
            (for all I in 1 .. P_Get (Positions (S), Cu) - 1 =>
               Mem (Model (R), Get (S_Keys (S), I))
-            and then Get (R, Get (S_Keys (S), I)) =
-                F (Get (S, Get (S_Keys (S), I))));
+            and then As_Element (R, Get (S_Keys (S), I)) =
+                F (As_Element (S, Get (S_Keys (S), I))));
          pragma Loop_Invariant
            (for all K of R =>
                 (for some I in 1 .. P_Get (Positions (S), Cu) - 1 =>
@@ -66,12 +68,12 @@ package body Use_Maps with SPARK_Mode is
          pragma Loop_Invariant (S_Keys (S) = S_Keys (S)'Loop_Entry);
          pragma Loop_Invariant
            (for all I in 1 .. P_Get (Positions (S), Cu) - 1 =>
-              Get (S, Get (S_Keys (S), I)) =
+              As_Element (S, Get (S_Keys (S), I)) =
                 F (Element (Model (S)'Loop_Entry, Get (S_Keys (S), I))));
          pragma Loop_Invariant
            (for all I in P_Get (Positions (S), Cu) .. Length (S) =>
               Element (Model (S)'Loop_Entry, Get (S_Keys (S), I)) =
-              Get (S, Get (S_Keys (S), I)));
+              As_Element (S, Get (S_Keys (S), I)));
          Set (S, As_Key (S, Cu), F (As_Element (S, Cu)));
          Cu := Next (S, Cu);
       end loop;
@@ -86,12 +88,12 @@ package body Use_Maps with SPARK_Mode is
          pragma Loop_Invariant (S_Keys (S) = S_Keys (S)'Loop_Entry);
          pragma Loop_Invariant
            (for all I in 1 .. P_Get (Positions (S), Cu) - 1 =>
-              Get (S, Get (S_Keys (S), I)) =
+              As_Element (S, Get (S_Keys (S), I)) =
                 F (Element (Model (S)'Loop_Entry, Get (S_Keys (S), I))));
          pragma Loop_Invariant
            (for all I in P_Get (Positions (S), Cu) .. Length (S) =>
               Element (Model (S)'Loop_Entry, Get (S_Keys (S), I)) =
-                Get (S, Get (S_Keys (S), I)));
+                As_Element (S, Get (S_Keys (S), I)));
          Set (S, As_Key (S, Cu), F (As_Element (S, Cu)));
          Cu := Next (S, Cu);
       end loop;

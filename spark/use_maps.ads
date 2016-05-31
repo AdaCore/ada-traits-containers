@@ -34,33 +34,33 @@ package Use_Maps with SPARK_Mode is
    procedure Apply_F (S : My_Maps.Map; R : in out My_Maps.Map) with
      Post => Length (R) = Length (S)
      and (for all K of S =>
-              (for some L of R => Get (R, L) = F (Get (S, K))))
+              (for some L of R => As_Element (R, L) = F (As_Element (S, K))))
      and (for all L of R =>
-              (for some K of S => Get (R, L) = F (Get (S, K))));
+              (for some K of S => As_Element (R, L) = F (As_Element (S, K))));
    --  Store in R the image of every element of S through F.
 
    procedure Apply_F_2 (S : My_Maps.Map; R : in out My_Maps.Map) with
      Post => Length (R) = Length (S)
      and (for all K of R => Mem (Impl.Model (S), K))
      and (for all K of S => Mem (Impl.Model (R), K)
-          and then Get (R, K)  = F (Get (S, K)));
+          and then As_Element (R, K)  = F (As_Element (S, K)));
    --  Same as before except that we also want S_Keys to be preserved.
 
    procedure Apply_F_3 (S : in out My_Maps.Map) with
      Post => Length (S) = Length (S)'Old
      and (for all K of Impl.Model (S)'Old =>
               (for some L of S =>
-                     Get (S, L) = F (Element (Impl.Model (S)'Old, K))))
+                     As_Element (S, L) = F (Element (Impl.Model (S)'Old, K))))
      and (for all L of S =>
               (for some K of Impl.Model (S)'Old =>
-                     Get (S, L) = F (Element (Impl.Model (S)'Old, K))));
+                     As_Element (S, L) = F (Element (Impl.Model (S)'Old, K))));
    --  Replace every element of S by its image through F.
 
    procedure Apply_F_4 (S : in out My_Maps.Map) with
      Post => Length (S) = Length (S)'Old
      and S_Keys (S) = S_Keys (S)'Old
      and (for all K of S =>
-              Get (S, K)  = F (Element (Impl.Model (S)'Old, K)));
+              As_Element (S, K)  = F (Element (Impl.Model (S)'Old, K)));
    --  Same as before except that we also want S_Keys to be preserved.
 
    function Are_Disjoint (S1, S2 : My_Maps.Map) return Boolean with
@@ -72,10 +72,10 @@ package Use_Maps with SPARK_Mode is
      (E >= 0);
 
    procedure Union_P (S1 : in out My_Maps.Map; S2 : My_Maps.Map) with
-     Pre  => (for all K of S1 => P (Get (S1, K)))
-     and (for all K of S2 => P (Get (S2, K)))
+     Pre  => (for all K of S1 => P (As_Element (S1, K)))
+     and (for all K of S2 => P (As_Element (S2, K)))
      and Count_Type'Last - Length (S1) > Length (S2),
-     Post => (for all K of S1 => P (Get (S1, K)));
+     Post => (for all K of S1 => P (As_Element (S1, K)));
    --  Compute the union of two maps for which P is true.
 
    Count : constant := 5;
@@ -88,7 +88,8 @@ package Use_Maps with SPARK_Mode is
      Post => Length (M) <= Length (M)'Old + Count
      and (for all K of M =>
             (if K > Count then Mem (Impl.Model (M)'Old, K)
-                 and then Get (M, K) = Impl.M.Get (Impl.Model (M)'Old, K)))
+             and then As_Element (M, K) =
+                 Impl.M.Get (Impl.Model (M)'Old, K)))
      and (for all K in 1 .. Count => Mem (Impl.Model (M), K)
           and then Get (M, K) = 0);
 
@@ -102,17 +103,17 @@ package Use_Maps with SPARK_Mode is
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (S_Keys (S), I)))),
-     Post   => (for all K of S => Q (Get (S, K)));
+                    Q (As_Element (S, Get (S_Keys (S), I)))),
+     Post   => (for all K of S => Q (As_Element (S, K)));
    --  Test that the link can be done from a property on the elements of a
    --  low level, position based view of a container and its high level view.
 
    procedure From_Model_To_S_Keys (S : My_Maps.Map) with
      Ghost,
      Global => null,
-     Pre    => (for all K of S => Q (Get (S, K))),
+     Pre    => (for all K of S => Q (As_Element (S, K))),
      Post   => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (S_Keys (S), I))));
+                    Q (As_Element (S, Get (S_Keys (S), I))));
    --  Test that the link can be done from a property on the elements of a
    --  high level view of a container and its lower level, position based view.
 
@@ -120,7 +121,7 @@ package Use_Maps with SPARK_Mode is
      Ghost,
      Global => null,
      Pre    => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (S_Keys (S), I)))),
+                    Q (As_Element (S, Get (S_Keys (S), I)))),
      Post   => (for all Cu in S => Q (Element (S, Cu)));
    --  Test that the link can be done from a property on the elements of a
    --  position based view of a container and its lowest level, cursor aware
@@ -131,14 +132,14 @@ package Use_Maps with SPARK_Mode is
      Global => null,
      Pre    => (for all Cu in S => Q (Element (S, Cu))),
      Post   => (for all I in 1 .. Length (S) =>
-                    Q (Get (S, Get (S_Keys (S), I))));
+                    Q (As_Element (S, Get (S_Keys (S), I))));
    --  Test that the link can be done from a property on the elements of a
    --  cursor aware view of a container and its position based view.
 
    procedure From_Model_To_Cursors (S : My_Maps.Map) with
      Ghost,
      Global => null,
-     Pre    => (for all K of S => Q (Get (S, K))),
+     Pre    => (for all K of S => Q (As_Element (S, K))),
      Post   => (for all Cu in S => Q (Element (S, Cu)));
    --  Test that the link can be done from a property on the elements of a
    --  high level view of a container and its lowest level, cursor aware view.
@@ -147,7 +148,7 @@ package Use_Maps with SPARK_Mode is
      Ghost,
      Global => null,
      Pre    => (for all Cu in S => Q (Element (S, Cu))),
-     Post   => (for all K of S => Q (Get (S, K)));
+     Post   => (for all K of S => Q (As_Element (S, K)));
    --  Test that the link can be done from a property on the elements of a
    --  low level, cursor aware view of a container and its high level view.
 end Use_Maps;

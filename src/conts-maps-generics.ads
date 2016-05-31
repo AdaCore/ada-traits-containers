@@ -137,6 +137,10 @@ package Conts.Maps.Generics with SPARK_Mode is
    function As_Element
      (Self : Base_Map'Class; Position : Cursor) return Elements.Element_Type
       renames Impl.As_Element;
+   function As_Element
+     (Self : Base_Map'Class; Key : Keys.Element_Type)
+      return Elements.Element_Type
+      renames Impl.As_Element;
 
    function First (Self : Base_Map'Class) return Cursor
      renames Impl.First;

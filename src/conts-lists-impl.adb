@@ -84,8 +84,8 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
       N : Cursor;
       E : Stored_Type;
    begin
-      while Self.Has_Element (C) loop
-         N := Self.Next (C);
+      while C.Current /= Null_Access loop
+         N := (Current => Get_Next (Self, C.Current));
          E := Get_Element (Self, C.Current);
          Elements.Release (E);
          Storage.Release_Node (Self, C.Current);
@@ -245,6 +245,7 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
       Storage.Assign (Self, Source,
                       Self.Head, Source.Head,
                       Self.Tail, Source.Tail);
+      Self.Size := Source.Size;
    end Assign;
 
    -------------------------

@@ -208,11 +208,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
          return Returned_Type
    with Inline,
      Global => null,
-     Pre    => Position <= Last (Self),
-     Post   => Reference'Result = Storage.Elements.To_Returned
-       (Storage.Elements.To_Stored (Element (Model (Self), Position)));
-   pragma Annotate
-     (GNATprove, Inline_For_Proof, Entity => Reference);
+     Pre    => Position <= Last (Self);
 
    function Element
      (Self : Base_Vector'Class; Position : Cursor)
@@ -220,10 +216,8 @@ package Conts.Vectors.Impl with SPARK_Mode is
    with
      Global => null,
      Pre    => Has_Element (Self, Position),
-     Post   => Element'Result = Storage.Elements.To_Constant_Returned
-       (Storage.Elements.To_Stored
-          (Element (Model (Self), To_Index (Position))));
-   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Element);
+     Post   => Storage.Elements.To_Element (Element'Result) =
+     Element (Model (Self), To_Index (Position));
 
    function Last_Element
      (Self : Base_Vector'Class) return Constant_Returned_Type with
@@ -517,12 +511,8 @@ package Conts.Vectors.Impl with SPARK_Mode is
    is (Element (Self, Position))
    with Inline,
      Pre'Class => Has_Element (Self, Position),
-     Post      => Element_Primitive'Result =
-       Storage.Elements.To_Constant_Returned
-       (Storage.Elements.To_Stored
-          (Element (Model (Self), To_Index (Position))));
-   pragma Annotate
-     (GNATprove, Inline_For_Proof, Entity => Element_Primitive);
+     Post      => Storage.Elements.To_Element (Element_Primitive'Result) =
+     Element (Model (Self), To_Index (Position));
    function Has_Element_Primitive
      (Self : Base_Vector; Position : Cursor) return Boolean
    is (Has_Element (Self, Position))

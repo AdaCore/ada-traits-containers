@@ -86,8 +86,9 @@ package Conts.Maps.Impl with SPARK_Mode is
 
    function Length (Self : Base_Map'Class) return Count_Type with
      Global => null,
-     Post   => Length'Result < Capacity (Self);
+     Post   => Length'Result = 0 or Length'Result < Capacity (Self);
    --  The length of a map is always strictly smaller than its capacity
+   --  except when the map's capacity is 0.
 
    ------------------
    -- Formal Model --
@@ -269,23 +270,30 @@ package Conts.Maps.Impl with SPARK_Mode is
       and M.Is_Add (Model (Self)'Old, Key, Value, Model (Self)));
 
    function Get
-     (Self     : Base_Map'Class;
-      Key      : Keys.Element_Type)
+     (Self : Base_Map'Class;
+      Key  : Keys.Element_Type)
       return Elements.Constant_Returned_Type
    with
      Global => null,
      Pre    => M.Mem (Model (Self), Key),
-     Post   => Get'Result = Elements.To_Constant_Returned
-       (Elements.To_Stored (Element (Model (Self), Key)));
-   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Get);
+     Post   => Elements.To_Element (Get'Result) =
+     Element (Model (Self), Key);
+
+   function As_Element
+     (Self : Base_Map'Class; Key : Keys.Element_Type) return Element_Type
+   is (Elements.To_Element (Self.Get (Key)))
+   with Inline,
+     Global => null,
+     Pre    => M.Mem (Model (Self), Key),
+     Post   => As_Element'Result = Element (Model (Self), Key);
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    procedure Clear (Self : in out Base_Map'Class)
    --  Remove all elements from the map
 
    with
      Global => null,
-     Post   => Capacity (Self) = Capacity (Self)'Old
-     and then Length (Self) = 0
+     Post   => Length (Self) = 0
      and then M.Is_Empty (Model (Self));
 
    function Mapping_Preserved (S1, S2 : K.Sequence; P1, P2 : P_Map)
@@ -447,7 +455,8 @@ package Conts.Maps.Impl with SPARK_Mode is
      Pre            => Has_Element (Self, Position),
      Contract_Cases =>
        (P_Get (Positions (Self), Position) = Length (Self) =>
-              Next'Result = No_Element,
+              not Has_Element (Self, Next'Result),
+--                Next'Result = No_Element,
         others                                             =>
           Has_Element (Self, Next'Result)
         and then P_Get (Positions (Self), Next'Result) =

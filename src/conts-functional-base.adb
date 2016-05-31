@@ -48,7 +48,7 @@ package body Conts.Functional.Base with SPARK_Mode => Off is
       end if;
 
       for I in C1.Elements'Range loop
-         if C1.Elements (I) /= C2.Elements (I) then
+         if C1.Elements (I).all /= C2.Elements (I).all then
             return False;
          end if;
       end loop;
