@@ -27,10 +27,6 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
 
    use Storage;
 
-   ------------------
-   -- Formal Model --
-   ------------------
-
    ---------------
    -- Positions --
    ---------------
@@ -70,10 +66,6 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
    ----------------------------
 
    procedure Lift_Abstraction_Level (Self : Base_List'Class) is null;
-
-   -----------------
-   -- Subprograms --
-   -----------------
 
    -----------
    -- Clear --
@@ -153,6 +145,10 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
          return (Current => Get_Next (Self, Position.Current));
       end if;
    end Next;
+
+   ----------
+   -- Next --
+   ----------
 
    procedure Next (Self : Base_List'Class; Position : in out Cursor) is
    begin
@@ -248,29 +244,37 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
       Self.Size := Source.Size;
    end Assign;
 
-   -------------------------
-   -- Not Implemented Yet --
-   -------------------------
+   ----------
+   -- Find --
+   ----------
 
    function Find (Self : Base_List'Class; Element : Element_Type) return Cursor
    is
    begin
-      raise Program_Error;
+      raise Program_Error with "Not implemented yet";
       return No_Element;
    end Find;
+
+   ------------
+   -- Insert --
+   ------------
 
    procedure Insert
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
    is
    begin
-      raise Program_Error;
+      raise Program_Error with "Not implemented yet";
    end Insert;
+
+   -------------------------
+   -- Replacement_Element --
+   -------------------------
 
    procedure Replace_Element
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
    is
    begin
-      raise Program_Error;
+      raise Program_Error with "Not implemented yet";
    end Replace_Element;
 
 end Conts.Lists.Impl;

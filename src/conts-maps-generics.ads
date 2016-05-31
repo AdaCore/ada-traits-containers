@@ -126,7 +126,7 @@ package Conts.Maps.Generics with SPARK_Mode is
 
    function Key
      (Self : Base_Map'Class; Position : Cursor)
-      return Constant_Returned_Key_Type
+     return Constant_Returned_Key_Type
      renames Impl.Key;
    function Element
      (Self : Base_Map'Class; Position : Cursor) return Constant_Returned_Type
@@ -136,11 +136,11 @@ package Conts.Maps.Generics with SPARK_Mode is
      renames Impl.As_Key;
    function As_Element
      (Self : Base_Map'Class; Position : Cursor) return Elements.Element_Type
-      renames Impl.As_Element;
+     renames Impl.As_Element;
    function As_Element
      (Self : Base_Map'Class; Key : Keys.Element_Type)
-      return Elements.Element_Type
-      renames Impl.As_Element;
+     return Elements.Element_Type
+     renames Impl.As_Element;
 
    function First (Self : Base_Map'Class) return Cursor
      renames Impl.First;
@@ -151,8 +151,9 @@ package Conts.Maps.Generics with SPARK_Mode is
      (Self : Base_Map'Class; Position : Cursor) return Cursor
      renames Impl.Next;
 
-   function Element (S : Impl.M.Map; K : Key_Type) return Element_Type
-                     renames Impl.Element;
+   function Element
+     (S : Impl.M.Map; K : Key_Type) return Element_Type
+     renames Impl.Element;
    function S_Keys (Self : Base_Map'Class) return Impl.K.Sequence
      renames Impl.S_Keys;
 
@@ -176,13 +177,14 @@ package Conts.Maps.Generics with SPARK_Mode is
 
    function Constant_Reference
      (Self : Map; Key : Key_Type) return Constant_Returned_Type
-   is (Get (Self, Key))
-   with Inline,
-   Pre'Class => Impl.M.Mem (Model (Self), Key);
+     is (Get (Self, Key))
+     with
+       Inline,
+       Pre'Class => Impl.M.Mem (Model (Self), Key);
 
-   function Model (Self : Map'Class) return Impl.M.Map is
-      (Impl.Model (Self))
-   with Ghost;
+   function Model (Self : Map'Class) return Impl.M.Map
+     is (Impl.Model (Self))
+     with Ghost;
    pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
 
    -------------

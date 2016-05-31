@@ -24,30 +24,23 @@ pragma Ada_2012;
 package body Conts.Vectors.Impl with SPARK_Mode => Off is
    use Conts.Vectors.Storage;
 
-   ------------------
-   -- Formal Model --
-   ------------------
-
    -------------------
    -- Valid_Cursors --
    -------------------
 
    function Valid_Cursors (Self : Base_Vector'Class) return V_Set is
       R  : V.Set;
-
    begin
-      --  If the vector is empty, return an empty model.
-
       if Self.Last = No_Element.Index then
+         --  If the vector is empty, return an empty model.
+         return V_Set'(Content => R);
+      else
+         --  otherwise return a cursor per valid index.
+         for Idx in Min_Index .. Self.Last loop
+            R := V.Add (R, (Index => Idx));
+         end loop;
          return V_Set'(Content => R);
       end if;
-
-      --  otherwise return a cursor per valid index.
-
-      for I in Min_Index .. Self.Last loop
-         R := V.Add (R, (Index => I));
-      end loop;
-      return V_Set'(Content => R);
    end Valid_Cursors;
 
    -----------
@@ -57,17 +50,21 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    function Model (Self : Base_Vector'Class) return M.Sequence is
       R  : M.Sequence;
    begin
-      if Self.Last = No_Element.Index then
-         return R;
-      end if;
-
-      for I in Min_Index .. Self.Last loop
-         R := M.Add (R, Storage.Elements.To_Element
+      if Self.Last /= No_Element.Index then
+         for Idx in Min_Index .. Self.Last loop
+            R := M.Add
+               (R,
+                Storage.Elements.To_Element
                    (Storage.Elements.To_Constant_Returned
-                      (Storage.Get_Element (Self, I))));
-      end loop;
+                      (Storage.Get_Element (Self, Idx))));
+         end loop;
+      end if;
       return R;
    end Model;
+
+   -------------------------
+   -- Lift_Abstract_Level --
+   -------------------------
 
    procedure Lift_Abstraction_Level (Self : Base_Vector'Class) is null;
 
@@ -90,7 +87,7 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
 
    function Element
      (Self : Base_Vector'Class; Position : Cursor)
-         return Constant_Returned_Type is
+     return Constant_Returned_Type is
    begin
       return Storage.Elements.To_Constant_Returned
         (Storage.Get_Element (Self, Position.Index));
@@ -121,6 +118,10 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
          return No_Element;
       end if;
    end Next;
+
+   ----------
+   -- Next --
+   ----------
 
    procedure Next (Self : Base_Vector'Class; Position : in out Cursor) is
    begin
@@ -210,10 +211,12 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
       if L + Count > Self.Capacity then
          Storage.Resize (Self, L + Count, L, Force => False);
       end if;
+
       for J in 1 .. Count loop
          Storage.Set_Element
            (Self, L + J, Storage.Elements.To_Stored (Element));
       end loop;
+
       Self.Last := Self.Last + Count;
    end Append;
 
@@ -370,4 +373,5 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
          Storage.Elements.Release (L_Tmp);
       end if;
    end Swap;
+
 end Conts.Vectors.Impl;

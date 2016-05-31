@@ -102,7 +102,18 @@ package Conts.Lists.Generics with SPARK_Mode is
    --  Complexity: constant for all cursor operations.
 
    procedure Next (Self : Base_List'Class; Position : in out Cursor)
-      renames Impl.Next;
+     renames Impl.Next;
+
+   use type Element_Type;
+
+   function As_Element
+     (Self : Base_List'Class; Position : Cursor) return Element_Type
+     is (Storage.Elements.To_Element (Element (Self, Position)))
+     with
+       Pre  => Has_Element (Self, Position),
+       Post => As_Element'Result = Element
+          (Impl.Model (Self), Impl.P_Get (Impl.Positions (Self), Position));
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    --  ??? Should we provide a Copy function ?
    --  This cannot be provided in this generic package, since the type could
@@ -124,17 +135,23 @@ package Conts.Lists.Generics with SPARK_Mode is
 
    function Constant_Reference
      (Self : List; Position : Cursor) return Constant_Returned_Type
-   is (Element (Self, Position))
-   with Inline,
-   Pre'Class => Has_Element (Self, Position);
+     is (Element (Self, Position))
+     with
+       Inline,
+       Pre'Class => Has_Element (Self, Position);
 
-   function Model (Self : List'Class) return Impl.M.Sequence is
-      (Impl.Model (Self))
-   with Ghost;
+   -----------
+   -- Model --
+   -----------
+   --  The following subprograms are used to write loop invariants for SPARK
+
+   function Model (Self : List'Class) return Impl.M.Sequence
+     is (Impl.Model (Self))
+     with Ghost;
    pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
 
    function Element (S : Impl.M.Sequence; I : Count_Type) return Element_Type
-                     renames Impl.Element;
+     renames Impl.Element;
 
    --------------------
    -- Cursors traits --
@@ -154,17 +171,6 @@ package Conts.Lists.Generics with SPARK_Mode is
    -------------------------
    -- Getters and setters --
    -------------------------
-
-   use type Element_Type;
-
-   function As_Element
-     (Self : Base_List'Class; Position : Cursor) return Element_Type
-   is (Storage.Elements.To_Element (Element (Self, Position)))
-   with
-   Pre  => Has_Element (Self, Position),
-   Post => As_Element'Result =
-     Element (Impl.Model (Self), Impl.P_Get (Impl.Positions (Self), Position));
-   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    package Maps is
       package Element is new Conts.Properties.Read_Only_Maps

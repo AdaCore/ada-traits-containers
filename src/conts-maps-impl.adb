@@ -38,10 +38,6 @@ package body Conts.Maps.Impl with SPARK_Mode => Off is
    --  Probe the table and look for the place where the element with that
    --  key would be inserted (or already exists).
 
-   ------------------
-   -- Formal Model --
-   ------------------
-
    -----------
    -- Model --
    -----------
@@ -49,7 +45,6 @@ package body Conts.Maps.Impl with SPARK_Mode => Off is
    function Model (Self : Base_Map'Class) return M.Map is
       R : M.Map;
       C : Cursor;
-
    begin
       --  If Self is empty, so is its model.
 
@@ -202,10 +197,6 @@ package body Conts.Maps.Impl with SPARK_Mode => Off is
 
    procedure Lift_Abstraction_Level (Self : Base_Map'Class) is null;
 
-   -----------------
-   -- Subprograms --
-   -----------------
-
    ---------------
    -- Find_Slot --
    ---------------
@@ -254,9 +245,7 @@ package body Conts.Maps.Impl with SPARK_Mode => Off is
    -- Assign --
    ------------
 
-   procedure Assign (Self : in out Base_Map'Class; Source : Base_Map'Class)
-   is
-
+   procedure Assign (Self : in out Base_Map'Class; Source : Base_Map'Class) is
    begin
       Self.Used := Source.Used;
       Self.Fill := Source.Fill;

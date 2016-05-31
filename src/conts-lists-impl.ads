@@ -19,6 +19,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+--  Implementation details for the list container.
+--  This package takes the same formal arguments as Conts.Lists.Generics
+--  and provides the internal implementation as well as annotations for
+--  all the primitive operations.
+
 pragma Ada_2012;
 with Conts.Lists.Storage;
 with Conts.Functional.Sequences;
@@ -26,8 +31,6 @@ with Conts.Functional.Maps;
 
 generic
    with package Storage is new Conts.Lists.Storage.Traits (<>);
-   --  Describes how the nodes of the list are stored.
-
 package Conts.Lists.Impl with SPARK_Mode is
 
    subtype Element_Type is Storage.Elements.Element_Type;
@@ -38,8 +41,8 @@ package Conts.Lists.Impl with SPARK_Mode is
    use type Storage.Elements.Element_Type;
    use type Storage.Elements.Constant_Returned_Type;
 
-   type Base_List is new Storage.Container with private with
-     Default_Initial_Condition => Length (Base_List) = 0;
+   type Base_List is new Storage.Container with private
+     with Default_Initial_Condition => Length (Base_List) = 0;
    --  We do not define the Iterable aspect here: this is not allowed,
    --  since the parent type is a generic formal parameter. Instead, we
    --  have to define it in the instantiations of Generic_List.
@@ -48,16 +51,20 @@ package Conts.Lists.Impl with SPARK_Mode is
    No_Element : constant Cursor;
 
    function Capacity (Self : Base_List'Class) return Count_Type
-   is (Storage.Capacity (Self))
-   with Inline => True, Global => null;
    --  The capacity of a list cannot be modified, it is the maximal number of
    --  elements that the list may contain.
+     is (Storage.Capacity (Self))
+     with
+       Inline => True,
+       Global => null;
 
    function Length (Self : Base_List'Class) return Count_Type
-   with --  Inline => True, ??? bug with Default_Initial_Condition
-     Global => null,
-     Post   => Length'Result <= Capacity (Self);
-   --  The length of a list is always smaller than its capacity;
+     with
+       --  Inline => True, ??? bug with Default_Initial_Condition
+       Global => null,
+       Post   =>
+          --  The length of a list is always smaller than its capacity
+          Length'Result <= Capacity (Self);
 
    ------------------
    -- Formal Model --
@@ -72,20 +79,24 @@ package Conts.Lists.Impl with SPARK_Mode is
                   Element => P_Iter_Element);
 
    type P_Private_Cursor is private with Ghost;
-   function P_Iter_First (M : P_Map) return P_Private_Cursor with Ghost;
-   function P_Iter_Next (M : P_Map; C : P_Private_Cursor)
-                         return P_Private_Cursor with Ghost;
-   function P_Iter_Has_Element (M : P_Map; C : P_Private_Cursor)
-                                return Boolean with Ghost;
+   function P_Iter_First (M : P_Map) return P_Private_Cursor
+     with Ghost;
+   function P_Iter_Next
+     (M : P_Map; C : P_Private_Cursor) return P_Private_Cursor
+     with Ghost;
+   function P_Iter_Has_Element
+     (M : P_Map; C : P_Private_Cursor) return Boolean
+     with Ghost;
    function P_Iter_Element (M : P_Map; C : P_Private_Cursor) return Cursor
      with Ghost;
 
    function P_Mem (M : P_Map; C : Cursor) return Boolean with Ghost;
-   function P_Get (M : P_Map; C : Cursor) return Positive_Count_Type with
-     Ghost,
-     Pre => P_Mem (M, C);
-
    pragma Annotate (GNATprove, Iterable_For_Proof, "Contains", P_Mem);
+
+   function P_Get (M : P_Map; C : Cursor) return Positive_Count_Type
+     with
+       Ghost,
+       Pre => P_Mem (M, C);
 
    package M is new Conts.Functional.Sequences
      (Index_Type   => Positive_Count_Type,
@@ -95,322 +106,338 @@ package Conts.Lists.Impl with SPARK_Mode is
 
    use type M.Sequence;
 
-   function Model (Self : Base_List'Class) return M.Sequence with
-     Ghost,
-     Post => M.Length (Model'Result) = Length (Self);
+   function Model (Self : Base_List'Class) return M.Sequence
    --  The highlevel model of a list is a sequence of elements. Cursors are
    --  not represented in this model.
+     with
+       Ghost,
+       Post => M.Length (Model'Result) = Length (Self);
 
-   function Positions (Self : Base_List'Class) return P_Map with Ghost,
+   function Positions (Self : Base_List'Class) return P_Map
    --  The Positions map is used to model cursors. It only contains valid
    --  cursors and map them to their position in the container.
+     with
+       Ghost,
+       Post => not P_Mem (Positions'Result, No_Element)
+          --  Positions of cursors are smaller than the container's length.
+          and then
+            (for all I of Positions'Result =>
+               P_Get (Positions'Result, I) in 1 .. Length (Self)
 
-     Post => not P_Mem (Positions'Result, No_Element)
+             --  No two cursors have the same position. Note that we do not
+             --  state that there is a cursor in the map for each position,
+             --  as it is rarely needed.
+             and then
+               (for all J of Positions'Result =>
+                  (if P_Get (Positions'Result, I) = P_Get (Positions'Result, J)
+                   then I = J)));
 
-     --  Positions of cursors are smaller than the container's length.
-
-     and then
-       (for all I of Positions'Result =>
-          P_Get (Positions'Result, I) in 1 .. Length (Self)
-
-        --  No two cursors have the same position. Note that we do not state
-        --  that there is a cursor in the map for each position, as it is
-        --  rarely needed.
-
-        and then
-          (for all J of Positions'Result =>
-             (if P_Get (Positions'Result, I) = P_Get (Positions'Result, J)
-                  then I = J)));
-
-   procedure Lift_Abstraction_Level (Self : Base_List'Class) with
-     Global => null,
-     Post   =>
-       (for all Elt of Model (Self) =>
-          (for some I of Positions (Self) =>
-               M.Get (Model (Self), P_Get (Positions (Self), I)) = Elt));
+   procedure Lift_Abstraction_Level (Self : Base_List'Class)
    --  Lift_Abstraction_Level is a ghost procedure that does nothing but
    --  assume that we can access to the same elements by iterating over
    --  positions or cursors.
    --  This information is not generally useful except when switching from
    --  a lowlevel, cursor aware view of a container, to a highlevel position
    --  based view.
+     with
+       Global => null,
+       Post   =>
+         (for all Elt of Model (Self) =>
+            (for some I of Positions (Self) =>
+                 M.Get (Model (Self), P_Get (Positions (Self), I)) = Elt));
 
    function Element (S : M.Sequence; I : Count_Type) return Element_Type
-                     renames M.Get;
+     renames M.Get;
+   --  ??? Do we need this subprogram, could we use M.Get everywhere instead ?
 
    -----------------
    -- Subprograms --
    -----------------
 
-   --  Actual implementation for the subprograms renamed in generics. See the
-   --  descriptions in generics.
-
    function Has_Element
      (Self : Base_List'Class; Position : Cursor) return Boolean
-   with
-     Inline,
-     Global => null,
-     Post   => Has_Element'Result = P_Mem (Positions (Self), Position);
+   --  See documentation in conts-lists-generics.ads
+     with
+       Inline,
+       Global => null,
+       Post   => Has_Element'Result = P_Mem (Positions (Self), Position);
    pragma Annotate (GNATprove, Inline_For_Proof, Entity => Has_Element);
 
-   function First (Self : Base_List'Class) return Cursor with
-     Inline,
-     Global         => null,
-     Contract_Cases =>
-       (Length (Self) = 0 => First'Result = No_Element,
-        others            => Has_Element (Self, First'Result)
-        and  P_Get (Positions (Self), First'Result) = 1);
+   function First (Self : Base_List'Class) return Cursor
+   --  See documentation in conts-lists-generics.ads
+     with
+       Inline,
+       Global         => null,
+       Contract_Cases =>
+         (Length (Self) = 0 => First'Result = No_Element,
+          others            => Has_Element (Self, First'Result)
+          and  P_Get (Positions (Self), First'Result) = 1);
 
    function Next
      (Self : Base_List'Class; Position : Cursor) return Cursor
-   with Inline,
-     Global         => null,
-     Pre            => Has_Element (Self, Position),
-     Contract_Cases =>
-       (P_Get (Positions (Self), Position) = Length (Self) =>
-              Next'Result = No_Element,
-        others                                             =>
-          Has_Element (Self, Next'Result)
-        and P_Get (Positions (Self), Next'Result) =
-          P_Get (Positions (Self), Position) + 1);
+   --  See documentation in conts-lists-generics.ads
+     with
+       Inline,
+       Global         => null,
+       Pre            => Has_Element (Self, Position),
+       Contract_Cases =>
+         (P_Get (Positions (Self), Position) = Length (Self) =>
+                Next'Result = No_Element,
+          others => Has_Element (Self, Next'Result)
+             and then P_Get (Positions (Self), Next'Result) =
+                 P_Get (Positions (Self), Position) + 1);
 
    function Previous
      (Self : Base_List'Class; Position : Cursor) return Cursor
-   with Inline,
-     Global         => null,
-     Pre            => Has_Element (Self, Position),
-     Contract_Cases =>
-       (P_Get (Positions (Self), Position) = 1 =>
-              Previous'Result = No_Element,
-        others                                             =>
-          Has_Element (Self, Previous'Result)
-        and P_Get (Positions (Self), Previous'Result) =
-          P_Get (Positions (Self), Position) - 1);
+   --  See documentation in conts-lists-generics.ads
+     with
+       Inline,
+       Global         => null,
+       Pre            => Has_Element (Self, Position),
+       Contract_Cases =>
+         (P_Get (Positions (Self), Position) = 1 =>
+                Previous'Result = No_Element,
+          others =>
+            Has_Element (Self, Previous'Result)
+            and then P_Get (Positions (Self), Previous'Result) =
+               P_Get (Positions (Self), Position) - 1);
 
    procedure Next (Self : Base_List'Class; Position : in out Cursor)
-   with Inline,
-     Global => null,
-     Pre    => Has_Element (Self, Position),
-     Contract_Cases =>
-       (Impl.P_Get (Impl.Positions (Self), Position) = Length (Self) =>
-              Position = No_Element,
-        others                                             =>
-          Has_Element (Self, Position)
-        and then Impl.P_Get (Impl.Positions (Self), Position) =
-          Impl.P_Get (Impl.Positions (Self), Position'Old) + 1);
+   --  See documentation in conts-lists-generics.ads
+     with
+       Inline,
+       Global => null,
+       Pre    => Has_Element (Self, Position),
+       Contract_Cases =>
+         (Impl.P_Get (Impl.Positions (Self), Position) = Length (Self) =>
+                Position = No_Element,
+          others =>
+            Has_Element (Self, Position)
+            and then Impl.P_Get (Impl.Positions (Self), Position) =
+              Impl.P_Get (Impl.Positions (Self), Position'Old) + 1);
 
-   function Last (Self : Base_List'Class) return Cursor with
-     Global         => null,
-     Contract_Cases =>
-       (Length (Self) = 0 => Last'Result = No_Element,
-        others            => Has_Element (Self, Last'Result)
-        and P_Get (Positions (Self), Last'Result) = Length (Self));
+   function Last (Self : Base_List'Class) return Cursor
+   --  See documentation in conts-lists-generics.ads
+     with
+       Global         => null,
+       Contract_Cases =>
+         (Length (Self) = 0 => Last'Result = No_Element,
+          others            => Has_Element (Self, Last'Result)
+            and P_Get (Positions (Self), Last'Result) = Length (Self));
 
    function Element
      (Self : Base_List'Class; Position : Cursor)
-         return Constant_Returned_Type
-   with Inline,
-     Global => null,
-     Pre    => Has_Element (Self, Position),
-     Post   =>
-
-     --  Query Positions to get the position of Position in Self and use it
-     --  to fetch the corresponding element in Model.
-
-     Storage.Elements.To_Element (Element'Result) =
-     Element (Model (Self), P_Get (Positions (Self), Position));
+     return Constant_Returned_Type
+     with
+       Inline,
+       Global => null,
+       Pre    => Has_Element (Self, Position),
+       Post   =>
+          --  Query Positions to get the position of Position in Self and use
+          --  it to fetch the corresponding element in Model.
+          Storage.Elements.To_Element (Element'Result) =
+          Element (Model (Self), P_Get (Positions (Self), Position));
 
    procedure Clear (Self : in out Base_List'Class)
-   with
-     Post => Capacity (Self) = Capacity (Self)'Old
-     and then Length (Self) = 0;
+   --  See documentation in conts-lists-generics.ads
+     with
+       Post => Capacity (Self) = Capacity (Self)'Old
+          and then Length (Self) = 0;
 
    procedure Assign
      (Self : in out Base_List'Class; Source : Base_List'Class)
-   with
-     Global => null,
-     Post   => Length (Self) = Length (Source)
-     and Capacity (Self) = Capacity (Self)'Old
-     and Model (Self) = Model (Source);
+   --  See documentation in conts-lists-generics.ads
+     with
+       Global => null,
+       Post   => Length (Self) = Length (Source)
+          and Capacity (Self) = Capacity (Self)'Old
+          and Model (Self) = Model (Source);
 
-   function P_Is_Add (P1, P2 : P_Map;
-                      K      : Cursor;
-                      E      : Positive_Count_Type) return Boolean
-   --  P2 is P1 with an additional mapping from K to E.
-
-   with Ghost,
-     Post => P_Is_Add'Result =
-         (not P_Mem (P1, K) and P_Mem (P2, K) and P_Get (P2, K) = E
-          and (for all I of P1 => P_Mem (P2, I)
-               and P_Get (P2, I) = P_Get (P1, I))
-          and (for all I of P2 => I = K or P_Mem (P1, I)));
+   function P_Is_Add
+     (P1, P2 : P_Map;
+      K      : Cursor;
+      E      : Positive_Count_Type) return Boolean
+     with
+       Ghost,
+       Post =>
+          --  P2 is P1 with an additional mapping from K to E.
+          P_Is_Add'Result =
+          (not P_Mem (P1, K) and P_Mem (P2, K) and P_Get (P2, K) = E
+           and (for all I of P1 => P_Mem (P2, I)
+                and P_Get (P2, I) = P_Get (P1, I))
+           and (for all I of P2 => I = K or P_Mem (P1, I)));
 
    procedure Append (Self : in out Base_List'Class; Element : Element_Type)
-   with
-     Global => null,
-     Pre    => Length (Self) < Capacity (Self),
-     Post   => Capacity (Self) = Capacity (Self)'Old
-     and Length (Self) = Length (Self)'Old + 1
+   --  See documentation in conts-lists-generics.ads
+     with
+       Global => null,
+       Pre    => Length (Self) < Capacity (Self),
+       Post   => Capacity (Self) = Capacity (Self)'Old
+          and Length (Self) = Length (Self)'Old + 1
 
-     --  Positions contains a new mapping from the last cursor of Self to
-     --  Length.
+          --  Positions contains a new mapping from the last cursor of Self to
+          --  Length.
+          and P_Is_Add
+            (Positions (Self)'Old, Positions (Self),
+             Last (Self), Length (Self))
 
-     and P_Is_Add
-         (Positions (Self)'Old, Positions (Self), Last (Self), Length (Self))
-
-     --  Model contains a new element Element at the end.
-
-     and M.Is_Add (Model (Self)'Old, Element, Model (Self));
+          --  Model contains a new element Element at the end.
+          and M.Is_Add (Model (Self)'Old, Element, Model (Self));
 
    function M_Not_Until
      (S : M.Sequence; Lst : Positive_Count_Type; E : Element_Type)
-      return Boolean
-   --  E is not in S until Lst.
-
-   with Ghost,
-     Pre  => Lst <= M.Length (S),
-     Post => M_Not_Until'Result =
-     (for all I in 1 .. Lst => Element (S, I) /= E);
+     return Boolean
+     with
+       Ghost,
+       Pre  => Lst <= M.Length (S),
+       Post =>
+          --  E is not in S until Lst.
+          M_Not_Until'Result =
+            (for all I in 1 .. Lst => Element (S, I) /= E);
 
    function Find (Self : Base_List'Class; Element : Element_Type) return Cursor
-   with
-     Global         => null,
-     Contract_Cases =>
+   --  ??? Find should not exist for lists, since there is no possible
+   --  optimized implementation. Instead, this is a generic algorithm that
+   --  can be applied to all containers, even though some, like maps, will
+   --  have better implementations.
+     with
+       Global         => null,
+       Contract_Cases =>
+          --  Either Element is not in the model and the result is No_Element
+          ((for all E of Model (Self) => E /= Element) =>
+             Find'Result = No_Element,
 
-     --  Either Element is not in the model and the result is No_Element
-
-     ((for all E of Model (Self) => E /= Element) => Find'Result = No_Element,
-
-     --  or the result is a valid cursor, Element is stored at its position in
-     --  Self and there is no previous occurrence of Element in L.
-
-      others                               =>
-        Has_Element (Self, Find'Result)
-      and Impl.Element (Model (Self),
-        P_Get (Positions (Self), Find'Result)) = Element
-      and M_Not_Until
-        (Model (Self), P_Get (Positions (Self), Find'Result) - 1, Element));
+          --  or the result is a valid cursor, Element is stored at its
+          --  position in Self and there is no previous occurrence of
+          --  Element in L.
+           others =>
+              Has_Element (Self, Find'Result)
+              and Impl.Element (Model (Self),
+                 P_Get (Positions (Self), Find'Result)) = Element
+              and M_Not_Until
+                 (Model (Self), P_Get (Positions (Self), Find'Result) - 1,
+                  Element));
 
    function M_Elements_Equal
      (S1, S2   : M.Sequence;
       Fst, Lst : Positive_Count_Type;
       Offset   : Count_Type'Base := 0)
-      return Boolean
+     return Boolean
    --  The slice from Fst to Lst in S1 has been shifted by Offset in S2.
-
-   with Ghost,
-   Pre  => Lst <= M.Length (S1) and Offset in 1 - Fst .. M.Length (S2) - Lst,
-   Post => M_Elements_Equal'Result =
-     (for all I in Fst .. Lst => Element (S1, I) = Element (S2, I + Offset));
+     with
+       Ghost,
+       Pre  => Lst <= M.Length (S1)
+          and Offset in 1 - Fst .. M.Length (S2) - Lst,
+       Post => M_Elements_Equal'Result =
+         (for all I in Fst .. Lst =>
+            Element (S1, I) = Element (S2, I + Offset));
    pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Equal);
 
-   function P_Insert_Position (P1, P2 : P_Map; Cut : Positive_Count_Type)
-                               return Boolean
+   function P_Insert_Position
+     (P1, P2 : P_Map; Cut : Positive_Count_Type) return Boolean
    --  P2 is the resul of inserting a cursor at position Cut in P1.
+     with
+       Ghost,
+       Pre  => (for all I of P1 => P_Get (P1, I) < Count_Type'Last),
+       Post => P_Insert_Position'Result =
+          --  Every cursor valid in P1 is valid in P2.
+          ((for all I of P1 => P_Mem (P2, I)
 
-   with Ghost,
-   Pre  => (for all I of P1 => P_Get (P1, I) < Count_Type'Last),
-   Post => P_Insert_Position'Result =
+            --  If it was located before Cut its position is preserved.
+            and (if P_Get (P1, I) < Cut then P_Get (P2, I) = P_Get (P1, I)
+                 --  Otherwise it is shifted by 1.
+                 else P_Get (P2, I) = P_Get (P1, I) + 1))
 
-   --  Every cursor valid in P1 is valid in P2.
-
-     ((for all I of P1 => P_Mem (P2, I)
-
-       --  If it was located before Cut its position is preserved.
-
-       and (if P_Get (P1, I) < Cut then P_Get (P2, I) = P_Get (P1, I)
-
-         --  Otherwise it is shifted by 1.
-
-           else P_Get (P2, I) = P_Get (P1, I) + 1))
-
-      --  Every cursor valid in P2 is valid P1 except the one at position Cut.
-
-     and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
+           --  Every cursor valid in P2 is valid P1 except the one at position
+           --  Cut.
+          and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
 
    procedure Insert
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
-     --  Insert Element before the valid cursor Position in L.
+   --  Insert Element before the valid cursor Position in L.
+     with
+       Global => null,
+       Pre    => Length (Self) < Capacity (Self)
+          and then Has_Element (Self, Position),
+       Post   => Length (Self) = Length (Self)'Old + 1
+          and Capacity (Self) = Capacity (Self)'Old
 
-   with
-     Global => null,
-     Pre    => Length (Self) < Capacity (Self)
-     and then Has_Element (Self, Position),
-     Post   => Length (Self) = Length (Self)'Old + 1
-     and Capacity (Self) = Capacity (Self)'Old
+          --  A new cursor has been inserted at position Position in Self.
+          and P_Insert_Position
+            (Positions (Self)'Old, Positions (Self),
+             Cut => P_Get (Positions (Self)'Old, Position))
 
-     --  A new cursor has been inserted at position Position in Self.
+          --  The elements of Self located before Position are preserved.
+          and M_Elements_Equal
+             (S1  => Model (Self),
+              S2  => Model (Self)'Old,
+              Fst => 1,
+              Lst => P_Get (Positions (Self)'Old, Position) - 1)
 
-     and P_Insert_Position
-       (Positions (Self)'Old, Positions (Self),
-        Cut => P_Get (Positions (Self)'Old, Position))
+          --  Other elements are shifted by 1.
+          and M_Elements_Equal
+            (S1     => Model (Self),
+             S2     => Model (Self)'Old,
+             Fst    => P_Get (Positions (Self)'Old, Position) + 1,
+             Lst    => Length (Self),
+             Offset => -1)
 
-     --  The elements of Self located before Position are preserved.
-
-     and M_Elements_Equal (S1  => Model (Self),
-                           S2  => Model (Self)'Old,
-                           Fst => 1,
-                           Lst => P_Get (Positions (Self)'Old, Position) - 1)
-
-     --  Other elements are shifted by 1.
-
-     and M_Elements_Equal
-       (S1     => Model (Self),
-        S2     => Model (Self)'Old,
-        Fst    => P_Get (Positions (Self)'Old, Position) + 1,
-        Lst    => Length (Self),
-        Offset => -1)
-
-     --  Element is stored at the previous position of Position in L.
-
-     and Impl.Element
-       (Model (Self), P_Get (Positions (Self)'Old, Position)) = Element;
+          --  Element is stored at the previous position of Position in L.
+          and Impl.Element
+            (Model (Self), P_Get (Positions (Self)'Old, Position)) = Element;
 
    procedure Replace_Element
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
-   with
-     Global => null,
-     Pre    => Has_Element (Self, Position),
-     Post   => Capacity (Self) = Capacity (Self)'Old
-     and Length (Self) = Length (Self)'Old
+     with
+       Global => null,
+       Pre    => Has_Element (Self, Position),
+       Post   => Capacity (Self) = Capacity (Self)'Old
+          and Length (Self) = Length (Self)'Old
 
-     --  Cursors are preserved.
+          --  Cursors are preserved.
+          and Positions (Self)'Old = Positions (Self)
 
-     and Positions (Self)'Old = Positions (Self)
-
-     --  The element at the position of Position in Self is replaced by E.
-
-     and M.Is_Set (Model (Self)'Old,
-                   P_Get (Positions (Self), Position),
-                   Element,
-                   Model (Self));
+          --  The element at the position of Position in Self is replaced by E.
+          and M.Is_Set (Model (Self)'Old,
+                        P_Get (Positions (Self), Position),
+                        Element,
+                        Model (Self));
+   --  See documentation in conts-lists-generics.ads
 
    function First_Primitive (Self : Base_List) return Cursor
-   is (First (Self)) with Inline;
+     is (First (Self)) with Inline;
+   --  See documentation in conts-lists-generics.ads
+
    function Element_Primitive
      (Self : Base_List; Position : Cursor) return Constant_Returned_Type
-   is (Element (Self, Position))
-   with Inline,
-     Pre'Class => Has_Element (Self, Position),
-     Post =>
-       Storage.Elements.To_Element (Element_Primitive'Result) =
-     Element (Model (Self), P_Get (Positions (Self), Position));
+   --  See documentation in conts-lists-generics.ads
+     is (Element (Self, Position))
+     with
+       Inline,
+       Pre'Class => Has_Element (Self, Position),
+       Post => Storage.Elements.To_Element (Element_Primitive'Result) =
+          Element (Model (Self), P_Get (Positions (Self), Position));
+
    function Has_Element_Primitive
      (Self : Base_List; Position : Cursor) return Boolean
-   is (Has_Element (Self, Position))
-   with Inline,
-     Post =>
-         Has_Element_Primitive'Result = P_Mem (Positions (Self), Position);
-   pragma Annotate
-     (GNATprove, Inline_For_Proof, Entity => Has_Element_Primitive);
+   --  See documentation in conts-lists-generics.ads
+     is (Has_Element (Self, Position))
+     with
+       Inline,
+       Post => Has_Element_Primitive'Result =
+          P_Mem (Positions (Self), Position);
+   pragma Annotate (GNATprove, Inline_For_Proof, Has_Element_Primitive);
+
    function Next_Primitive
      (Self : Base_List; Position : Cursor) return Cursor
-   is (Next (Self, Position)) with Inline,
-   Pre'Class => Has_Element (Self, Position);
    --  These are only needed because the Iterable aspect expects a parameter
    --  of type List instead of List'Class. But then it means that the loop
    --  is doing a lot of dynamic dispatching, and is twice as slow as a loop
    --  using an explicit cursor.
+     is (Next (Self, Position))
+     with
+       Inline,
+       Pre'Class => Has_Element (Self, Position);
 
 private
    pragma SPARK_Mode (Off);
@@ -445,49 +472,50 @@ private
 
    type P_Private_Cursor is new P.Private_Key;
 
-   function P_Iter_First (M : P_Map) return P_Private_Cursor is
-      (P_Private_Cursor (P.Iter_First (M.Content)));
-   function P_Iter_Next (M : P_Map; C : P_Private_Cursor)
-                         return P_Private_Cursor is
-      (P_Private_Cursor (P.Iter_Next (M.Content, P.Private_Key (C))));
-   function P_Iter_Has_Element (M : P_Map; C : P_Private_Cursor)
-                                return Boolean is
-      (P.Iter_Has_Element (M.Content, P.Private_Key (C)));
-   function P_Iter_Element (M : P_Map; C : P_Private_Cursor) return Cursor is
-      (P.Iter_Element (M.Content, P.Private_Key (C)));
-   function P_Mem (M : P_Map; C : Cursor) return Boolean is
-      (P.Mem (M.Content, C));
-   function P_Get (M : P_Map; C : Cursor) return Positive_Count_Type is
-      (P.Get (M.Content, C));
+   function P_Iter_First (M : P_Map) return P_Private_Cursor
+     is (P_Private_Cursor (P.Iter_First (M.Content)));
+   function P_Iter_Next
+     (M : P_Map; C : P_Private_Cursor) return P_Private_Cursor
+     is (P_Private_Cursor (P.Iter_Next (M.Content, P.Private_Key (C))));
+   function P_Iter_Has_Element
+     (M : P_Map; C : P_Private_Cursor) return Boolean
+     is (P.Iter_Has_Element (M.Content, P.Private_Key (C)));
+   function P_Iter_Element (M : P_Map; C : P_Private_Cursor) return Cursor
+     is (P.Iter_Element (M.Content, P.Private_Key (C)));
+   function P_Mem (M : P_Map; C : Cursor) return Boolean
+     is (P.Mem (M.Content, C));
+   function P_Get (M : P_Map; C : Cursor) return Positive_Count_Type
+     is (P.Get (M.Content, C));
 
-   function P_Is_Add (P1, P2 : P_Map;
-                      K      : Cursor;
-                      E      : Positive_Count_Type) return Boolean
-   is
-     (not P_Mem (P1, K) and P_Mem (P2, K) and P_Get (P2, K) = E
-      and (for all I of P1 => P_Mem (P2, I)
-           and P_Get (P2, I) = P_Get (P1, I))
-      and (for all I of P2 => I = K or P_Mem (P1, I)));
+   function P_Is_Add
+      (P1, P2 : P_Map;
+       K      : Cursor;
+       E      : Positive_Count_Type) return Boolean
+     is
+       (not P_Mem (P1, K) and P_Mem (P2, K) and P_Get (P2, K) = E
+        and (for all I of P1 => P_Mem (P2, I)
+             and P_Get (P2, I) = P_Get (P1, I))
+        and (for all I of P2 => I = K or P_Mem (P1, I)));
 
-   function P_Insert_Position (P1, P2 : P_Map; Cut : Positive_Count_Type)
-                               return Boolean
-   is
-     ((for all I of P1 => P_Mem (P2, I)
-      and (if P_Get (P1, I) < Cut then P_Get (P2, I) = P_Get (P1, I)
-           else P_Get (P2, I) = P_Get (P1, I) + 1))
-     and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
+   function P_Insert_Position
+      (P1, P2 : P_Map; Cut : Positive_Count_Type) return Boolean
+     is
+       ((for all I of P1 => P_Mem (P2, I)
+        and (if P_Get (P1, I) < Cut then P_Get (P2, I) = P_Get (P1, I)
+             else P_Get (P2, I) = P_Get (P1, I) + 1))
+       and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
 
    function M_Not_Until
      (S : M.Sequence; Lst : Positive_Count_Type; E : Element_Type)
-      return Boolean
-   is (for all I in 1 .. Lst => Element (S, I) /= E);
+     return Boolean
+     is (for all I in 1 .. Lst => Element (S, I) /= E);
 
    function M_Elements_Equal
      (S1, S2   : M.Sequence;
       Fst, Lst : Positive_Count_Type;
       Offset   : Count_Type'Base := 0)
       return Boolean
-   is
-     (for all I in Fst .. Lst => Element (S1, I) = Element (S2, I + Offset));
+     is (for all I in Fst .. Lst =>
+            Element (S1, I) = Element (S2, I + Offset));
 
 end Conts.Lists.Impl;

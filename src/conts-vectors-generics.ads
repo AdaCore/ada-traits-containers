@@ -54,16 +54,15 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    function To_Count (Idx : Index_Type) return Count_Type
      renames Impl.To_Count;
-   --  Converts from an index type to an index into the actual underlying
-   --  array.
-
    function To_Index (Position : Cursor) return Index_Type
      renames Impl.To_Index;
+   --  Converts to or from an index type to an index into the actual underlying
+   --  array.
 
    function "<=" (Idx : Index_Type; Count : Count_Type) return Boolean
-   is (To_Count (Idx) <= Count)
-   with Inline,
-     Pre => Idx in Index_Type'First .. Impl.To_Index (Impl.Last_Count);
+     is (To_Count (Idx) <= Count)
+     with Inline,
+       Pre => Idx in Index_Type'First .. Impl.To_Index (Impl.Last_Count);
 
    procedure Reserve_Capacity
      (Self : in out Base_Vector'Class; Capacity : Count_Type)
@@ -122,9 +121,9 @@ package Conts.Vectors.Generics with SPARK_Mode is
    procedure Replace_Element
      (Self     : in out Base_Vector'Class;
       Index    : Index_Type;
-      New_Item : Element_Type) renames Impl.Replace_Element;
+      New_Item : Element_Type)
+     renames Impl.Replace_Element;
    --  Replace the element at the given position.
-   --  Nothing is done if Index is not a valid index in the container.
 
    procedure Swap
      (Self        : in out Base_Vector'Class;
@@ -150,7 +149,9 @@ package Conts.Vectors.Generics with SPARK_Mode is
      renames Impl.Delete_Last;
    --  Remove the last element from the vector.
    --  The vector is not resized, so it will keep its current capacity, for
-   --  efficient insertion of future elements. You can call Shrink_To_Fit
+   --  efficient insertion of future elements. You can call Shrink_To_Fit.
+   --  Existing cursors are still valid after this call (except one that
+   --  was pointing to the last element, of course).
 
    function Last_Element
      (Self : Base_Vector'Class) return Constant_Returned_Type
@@ -164,15 +165,6 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  When the list is controlled, this has the same behavior as calling
    --  Self := Source.
 
-   function Element
-     (Self : Base_Vector'Class; Position : Index_Type)
-      return Constant_Returned_Type
-     renames Impl.Element;
-   function Reference
-     (Self : Base_Vector'Class; Position : Index_Type)
-      return Returned_Type
-      renames Impl.Reference;
-
    function First (Self : Base_Vector'Class) return Cursor
      renames Impl.First;
    function Element
@@ -181,19 +173,53 @@ package Conts.Vectors.Generics with SPARK_Mode is
      renames Impl.Element;
    function Has_Element
      (Self : Base_Vector'Class; Position : Cursor) return Boolean
-      renames Impl.Has_Element;
+     renames Impl.Has_Element;
    function Next
      (Self : Base_Vector'Class; Position : Cursor) return Cursor
-      renames Impl.Next;
+     renames Impl.Next;
    function Previous
      (Self : Base_Vector'Class; Position : Cursor) return Cursor
-      renames Impl.Previous;
+     renames Impl.Previous;
    --  We pass the container explicitly for the sake of writing the pre
    --  and post conditions.
    --  Complexity: constant for all cursor operations.
 
    procedure Next (Self : Base_Vector'Class; Position : in out Cursor)
-      renames Impl.Next;
+     renames Impl.Next;
+   --  Modifies Position in place.
+
+   function Element
+     (Self : Base_Vector'Class; Position : Index_Type)
+     return Constant_Returned_Type
+     renames Impl.Element;
+   function Reference
+     (Self : Base_Vector'Class; Position : Index_Type)
+     return Returned_Type
+     renames Impl.Reference;
+   --  Return a reference to the element at the given position. The notion
+   --  of reference depends on the storage type chosen for the vector, and
+   --  might instead return a copy. A reference will thus be in general
+   --  more efficient than a simple copy, and will never be worse.
+
+   use type Element_Type;
+
+   function As_Element
+     (Self : Base_Vector'Class; Position : Cursor) return Element_Type
+   --  Return a copy of the element at the given position.
+     is (Storage.Elements.To_Element (Element (Self, Position)))
+     with
+       Pre => Has_Element (Self, Position),
+       Post => As_Element'Result =
+         Element (Impl.Model (Self), Impl.To_Index (Position));
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
+
+   function As_Element
+     (Self : Base_Vector'Class; Index : Index_Type) return Element_Type
+     is (Storage.Elements.To_Element (Element (Self, Index)))
+     with
+       Pre => Index <= Last (Self),
+       Post => As_Element'Result = Element (Impl.Model (Self), Index);
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    ------------------
    -- for-of loops --
@@ -208,19 +234,23 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    function Constant_Reference
      (Self : Vector; Position : Index_Type) return Constant_Returned_Type
-   is (Element (Self, Position))
-   with Inline,
-     Pre'Class => Position <= Last (Self);
+     is (Element (Self, Position))
+     with Inline, Pre'Class => Position <= Last (Self);
+
+   -----------
+   -- Model --
+   -----------
+   --  The following subprograms are used to write loop invariants for SPARK
 
    use type Impl.M.Sequence;
 
-   function Model (Self : Vector'Class) return Impl.M.Sequence is
-      (Impl.Model (Self))
-   with Ghost;
+   function Model (Self : Vector'Class) return Impl.M.Sequence
+     is (Impl.Model (Self))
+     with Ghost;
    pragma Annotate (GNATprove, Iterable_For_Proof, "Model", Model);
 
    function Element (S : Impl.M.Sequence; I : Index_Type) return Element_Type
-                     renames Impl.Element;
+     renames Impl.Element;
 
    -------------
    -- Cursors --
@@ -228,17 +258,19 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    package Cursors is
       function Index_First (Self : Base_Vector'Class) return Index_Type
-         is (Index_Type'First) with Inline;
+        is (Index_Type'First) with Inline;
       function "-" (Left, Right : Index_Type) return Integer
-         is (Integer (To_Count (Left))
-             - Integer (To_Count (Right)))
-      with Pre => Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
-        and Right in Index_Type'First .. Impl.To_Index (Impl.Last_Count);
+        is (Integer (To_Count (Left)) - Integer (To_Count (Right)))
+        with Pre =>
+          Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
+          and then
+          Right in Index_Type'First .. Impl.To_Index (Impl.Last_Count);
       function "+" (Left : Index_Type; N : Integer) return Index_Type
-         is (Impl.To_Index (Count_Type (Integer (To_Count (Left)) + N)))
-      with Pre => Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
-        and then N in Integer (1 - To_Count (Left)) ..
-          Integer (Impl.Last_Count - To_Count (Left));
+        is (Impl.To_Index (Count_Type (Integer (To_Count (Left)) + N)))
+        with Pre =>
+          Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
+          and then N in Integer (1 - To_Count (Left)) ..
+            Integer (Impl.Last_Count - To_Count (Left));
 
       package Random_Access is new Conts.Cursors.Random_Access_Cursors
         (Container_Type => Base_Vector'Class,
@@ -247,7 +279,6 @@ package Conts.Vectors.Generics with SPARK_Mode is
          Last           => Last,
          "-"            => "-",
          "+"            => "+");
-
       package Bidirectional is new Conts.Cursors.Bidirectional_Cursors
         (Container_Type => Base_Vector'Class,
          Cursor_Type    => Cursor,
@@ -261,23 +292,6 @@ package Conts.Vectors.Generics with SPARK_Mode is
    -------------------------
    -- Getters and setters --
    -------------------------
-
-   use type Element_Type;
-
-   function As_Element
-     (Self : Base_Vector'Class; Position : Cursor) return Element_Type
-   is (Storage.Elements.To_Element (Element (Self, Position))) with
-   Pre => Has_Element (Self, Position),
-   Post => As_Element'Result =
-     Element (Impl.Model (Self), Impl.To_Index (Position));
-   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
-
-   function As_Element
-     (Self : Base_Vector'Class; Index : Index_Type) return Element_Type
-   is (Storage.Elements.To_Element (Element (Self, Index))) with
-   Pre => Index <= Last (Self),
-   Post => As_Element'Result = Element (Impl.Model (Self), Index);
-   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    package Maps is
       package Element is new Conts.Properties.Read_Only_Maps
