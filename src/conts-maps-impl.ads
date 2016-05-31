@@ -363,18 +363,18 @@ package Conts.Maps.Impl with SPARK_Mode is
      --  Query Positions to get the position of Position in Self and use it to
      --  fetch the corresponding key in Keys.
 
-     Post => Key'Result =
-       Keys.To_Constant_Returned
-         (Keys.To_Stored
-            (K.Get (S_Keys (Self), P_Get (Positions (Self), Position))));
-   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Key);
+     Post => Keys.To_Element (Key'Result) =
+       K.Get (S_Keys (Self), P_Get (Positions (Self), Position));
 
    function As_Key
      (Self : Base_Map'Class; Position : Cursor) return Key_Type
    is (Keys.To_Element (Self.Key (Position)))
    with Inline,
      Global => null,
-     Pre    => Has_Element (Self, Position);
+     Pre    => Has_Element (Self, Position),
+     Post => As_Key'Result =
+     K.Get (S_Keys (Self), P_Get (Positions (Self), Position));
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Key);
 
    function Element
      (Self : Base_Map'Class; Position : Cursor)
@@ -387,20 +387,21 @@ package Conts.Maps.Impl with SPARK_Mode is
      --  fetch the corresponding key in Keys, and then use this key to get the
      --  associated element from Model.
 
-     Post   => Element'Result =
-       Elements.To_Constant_Returned
-         (Elements.To_Stored
-            (Element (Model (Self),
+     Post   => Elements.To_Element (Element'Result) =
+       Element (Model (Self),
              K.Get (S_Keys (Self),
-               P_Get (Positions (Self), Position)))));
-   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Element);
+               P_Get (Positions (Self), Position)));
 
    function As_Element
      (Self : Base_Map'Class; Position : Cursor) return Element_Type
    is (Elements.To_Element (Self.Element (Position)))
    with Inline,
      Global => null,
-     Pre    => Has_Element (Self, Position);
+     Pre    => Has_Element (Self, Position),
+     Post => As_Element'Result =
+     Element (Model (Self),
+              K.Get (S_Keys (Self), P_Get (Positions (Self), Position)));
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    function Contains (Self : Base_Map'Class; Key : Key_Type) return Boolean
    with

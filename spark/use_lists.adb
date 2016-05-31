@@ -11,7 +11,7 @@ package body Use_Lists with SPARK_Mode is
                          Element (Model (L2), N)));
          pragma Loop_Invariant
            (P_Get (Positions (L1), Cu) = Length (L2) + 1);
-         if Element (L1, Cu) < Element_Type'Last then
+         if As_Element (L1, Cu) < Element_Type'Last then
             Append (L2, Element (L1, Cu) + 1);
          else
             Append (L2, Element (L1, Cu));
@@ -34,7 +34,7 @@ package body Use_Lists with SPARK_Mode is
            (for all N in P_Get (Positions (L), Cu) .. Length (L) =>
                 Element (Model (L)'Loop_Entry, N) =
                 Element (Model (L), N));
-         if Element (L, Cu) < Element_Type'Last then
+         if As_Element (L, Cu) < Element_Type'Last then
             Impl.Replace_Element (L, Cu, Element (L, Cu) + 1);
          end if;
          Next (L, Cu);
@@ -57,7 +57,7 @@ package body Use_Lists with SPARK_Mode is
                 Element (Model (L), N));
          pragma Loop_Invariant (Positions (L)'Loop_Entry =
                                   Positions (L));
-         if Element (L, Cu) < Element_Type'Last then
+         if As_Element (L, Cu) < Element_Type'Last then
             Impl.Replace_Element (L, Cu, Element (L, Cu) + 1);
          end if;
          Next (L, Cu);
@@ -81,7 +81,7 @@ package body Use_Lists with SPARK_Mode is
                 Element (Model (L)'Loop_Entry, J));
          pragma Loop_Invariant
            (P_Get (Positions (L), Cu) = I);
-         Append (L, Element (L, Cu));
+         Append (L, As_Element (L, Cu));
          Next (L, Cu);
       end loop;
    end Double_Size;
@@ -104,7 +104,7 @@ package body Use_Lists with SPARK_Mode is
               Element (Model (L)'Loop_Entry, I));
          pragma Loop_Invariant
            (P_Get (Positions (L), Cu) = 2 * N + 1);
-         Impl.Insert (L, Cu, Element (L, Cu));
+         Impl.Insert (L, Cu, As_Element (L, Cu));
          Next (L, Cu);
          N := N + 1;
       end loop;

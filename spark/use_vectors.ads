@@ -37,8 +37,8 @@ package Use_Vectors with SPARK_Mode is
    procedure Incr_All (V1 : Vector; V2 : in out Vector) with
      Post => Length (V2) = Length (V1)
      and (for all N in Index_Type'First .. Last (V1) =>
-              Is_Incr (Element (V1, N),
-                       Element (V2, N)));
+              Is_Incr (As_Element (V1, N),
+                       As_Element (V2, N)));
    --  Loop through a vector to increment each element. Store the incremented
    --  elements in V2.
 
@@ -46,14 +46,14 @@ package Use_Vectors with SPARK_Mode is
      Post => Length (V) = Length (V)'Old
      and (for all N in Index_Type'First .. Last (V) =>
               Is_Incr (Element (Model (V)'Old, N),
-                       Element (V, N)));
+                       As_Element (V, N)));
    --  Same as before except that elements are stored back in V.
 
    procedure Incr_All_3 (V : in out Vector) with
      Post => Length (V) = Length (V)'Old
      and (for all N in Index_Type'First .. Last (V) =>
               Is_Incr (Element (Model (V)'Old, N),
-                       Element (V, N)))
+                       As_Element (V, N)))
      and Valid_Cursors (V)'Old = Valid_Cursors (V);
    --  Same as before except that we use cursors instead of indexes in the
    --  specification.
@@ -62,8 +62,8 @@ package Use_Vectors with SPARK_Mode is
      Pre  => Impl.Last_Count / 2 >= Length (V),
      Post => Length (V) = 2 * Length (V)'Old
      and (for all I in Index_Type'First .. Last (V)'Old =>
-       Element (V, I) = Element (Model (V)'Old, I)
-       and Element (V, I + Integer (Length (V)'Old)) =
+       As_Element (V, I) = Element (Model (V)'Old, I)
+       and As_Element (V, I + Integer (Length (V)'Old)) =
            Element (Model (V)'Old, I));
    --  Double the size of list by duplicating every element. New elements are
    --  appended to the list.
@@ -76,9 +76,9 @@ package Use_Vectors with SPARK_Mode is
        ((for all F of V => F /= E) =>
             My_Find'Result = Index_Type'First - 1,
         others => My_Find'Result in Index_Type'First .. Last (V)
-        and then Element (V, My_Find'Result) = E
+        and then As_Element (V, My_Find'Result) = E
         and then (for all I in Index_Type'First .. My_Find'Result - 1 =>
-                  Element (V, I) /= E));
+                  As_Element (V, I) /= E));
 
    procedure Update_Range_To_Zero (V : in out Vector; Fst, Lst : Index_Type)
    --  Replace every element between Fst and Lst with 0.
@@ -88,8 +88,8 @@ package Use_Vectors with SPARK_Mode is
      Post => Valid_Cursors (V) = Valid_Cursors (V)'Old
      and (for all I in Index_Type'First .. Last (V) =>
               (if I in Fst .. Lst
-               then Element (V, I) = 0
-               else Element (V, I) = Element (Model (V)'Old, I)));
+               then As_Element (V, I) = 0
+               else As_Element (V, I) = Element (Model (V)'Old, I)));
 
    Count : constant := 7;
 
@@ -100,10 +100,10 @@ package Use_Vectors with SPARK_Mode is
      Pre  => I <= Last (V) and Impl.Last_Count - Count >= Length (V),
      Post => Length (V) = Length (V)'Old + Count
      and (for all J in Index_Type'First .. I - 1 =>
-        Element (V, J) = Element (Model (V)'Old, J))
-     and (for all J in I .. I + Count - 1 => Element (V, J) = 0)
+        As_Element (V, J) = Element (Model (V)'Old, J))
+     and (for all J in I .. I + Count - 1 => As_Element (V, J) = 0)
      and (for all J in I + Count .. Last (V) =>
-              Element (V, J) = Element (Model (V)'Old, J - Count));
+              As_Element (V, J) = Element (Model (V)'Old, J - Count));
 
    type My_Enum_Base is (Zero, One, Two, Three);
    subtype My_Enum is My_Enum_Base range One .. Three;
@@ -122,14 +122,14 @@ package Use_Vectors with SPARK_Mode is
      Ghost,
      Global => null,
      Pre    => (for all E of V => P (E)),
-     Post   => (for all Cu in V => P (Element (V, Cu)));
+     Post   => (for all Cu in V => P (As_Element (V, Cu)));
    --  Test that the link can be done from a property on the elements of a
    --  high level view of a container and its low level view.
 
    procedure From_Lower_To_Higher (V : Vector) with
      Ghost,
      Global => null,
-     Pre    => (for all Cu in V => P (Element (V, Cu))),
+     Pre    => (for all Cu in V => P (As_Element (V, Cu))),
      Post   => (for all E of V => P (E));
    --  Test that the link can be done from a property on the elements of a
    --  low level view of a container and its high level view.

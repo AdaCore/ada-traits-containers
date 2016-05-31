@@ -217,10 +217,8 @@ package Conts.Lists.Impl with SPARK_Mode is
      --  Query Positions to get the position of Position in Self and use it
      --  to fetch the corresponding element in Model.
 
-     Element'Result = Storage.Elements.To_Constant_Returned
-       (Storage.Elements.To_Stored (Element (Model (Self),
-        P_Get (Positions (Self), Position))));
-   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Element);
+     Storage.Elements.To_Element (Element'Result) =
+     Element (Model (Self), P_Get (Positions (Self), Position));
 
    procedure Clear (Self : in out Base_List'Class)
    with
@@ -395,12 +393,8 @@ package Conts.Lists.Impl with SPARK_Mode is
    with Inline,
      Pre'Class => Has_Element (Self, Position),
      Post =>
-       Element_Primitive'Result =
-     Storage.Elements.To_Constant_Returned
-       (Storage.Elements.To_Stored
-          (Element (Model (Self), P_Get (Positions (Self), Position))));
-   pragma Annotate
-     (GNATprove, Inline_For_Proof, Entity => Element_Primitive);
+       Storage.Elements.To_Element (Element_Primitive'Result) =
+     Element (Model (Self), P_Get (Positions (Self), Position));
    function Has_Element_Primitive
      (Self : Base_List; Position : Cursor) return Boolean
    is (Has_Element (Self, Position))

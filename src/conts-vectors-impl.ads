@@ -200,10 +200,8 @@ package Conts.Vectors.Impl with SPARK_Mode is
    with Inline,
      Global => null,
      Pre    => Position <= Last (Self),
-     Post   => Element'Result = Storage.Elements.To_Constant_Returned
-       (Storage.Elements.To_Stored (Element (Model (Self), Position)));
-   pragma Annotate
-     (GNATprove, Inline_For_Proof, Entity => Element);
+     Post   => Storage.Elements.To_Element (Element'Result) =
+     Element (Model (Self), Position);
 
    function Reference
      (Self : Base_Vector'Class; Position : Index_Type)

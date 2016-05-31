@@ -262,10 +262,22 @@ package Conts.Vectors.Generics with SPARK_Mode is
    -- Getters and setters --
    -------------------------
 
+   use type Element_Type;
+
    function As_Element
      (Self : Base_Vector'Class; Position : Cursor) return Element_Type
    is (Storage.Elements.To_Element (Element (Self, Position))) with
-   Pre => Has_Element (Self, Position);
+   Pre => Has_Element (Self, Position),
+   Post => As_Element'Result =
+     Element (Impl.Model (Self), Impl.To_Index (Position));
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
+
+   function As_Element
+     (Self : Base_Vector'Class; Index : Index_Type) return Element_Type
+   is (Storage.Elements.To_Element (Element (Self, Index))) with
+   Pre => Index <= Last (Self),
+   Post => As_Element'Result = Element (Impl.Model (Self), Index);
+   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    package Maps is
       package Element is new Conts.Properties.Read_Only_Maps
