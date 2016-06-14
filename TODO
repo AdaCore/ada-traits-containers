@@ -70,9 +70,6 @@ can be edited with any text editor.
 
 * Algorithms
 
-** TODO =Contains=
-   Check whether a container contains a specific item
-
 ** TODO =Sort=
 
 ** TODO =Equal=
@@ -98,7 +95,6 @@ can be edited with any text editor.
    section 3.3.12 suggests to do a probe O(n) for the last element, since
    that doesn't change the algorithmic complexity.
 
-** TODO adaptors for Ada2012 vectors should be random_access cursors
 
 ** TODO Algorithms that apply to a slice of a container (ranges)
 

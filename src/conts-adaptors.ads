@@ -164,6 +164,7 @@ package Conts.Adaptors is
       subtype Element_Type is Vectors.Element_Type;
       subtype Vector is Vectors.Vector;
       subtype Cursor is Vectors.Cursor;
+      subtype Extended_Index is Vectors.Extended_Index;
 
       function Element (Self : Vector; Position : Cursor) return Element_Type
          is (Vectors.Element (Position)) with Inline;
@@ -174,8 +175,18 @@ package Conts.Adaptors is
       function Previous (Self : Vector; Position : Cursor) return Cursor
          is (Vectors.Previous (Position)) with Inline;
 
+      function "-" (Left, Right : Extended_Index) return Integer
+         is (Integer (Vectors."-" (Left, Right)));
+      function "+" (Left : Extended_Index; N : Integer) return Extended_Index
+         is (Vectors."+" (Left, Extended_Index (N)));
+
       package Cursors is
-         --  ??? Should provide random access cursors
+         package Random_Access is new Random_Access_Cursors
+            (Container_Type => Vector'Class,
+             Index_Type     => Extended_Index,
+             No_Element     => Vectors.No_Index,
+             First          => Vectors.First_Index,
+             Last           => Vectors.Last_Index);
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
@@ -201,6 +212,7 @@ package Conts.Adaptors is
       subtype Element_Type is Vectors.Element_Type;
       subtype Vector is Vectors.Vector;
       subtype Cursor is Vectors.Cursor;
+      subtype Extended_Index is Vectors.Extended_Index;
 
       function Element (Self : Vector; Position : Cursor) return Element_Type
          is (Vectors.Element (Position)) with Inline;
@@ -211,7 +223,18 @@ package Conts.Adaptors is
       function Previous (Self : Vector; Position : Cursor) return Cursor
          is (Vectors.Previous (Position)) with Inline;
 
+      function "-" (Left, Right : Extended_Index) return Integer
+         is (Integer (Vectors."-" (Left, Right)));
+      function "+" (Left : Extended_Index; N : Integer) return Extended_Index
+         is (Vectors."+" (Left, Extended_Index (N)));
+
       package Cursors is
+         package Random_Access is new Random_Access_Cursors
+            (Container_Type => Vector'Class,
+             Index_Type     => Extended_Index,
+             No_Element     => Vectors.No_Index,
+             First          => Vectors.First_Index,
+             Last           => Vectors.Last_Index);
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
@@ -239,6 +262,7 @@ package Conts.Adaptors is
       subtype Constant_Returned is Vectors.Constant_Reference_Type;
       subtype Vector            is Vectors.Vector;
       subtype Cursor            is Vectors.Cursor;
+      subtype Extended_Index is Vectors.Extended_Index;
 
       function Element (Self : Vector; Position : Cursor) return Returned
          is (Vectors.Constant_Reference (Self, Position)) with Inline;
@@ -251,7 +275,18 @@ package Conts.Adaptors is
       function Previous (Self : Vector; Position : Cursor) return Cursor
          is (Vectors.Previous (Position)) with Inline;
 
+      function "-" (Left, Right : Extended_Index) return Integer
+         is (Integer (Vectors."-" (Left, Right)));
+      function "+" (Left : Extended_Index; N : Integer) return Extended_Index
+         is (Vectors."+" (Left, Extended_Index (N)));
+
       package Cursors is
+         package Random_Access is new Random_Access_Cursors
+            (Container_Type => Vector'Class,
+             Index_Type     => Extended_Index,
+             No_Element     => Vectors.No_Index,
+             First          => Vectors.First_Index,
+             Last           => Vectors.Last_Index);
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
