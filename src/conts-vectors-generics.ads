@@ -51,7 +51,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    subtype Base_Vector is Impl.Base_Vector;
    subtype Cursor is Impl.Cursor;
    No_Element : constant Cursor := Impl.No_Element;
-   No_Index   : constant Index_Type := Impl.No_Index;
+   No_Index   : constant Extended_Index := Impl.No_Index;
 
    function To_Count (Idx : Index_Type) return Count_Type
      renames Impl.To_Count;
