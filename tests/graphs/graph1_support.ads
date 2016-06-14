@@ -63,7 +63,8 @@ package Graph1_Support is
 
    package Custom_Vertices is new Conts.Cursors.Forward_Cursors
      (Container_Type => Graph,
-      Cursor_Type    => Vertex_Cursor);
+      Cursor_Type    => Vertex_Cursor,
+      No_Element     => Vertex_Cursor'Last);
    package Vertices_Maps is new Conts.Properties.Read_Only_Maps
      (Map_Type       => Graph,
       Key_Type       => Vertex_Cursor,

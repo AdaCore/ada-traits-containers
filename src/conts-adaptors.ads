@@ -64,6 +64,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => List'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Lists.No_Element,
              First          => Lists.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -99,6 +100,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => List'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Lists.No_Element,
              First          => Lists.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -139,6 +141,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => List'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Lists.No_Element,
              First          => Lists.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -176,6 +179,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Vectors.No_Element,
              First          => Vectors.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -211,6 +215,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Vectors.No_Element,
              First          => Vectors.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -250,6 +255,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Vector'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Vectors.No_Element,
              First          => Vectors.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -287,6 +293,7 @@ package Conts.Adaptors is
          package Forward is new Forward_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Hashed_Maps.No_Element,
              First          => Hashed_Maps.First);
       end Cursors;
 
@@ -323,6 +330,7 @@ package Conts.Adaptors is
          package Forward is new Forward_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Hashed_Maps.No_Element,
              First          => Hashed_Maps.First);
       end Cursors;
 
@@ -361,6 +369,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Ordered_Maps.No_Element,
              First          => Ordered_Maps.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -399,6 +408,7 @@ package Conts.Adaptors is
          package Forward is new Forward_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Hashed_Maps.No_Element,
              First          => Hashed_Maps.First);
       end Cursors;
 
@@ -438,6 +448,7 @@ package Conts.Adaptors is
          package Bidirectional is new Bidirectional_Cursors
             (Container_Type => Map'Class,
              Cursor_Type    => Cursor,
+             No_Element     => Ordered_Maps.No_Element,
              First          => Ordered_Maps.First);
          package Forward renames Bidirectional.Forward;
       end Cursors;
@@ -459,6 +470,13 @@ package Conts.Adaptors is
       type Element_Type is private;
       type Array_Type is array (Index_Type range <>) of Element_Type;
    package Array_Adaptors is
+
+      subtype Extended_Index is Index_Type'Base range
+        Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
+      No_Index : constant Extended_Index := Extended_Index'First;
+      --  Index_Type with one more element to the left, used to represent
+      --  invalid indexes
+
       function First (Self : Array_Type) return Index_Type
          is (Self'First) with Inline;
       function Last (Self : Array_Type) return Index_Type
@@ -475,7 +493,8 @@ package Conts.Adaptors is
       package Cursors is
          package Random_Access is new Random_Access_Cursors
            (Container_Type => Array_Type,
-            Index_Type     => Index_Type,
+            Index_Type     => Extended_Index,
+            No_Element     => No_Index,
             First          => First,
             Last           => Last,
             "-"            => "-",
@@ -486,7 +505,7 @@ package Conts.Adaptors is
 
       package Maps is
          package Element is new Conts.Properties.Read_Only_Maps
-           (Array_Type, Index_Type, Element_Type, Element);
+           (Array_Type, Extended_Index, Element_Type, Element);
          package Constant_Returned renames Element;
       end Maps;
    end Array_Adaptors;

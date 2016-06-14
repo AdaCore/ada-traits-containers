@@ -161,6 +161,7 @@ package Conts.Lists.Generics with SPARK_Mode is
       package Bidirectional is new Conts.Cursors.Bidirectional_Cursors
         (Container_Type => Base_List'Class,
          Cursor_Type    => Cursor,
+         No_Element     => No_Element,
          First          => First,
          Next           => Next,
          Has_Element    => Has_Element,

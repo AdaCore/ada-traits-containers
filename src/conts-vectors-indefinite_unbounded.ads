@@ -44,6 +44,8 @@ package Conts.Vectors.Indefinite_Unbounded is
    subtype Vector is Vectors.Vector;
    subtype Cursor is Vectors.Cursor;
    subtype Constant_Returned is Elements.Traits.Constant_Returned;
+   No_Element : Cursor renames Vectors.No_Element;
+   No_Index   : Index_Type renames Vectors.No_Index;
 
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;

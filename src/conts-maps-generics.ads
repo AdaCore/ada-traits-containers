@@ -195,6 +195,7 @@ package Conts.Maps.Generics with SPARK_Mode is
       package Forward is new Conts.Cursors.Forward_Cursors
         (Container_Type => Base_Map'Class,
          Cursor_Type    => Cursor,
+         No_Element     => No_Element,
          First          => First,
          Next           => Next,
          Has_Element    => Has_Element);

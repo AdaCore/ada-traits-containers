@@ -77,4 +77,38 @@ package Conts.Algorithms is
    --  Swap will generally be visible by default.
    --  Complexity: O(n)
 
+   ----------
+   -- Find --
+   ----------
+
+   generic
+      with package Cursors is new Conts.Cursors.Forward_Cursors (<>);
+      with package Getters is new Conts.Properties.Read_Only_Maps
+        (Map_Type => Cursors.Container,
+         Key_Type => Cursors.Cursor,
+         others   => <>);
+      with function "=" (K1, K2 : Getters.Element) return Boolean is <>;
+   function Find
+     (Self      : Cursors.Container;
+      E         : Getters.Element)
+     return Cursors.Cursor
+     with Global => null;
+
+   --------------
+   -- Contains --
+   --------------
+
+   generic
+      with package Cursors is new Conts.Cursors.Forward_Cursors (<>);
+      with package Getters is new Conts.Properties.Read_Only_Maps
+        (Map_Type => Cursors.Container,
+         Key_Type => Cursors.Cursor,
+         others   => <>);
+      with function "=" (K1, K2 : Getters.Element) return Boolean is <>;
+   function Contains
+     (Self      : Cursors.Container;
+      E         : Getters.Element)
+     return Boolean
+     with Global => null;
+
 end Conts.Algorithms;

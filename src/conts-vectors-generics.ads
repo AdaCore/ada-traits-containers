@@ -51,6 +51,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
    subtype Base_Vector is Impl.Base_Vector;
    subtype Cursor is Impl.Cursor;
    No_Element : constant Cursor := Impl.No_Element;
+   No_Index   : constant Index_Type := Impl.No_Index;
 
    function To_Count (Idx : Index_Type) return Count_Type
      renames Impl.To_Count;
@@ -274,7 +275,8 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
       package Random_Access is new Conts.Cursors.Random_Access_Cursors
         (Container_Type => Base_Vector'Class,
-         Index_Type     => Index_Type,
+         Index_Type     => Extended_Index,
+         No_Element     => Impl.No_Index,
          First          => Index_First,
          Last           => Last,
          "-"            => "-",
@@ -282,6 +284,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
       package Bidirectional is new Conts.Cursors.Bidirectional_Cursors
         (Container_Type => Base_Vector'Class,
          Cursor_Type    => Cursor,
+         No_Element     => No_Element,
          First          => First,
          Has_Element    => Has_Element,
          Next           => Next,

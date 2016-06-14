@@ -92,4 +92,44 @@ package body Conts.Algorithms is
       end loop;
    end Shuffle;
 
+   ----------
+   -- Find --
+   ----------
+
+   function Find
+     (Self      : Cursors.Container;
+      E         : Getters.Element)
+     return Cursors.Cursor
+   is
+      C     : Cursors.Cursor := Cursors.First (Self);
+   begin
+      while Cursors.Has_Element (Self, C) loop
+         if Getters.Get (Self, C) = E then
+            return C;
+         end if;
+         C := Cursors.Next (Self, C);
+      end loop;
+      return Cursors.No_Element;
+   end Find;
+
+   --------------
+   -- Contains --
+   --------------
+
+   function Contains
+     (Self      : Cursors.Container;
+      E         : Getters.Element)
+     return Boolean
+   is
+      C     : Cursors.Cursor := Cursors.First (Self);
+   begin
+      while Cursors.Has_Element (Self, C) loop
+         if Getters.Get (Self, C) = E then
+            return True;
+         end if;
+         C := Cursors.Next (Self, C);
+      end loop;
+      return False;
+   end Contains;
+
 end Conts.Algorithms;

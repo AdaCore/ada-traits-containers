@@ -36,6 +36,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
    subtype Extended_Index is Index_Type'Base range
      Index_Type'Pred (Index_Type'First) .. Index_Type'Last;
+   No_Index : constant Extended_Index := Extended_Index'First;
    --  Index_Type with one more element to the left, used to represent
    --  invalid indexes
 

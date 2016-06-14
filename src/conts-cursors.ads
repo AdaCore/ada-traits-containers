@@ -46,6 +46,7 @@ package Conts.Cursors with SPARK_Mode is
    generic
       type Container_Type (<>) is limited private;
       type Cursor_Type is private;
+      No_Element : Cursor_Type;
       with function First (Self : Container_Type) return Cursor_Type is <>;
       with function Has_Element (Self : Container_Type; Pos : Cursor_Type)
          return Boolean is <>;
@@ -63,6 +64,7 @@ package Conts.Cursors with SPARK_Mode is
    generic
       type Container_Type (<>) is limited private;
       type Cursor_Type is private;
+      No_Element : Cursor_Type;
       with function First (Self : Container_Type) return Cursor_Type is <>;
       with function Has_Element (Self : Container_Type; Pos : Cursor_Type)
          return Boolean is <>;
@@ -75,7 +77,7 @@ package Conts.Cursors with SPARK_Mode is
       subtype Cursor    is Cursor_Type;
 
       --  A bidirectional cursor is also a forward cursor
-      package Forward is new Forward_Cursors (Container, Cursor);
+      package Forward is new Forward_Cursors (Container, Cursor, No_Element);
    end Bidirectional_Cursors;
 
    ----------------------------
@@ -87,6 +89,7 @@ package Conts.Cursors with SPARK_Mode is
    generic
       type Container_Type (<>) is limited private;
       type Index_Type is (<>);
+      No_Element : Index_Type;
 
       with function First (Self : Container_Type) return Index_Type is <>;
       --  Index of the first element in the container (often Index_Type'First)
@@ -128,7 +131,7 @@ package Conts.Cursors with SPARK_Mode is
 
       --  A random cursor is also a bidirectional and forward cursor
       package Bidirectional is
-        new Bidirectional_Cursors (Container, Index_Type);
+        new Bidirectional_Cursors (Container, Index_Type, No_Element);
       package Forward renames Bidirectional.Forward;
    end Random_Access_Cursors;
 

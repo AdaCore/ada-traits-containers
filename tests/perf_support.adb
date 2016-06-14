@@ -52,9 +52,9 @@ package body Perf_Support is
    ---------------------
 
    procedure Test_Arrays_Int (Stdout : not null access Output'Class) is
-      type Int_Array is array (Integer range <>) of Integer;
+      type Int_Array is array (Natural range <>) of Integer;
       package Adaptors is new Array_Adaptors
-         (Index_Type   => Integer,
+         (Index_Type   => Natural,
           Element_Type => Integer,
           Array_Type   => Int_Array);
       function Count_If is new Conts.Algorithms.Count_If

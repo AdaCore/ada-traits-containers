@@ -70,6 +70,7 @@ package Conts.Graphs.Adjacency_List is
         (G : Graph; E : Edge) return Vertex with Inline;
 
       type Vertex_Cursor is private;
+      No_Vertex : constant Vertex_Cursor;
       function First (G : Graph) return Vertex_Cursor;
       function Element (G : Graph; C : Vertex_Cursor) return Vertex;
       function Has_Element (G : Graph; C : Vertex_Cursor) return Boolean;
@@ -137,6 +138,8 @@ package Conts.Graphs.Adjacency_List is
       type Vertex_Cursor is record
          Current : Vertex_Vectors.Cursor;
       end record;
+      No_Vertex : constant Vertex_Cursor :=
+         (Current => Vertex_Vectors.No_Element);
 
       type Edges_Cursor is record
          From    : Vertex;
@@ -165,6 +168,7 @@ package Conts.Graphs.Adjacency_List is
    package Vertices_Cursors is new Conts.Cursors.Forward_Cursors
      (Container_Type => Graph,
       Cursor_Type    => Impl.Vertex_Cursor,
+      No_Element     => Impl.No_Vertex,
       First          => Impl.First,
       Has_Element    => Impl.Has_Element,
       Next           => Impl.Next);
