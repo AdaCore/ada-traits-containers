@@ -295,29 +295,6 @@ package Conts.Lists.Impl with SPARK_Mode is
           M_Not_Until'Result =
             (for all I in 1 .. Lst => Element (S, I) /= E);
 
-   function Find (Self : Base_List'Class; Element : Element_Type) return Cursor
-   --  ??? Find should not exist for lists, since there is no possible
-   --  optimized implementation. Instead, this is a generic algorithm that
-   --  can be applied to all containers, even though some, like maps, will
-   --  have better implementations.
-     with
-       Global         => null,
-       Contract_Cases =>
-          --  Either Element is not in the model and the result is No_Element
-          ((for all E of Model (Self) => E /= Element) =>
-             Find'Result = No_Element,
-
-          --  or the result is a valid cursor, Element is stored at its
-          --  position in Self and there is no previous occurrence of
-          --  Element in L.
-           others =>
-              Has_Element (Self, Find'Result)
-              and Impl.Element (Model (Self),
-                 P_Get (Positions (Self), Find'Result)) = Element
-              and M_Not_Until
-                 (Model (Self), P_Get (Positions (Self), Find'Result) - 1,
-                  Element));
-
    function M_Elements_Equal
      (S1, S2   : M.Sequence;
       Fst, Lst : Positive_Count_Type;

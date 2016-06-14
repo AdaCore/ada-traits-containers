@@ -244,17 +244,6 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
       Self.Size := Source.Size;
    end Assign;
 
-   ----------
-   -- Find --
-   ----------
-
-   function Find (Self : Base_List'Class; Element : Element_Type) return Cursor
-   is
-   begin
-      raise Program_Error with "Not implemented yet";
-      return No_Element;
-   end Find;
-
    ------------
    -- Insert --
    ------------

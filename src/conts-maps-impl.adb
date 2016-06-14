@@ -558,25 +558,6 @@ package body Conts.Maps.Impl with SPARK_Mode => Off is
       return False;
    end Contains;
 
-   ----------
-   -- Find --
-   ----------
-
-   function Find (Self : Base_Map'Class; Key : Key_Type) return Cursor is
-   begin
-      if Self.Table /= null then
-         declare
-            H     : constant Hash_Type := Hash (Key);
-            Index : constant Hash_Type := Find_Slot (Self, Key, H);
-         begin
-            if Self.Table (Index).Kind = Full then
-               return (Index => Index);
-            end if;
-         end;
-      end if;
-      return No_Element;
-   end Find;
-
    ------------
    -- Delete --
    ------------

@@ -391,20 +391,6 @@ package Conts.Maps.Impl with SPARK_Mode is
        Post   => Contains'Result = M.Mem (Model (Self), Key);
    pragma Annotate (GNATprove, Inline_For_Proof, Entity => Contains);
 
-   function Find (Self : Base_Map'Class; Key : Key_Type) return Cursor
-     with
-       Global => null,
-       Contract_Cases   =>
-          --  Either the result is a valid cursor and K is stored at its
-          --  position in Self.
-          (Contains (Self, Key) =>
-             Has_Element (Self, Find'Result)
-             and then Key = K.Get
-                (S_Keys (Self), P_Get (Positions (Self), Find'Result)),
-
-           --  or K is not in the model and the result is No_Element
-           others => Find'Result = No_Element);
-
    function First (Self : Base_Map'Class) return Cursor
      with
        Inline,

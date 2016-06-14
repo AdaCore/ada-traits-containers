@@ -20,13 +20,16 @@ package Use_Maps with SPARK_Mode is
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   function My_Contains (S : My_Maps.Map; K : Positive) return Boolean is
-     (Impl.Find (S, K) /= No_Element) with
-   Post => My_Contains'Result = Impl.Contains (S, K);
-
-   function My_Find (S : My_Maps.Map; K : Positive) return Cursor with
-   Post => My_Find'Result = Impl.Find (S, K);
+   function My_Find (S : My_Maps.Map; K : Positive) return Cursor
+     with
+       Post => (if My_Find'Result /= No_Element
+                then As_Element (S, My_Find'Result) = K);
    --  Iterate through the set to find K.
+
+   function My_Contains (S : My_Maps.Map; K : Positive) return Boolean
+     is (Impl.Contains (S, K)) with
+   Post => (if My_Contains'Result then My_Find (S, K) /= No_Element
+            else My_Find (S, K) = No_Element);
 
    function F (E : Integer) return Integer is
       (if E in -100 .. 100 then E * 2 else E);

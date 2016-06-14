@@ -64,10 +64,6 @@ package Use_Lists with SPARK_Mode is
    --  Same as before except that new elements are inserted just before each
    --  duplicated element.
 
-   function My_Find (L : List; E : Element_Type) return Cursor with
-     Post => My_Find'Result = Impl.Find (L, E);
-   --  Iterate to find an element.
-
    procedure Update_Range_To_Zero (L : in out List; Fst, Lst : Cursor)
    --  Replace every element between Fst and Lst with 0.
 

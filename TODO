@@ -70,10 +70,6 @@ can be edited with any text editor.
 
 * Algorithms
 
-** TODO Remove =Conts.Lists.Impl.Find=
-   This should be a generic algorithm. But currently we need this for
-   pre and post conditions.
-
 ** TODO =Contains=
    Check whether a container contains a specific item
 

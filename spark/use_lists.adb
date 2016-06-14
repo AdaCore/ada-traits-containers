@@ -109,21 +109,6 @@ package body Use_Lists with SPARK_Mode is
          N := N + 1;
       end loop;
    end Double_Size_2;
---
-   function My_Find (L : List; E : Element_Type) return Cursor is
-      Cu : Cursor := First (L);
-   begin
-      while Has_Element (L, Cu) loop
-         pragma Loop_Invariant
-           (for all I in 1 .. P_Get (Positions (L), Cu) - 1 =>
-              Element (Model (L), I) /= E);
-         if As_Element (L, Cu) = E then
-            return Cu;
-         end if;
-         Next (L, Cu);
-      end loop;
-      return No_Element;
-   end My_Find;
 
    procedure Update_Range_To_Zero (L : in out List; Fst, Lst : Cursor) is
       Current : Cursor := Fst;
