@@ -9,9 +9,6 @@ can be edited with any text editor.
 
 * General organization of packages
 
-** TODO use SPARK_Pre and SPARK_Post, merge all packages and generate two sets
-   via a python script. To avoid duplication of code.
-
 ** TODO Replace storage_pools package with higher-level package
    For unbounded vectors, for instance, we want to use directly =System.Memory=
    so that we can also use =realloc=. This is not compatible with storage
@@ -43,10 +40,6 @@ can be edited with any text editor.
    giving a default value, and would let users override this for their whole
    application.
 
-** TODO Support for standard Ada iterators, rather than =Iterable= aspect
-   Measure performance, which might be better since Iterable forces dynamic
-   dispatching.
-
 ** MAYBE persistent data structures
    By implementing specific storage pools or node packages, we could have
    data structures directly mapped to files (perhaps via mmap) ?
@@ -70,15 +63,16 @@ can be edited with any text editor.
    It might be more efficient in some cases, but currently leads to a
    =Storage_Error= since we are doing low-level manipulations.
 
-** MAYBE merge conts-elements-indefinite and indefinite_spark
-   The access type should never be shown in fact.
-
 ** TODO =move= and =copy= operations instead of =Copyable= and =Movable=
    Since users have to provide =Copy= anyway, no need to provide the extra
    flag. We could have intermediate generic packages that provide convenient
    default for these subprograms.
 
 * Algorithms
+
+** TODO Remove =Conts.Lists.Impl.Find=
+   This should be a generic algorithm. But currently we need this for
+   pre and post conditions.
 
 ** TODO =Contains=
    Check whether a container contains a specific item
