@@ -1,7 +1,11 @@
 obj/
 lib/
+*.pyc
 
 doc/build/
 
-tests/generated/
+tests/perfs/generated/
+tests/out
 data.js
+
+tests/run.sh

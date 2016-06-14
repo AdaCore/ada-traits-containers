@@ -54,7 +54,7 @@ for Boost:
 Finally, compile and run the test with
 
 ```
-make
+make all perfs
 ```
 
 and finally open the file [index.html](index.html)

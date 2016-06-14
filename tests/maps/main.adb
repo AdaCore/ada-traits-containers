@@ -25,7 +25,7 @@ with Conts.Maps.Indef_Def_Unbounded;
 with Ada.Strings.Hash;
 with Ada.Text_IO;          use Ada.Text_IO;
 
-procedure Test_Maps is
+procedure Main is
 
    package Maps is new Conts.Maps.Indef_Def_Unbounded
      (Key_Type            => String,
@@ -74,4 +74,4 @@ begin
       when Constraint_Error =>
          null;   --  expected
    end;
-end Test_Maps;
+end Main;

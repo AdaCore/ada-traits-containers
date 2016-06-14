@@ -27,7 +27,7 @@ with Conts.Graphs.Adjacency_List;
 with Conts.Graphs.Components; use Conts.Graphs.Components;
 with Ada.Text_IO;             use Ada.Text_IO;
 
-procedure Test_Components is
+procedure Main is
 
    type Vertex_With_Null is (Null_V, A, B, C, D, E, F, G, H);
    subtype Vertex is Vertex_With_Null range A .. Vertex_With_Null'Last;
@@ -72,4 +72,4 @@ begin
       Put_Line ("Component for " & V'Img
          & " is" & Graphs.Integer_Maps.Get (Map, V)'Img);
    end loop;
-end Test_Components;
+end Main;

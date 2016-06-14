@@ -3,6 +3,13 @@
 This script is used to generate test for the various container combinations.
 """
 
+import os
+
+output_dir = 'generated/'
+if not os.path.isdir(output_dir):
+    os.mkdir(output_dir)
+
+
 ############
 # Comments #
 ############
@@ -295,11 +302,11 @@ class Tests(object):
     def write(self):
         filename = self.args['test_name'].lower()
 
-        ads = open("tests/generated/%s.ads" % filename, "w")
+        ads = open(os.path.join(output_dir, "%s.ads" % filename), "w")
         ads.write(Templates.spec.format(**self.args))
         ads.close()
 
-        adb = open("tests/generated/%s.adb" % filename, "w")
+        adb = open(os.path.join(output_dir, "%s.adb" % filename), "w")
         adb.write(Templates.body_header.format(**self.args))
         for t in self.tests():
             adb.write(t.format(**self.args))
@@ -914,11 +921,11 @@ Map("StrStr",
     filename="hashed_indef_indef_unbounded_spark",
     favorite=True).gen(adaptor="Constant_Returned")
 
-run_all = open("tests/generated/perf-run_all.adb", "w")
+run_all = open(os.path.join(output_dir, "main-run_all.adb"), "w")
 run_all.write("\n".join(all_tests_withs))
 run_all.write("""
 pragma Style_Checks (Off);
-separate (Perf)
+separate (Main)
 procedure Run_All is
 begin\n""")
 run_all.write("\n".join(all_tests))

@@ -30,7 +30,7 @@ with Report;           use Report;
 with System;
 with Custom_Graph;
 
-procedure Perf is
+procedure Main is
    procedure Test_Cpp_Graph (Stdout : System.Address)
       with Import, Convention => C, External_Name => "test_cpp_graph";
 
@@ -99,4 +99,4 @@ begin
    Stdout.Display;
 
    Free (Test_Name);
-end Perf;
+end Main;

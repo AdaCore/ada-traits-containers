@@ -145,6 +145,7 @@ can be edited with any text editor.
 
 ** TODO: Resize strategies for vectors may overflow Count_Type
 
+** Resizing vectors to Length 0
 * Strings
 
 ** TODO One possible storage is vectors
@@ -213,9 +214,6 @@ can be edited with any text editor.
 
 * Testing
 
-** TODO Can we declare a vector indexed on =Integer=
-   This would be a plus compared to the standard Ada containers.
-
 ** TODO Check that =Copy= works fine in particular for lists
 ** TODO Check that all simple containers provide the same ops
    In particular, they should all redefine the iterable aspect,
@@ -255,9 +253,6 @@ can be edited with any text editor.
       begin
          ... C references deallocated memory since My_Function's result
          ... has been finalized
-
-* Resizing vectors to Length 0
-* Last on empty vectors
 
 * Links to other libraries
 ** Stephe's Ada Library
