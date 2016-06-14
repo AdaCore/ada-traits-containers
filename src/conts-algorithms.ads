@@ -37,8 +37,8 @@ package Conts.Algorithms is
      (Self      : Cursors.Container;
       Map       : Getters.Map;
       Predicate : not null access
-        function (E : Getters.Value_Type) return Boolean)
-      return Natural
+        function (E : Getters.Element) return Boolean)
+     return Natural
      with Global => null;
    --  Count the number of elements in the container that match the predicate
 
@@ -51,8 +51,8 @@ package Conts.Algorithms is
    function Count_If
      (Self      : Cursors.Container;
       Predicate : not null access
-        function (E : Getters.Value_Type) return Boolean)
-      return Natural
+        function (E : Getters.Element) return Boolean)
+     return Natural
      with Global => null;
    --  Same as above, but the container itself is the property map to
    --  retrieve the element
@@ -71,7 +71,7 @@ package Conts.Algorithms is
    procedure Shuffle
      (Self : in out Cursors.Container;
       Gen  : in out Random.Generator)
-      with Global => null;
+     with Global => null;
    --  Generates a random permutation of Self.
    --  If you 'use' the package for your container (vector for instance), then
    --  Swap will generally be visible by default.

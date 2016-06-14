@@ -31,7 +31,7 @@ package body Conts.Algorithms is
       (Self      : Cursors.Container;
        Map       : Getters.Map;
        Predicate : not null access
-         function (E : Getters.Value_Type) return Boolean)
+         function (E : Getters.Element) return Boolean)
       return Natural
    is
       C     : Cursors.Cursor := Cursors.First (Self);
@@ -53,7 +53,7 @@ package body Conts.Algorithms is
    function Count_If
      (Self      : Cursors.Container;
       Predicate : not null access function
-        (E : Getters.Value_Type) return Boolean)
+        (E : Getters.Element) return Boolean)
        return Natural
    is
       function Internal is new Count_If_With_External_Get (Cursors, Getters);

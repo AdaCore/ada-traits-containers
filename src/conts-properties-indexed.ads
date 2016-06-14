@@ -33,9 +33,9 @@ with Conts.Vectors.Definite_Unbounded;
 generic
    type Container_Type (<>) is limited private;
    type Key_Type (<>) is limited private;
-   type Value_Type is private;
+   type Element_Type is private;
 
-   Default_Value : Value_Type;
+   Default_Value : Element_Type;
    --  These maps are implemented as vectors, and a default value is needed
    --  when the vector is resized.
 
@@ -53,19 +53,19 @@ generic
 package Conts.Properties.Indexed is
 
    package Value_Vectors is new Conts.Vectors.Definite_Unbounded
-     (Index_Type, Value_Type, Container_Base_Type => Container_Base_Type);
+     (Index_Type, Element_Type, Container_Base_Type => Container_Base_Type);
 
    type Map is limited record
       Values : Value_Vectors.Vector;
    end record;
-   function Get (M : Map; K : Key_Type) return Value_Type;
-   procedure Set (M : in out Map; K : Key_Type; Val : Value_Type);
+   function Get (M : Map; K : Key_Type) return Element_Type;
+   procedure Set (M : in out Map; K : Key_Type; Val : Element_Type);
    procedure Clear (M : in out Map);
 
    function Create_Map (G : Container_Type) return Map;
    --  Create a new uninitialized map
 
-   package As_Map is new Maps (Map, Key_Type, Value_Type, Set, Get, Clear);
+   package As_Map is new Maps (Map, Key_Type, Element_Type, Set, Get, Clear);
    package As_Read_Only renames As_Map.As_Read_Only;
 
 end Conts.Properties.Indexed;

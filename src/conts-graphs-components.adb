@@ -151,11 +151,11 @@ package body Conts.Graphs.Components is
       end Get;
 
       package Color_Maps is new Conts.Properties.Maps
-        (Key_Type   => Vertex,
-         Value_Type => Color,
-         Map_Type   => Component_Maps.Map,
-         Set        => Set,
-         Get        => Get);
+        (Key_Type     => Vertex,
+         Element_Type => Color,
+         Map_Type     => Component_Maps.Map,
+         Set          => Set,
+         Get          => Get);
       package Local_DFS is new Conts.Graphs.DFS.With_Map (Graphs, Color_Maps);
 
       type SCC_Visitor is new DFS_Visitor with null record;

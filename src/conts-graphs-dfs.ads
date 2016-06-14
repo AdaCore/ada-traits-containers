@@ -40,7 +40,7 @@ package Conts.Graphs.DFS is
    generic
       with package Graphs is new Conts.Graphs.Traits (<>);
       with package Color_Maps is new Conts.Properties.Maps
-        (Key_Type => Graphs.Vertex, Value_Type => Color, others => <>);
+        (Key_Type => Graphs.Vertex, Element_Type => Color, others => <>);
    package With_Map is
 
       generic
@@ -115,7 +115,7 @@ package Conts.Graphs.DFS is
    generic
       with package Graphs is new Conts.Graphs.Traits (<>);
       with package Color_Maps is new Conts.Properties.Maps
-        (Key_Type => Graphs.Vertex, Value_Type => Color, others => <>);
+        (Key_Type => Graphs.Vertex, Element_Type => Color, others => <>);
       with function Create_Map (G : Graphs.Graph) return Color_Maps.Map;
    package Exterior is
 
@@ -146,7 +146,7 @@ package Conts.Graphs.DFS is
       with package Graphs is new Conts.Graphs.Traits (<>);
       with package Color_Maps is new Conts.Properties.Maps
         (Map_Type => Graphs.Graph, Key_Type => Graphs.Vertex,
-         Value_Type => Color, others => <>);
+         Element_Type => Color, others => <>);
    package Interior is
 
       generic

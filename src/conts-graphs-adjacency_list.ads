@@ -172,7 +172,7 @@ package Conts.Graphs.Adjacency_List is
    package Vertices_Maps is new Conts.Properties.Read_Only_Maps
      (Map_Type       => Graph,
       Key_Type       => Impl.Vertex_Cursor,
-      Value_Type     => Vertex,
+      Element_Type   => Vertex,
       Get            => Impl.Element);
 
    package Out_Edges_Cursors is new Conts.Graphs.Edge_Cursors
@@ -201,7 +201,7 @@ package Conts.Graphs.Adjacency_List is
    package Color_Maps is new Conts.Properties.Indexed
      (Container_Type      => Graph,
       Key_Type            => Vertex,
-      Value_Type          => Color,
+      Element_Type        => Color,
       Default_Value       => White,
       Index_Type          => Vertex,
       Container_Base_Type => Conts.Limited_Base,
@@ -216,7 +216,7 @@ package Conts.Graphs.Adjacency_List is
    package Integer_Maps is new Conts.Properties.Indexed
      (Container_Type      => Graph,
       Key_Type            => Vertex,
-      Value_Type          => Integer,
+      Element_Type          => Integer,
       Default_Value       => -1,
       Index_Type          => Vertex,
       Container_Base_Type => Container_Base_Type,

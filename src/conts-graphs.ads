@@ -79,10 +79,10 @@ package Conts.Graphs is
         (Container_Type => Graph_Type,
          others         => <>);
       with package Vertex_Maps is new Conts.Properties.Read_Only_Maps
-        (Key_Type   => Vertex_Cursors.Cursor,
-         Value_Type => Vertices.Element,
-         Map_Type   => Graph_Type,
-         others     => <>);
+        (Key_Type     => Vertex_Cursors.Cursor,
+         Element_Type => Vertices.Element,
+         Map_Type     => Graph_Type,
+         others       => <>);
       --  Iterate on all vertices of the graph
 
       with package Out_Edges_Cursors is new Edge_Cursors

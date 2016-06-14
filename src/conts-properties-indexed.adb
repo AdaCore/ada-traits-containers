@@ -38,7 +38,7 @@ package body Conts.Properties.Indexed is
    -- Get --
    ---------
 
-   function Get (M : Map; K : Key_Type) return Value_Type is
+   function Get (M : Map; K : Key_Type) return Element_Type is
    begin
       return M.Values.Element (Get_Index (K));
    end Get;
@@ -47,7 +47,7 @@ package body Conts.Properties.Indexed is
    -- Set --
    ---------
 
-   procedure Set (M : in out Map; K : Key_Type; Val : Value_Type) is
+   procedure Set (M : in out Map; K : Key_Type; Val : Element_Type) is
       Idx : constant Index_Type := Get_Index (K);
    begin
       --  ??? We should have such an operation in the vector directly

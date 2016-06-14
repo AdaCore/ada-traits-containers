@@ -27,7 +27,7 @@ package Conts.Graphs.Components is
    generic
       with package Graphs is new Conts.Graphs.Traits (<>);
       with package Component_Maps is new Conts.Properties.Maps
-        (Key_Type => Graphs.Vertex, Value_Type => Integer, others => <>);
+        (Key_Type => Graphs.Vertex, Element_Type => Integer, others => <>);
    procedure Strongly_Connected_Components
      (G                : Graphs.Graph;
       Components       : out Component_Maps.Map;

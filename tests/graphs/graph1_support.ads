@@ -67,7 +67,7 @@ package Graph1_Support is
    package Vertices_Maps is new Conts.Properties.Read_Only_Maps
      (Map_Type       => Graph,
       Key_Type       => Vertex_Cursor,
-      Value_Type     => Vertex,
+      Element_Type   => Vertex,
       Get            => Element);
 
    ------------------

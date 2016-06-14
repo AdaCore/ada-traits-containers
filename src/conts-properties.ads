@@ -80,13 +80,13 @@ package Conts.Properties is
    generic
       type Map_Type (<>) is limited private;
       type Key_Type (<>) is limited private;
-      type Value_Type (<>) is private;
-      with function Get (M : Map_Type; K : Key_Type) return Value_Type is <>;
+      type Element_Type (<>) is private;
+      with function Get (M : Map_Type; K : Key_Type) return Element_Type is <>;
 
    package Read_Only_Maps is
       subtype Map is Map_Type;
       subtype Key is Key_Type;
-      subtype Value is Value_Type;
+      subtype Element is Element_Type;
    end Read_Only_Maps;
 
    -------------------
@@ -96,17 +96,17 @@ package Conts.Properties is
    generic
       type Map_Type (<>) is limited private;
       type Key_Type (<>) is limited private;
-      type Value_Type is private;
+      type Element_Type is private;
       with procedure Set
-         (M : in out Map_Type; K : Key_Type; V : Value_Type) is <>;
-      with function Get (M : Map_Type; K : Key_Type) return Value_Type is <>;
+         (M : in out Map_Type; K : Key_Type; V : Element_Type) is <>;
+      with function Get (M : Map_Type; K : Key_Type) return Element_Type is <>;
       with procedure Clear (M : in out Map_Type) is null;
    package Maps is
       subtype Map is Map_Type;
       subtype Key is Key_Type;
-      subtype Value is Value_Type;
+      subtype Element is Element_Type;
 
-      package As_Read_Only is new Read_Only_Maps (Map, Key, Value);
+      package As_Read_Only is new Read_Only_Maps (Map, Key, Element);
    end Maps;
 
 end Conts.Properties;
