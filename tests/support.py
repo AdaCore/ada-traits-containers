@@ -2,12 +2,15 @@ from gnatpython.testsuite import Testsuite
 from gnatpython.testsuite.driver import TestDriver
 from gnatpython.testsuite.result import Result
 from gnatpython.ex import Run, STDOUT
-# from gnatpython.env import Env
 from gnatpython.fileutils import mkdir, rm
 import os
 
 
 class BuildError(Exception):
+    pass
+
+
+class Disabled(Exception):
     pass
 
 
@@ -74,6 +77,44 @@ end Default;""")
             self.result.set_status('FAILED', 'gnatprove failed')
             raise BuildError()
 
+    def set_expected_output(self):
+        """
+        Set the expected output in `self.result`
+        This is read from test.yaml:
+            baseline: 'test.out'
+        If it is the empty string or unspecified and test.out does not
+        exists, no output is expected.
+        """
+        baseline = self.test_env.get('baseline')
+        if baseline == '':
+            self.result.expected_output = ''
+        elif baseline is None:
+            # Default is test.out if it exists, empty string otherwise
+            baseline = os.path.join(self.working_dir, 'test.out')
+            if os.path.isfile(baseline):
+                self.result.expected_output = file(baseline).read()
+            else:
+                self.result.expected_output = ''
+        else:
+            # File specified by the user
+            baseline = os.path.join(self.working_dir, baseline)
+            self.result.expected_output = file(baseline).read()
+
+    def check_if_must_run(self):
+        """
+        Check whether the test should be run:
+        this is true for tests that do not have a 'manual:true' setting in
+        their test.yaml. For the other tests, they are only run if specified
+        explicitly on the command line.
+        """
+        manual = self.test_env.get('manual', False)
+        if manual:
+            cmdline = self.global_env['containers']['test_on_command_line']
+            if self.test_env['test_name'] not in cmdline:
+                self.result.set_status(
+                    'DEAD', 'Must be specified on command line')
+                raise Disabled()
+
     def run_exec(self, cmds):
         p = Run(cmds=cmds, error=STDOUT, cwd=self.working_dir)
         self.result.actual_output = p.out
@@ -93,10 +134,23 @@ end Default;""")
         self.project = os.path.join(
             self.working_dir,
             self.test_env.get('project', 'default.gpr'))
+        self.set_expected_output()
 
     def tear_down(self):
-        if self.project_is_tmp:
+        keep_project = self.global_env['options'].keep_project
+        if self.project_is_tmp and not keep_project:
             rm(self.project)
+
+    def run(self):
+        try:
+            self.check_if_must_run()
+            self.do_run()
+        except Disabled:
+            pass
+        except KeyboardInterrupt:   # make sure that tear_down() is run
+            pass
+        except Exception:
+            raise
 
 
 class BuildAndExec(AbstractDriver):
@@ -104,20 +158,15 @@ class BuildAndExec(AbstractDriver):
     Builds a project, and run an executable. Compare its output to a baseline
     test.yaml should contains any of the following (the values given here are
     the default)::
-
-            driver: 'build_and_exec'    # Mandatory
-            pre: [],   # Commands to execute before the build
-            project: 'default.gpr'
-            exec: 'obj/main'
-            baseline: 'test.out'
+        driver: 'build_and_exec'    # Mandatory
+        pre: [],   # Commands to execute before the build
+        project: 'default.gpr'
+        exec: 'obj/main'
+        baseline: 'test.out'
+        manual: False  # true if only executed when specified as argument
     """
 
-    def run(self):
-        baseline = os.path.join(
-            self.working_dir,
-            self.test_env.get('baseline', 'test.out'))
-        self.result.expected_output = file(baseline).read()
-
+    def do_run(self):
         self.create_project_if_needed()
 
         pre = self.test_env.get('pre', [])
@@ -136,19 +185,15 @@ class Prove(AbstractDriver):
     """
     Prove all source code for a project. The test.yaml file should
     contain any of the following (the values given here are the default)::
-
         driver: 'prove'
         project: 'default.gpr'
         sources: []   # If unspecified, prove all
+        manual: False  # true if only executed when specified as argument
     """
 
-    def run(self):
-        sources = self.test_env.get('sources', [])
-
-        self.result.expected_output = ""
+    def do_run(self):
         self.create_project_if_needed()
-
-        self.gnatprove(sources)
+        self.gnatprove(sources=self.test_env.get('sources', []))
 
 
 class ContainerTestsuite(Testsuite):
@@ -157,11 +202,22 @@ class ContainerTestsuite(Testsuite):
                'prove': Prove}
     default_driver = 'build_and_exec'
 
-    def tear_up(self):
-        pass
+    def add_options(self):
+        self.main.add_option(
+            "-k", "--keep-project",
+            default=False,
+            action="store_true",
+            help="Do not delete the project files created automatically for"
+            " the tests")
 
     def tear_down(self):
         # Print the testsuite result on the terminal for the convenience
         # of developers.
+        super(ContainerTestsuite, self).tear_down()
         print("\n")
         print(file("out/new/report").read())
+
+    def get_test_list(self, sublist):
+        self.global_env.setdefault('containers', {})
+        self.global_env['containers']['test_on_command_line'] = sublist
+        return super(ContainerTestsuite, self).get_test_list(sublist)

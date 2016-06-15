@@ -2,3 +2,4 @@ title: 'maps'
 description: 'Basic test for maps'
 driver: 'build_and_exec'
 pre: ['python ./generate_test.py']
+manual: true
