@@ -22,7 +22,7 @@
 with Ada.Text_IO;   use Ada.Text_IO;
 with Conts;         use Conts;
 
-procedure Test_Random is
+procedure Main is
    type My_Subtype is new Integer range 10 .. 20;
    package Rand is new Conts.Default_Random (My_Subtype);
 
@@ -31,31 +31,37 @@ procedure Test_Random is
    Total : Long_Float := 0.0;
    Val  : My_Subtype;
 
-   Items_Count : constant := 20;
+   Items_Count : constant := 200_000;
+   Mean : Long_Float;
 
 begin
    Rand.Reset (Gen);
 
-   Put_Line ("Standard random numbers");
    for Count in 1 .. Items_Count loop
-      Val := Rand.Traits.Rand (Gen);
+      Rand.Traits.Rand (Gen, Val);
       Total := Total + Long_Float (Val);
-      Put_Line (Val'Img);
    end loop;
-   Put_Line ("Mean =" & Long_Float'Image (Total / Long_Float (Items_Count)));
+
+   Mean := Total / Long_Float (Items_Count);
+   if abs (Mean - 15.0) > 0.2 then
+      Put_Line ("Standard random numbers");
+      Put_Line ("Mean =" & Long_Float'Image (Mean));
+   end if;
 
    declare
-      function Ranged is new Conts.Ranged_Random (Rand.Traits, 12, 14);
+      procedure Ranged is new Conts.Ranged_Random (Rand.Traits, 12, 14);
    begin
-      Put_Line ("Ranged random numbers");
       Total := 0.0;
       for Count in 1 .. Items_Count loop
-         Val := Ranged (Gen);
+         Ranged (Gen, Val);
          Total := Total + Long_Float (Val);
-         Put_Line (Val'Img);
       end loop;
-      Put_Line
-         ("Mean =" & Long_Float'Image (Total / Long_Float (Items_Count)));
+
+      Mean := Total / Long_Float (Items_Count);
+      if abs (Mean - 13.0) > 0.2 then
+         Put_Line ("Ranged random numbers");
+         Put_Line ("Mean =" & Long_Float'Image (Mean));
+      end if;
    end;
 
-end Test_Random;
+end Main;
