@@ -1,0 +1,5 @@
+aggregate project Root is
+
+   for Project_files use ("src/conts.gpr", "tests/**/*.gpr");
+
+end Root;

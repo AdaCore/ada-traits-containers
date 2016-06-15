@@ -57,5 +57,14 @@ Finally, compile and run the test with
 make all perfs
 ```
 
-and finally open the file [index.html](index.html)
+and finally open the file [tests/perfs/index.html](index.html)
 in a browser to view the performance comparison.
+
+## Editing with GNAT Programming Studio
+
+To edit with GPS, including the tests, you must first run:
+
+    make projects
+
+Then you can edit by launching GPS from the top directory, which will
+automatically load the aggregate project 'root.gpr'

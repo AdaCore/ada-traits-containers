@@ -1,14 +1,12 @@
-with "src/conts";
-with "spark/spark";
-with "src/shared";
+with "../../src/conts";
+with "../../src/shared";
 with "gnatcoll";
 
-project Tests is
-   for Source_Dirs use ("tests/", "tests/generated", "tests/graphs",
-                        "tests/maps", ".");
-   for Object_Dir use "tests/obj";
+project Tests_Perfs is
+   for Source_Dirs use (".", "generated");
+   for Object_Dir use "obj";
    for Languages use ("Ada", "C++", "Python");
-   for Main use ("perf.adb", "test_components.adb", "test_maps.adb");
+   for Main use ("main.adb");
 
    package Compiler extends Shared.Compiler is
       for Switches ("s-memory.adb") use ("-gnatg")
@@ -22,4 +20,4 @@ project Tests is
    package Naming renames Shared.Naming;
    package Binder renames Shared.Binder;
    package Linker renames Shared.Linker;
-end Tests;
+end Tests_Perfs;

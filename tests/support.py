@@ -25,21 +25,30 @@ class AbstractDriver(TestDriver):
         Create a standard project if none exists in the test directory.
         `self.project` must be set
         """
-        if os.path.isfile(self.project):
+        fromenv = self.test_env.get('project')
+
+        if fromenv is not None:
+            # File must exist, don't check
+            self.project = os.path.join(self.working_dir, fromenv)
             return
 
+        # Create a new file automatically. It has a name specific to the
+        # test, so that an aggregate project shows meaningful info.
+        defaultname = "Auto_%s" % (self.test_env['test_name'].title(), )
+        defaultfile = defaultname.lower() + '.gpr'
+        self.project = os.path.join(self.working_dir, defaultfile)
         self.project_is_tmp = True
         file(self.project, "w").write("""
 with "../../src/shared";
 with "../../src/conts";
-project Default is
+project %(name)s is
    for Main use ("main.adb");
    for Object_Dir use "obj";
    package Compiler renames Shared.Compiler;
    package Builder renames Shared.Builder;
    package Binder renames Shared.Binder;
    package Linker renames Shared.Linker;
-end Default;""")
+end %(name)s;""" % {'name': defaultname})
 
     def gprbuild(self):
         """
@@ -131,18 +140,22 @@ end Default;""")
         self.working_dir = os.path.join(
             self.global_env['test_dir'],
             self.test_env['test_name'])
-        self.project = os.path.join(
-            self.working_dir,
-            self.test_env.get('project', 'default.gpr'))
         self.set_expected_output()
 
     def tear_down(self):
         keep_project = self.global_env['options'].keep_project
-        if self.project_is_tmp and not keep_project:
+        create_only = self.global_env['options'].create_projects
+        if self.project_is_tmp and not keep_project and not create_only:
             rm(self.project)
 
     def run(self):
         try:
+            self.create_project_if_needed()
+
+            if self.global_env['options'].create_projects:
+                self.result.set_status("DEAD", "only creating projects")
+                return
+
             self.check_if_must_run()
             self.do_run()
         except Disabled:
@@ -167,8 +180,6 @@ class BuildAndExec(AbstractDriver):
     """
 
     def do_run(self):
-        self.create_project_if_needed()
-
         pre = self.test_env.get('pre', [])
         for p in pre:
             self.run_exec(p.split())
@@ -192,7 +203,6 @@ class Prove(AbstractDriver):
     """
 
     def do_run(self):
-        self.create_project_if_needed()
         self.gnatprove(sources=self.test_env.get('sources', []))
 
 
@@ -210,12 +220,19 @@ class ContainerTestsuite(Testsuite):
             help="Do not delete the project files created automatically for"
             " the tests")
 
+        self.main.add_option(
+            '-c', '--create-projects',
+            default=False,
+            action='store_true',
+            help='If set, only create all missing projects, but do not run')
+
     def tear_down(self):
         # Print the testsuite result on the terminal for the convenience
         # of developers.
         super(ContainerTestsuite, self).tear_down()
-        print("\n")
-        print(file("out/new/report").read())
+        if not self.global_env['options'].create_projects:
+            print("\n")
+            print(file("out/new/report").read())
 
     def get_test_list(self, sublist):
         self.global_env.setdefault('containers', {})
