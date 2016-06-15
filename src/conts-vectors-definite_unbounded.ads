@@ -45,6 +45,7 @@ package Conts.Vectors.Definite_Unbounded is
 
    subtype Vector is Vectors.Vector;
    subtype Cursor is Vectors.Cursor;
+   subtype Extended_Index is Vectors.Extended_Index;
 
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;

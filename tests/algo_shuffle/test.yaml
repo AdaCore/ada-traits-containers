@@ -1,0 +1,2 @@
+description: 'Test the Shuffle algorithm'
+driver: 'build_and_exec'

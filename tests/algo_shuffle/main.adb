@@ -25,18 +25,21 @@ with Conts.Algorithms;  use Conts.Algorithms;
 with Conts.Vectors.Definite_Unbounded;
 with Ada.Text_IO;       use Ada.Text_IO;
 
-procedure Test_Shuffle is
+procedure Main is
    subtype Index_Type is Positive;
 
    package Int_Vecs is new Conts.Vectors.Definite_Unbounded
       (Index_Type, Integer, Ada.Finalization.Controlled);
    use Int_Vecs;
-   package Rand is new Conts.Default_Random (Index_Type);
+   package Rand is new Conts.Default_Random (Extended_Index);
    procedure Shuffle is new Conts.Algorithms.Shuffle
-      (Cursors => Int_Vecs.Cursors.Random_Cursors,
+      (Cursors => Int_Vecs.Cursors.Random_Access,
        Random  => Rand.Traits);
+   function Equals is new Conts.Algorithms.Equals
+      (Cursors => Int_Vecs.Cursors.Random_Access,
+       Getters => Int_Vecs.Maps.Element_From_Index);
 
-   V : Vector;
+   V, V2 : Vector;
    G : Rand.Generator;
 
 begin
@@ -45,11 +48,17 @@ begin
    end loop;
 
    Rand.Reset (G);
+
+   V2 := V;
    Shuffle (V, G);
+   if Equals (V, V2) then
+      Put_Line ("Shuffle should change the order of elements");
+   end if;
 
-   for J of V loop
-      Put (J'Img);
-   end loop;
-   New_Line;
+   V2 := V;
+   Shuffle (V, G);
+   if Equals (V, V2) then
+      Put_Line ("Shuffle should change the order of elements");
+   end if;
 
-end Test_Shuffle;
+end Main;
