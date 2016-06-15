@@ -202,8 +202,6 @@ can be edited with any text editor.
 *** TODO can we allow enumeration types for Vertex_Type
     This requires a similar change in vectors.
 
-* Priority queues
-
 * Other data structures
 
 ** Perhaps a state machine ? (see the one in XML/Ada)

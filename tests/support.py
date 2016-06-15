@@ -119,7 +119,12 @@ end %(name)s;""" % {'name': defaultname})
         manual = self.test_env.get('manual', False)
         if manual:
             cmdline = self.global_env['containers']['test_on_command_line']
-            if self.test_env['test_name'] not in cmdline:
+
+            # Some shells, when using completion, will add a final '/' after
+            # directory names, so we end up running "./testsuite.py perfs/".
+            # Handle this case as well.
+            if (self.test_env['test_name'] not in cmdline
+               and (self.test_env['test_name'] + '/') not in cmdline):
                 self.result.set_status(
                     'DEAD', 'Must be specified on command line')
                 raise Disabled()
