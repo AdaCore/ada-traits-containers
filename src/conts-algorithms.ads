@@ -111,4 +111,18 @@ package Conts.Algorithms is
      return Boolean
      with Global => null;
 
+   ------------
+   -- Equals --
+   ------------
+
+   generic
+      with package Cursors is new Conts.Cursors.Random_Access_Cursors (<>);
+      with package Getters is new Conts.Properties.Read_Only_Maps
+        (Map_Type => Cursors.Container,
+         Key_Type => Cursors.Index_Type,
+         others   => <>);
+      with function "=" (K1, K2 : Getters.Element) return Boolean is <>;
+   function Equals (Left, Right  : Cursors.Container) return Boolean
+     with Global => null;
+
 end Conts.Algorithms;

@@ -1,0 +1,2 @@
+description: 'Tests for the Equals algorithm'
+driver: 'build_and_exec'

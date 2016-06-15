@@ -303,6 +303,9 @@ package Conts.Vectors.Generics with SPARK_Mode is
       package Constant_Returned is new Conts.Properties.Read_Only_Maps
         (Cursors.Forward.Container, Cursors.Forward.Cursor,
          Storage.Elements.Constant_Returned, Conts.Vectors.Generics.Element);
+      package Element_From_Index is new Conts.Properties.Read_Only_Maps
+        (Cursors.Random_Access.Container, Cursors.Random_Access.Index,
+         Element_Type, As_Element);
    end Maps;
 
 end Conts.Vectors.Generics;
