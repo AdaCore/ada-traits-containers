@@ -17,7 +17,10 @@ projects:
 
 
 valgrind:
-	valgrind --leak-check=full --max-stackframe=3800000 --show-reachable=yes ./tests/obj/perf
+	valgrind --leak-check=full --max-stackframe=3800000 --show-reachable=yes ./tests/perfs/obj/perf
 
 clean:
-	gprclean -Ptests -r -q
+	gprclean -Proot -r -q
+	rm tests/*/auto_*.gpr
+	rm -rf tests/*/obj/
+

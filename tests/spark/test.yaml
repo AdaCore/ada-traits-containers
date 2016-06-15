@@ -3,3 +3,4 @@ driver: 'prove'
 sources: ['use_sets.adb', 'use_lists.adb', 'use_maps.adb',
           'use_ordered_sets.adb', 'use_vectors.adb']
 manual: true
+sort_output: true
