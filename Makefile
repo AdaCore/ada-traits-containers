@@ -5,11 +5,11 @@ all:
 
 # Run all tests, except manual ones
 test:
-	cd tests; python ./testsuite.py
+	cd tests; python ./testsuite.py -j0 --enable-color
 
 # Run manual tests
 perfs spark:
-	cd tests; python ./testsuite.py $@
+	cd tests; python ./testsuite.py -j0 --enable-color $@
 
 # Create all project files, for use with GPS
 projects:
@@ -21,6 +21,6 @@ valgrind:
 
 clean:
 	gprclean -Proot -r -q
-	rm tests/*/auto_*.gpr
-	rm -rf tests/*/obj/
+	-rm -f tests/*/auto_*.gpr
+	-rm -rf tests/*/obj/
 
