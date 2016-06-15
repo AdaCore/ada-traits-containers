@@ -23,7 +23,9 @@ package Use_Maps with SPARK_Mode is
    function My_Find (S : My_Maps.Map; K : Positive) return Cursor
      with
        Post => (if My_Find'Result /= No_Element
-                then As_Element (S, My_Find'Result) = K);
+                then Has_Element (S, My_Find'Result)
+                  and then As_Key (S, My_Find'Result) = K
+                else not Mem (Model (S), K));
    --  Iterate through the set to find K.
 
    function My_Contains (S : My_Maps.Map; K : Positive) return Boolean
