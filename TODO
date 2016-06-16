@@ -74,6 +74,9 @@ can be edited with any text editor.
 
 ** TODO =Equal=
    Compares two containers, ignore order when relevant.
+** TODO =Find= with predicate
+   Find the first item (or key for a map) that matches a given predicate,
+   and possibly continue searching from that point.
 
 ** MAYBE Should we have a version of the algorithms with two cursors as input ?
    This should allow working on a subset of a container. The second cursor
@@ -145,7 +148,11 @@ can be edited with any text editor.
 
 ** TODO: Resize strategies for vectors may overflow Count_Type
 
-** Resizing vectors to Length 0
+** TODO: Resizing vectors to Length 0
+** TODO: testsuite
+   What should happen when swapping elements outside of the range of the
+   vector?
+
 * Strings
 
 ** TODO One possible storage is vectors

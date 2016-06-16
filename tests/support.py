@@ -37,6 +37,11 @@ value.
     pre: []
     --  A list of strings, the commands to execute before running the
     --  test driver. The project has already been created at this point.
+
+Run the testsuite with
+    BUILD=Debug ./testsuite.py
+to compile the tests with assertions, and thus run pre and post conditions.
+
 """
 
 
@@ -72,7 +77,9 @@ class AbstractDriver(TestDriver):
         file(self.project, "w").write("""
 with "../../src/shared";
 with "../../src/conts";
+with "gnatcoll";
 project %(name)s is
+   for Source_Dirs use (".", "../shared/");
    for Main use ("main.adb");
    for Object_Dir use "obj";
    package Compiler renames Shared.Compiler;
@@ -225,7 +232,16 @@ class BuildAndExec(AbstractDriver):
         execname = os.path.join(
             self.working_dir,
             self.test_env.get('exec', 'obj/main'))
-        self.run_exec([execname])
+
+        options = self.global_env['options']
+        if options.valgrind:
+            self.run_exec(['valgrind', '--max-stackframe=3800000', execname])
+        elif options.leaks:
+            self.run_exec(['valgrind', '--leak-check=full',
+                           '--max-stackframe=3800000',
+                           '--show-reachable=yes', execname])
+        else:
+            self.run_exec([execname])
 
 
 class Prove(AbstractDriver):
@@ -247,18 +263,34 @@ class ContainerTestsuite(Testsuite):
     default_driver = 'build_and_exec'
 
     def add_options(self):
-        self.main.add_option(
+        gr = self.main.create_option_group('Containers testuite')
+        self.main.add_option_group(gr)
+
+        gr.add_option(
             "-k", "--keep-project",
             default=False,
             action="store_true",
             help="Do not delete the project files created automatically for"
             " the tests")
 
-        self.main.add_option(
+        gr.add_option(
             '-c', '--create-projects',
             default=False,
             action='store_true',
             help='If set, only create all missing projects, but do not run')
+
+        gr.add_option(
+            '--valgrind',
+            default=False,
+            action='store_true',
+            help='Run tests with valgrind. You should first compile with'
+            '"make BUILD=Debug" to get better source locations')
+
+        gr.add_option(
+            '--leaks',
+            default=False,
+            action='store_true',
+            help='Check for memory leaks in the tests')
 
     def tear_down(self):
         # Print the testsuite result on the terminal for the convenience
