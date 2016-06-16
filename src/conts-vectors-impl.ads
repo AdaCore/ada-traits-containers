@@ -114,7 +114,10 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Inline,
        Global => null,
        Pre    => Idx in Index_Type'First .. To_Index (Last_Count),
-       Post   => To_Index (To_Count'Result) = Idx;
+       Post   => To_Count'Result = Count_Type
+         (Conts.Vectors.Storage.Min_Index
+          + Count_Type'Base (Index_Type'Pos (Idx))
+          - Count_Type'Base (Index_Type'Pos (Index_Type'First)));
 
    ------------------
    -- Formal Model --
@@ -338,19 +341,14 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
    procedure Resize
      (Self    : in out Base_Vector'Class;
-      Length  : Index_Type;
+      Length  : Count_Type;
       Element : Storage.Elements.Element_Type)
-   --  Resize the container so that it contains Length elements.
-   --  If Length is smaller than the current container length, Self is
-   --     reduced to its first Length elements, destroying the other elements.
-   --  If Length is greater than the current container length, new elements
-   --     are added as needed, as copied of Element.
+   --  See documentation in conts-vectors-generics.ads
      with
        Global => null,
-       Pre    => Length <= To_Index (Max_Capacity (Self)),
+       Pre    => Length <= Max_Capacity (Self),
        Post   =>
-          Impl.Length (Self) =
-             Index_Type'Pos (Length) - Index_Type'Pos (Index_Type'First) + 1
+          Impl.Length (Self) = Length
 
           --  Elements of Self that were located before the index Length are
           --  preserved.
@@ -358,11 +356,13 @@ package Conts.Vectors.Impl with SPARK_Mode is
             (S1  => Model (Self),
              S2  => Model (Self)'Old,
              Fst => Index_Type'First,
-             Lst => Index_Type'Min (Length, Last (Self)'Old))
+             Lst => Index_Type'Min
+                (To_Index (Length),
+                 Last (Self)'Old))
 
           --  If elements were appended to Self then they are equal to Element.
           and then
-            (if Length > Last (Self)'Old then
+            (if To_Index (Length) > Last (Self)'Old then
                    M_Elements_Consts (S   => Model (Self),
                                       Fst => Index_Type'Succ (Last (Self)'Old),
                                       Lst => Last (Self),

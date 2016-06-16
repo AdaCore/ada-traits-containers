@@ -138,8 +138,6 @@ can be edited with any text editor.
    the simpler packages all need to override Constant_Indexing, which cannot
    be defined in vectors-generics.ads.
 
-** TODO: what should Last return on empty vector ?
-
 ** TODO: can we allow enumeration types for =Index_Type= ?
    perhaps via a generic package that would convert back and forth from the
    enumeration to a Natural, and would let users use the enumeration directly
@@ -147,8 +145,9 @@ can be edited with any text editor.
    See also `support for different key types when searching` for maps, below
 
 ** TODO: Resize strategies for vectors may overflow Count_Type
+** TODO: missing =Insert= primitive
+   Need a Count parameter as well
 
-** TODO: Resizing vectors to Length 0
 ** TODO: testsuite
    What should happen when swapping elements outside of the range of the
    vector?

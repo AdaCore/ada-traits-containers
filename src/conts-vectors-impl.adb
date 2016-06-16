@@ -171,20 +171,19 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
 
    procedure Resize
      (Self    : in out Base_Vector'Class;
-      Length  : Index_Type;
+      Length  : Count_Type;
       Element : Storage.Elements.Element_Type)
    is
       Old_L : constant Count_Type := Self.Length;
-      L     : constant Count_Type := To_Count (Length);
    begin
-      if L < Old_L then
-         for J in L + 1 .. Old_L loop
+      if Length < Old_L then
+         for J in Length + 1 .. Old_L loop
             Storage.Release_Element (Self, J);
          end loop;
-         Self.Last := L;
+         Self.Last := Length;
 
-      elsif L > Old_L then
-         Self.Append (Element, Count => L - Old_L);
+      elsif Length > Old_L then
+         Self.Append (Element, Count => Length - Old_L);
       end if;
    end Resize;
 

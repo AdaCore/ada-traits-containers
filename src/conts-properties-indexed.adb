@@ -52,7 +52,9 @@ package body Conts.Properties.Indexed is
    begin
       --  ??? We should have such an operation in the vector directly
       if not (Value_Vectors.Vectors.To_Count (Idx) <= M.Values.Length) then
-         M.Values.Resize (Idx, Element => Default_Value);
+         M.Values.Resize
+            (Length  => Value_Vectors.Vectors.To_Count (Idx),
+             Element => Default_Value);
       end if;
 
       M.Values.Replace_Element (Idx, Val);

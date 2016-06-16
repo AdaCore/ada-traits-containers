@@ -119,11 +119,21 @@ package body Use_Vectors with SPARK_Mode is
       J   : Index_Type;
    begin
       Assign (Loc, V);
+
+      --  Remove all elements after I, and will reinsert them afterward.
+      --  This procedure simulates a primitive Insert, which we do not have
+      --  yet
+
       if I = Index_Type'First then
          Clear (V);
       else
-         Resize (V, I - 1, 0);
+         Resize (V, To_Count (I - 1), 0);
       end if;
+
+      --  Now insert the new elements
+      --  Here we want to test scalability of GNATprove. We do not use a
+      --  loop which would introduce a cutpoint for proof.
+
       Append (V, 0);
       Append (V, 0);
       Append (V, 0);
@@ -131,6 +141,8 @@ package body Use_Vectors with SPARK_Mode is
       Append (V, 0);
       Append (V, 0);
       Append (V, 0);
+
+      --  And finally reinsert the other elements
 
       J := I;
       while J <= Last (Loc) loop

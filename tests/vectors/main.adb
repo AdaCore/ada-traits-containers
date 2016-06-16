@@ -200,4 +200,53 @@ begin
    Assert (V1.Length, 0, "length after clear");
    Assert (V1.Is_Empty, True, "is_empty, after clear");
 
+   -----------------------
+   -- Resizing a vector --
+   -----------------------
+
+   --  resize from empty
+   V1.Resize (Length => 4, Element => 1);
+   Assert (V1.Length, 4, "length after resize");
+   Assert (V1.Is_Empty, False, "is_empty after resize");
+   Assert (V1.Last_Element, 1, "last_element after resize");
+   for E2 of V1 loop
+      Put_Line ("vector after resize, element loop =>" & E2'Img);
+   end loop;
+
+   --  resize to bigger size
+   V1.Resize (Length => 6, Element => 2);
+   Assert (V1.Length, 6, "length after resize2");
+   Assert (V1.Last_Element, 2, "last_element after resize2");
+   for E2 of V1 loop
+      Put_Line ("vector after resize2, element loop =>" & E2'Img);
+   end loop;
+
+   --  resize to smaller size
+   V1.Resize (Length => 3, Element => 3);
+   Assert (V1.Length, 3, "length after resize3");
+   Assert (V1.Last_Element, 1, "last_element after resize3");
+   for E2 of V1 loop
+      Put_Line ("vector after resize3, element loop =>" & E2'Img);
+   end loop;
+
+   --  resize to 0
+   V1.Resize (Length => 0, Element => 3);
+   Assert (V1.Length, 0, "length after resize4");
+   for E2 of V1 loop
+      Put_Line ("vector after resize4, element loop =>" & E2'Img);
+   end loop;
+
+   ---------------
+   -- Shrinking --
+   ---------------
+
+   V1.Clear;
+   for E in 1 .. 20 loop
+      V1.Append (E);
+   end loop;
+
+   V1.Shrink_To_Fit;
+   Assert (V1.Length, 20, "length after shrink");
+   Assert (V1.Last_Element, 20, "last_element after shrink");
+
 end Main;

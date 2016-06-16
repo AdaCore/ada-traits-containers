@@ -84,7 +84,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    procedure Resize
      (Self    : in out Base_Vector'Class;
-      Length  : Index_Type;
+      Length  : Count_Type;
       Element : Storage.Elements.Element_Type)
      renames Impl.Resize;
    --  Resize the container so that it contains Length elements.
