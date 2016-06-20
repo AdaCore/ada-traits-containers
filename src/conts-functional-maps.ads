@@ -28,7 +28,8 @@ generic
    type Element_Type (<>)  is private;
    with function "=" (Left, Right : Key_Type) return Boolean is <>;
 package Conts.Functional.Maps with SPARK_Mode is
-   pragma Warnings (Off, "unused variable");
+
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
 
    type Map is private with
      Default_Initial_Condition => Is_Empty (Map) and Length (Map) = 0,

@@ -27,7 +27,8 @@ generic
    type Element_Type (<>) is private;
    with function "=" (Left, Right : Element_Type) return Boolean is <>;
 package Conts.Functional.Sets with SPARK_Mode is
-   pragma Warnings (Off, "unused variable");
+
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
 
    type Set is private with
      Default_Initial_Condition => Is_Empty (Set) and Length (Set) = 0,

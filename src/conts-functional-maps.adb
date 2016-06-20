@@ -24,6 +24,8 @@ package body Conts.Functional.Maps with SPARK_Mode => Off is
    use Key_Containers;
    use Element_Containers;
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    ---------
    -- "=" --
    ---------

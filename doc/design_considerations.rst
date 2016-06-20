@@ -209,6 +209,41 @@ container inside the cursor, which could be unsafe.
 In practice, this makes the implementation cleaner and even faster since
 the cursor are lighter weight.
 
+Assertion policy
+----------------
+
+This library is intended for both Ada and SPARK users. Some of the subprograms
+need to perform some validity checks on their parameters. For instance, a
+function that `Get` the n-th element of a vector needs to check that `n` is
+a valid index.
+
+This check is part of the preconditions for `Get`. This is needed to prove the
+use of the containers for SPARK programs.
+
+Ada applications, though, might not be compiled with `-gnata`, and therefore
+would not run the assertions. This means we need to duplicate the same check
+in the body of `Get`.
+
+This is not elegant, since it results in duplication of the code (and thus
+will be hard to keep synchronized), and will result in duplicate checks at
+runtime for applications compiled with `-gnata`.
+
+Instead, our approach is to add an `Assertion_Policy` in all packages::
+
+   pragma Assertion_Policy (Pre => Check);
+   pragma Assertion_Policy (Post => Ignore);
+   pragma Assertion_Policy (Ghost => Ignore);
+
+The effect is that the code for the preconditions will always be run,
+no matter whether the application was compiled with `-gnata` or not.
+We can therefore remove the explicit checks in the body of the
+subprograms, and rely on those checks already written for the
+preconditions.
+
+The postconditions are only needed for SPARK users to prove the use of
+the containers, but we never need to run them. So we systematically
+disable post-conditions, whether we compile with `-gnata` or not.
+
 Default values
 --------------
 

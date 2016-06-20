@@ -35,6 +35,8 @@ with Conts.Lists.Storage.Unbounded;
 
 package Conts.Lists.Strings is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    package Elements is new Conts.Elements.Arrays
       (Positive, Character, String, Conts.Global_Pool);
    package Storage is new Conts.Lists.Storage.Unbounded

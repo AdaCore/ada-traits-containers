@@ -45,6 +45,8 @@ generic
       Capacity : Count_Type) return Count_Type is Resize_2_3;
 package Conts.Maps.Impl with SPARK_Mode is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    subtype Key_Type is Keys.Element_Type;
    subtype Element_Type is Elements.Element_Type;
    subtype Returned_Type is Elements.Returned_Type;

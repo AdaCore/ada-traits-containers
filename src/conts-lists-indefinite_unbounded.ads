@@ -31,6 +31,8 @@ generic
    type Element_Type (<>) is private;
 package Conts.Lists.Indefinite_Unbounded is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    package Elements is new Conts.Elements.Indefinite
       (Element_Type, Pool => Conts.Global_Pool);
    package Storage is new Conts.Lists.Storage.Unbounded

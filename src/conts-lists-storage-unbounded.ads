@@ -36,6 +36,8 @@ generic
 
 package Conts.Lists.Storage.Unbounded with SPARK_Mode => Off is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    subtype Nodes_Container is Container_Base_Type;
    type Node;
    type Node_Access is access Node;

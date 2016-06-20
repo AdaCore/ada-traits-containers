@@ -54,7 +54,7 @@ begin
       E := V1.Last_Element;
       Assert_Failed ("last_element of empty vector");
    exception
-      when Constraint_Error | Assert_Failure =>
+      when Assert_Failure =>
          null;  --  expected
    end;
 
@@ -130,7 +130,7 @@ begin
       V1.Delete (10);  --  invalid
       Assert_Failed ("should not delete element at invalid index");
    exception
-      when Constraint_Error | Assert_Failure =>
+      when Assert_Failure =>
          null;   --  expected
    end;
 
@@ -158,7 +158,7 @@ begin
       V1.Swap (10000, 1);     --  invalid first index
       Assert_Failed ("Swap with invalid first index");
    exception
-      when Constraint_Error | Assert_Failure =>
+      when Assert_Failure =>
          null;   --  expected
    end;
 
@@ -166,7 +166,7 @@ begin
       V1.Swap (1, 10000);     --  invalid second index
       Assert_Failed ("Swap with invalid second index");
    exception
-      when Constraint_Error | Assert_Failure =>
+      when Assert_Failure =>
          null;   --  expected
    end;
 
@@ -188,7 +188,7 @@ begin
       V1.Replace_Element (10000, 20);
       Assert_Failed ("Replace at invalid index");
    exception
-      when Constraint_Error | Assert_Failure =>
+      when Assert_Failure =>
          null;   --  expected
    end;
 

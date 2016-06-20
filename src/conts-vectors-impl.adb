@@ -24,6 +24,8 @@ pragma Ada_2012;
 package body Conts.Vectors.Impl with SPARK_Mode => Off is
    use Conts.Vectors.Storage;
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    -------------------
    -- Valid_Cursors --
    -------------------
@@ -242,11 +244,6 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    procedure Delete (Self : in out Base_Vector'Class; Index : Index_Type) is
       Idx : constant Count_Type := To_Count (Index);
    begin
-      --  ??? Should be controlled by a policy package
-      if Idx > Self.Last then
-         raise Constraint_Error with "Invalid index";
-      end if;
-
       Storage.Release_Element (Self, Idx);
       Storage.Copy
         (Self, Source => Self,
@@ -273,11 +270,6 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    function Last_Element
      (Self : Base_Vector'Class) return Constant_Returned_Type is
    begin
-      --  ??? Should be controlled by a policy package
-      if Self.Is_Empty then
-         raise Constraint_Error with "Container is empty";
-      end if;
-
       return Storage.Elements.To_Constant_Returned
         (Storage.Get_Element (Self, Self.Last));
    end Last_Element;
@@ -347,11 +339,6 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    is
       Pos : constant Count_Type := To_Count (Index);
    begin
-      --  ??? Should be controlled by a policy package
-      if Pos > Self.Last then
-         raise Constraint_Error with "Invalid index";
-      end if;
-
       Storage.Release_Element (Self, Pos);
       Storage.Set_Element
         (Self, Pos, Storage.Elements.To_Stored (New_Item));
@@ -370,15 +357,6 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
       L_Tmp : Stored_Type := Storage.Get_Element (Self, L);
       R_Tmp : Stored_Type := Storage.Get_Element (Self, R);
    begin
-      --  ??? Should be controlled by a policy package
-      if L > Self.Last then
-         raise Constraint_Error with "Invalid index";
-      end if;
-
-      if R > Self.Last then
-         raise Constraint_Error with "Invalid index";
-      end if;
-
       --  Since we will only keep one copy of the elements in the end, we
       --  should test Movable here, not Copyable.
       if Storage.Elements.Movable then

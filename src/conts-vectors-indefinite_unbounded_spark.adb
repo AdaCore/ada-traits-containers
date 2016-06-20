@@ -23,6 +23,8 @@ pragma Ada_2012;
 
 package body Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode => Off is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    ----------
    -- Copy --
    ----------

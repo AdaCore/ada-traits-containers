@@ -36,6 +36,8 @@ generic
 
 package Conts.Lists.Storage.Unbounded_SPARK with SPARK_Mode is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    type Node_Access is new Count_Type;
    Null_Node_Access : constant Node_Access := 0;
    type Node is record

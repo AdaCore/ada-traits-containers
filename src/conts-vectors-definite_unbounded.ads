@@ -35,6 +35,8 @@ generic
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Vectors.Definite_Unbounded is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    package Elements is new Conts.Elements.Definite
      (Element_Type, Free => Free);
    package Storage is new Conts.Vectors.Storage.Unbounded

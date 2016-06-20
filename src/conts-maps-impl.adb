@@ -25,6 +25,8 @@ with Ada.Containers; use Ada.Containers;
 
 package body Conts.Maps.Impl with SPARK_Mode => Off is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    Min_Size : constant Count_Type := 2 ** 3;
    --  Minimum size for maps. Must be a power of 2.
 

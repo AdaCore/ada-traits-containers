@@ -33,6 +33,8 @@ generic
    with function "=" (Left, Right : Key_Type) return Boolean is <>;
 package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    package Keys is new Conts.Elements.Indefinite_SPARK
      (Key_Type, Pool => Conts.Global_Pool);
    package Elements is new Conts.Elements.Indefinite_SPARK

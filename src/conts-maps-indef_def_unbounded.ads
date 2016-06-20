@@ -37,6 +37,8 @@ generic
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Maps.Indef_Def_Unbounded is
 
+   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+
    package Keys is new Conts.Elements.Indefinite
      (Key_Type, Pool => Conts.Global_Pool, Free => Free);
    package Elements is new Conts.Elements.Definite
