@@ -223,25 +223,29 @@ class BuildAndExec(AbstractDriver):
     test.yaml should contains any of the following (the values given here are
     the default)::
         driver: 'build_and_exec'    # Mandatory
-        exec: 'obj/main'
+        exec: 'obj/main'        # or a list
     """
 
     def do_run(self):
         self.gprbuild()
 
-        execname = os.path.join(
-            self.working_dir,
-            self.test_env.get('exec', 'obj/main'))
+        execs = self.test_env.get('exec', 'obj/main')
+        if not isinstance(execs, list):
+            execs = [execs]
 
-        options = self.global_env['options']
-        if options.valgrind:
-            self.run_exec(['valgrind', '--max-stackframe=3800000', execname])
-        elif options.leaks:
-            self.run_exec(['valgrind', '--leak-check=full',
-                           '--max-stackframe=3800000',
-                           '--show-reachable=yes', execname])
-        else:
-            self.run_exec([execname])
+        for e in execs:
+            execname = os.path.join(self.working_dir, e)
+
+            options = self.global_env['options']
+            if options.valgrind:
+                self.run_exec([
+                    'valgrind', '--max-stackframe=3800000', execname])
+            elif options.leaks:
+                self.run_exec(['valgrind', '--leak-check=full',
+                               '--max-stackframe=3800000',
+                               '--show-reachable=yes', execname])
+            else:
+                self.run_exec([execname])
 
 
 class Prove(AbstractDriver):
