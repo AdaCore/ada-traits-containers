@@ -199,6 +199,12 @@ package Conts.Maps.Impl with SPARK_Mode is
    -- Subprograms --
    -----------------
 
+   function Contains (Self : Base_Map'Class; Key : Key_Type) return Boolean
+     with
+       Global => null,
+       Post   => Contains'Result = M.Mem (Model (Self), Key);
+   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Contains);
+
    procedure Assign
      (Self : in out Base_Map'Class; Source : Base_Map'Class)
      with
@@ -226,7 +232,7 @@ package Conts.Maps.Impl with SPARK_Mode is
    --  Otherwise, replace the element associated to Key by Element.
      with
        Global         => null,
-       Pre            => M.Mem (Model (Self), Key)
+       Pre            => Contains (Self, Key)
           or else Length (Self) < Count_Type'Last - 1,
        Contract_Cases =>
           --  If Key is already in Self, then Key now maps to Element in Model.
@@ -250,7 +256,7 @@ package Conts.Maps.Impl with SPARK_Mode is
       return Elements.Constant_Returned_Type
      with
        Global => null,
-       Pre    => M.Mem (Model (Self), Key),
+       Pre    => Contains (Self, Key),
        Post   => Elements.To_Element (Get'Result) =
        Element (Model (Self), Key);
 
@@ -260,7 +266,7 @@ package Conts.Maps.Impl with SPARK_Mode is
      with
        Inline,
        Global => null,
-       Pre    => M.Mem (Model (Self), Key),
+       Pre    => Contains (Self, Key),
        Post   => As_Element'Result = Element (Model (Self), Key);
    pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
@@ -386,12 +392,6 @@ package Conts.Maps.Impl with SPARK_Mode is
           (Model (Self), K.Get (S_Keys (Self),
            P_Get (Positions (Self), Position)));
    pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
-
-   function Contains (Self : Base_Map'Class; Key : Key_Type) return Boolean
-     with
-       Global => null,
-       Post   => Contains'Result = M.Mem (Model (Self), Key);
-   pragma Annotate (GNATprove, Inline_For_Proof, Entity => Contains);
 
    function First (Self : Base_Map'Class) return Cursor
      with
