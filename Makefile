@@ -1,7 +1,10 @@
 BUILD=Production
 
+# Add support for passing extra switches to gprbuild, like -d
+GPRBUILD_OPTIONS=
+
 all:
-	gprbuild -m -p -Psrc/conts -j0 -XBUILD=${BUILD}
+	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=${BUILD}
 
 # Run all tests, except manual ones
 test:
