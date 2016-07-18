@@ -83,6 +83,7 @@ package Conts.Maps.Generics with SPARK_Mode is
 
    subtype Base_Map is Conts.Maps.Generics.Impl.Base_Map;
    subtype Cursor is Impl.Cursor;
+   use all type Impl.Cursor;
    No_Element : constant Cursor := Impl.No_Element;
 
    function Capacity (Self : Base_Map'Class) return Count_Type

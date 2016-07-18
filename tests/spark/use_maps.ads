@@ -1,6 +1,7 @@
 pragma Ada_2012;
 with Conts; use Conts;
 with Conts.Maps.Indef_Indef_Unbounded_SPARK;
+with Conts.Algorithms.SPARK;
 pragma Elaborate_All (Conts.Maps.Indef_Indef_Unbounded_SPARK);
 
 package Use_Maps with SPARK_Mode is
@@ -19,6 +20,12 @@ package Use_Maps with SPARK_Mode is
    use all type My_Maps.Cursor_Position_Map;
 
    pragma Unevaluated_Use_Of_Old (Allow);
+
+   function Find is new Conts.Algorithms.SPARK.Find
+     (Cursors => My_Maps.Cursors.Forward,
+      Getters => My_Maps.Maps.Constant_Returned_Key,
+      "="     => "=",
+      Content => My_Maps.Content_Models);
 
    function My_Find (S : My_Maps.Map; K : Positive) return Cursor
      with

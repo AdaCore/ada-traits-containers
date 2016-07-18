@@ -25,6 +25,7 @@
 pragma Ada_2012;
 with Conts.Elements.Indefinite_SPARK;
 with Conts.Maps.Generics;
+with Conts.Properties.SPARK;
 
 generic
    type Key_Type (<>) is private;
@@ -71,5 +72,15 @@ package Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode is
 
    package Cursors renames Impl.Cursors;
    package Maps renames Impl.Maps;
+
+   package Content_Models is new Conts.Properties.SPARK.Content_Models
+        (Map_Type     => Impl.Base_Map'Class,
+         Element_Type => Key_Type,
+         Model_Type   => Key_Sequence,
+         Index_Type   => Impl.Impl.K.Extended_Index,
+         Model        => Impl.S_Keys,
+         Get          => Impl.Impl.K.Get,
+         First        => Impl.Impl.K.First,
+         Last         => Impl.Impl.K.Last);
 
 end Conts.Maps.Indef_Indef_Unbounded_SPARK;

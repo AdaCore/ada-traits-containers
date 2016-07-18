@@ -27,6 +27,7 @@ pragma Ada_2012;
 with Conts.Elements.Indefinite_SPARK;
 with Conts.Lists.Storage.Unbounded_SPARK;
 with Conts.Lists.Generics;
+with Conts.Properties.SPARK;
 
 generic
    type Element_Type (<>) is private;
@@ -60,5 +61,15 @@ package Conts.Lists.Indefinite_Unbounded_SPARK with SPARK_Mode is
 
    package Cursors renames Lists.Cursors;
    package Maps renames Lists.Maps;
+
+   package Content_Models is new Conts.Properties.SPARK.Content_Models
+        (Map_Type     => Lists.Base_List'Class,
+         Element_Type => Element_Type,
+         Model_Type   => Element_Sequence,
+         Index_Type   => Lists.Impl.M.Extended_Index,
+         Model        => Lists.Impl.Model,
+         Get          => Lists.Impl.M.Get,
+         First        => Lists.Impl.M.First,
+         Last         => Lists.Impl.M.Last);
 
 end Conts.Lists.Indefinite_Unbounded_SPARK;

@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with  Conts.Lists.Indefinite_Unbounded_SPARK;
+with Conts.Algorithms.SPARK;
 pragma Elaborate_All (Conts.Lists.Indefinite_Unbounded_SPARK);
 with Conts; use Conts;
 
@@ -13,6 +14,20 @@ package Use_Lists with SPARK_Mode is
    use all type My_Lists.Cursor_Position_Map;
 
    pragma Unevaluated_Use_Of_Old (Allow);
+
+   function Find is new Conts.Algorithms.SPARK.Find
+     (Cursors => My_Lists.Cursors.Forward,
+      Getters => My_Lists.Maps.Constant_Returned,
+      "="     => "=",
+      Content => My_Lists.Content_Models);
+
+   function My_Find (L : List; E : Element_Type) return Cursor with
+     Post =>  (if Find (L, E) = No_Element then My_Find'Result = No_Element
+               else As_Element (L, My_Find'Result) = E
+               and
+                 P_Get (Positions (L), Find (L, E)) >=
+                   P_Get (Positions (L), My_Find'Result));
+   --  Iterate to find an element.
 
    function Is_Incr (I1, I2 : Element_Type) return Boolean is
       (if I1 = Element_Type'Last then I2 = Element_Type'Last else I2 = I1 + 1);

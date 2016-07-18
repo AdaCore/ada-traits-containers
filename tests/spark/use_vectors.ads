@@ -1,6 +1,7 @@
 pragma Ada_2012;
 with Conts.Vectors.Indefinite_Unbounded_SPARK;
 with Conts;              use Conts;
+with Conts.Algorithms.SPARK;
 pragma Elaborate_All (Conts.Vectors.Indefinite_Unbounded_SPARK);
 
 package Use_Vectors with SPARK_Mode is
@@ -30,6 +31,12 @@ package Use_Vectors with SPARK_Mode is
    use all type My_Vectors.Cursor_Set;
 
    pragma Unevaluated_Use_Of_Old (Allow);
+
+   function Find is new Conts.Algorithms.SPARK.Find
+     (Cursors => My_Vectors.Cursors.Forward,
+      Getters => My_Vectors.Maps.Constant_Returned,
+      "="     => "=",
+      Content => My_Vectors.Content_Models);
 
    function Is_Incr (I1, I2 : Element_Type) return Boolean is
       (if I1 = Element_Type'Last then I2 = Element_Type'Last else I2 = I1 + 1);

@@ -25,6 +25,7 @@ pragma Ada_2012;
 with Conts.Elements.Indefinite_SPARK;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Storage.Unbounded;
+with Conts.Properties.SPARK;
 
 generic
    type Index_Type is (<>);
@@ -62,5 +63,15 @@ package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
    procedure Swap
      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
        renames Vectors.Swap;
+
+   package Content_Models is new Conts.Properties.SPARK.Content_Models
+        (Map_Type     => Vectors.Base_Vector'Class,
+         Element_Type => Element_Type,
+         Model_Type   => Element_Sequence,
+         Index_Type   => Vectors.Impl.M.Extended_Index,
+         Model        => Vectors.Impl.Model,
+         Get          => Vectors.Impl.M.Get,
+         First        => Vectors.Impl.M.First,
+         Last         => Vectors.Impl.M.Last);
 
 end Conts.Vectors.Indefinite_Unbounded_SPARK;

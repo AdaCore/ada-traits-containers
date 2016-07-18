@@ -314,6 +314,7 @@ package Conts.Adaptors is
       subtype Returned     is Hashed_Maps.Constant_Reference_Type;
       subtype Map          is Hashed_Maps.Map;
       subtype Cursor       is Hashed_Maps.Cursor;
+      use all type Hashed_Maps.Cursor;
 
       function Element (Self : Map; Position : Cursor) return Returned
          is (Hashed_Maps.Constant_Reference (Self, Position)) with Inline;
@@ -351,6 +352,7 @@ package Conts.Adaptors is
       subtype Returned     is Hashed_Maps.Constant_Reference_Type;
       subtype Map          is Hashed_Maps.Map;
       subtype Cursor       is Hashed_Maps.Cursor;
+      use all type Hashed_Maps.Cursor;
 
       function Element (Self : Map; Position : Cursor) return Returned
          is (Hashed_Maps.Constant_Reference (Self, Position)) with Inline;
@@ -429,6 +431,7 @@ package Conts.Adaptors is
       subtype Returned     is Hashed_Maps.Constant_Reference_Type;
       subtype Map          is Hashed_Maps.Map;
       subtype Cursor       is Hashed_Maps.Cursor;
+      use all type Hashed_Maps.Cursor;
 
       function Element (Self : Map; Position : Cursor) return Returned
          is (Hashed_Maps.Constant_Reference (Self, Position)) with Inline;

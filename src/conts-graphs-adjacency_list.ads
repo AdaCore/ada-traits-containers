@@ -146,6 +146,7 @@ package Conts.Graphs.Adjacency_List is
          Current : Edge_Vectors.Cursor;
       end record;
    end Impl;
+   use all type Impl.Vertex_Cursor;
 
    subtype Graph is Impl.Graph;
    subtype Edge is Impl.Edge;

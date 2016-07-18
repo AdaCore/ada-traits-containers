@@ -1,5 +1,20 @@
 pragma Ada_2012;
 package body Use_Lists with SPARK_Mode is
+   function My_Find (L : List; E : Element_Type) return Cursor is
+      Cu : Cursor := First (L);
+   begin
+      while Has_Element (L, Cu) loop
+         pragma Loop_Invariant
+           (for all I in 1 .. P_Get (Positions (L), Cu) - 1 =>
+              Element (Model (L), I) /= E);
+         if As_Element (L, Cu) = E then
+            return Cu;
+         end if;
+         Next (L, Cu);
+      end loop;
+      return No_Element;
+   end My_Find;
+
    procedure Incr_All (L1 : List; L2 : in out List) is
       Cu : Cursor := First (L1);
    begin

@@ -62,6 +62,8 @@ package Conts.Functional.Sequences with SPARK_Mode is
      Post => Last'Result =
        Index_Type'Val ((Index_Type'Pos (Index_Type'First) - 1) + Length (S));
 
+   function First return Extended_Index is (Index_Type'First);
+
    function Get (S : Sequence; N : Extended_Index) return Element_Type
    --  Get ranges over Extended_Index so that it can be used for iteration.
 

@@ -109,4 +109,36 @@ package Conts.Properties is
       package As_Read_Only is new Read_Only_Maps (Map, Key, Element);
    end Maps;
 
+   ------------------------------
+   -- Property position models --
+   ------------------------------
+
+   generic
+      type Map_Type (<>) is limited private;
+      type Key_Type (<>) is limited private;
+      type Model_Type is private;
+      type Index_Type is (<>);
+      with function Model (M : Map_Type) return Model_Type;
+      with function Get (M : Model_Type; K : Key_Type) return Index_Type;
+   package Position_Models is
+      subtype Map is Map_Type;
+      subtype Key is Key_Type;
+   end Position_Models;
+
+   -----------------------------
+   -- Property content models --
+   -----------------------------
+
+   generic
+      type Map_Type (<>) is limited private;
+      type Element_Type (<>) is private;
+      type Model_Type is private;
+      type Index_Type is (<>);
+      with function Model (M : Map_Type) return Model_Type;
+      with function Get (M : Model_Type; I : Index_Type) return Element_Type;
+   package Content_Models is
+      subtype Map is Map_Type;
+      subtype Element is Element_Type;
+   end Content_Models;
+
 end Conts.Properties;

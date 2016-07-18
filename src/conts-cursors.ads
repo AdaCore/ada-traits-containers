@@ -52,6 +52,7 @@ package Conts.Cursors with SPARK_Mode is
          return Boolean is <>;
       with function Next (Self : Container_Type; Pos : Cursor_Type)
          return Cursor_Type is <>;
+      with function "=" (Left, Right : Cursor_Type) return Boolean is <>;
    package Forward_Cursors is
       subtype Container is Container_Type;
       subtype Cursor    is Cursor_Type;
