@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with Conts.Vectors.Indefinite_Unbounded_SPARK;
+with Conts.Vectors.Definite_Bounded;
 with Conts;              use Conts;
 with Conts.Algorithms.SPARK;
 pragma Elaborate_All (Conts.Vectors.Indefinite_Unbounded_SPARK);
@@ -25,10 +26,17 @@ package Use_Vectors with SPARK_Mode is
      Conts.Vectors.Indefinite_Unbounded_SPARK
        (Index_Type => Index_Type,
         Element_Type => Element_Type);
+   package My_Bounded_Vectors is new
+     Conts.Vectors.Definite_Bounded
+       (Index_Type => Index_Type,
+        Element_Type => Element_Type);
    use type My_Vectors.Cursor;
    use My_Vectors.Vectors;
    use type My_Vectors.Element_Sequence;
    use all type My_Vectors.Cursor_Set;
+
+   subtype My_Bounded is My_Bounded_Vectors.Vector;
+   subtype My_Bounded_100 is My_Bounded_Vectors.Vector (100);
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
@@ -41,13 +49,15 @@ package Use_Vectors with SPARK_Mode is
    function Is_Incr (I1, I2 : Element_Type) return Boolean is
       (if I1 = Element_Type'Last then I2 = Element_Type'Last else I2 = I1 + 1);
 
-   procedure Incr_All (V1 : Vector; V2 : in out Vector) with
-     Post => Length (V2) = Length (V1)
-     and (for all N in Index_Type'First .. Last (V1) =>
-              Is_Incr (As_Element (V1, N),
-                       As_Element (V2, N)));
+   procedure Incr_All (V1 : My_Bounded_100; V2 : in out My_Bounded_100) with
+     Post => My_Bounded_Vectors.Vectors.Length (V2) =
+     My_Bounded_Vectors.Vectors.Length (V1)
+     and (for all N in Index_Type'First ..
+            My_Bounded_Vectors.Vectors.Last (V1) =>
+              Is_Incr (My_Bounded_Vectors.Vectors.As_Element (V1, N),
+                       My_Bounded_Vectors.Vectors.As_Element (V2, N)));
    --  Loop through a vector to increment each element. Store the incremented
-   --  elements in V2.
+   --  elements in V2. This test uses bounded vectors.
 
    procedure Incr_All_2 (V : in out Vector) with
      Post => Length (V) = Length (V)'Old

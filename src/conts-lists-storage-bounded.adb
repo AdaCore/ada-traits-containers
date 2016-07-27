@@ -27,7 +27,7 @@
 
 pragma Ada_2012;
 
-package body Conts.Lists.Storage.Bounded with SPARK_Mode is
+package body Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
 
    package body Impl is
       --------------

@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 
-package body Conts.Vectors.Storage.Bounded with SPARK_Mode is
+package body Conts.Vectors.Storage.Bounded with SPARK_Mode => Off is
 
    ----------
    -- Impl --

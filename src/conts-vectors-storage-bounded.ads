@@ -28,12 +28,10 @@ with Conts.Elements;
 
 generic
    with package Elements is new Conts.Elements.Traits (<>);
-   type Container_Base_Type is abstract tagged limited private;
 package Conts.Vectors.Storage.Bounded with SPARK_Mode is
 
    package Impl is
-      type Container (Capacity : Count_Type) is
-         abstract new Container_Base_Type with private;
+      type Container (Capacity : Count_Type) is abstract tagged private;
 
       function Max_Capacity (Self : Container'Class) return Count_Type
          is (Self.Capacity) with Inline;
@@ -59,11 +57,10 @@ package Conts.Vectors.Storage.Bounded with SPARK_Mode is
          Self_From              : Count_Type) with Inline;
 
    private
+      pragma SPARK_Mode (Off);
       type Elem_Array is array (Count_Type range <>) of Elements.Stored_Type;
 
-      type Container (Capacity : Count_Type) is abstract
-         new Container_Base_Type with
-      record
+      type Container (Capacity : Count_Type) is abstract tagged record
          Nodes : Elem_Array (Min_Index .. Capacity);
       end record;
 

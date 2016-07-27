@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with  Conts.Lists.Indefinite_Unbounded_SPARK;
+with  Conts.Lists.Definite_Bounded;
 with Conts.Algorithms.SPARK;
 pragma Elaborate_All (Conts.Lists.Indefinite_Unbounded_SPARK);
 with Conts; use Conts;
@@ -8,10 +9,15 @@ package Use_Lists with SPARK_Mode is
    type Element_Type is new Integer;
    package My_Lists is new
      Conts.Lists.Indefinite_Unbounded_SPARK (Element_Type => Element_Type);
+   package My_Bounded_Lists is new
+     Conts.Lists.Definite_Bounded (Element_Type => Element_Type);
    use type My_Lists.Cursor;
    use My_Lists.Lists;
    use type My_Lists.Element_Sequence;
    use all type My_Lists.Cursor_Position_Map;
+
+   subtype My_Bounded is My_Bounded_Lists.List;
+   subtype My_Bounded_100 is My_Bounded_Lists.List (100);
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
@@ -32,13 +38,16 @@ package Use_Lists with SPARK_Mode is
    function Is_Incr (I1, I2 : Element_Type) return Boolean is
       (if I1 = Element_Type'Last then I2 = Element_Type'Last else I2 = I1 + 1);
 
-   procedure Incr_All (L1 : List; L2 : in out List) with
-     Post => Length (L2) = Length (L1)
-     and (for all N in 1 .. Length (L1) =>
-              Is_Incr (Element (Model (L1), N),
-                       Element (Model (L2), N)));
+   procedure Incr_All (L1 : My_Bounded_100; L2 : in out My_Bounded_100) with
+     Post => My_Bounded_Lists.Lists.Length (L2) =
+     My_Bounded_Lists.Lists.Length (L1)
+     and (for all N in 1 .. My_Bounded_Lists.Lists.Length (L1) =>
+              Is_Incr (My_Bounded_Lists.Lists.Element
+                       (My_Bounded_Lists.Lists.Model (L1), N),
+                       My_Bounded_Lists.Lists.Element
+                         (My_Bounded_Lists.Lists.Model (L2), N)));
    --  Loop through a list to increment each element. Store the incremented
-   --  elements in L2.
+   --  elements in L2. This test uses bounded lists.
 
    procedure Incr_All_2 (L : in out List) with
      Post => Capacity (L) = Capacity (L)'Old

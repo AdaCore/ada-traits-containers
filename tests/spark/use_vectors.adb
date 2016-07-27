@@ -3,21 +3,28 @@ with Conts;         use Conts;
 
 package body Use_Vectors with SPARK_Mode is
 
-   procedure Incr_All (V1 : Vector; V2 : in out Vector) is
-      Lst : Index_Type'Base := Last (V1);
+   procedure Incr_All (V1 : My_Bounded_100; V2 : in out My_Bounded_100) is
+      Lst : Index_Type'Base := My_Bounded_Vectors.Vectors.Last (V1);
    begin
-      Clear (V2);
+      My_Bounded_Vectors.Vectors.Clear (V2);
       for I in Index_Type'First .. Lst loop
-         pragma Loop_Invariant (Integer (Length (V2)) = I - Index_Type'First);
          pragma Loop_Invariant
-           (for all N in Index_Type'First .. Last (V2) =>
-                Is_Incr (As_Element (V1, N),
-              As_Element (V2, N)));
+           (Integer (My_Bounded_Vectors.Vectors.Length (V2)) =
+              I - Index_Type'First);
+         pragma Loop_Invariant
+           (for all N in Index_Type'First ..
+              My_Bounded_Vectors.Vectors.Last (V2) =>
+                Is_Incr (My_Bounded_Vectors.Vectors.As_Element (V1, N),
+              My_Bounded_Vectors.Vectors.As_Element (V2, N)));
 
-         if As_Element (V1, I) < Element_Type'Last then
-            Append (V2, As_Element (V1, I) + 1);
+         if My_Bounded_Vectors.Vectors.As_Element (V1, I) <
+           Element_Type'Last
+         then
+            My_Bounded_Vectors.Vectors.Append
+              (V2, My_Bounded_Vectors.Vectors.As_Element (V1, I) + 1);
          else
-            Append (V2, As_Element (V1, I));
+            My_Bounded_Vectors.Vectors.Append
+              (V2, My_Bounded_Vectors.Vectors.As_Element (V1, I));
          end if;
       end loop;
    end Incr_All;

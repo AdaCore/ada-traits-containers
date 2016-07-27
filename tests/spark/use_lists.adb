@@ -15,23 +15,29 @@ package body Use_Lists with SPARK_Mode is
       return No_Element;
    end My_Find;
 
-   procedure Incr_All (L1 : List; L2 : in out List) is
-      Cu : Cursor := First (L1);
+   procedure Incr_All (L1 : My_Bounded_100; L2 : in out My_Bounded_100) is
+      Cu : My_Bounded_Lists.Cursor := My_Bounded_Lists.Lists.First (L1);
    begin
-      Clear (L2);
-      while Has_Element (L1, Cu) loop
+      My_Bounded_Lists.Lists.Clear (L2);
+      while My_Bounded_Lists.Lists.Has_Element (L1, Cu) loop
          pragma Loop_Invariant
-           (for all N in 1 .. Length (L2) =>
-                Is_Incr (Element (Model (L1), N),
-                         Element (Model (L2), N)));
+           (for all N in 1 .. My_Bounded_Lists.Lists.Length (L2) =>
+                Is_Incr (My_Bounded_Lists.Lists.Element
+              (My_Bounded_Lists.Lists.Model (L1), N),
+              My_Bounded_Lists.Lists.Element
+                (My_Bounded_Lists.Lists.Model (L2), N)));
          pragma Loop_Invariant
-           (P_Get (Positions (L1), Cu) = Length (L2) + 1);
-         if As_Element (L1, Cu) < Element_Type'Last then
-            Append (L2, As_Element (L1, Cu) + 1);
+           (My_Bounded_Lists.Lists.Impl.P_Get
+              (My_Bounded_Lists.Lists.Impl.Positions (L1), Cu) =
+                My_Bounded_Lists.Lists.Length (L2) + 1);
+         if My_Bounded_Lists.Lists.As_Element (L1, Cu) < Element_Type'Last then
+            My_Bounded_Lists.Lists.Append
+              (L2, My_Bounded_Lists.Lists.As_Element (L1, Cu) + 1);
          else
-            Append (L2, As_Element (L1, Cu));
+            My_Bounded_Lists.Lists.Append
+              (L2, My_Bounded_Lists.Lists.As_Element (L1, Cu));
          end if;
-         Next (L1, Cu);
+         My_Bounded_Lists.Lists.Next (L1, Cu);
       end loop;
    end Incr_All;
 
