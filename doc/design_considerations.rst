@@ -363,3 +363,159 @@ Example of use for custom pools:
     - persistent containers, by having a pool allocating a large buffer with
       mmap, and then using this buffer when allocating small blocks.
 
+Formal Representation
+---------------------
+As this library is meant to be usable for SPARK users, annotations are provided
+that describe the expected behavior of each subprogram. They are typically
+written as Ada 2012 contracts. In this section, we describe the formal
+representation of containers used in these annotations and explain how it can be
+used to annotate user code.
+
+ - The Notion of Models
+
+   The most straight forward way of annotating a subprogram dealing with
+   containers is by reusing the API subprograms. For example, here we have
+   annotated a procedure that resets every element of a vector to zero using
+   an Ada 2012 quantified expression and two regular functions ``Last`` and
+   ``As_Element`` of the vector API::
+
+     procedure Set_All_To_Zero (V : in out Vector) with
+       Post => (for all N in 1 .. Last (V) => As_Element (V, N) = 0);
+
+   To annotate the containers API, this simple technique turned out to be
+   insufficient. Indeed, when annotating a procedure, it is common to refer to
+   the previous value of its in out parameters using the ``'Old`` Ada 2012
+   attribute. For example, this is what we could write for a procedure that
+   increments each element of a vector::
+
+     procedure Increment_All (V : in out Vector) with
+       Post => (for all N in 1 .. Last (V) =>
+                As_Element (V, N) = As_Element (V'Old, N) + 1);
+
+   Unfortunately, as the ``'Old`` attribute introduces a copy of its argument,
+   it cannot be applied to expressions of a container type which may be limited.
+   To work-around this restriction, we introduce models for containers. Models
+   are actual objects which represent certain properties of the object they
+   model. Typically they are a higher level, simpler view of a complex
+   implementation. As an example, a ring buffer may be modelled by an array
+   representing its content in the expected order::
+
+     type Ring_Buffer is record
+        Content : My_Array (1 ..7);
+        First   : Positive := 1;
+        Length  : Natural := 0;
+     end record;
+
+     function Model (R : Ring_Buffer) return My_Array;
+
+     pragma Assert (Model (Ring_Buffer'(Content => (3, 4, 5, 42, 42, 1, 2),
+                                        First   => 6,
+                                        Length => 5))
+                    = (1, 2, 3, 4, 5));
+
+   Models offer advantages both in terms of expressiveness, readability and
+   ease of use. However, they suffer from one major drawback which is
+   efficiency. Indeed, they typically require copies of (part of) the objects
+   they model and rely on a simple but often inefficient data representation.
+   As a consequence, models are often implemented as ghost code, which means
+   they can only be used in annotations so that they can be completely removed
+   from the final executable by the compiler::
+
+     function Model (R : Ring_Buffer) return My_Array with Ghost;
+
+ - Functional Containers
+
+   To model classical imperative containers, we introduce new simpler,
+   mathematical like containers. They are unbounded and may contain indefinite
+   elements. Furthermore, to be usable in every context, they are neither
+   controlled nor limited. So that these containers can be used safely, we have
+   made them functional, that is, no primitives are provided which would allow
+   to modify an existing container. Instead, their API features functions
+   creating new containers from existing ones. As an example, functional
+   containers provide no ``Insert`` procedure but rather a function ``Add``
+   which creates a new container with one more element than its parameter::
+
+     function Add (C : Container; E : Element_Type) return Container;
+
+   As a consequence, these containers are highly inefficient. They are also
+   memory consuming as the allocated memory is not reclaimed when the container
+   is no longer referenced. Thus, they should in general be used in ghost code
+   and annotations so that they can be removed from the final executable.
+
+   This library provides three functional containers, sequences, sets, and maps.
+   A sequence is no more than an ordered collection of elements. In an Ada like
+   manner, the user can choose the range used to index the elements::
+
+     function Length (S : Sequence) return Count_Type;
+     function Get (S : Sequence; N : Index_Type) return Element_Type;
+
+   Functional sets offer standard mathematical set functionalities such as
+   inclusion, union, and intersection. They are neither ordered nor hashed::
+
+     function Mem (S : Set; E : Element_Type) return Boolean;
+     function "<=" (S1, S2 : Set) return Boolean;
+
+   Functional maps offer a dictionary between any two types of elements::
+
+     function Mem (M : Map; K : Key_Type) return Boolean;
+     function Get (M : Map; K : Key_Type) return Element_Type;
+
+   Each functional container type supports iteration as appropriate, so that
+   its elements can easily be quantified over.
+
+   These containers can easily be used to model user defined data structures.
+   They were used to this end to annotate and verify a package of allocators.
+   In this example, an allocator featuring a free list implemented in an array
+   is modeled by a record containing a set of allocated resources and a
+   sequence of available ressources::
+
+     type Status is (Available, Allocated);
+     type Cell is record
+        Stat : Status;
+        Next : Resource;
+     end record;
+     type Allocator is array (Valid_Resource) of Cell;
+     type Model is record 
+        Available : Sequence;
+        Allocated : Set;
+     end record;
+
+ - Models of Imperative Containers
+
+   For each container type, the library provides model functions that are used
+   to annotate subprograms from the API. The different models supply different
+   levels of abstraction of the container’s functionalities.
+
+    * The higher level view of a container is usually the mathematical
+      structure of element it represents. We use a sequence for ordered
+      containers such as list and vectors and a mathematical map for imperative
+      maps. This allows us to specify the effects of a subprogram in a very high
+      level view, not having to consider cursors nor order of elements in a
+      map::
+
+        procedure Increment_All (L : in out List) with
+          Post => (for all N in 1 .. Length (L) =>
+                   Element (Model (L), N) =  Element (Model (L)'Old, N) + 1);
+        procedure Increment_All (S : in out Map) with
+          Post =>  (for all K of Model (S)'Old => Mem (Model (S), K))
+              and then (for all K of Model (S) => Mem (Model (S)'Old, K)
+                   and then Get (Model (S), K)  = Get (Model (S)'Old, K) + 1);
+
+    * For maps, there is a lower level model representing the underlying order
+      used for iteration in the map. It is a sequence of keys. We can use it if
+      we want to specify in ``Increment_All`` on maps that the order in the keys
+      are preserved::
+
+        procedure Increment_All (S : in out Map) with
+          Post => S_Keys (S) = S_Keys (S)'Old
+             and then (for all K of Model (S) =>
+                       Get (Model (S), K) = Get (Model (S)'Old, K) + 1);
+
+    * Finally, cursors are modeled using a functional map linking them to their
+      position in the container. For example, we can state that the positions
+      of cursors in a list are not modified by a call to ``Increment_All``::
+
+        procedure Increment_All (L : in out List) with
+          Post => Positions (L) = Positions (L)'Old
+             and then (for all N in 1 .. Length (L) =>
+                   Element (Model (L), N) =  Element (Model (L)'Old, N) + 1);
