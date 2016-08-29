@@ -38,7 +38,8 @@ generic
 
 package Conts.Lists.Storage.Bounded with SPARK_Mode is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    subtype Stored_Type is Elements.Stored_Type;
 

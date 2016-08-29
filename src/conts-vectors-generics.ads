@@ -40,7 +40,8 @@ generic
 
 package Conts.Vectors.Generics with SPARK_Mode is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    subtype Element_Type is Storage.Elements.Element_Type;
    subtype Returned_Type is Storage.Elements.Returned_Type;

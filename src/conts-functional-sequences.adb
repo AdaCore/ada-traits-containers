@@ -23,7 +23,8 @@ pragma Ada_2012;
 package body Conts.Functional.Sequences with SPARK_Mode => Off is
    use Containers;
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    ---------
    -- "=" --

@@ -29,7 +29,8 @@ generic
    with function "=" (Left, Right : Key_Type) return Boolean is <>;
 package Conts.Functional.Maps with SPARK_Mode is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    type Map is private with
      Default_Initial_Condition => Is_Empty (Map) and Length (Map) = 0,

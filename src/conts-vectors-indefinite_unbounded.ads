@@ -33,7 +33,8 @@ generic
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Vectors.Indefinite_Unbounded is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    package Elements is new Conts.Elements.Indefinite
       (Element_Type, Free => Free, Pool => Conts.Global_Pool);

@@ -36,7 +36,8 @@ generic
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Maps.Def_Def_Unbounded is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    package Keys is new Conts.Elements.Definite
      (Key_Type, Free => Free);

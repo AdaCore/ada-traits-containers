@@ -34,7 +34,8 @@ private generic
    with function "=" (Left, Right : Element_Type) return Boolean is <>;
 package Conts.Functional.Base with SPARK_Mode => Off is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    subtype Extended_Index is Index_Type'Base range
      Index_Type'Pred (Index_Type'First) .. Index_Type'Last;

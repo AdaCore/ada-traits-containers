@@ -149,9 +149,6 @@ can be edited with any text editor.
 ** TODO: missing =Insert= primitive
    Need a Count parameter as well
 
-** TODO: testsuite
-   What should happen when swapping elements outside of the range of the
-   vector?
 
 * Strings
 

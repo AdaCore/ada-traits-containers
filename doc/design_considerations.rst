@@ -230,15 +230,19 @@ runtime for applications compiled with `-gnata`.
 
 Instead, our approach is to add an `Assertion_Policy` in all packages::
 
-   pragma Assertion_Policy (Pre => Check);
+   pragma Assertion_Policy (Pre => Suppressible);
    pragma Assertion_Policy (Post => Ignore);
-   pragma Assertion_Policy (Ghost => Ignore);
+   pragma Assertion_Policy (Ghost => Suppressible);
 
 The effect is that the code for the preconditions will always be run,
 no matter whether the application was compiled with `-gnata` or not.
 We can therefore remove the explicit checks in the body of the
 subprograms, and rely on those checks already written for the
 preconditions.
+
+Yes, since we use `Suppressible` as the policy, if the user wants
+maximum performance at the cost of safety, they can use `-gnatp` on
+the command line, which will also suppress these checks.
 
 The postconditions are only needed for SPARK users to prove the use of
 the containers, but we never need to run them. So we systematically

@@ -34,14 +34,8 @@ generic
    with package Storage is new Conts.Vectors.Storage.Traits (<>);
 package Conts.Vectors.Impl with SPARK_Mode is
 
-   pragma Assertion_Policy (Pre => Check);
-   pragma Assertion_Policy (Post => Ignore);
-   pragma Assertion_Policy (Ghost => Check);
-   --  Force checking all preconditions, no matter whether -gnata is specified.
-   --  Explicit tests are removed from the body to avoid duplication (both of
-   --  code and at execution).
-   --  We will eventually have a custom assertion policy that disables all
-   --  tests when run with -gnatp, but keep them in all other cases.
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    subtype Extended_Index is Index_Type'Base range
      Index_Type'Pred (Index_Type'First) .. Index_Type'Last;

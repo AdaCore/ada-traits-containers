@@ -32,7 +32,8 @@ generic
    type Element_Type (<>) is private;
 package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    package Elements is new Conts.Elements.Indefinite_SPARK
       (Element_Type, Pool => Conts.Global_Pool);

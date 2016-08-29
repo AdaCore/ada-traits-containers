@@ -28,7 +28,8 @@ generic
    with function "=" (Left, Right : Element_Type) return Boolean is <>;
 package Conts.Functional.Sets with SPARK_Mode is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    type Set is private with
      Default_Initial_Condition => Is_Empty (Set) and Length (Set) = 0,

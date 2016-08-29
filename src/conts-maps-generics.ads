@@ -63,7 +63,8 @@ generic
 
 package Conts.Maps.Generics with SPARK_Mode is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    subtype Key_Type is Keys.Element_Type;
    subtype Element_Type is Elements.Element_Type;

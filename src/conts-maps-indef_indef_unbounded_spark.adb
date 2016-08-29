@@ -23,7 +23,8 @@ pragma Ada_2012;
 
 package body Conts.Maps.Indef_Indef_Unbounded_SPARK with SPARK_Mode => Off is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    ----------
    -- Copy --

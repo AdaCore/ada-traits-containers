@@ -32,7 +32,8 @@ generic
    type Element_Type is private;
 package Conts.Vectors.Definite_Bounded is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    package Elements is new Conts.Elements.Definite (Element_Type);
    package Storage is new Conts.Vectors.Storage.Bounded

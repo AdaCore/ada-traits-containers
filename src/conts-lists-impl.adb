@@ -27,7 +27,8 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
 
    use Storage;
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    ---------------
    -- Positions --

@@ -23,7 +23,8 @@ pragma Ada_2012;
 
 package body Conts.Functional.Base with SPARK_Mode => Off is
 
-   pragma Assertion_Policy (Pre => Check, Post => Ignore, Ghost => Check);
+   pragma Assertion_Policy
+      (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    function To_Count (Idx : Extended_Index) return Count_Type
    is (Count_Type

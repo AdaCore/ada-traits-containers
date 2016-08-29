@@ -1,0 +1,5 @@
+[gerrit]
+host = git.adacore.com
+project = containers
+defaultbranch = master
+defaultremote = origin
