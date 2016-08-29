@@ -57,6 +57,62 @@ can be edited with any text editor.
    to only keep the n first elements of the range, or Group_By.
    http://www.informit.com/articles/printerfriendly/1407357
 
+* Task safe containers
+
+** Have a task-safe version of the containers
+   A simple approach is to wrap the containers and their operation inside
+   protected types. This is easy to do, especially with code generation,
+   but granularity is too coarse, since the whole operation results in a
+   lock, even though only a small part of it might need it.
+
+   A better approach is via a new =Locking_Policy= package. We propose the
+   following initial spec, where the =For_Read= parameter indicate whether
+   we only intend to read from the container and could be used to implement
+   more efficient locks.
+
+#+BEGIN_SRC ada
+   generic
+      type T is private;
+      with procedure Lock (Self : in out T; For_Read : Boolean);
+      with procedure Unlock (Self : in out T);
+   package Locking_Policy is
+   end Locking_Policy;
+#END_SRC
+
+   For the higher-level packages, we could have an enumeration (which could
+   have a default value and therefore be easier to instantiate):
+
+#+BEGIN_SRC ada
+   type Locking_Policies is (Unprotected, With_Protected, Global_Lock,...);
+   generic
+      Locking : Locking_Policies;
+   package Generic_Locking_Policies is
+      type T is private;
+      procedure Lock (...) is
+      begin
+         case Locking is
+            when Unprotected => ...;
+            ...
+         end case;
+      end Lock;
+      package Policy is new Locking_Policy (T, Lock, Unlock);
+   end Generic_Locking_Policies;
+
+   generic
+      type Element is private;
+      Locking : Locking_Policies := Unprotected;
+   package Lists_Unbounded_Indefinite is
+      package LP is new Generic_Locking_Policies (Locking);
+      package Impl is new List (LP.Policy);
+   end Lists_Unbounded_Indefinite;
+#END_SRC
+
+** task-safe policies
+   example Unprotected, based on a protected type, based on the global lock in
+   System.Soft_Links, user-defined using primitives of the platforms.
+   Atomic operations (and lock-free containers) will likely require specific
+   implementations since they are really different from those using locking.
+
 * Elements traits
 
 ** TODO Review =Conts.Elements.Arrays=
