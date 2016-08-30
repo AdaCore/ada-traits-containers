@@ -92,7 +92,11 @@ end %(name)s;""" % {'name': defaultname})
         """
         Runs gprbuild on `self.project`
         """
-        p = Run(cmds=['gprbuild', '-q', '-p', '-P', self.project],
+        p = Run(cmds=['gprbuild', '-q', '-p', '-P', self.project,
+
+                      # Don't want to use -gnatp, we need the checks for the
+                      # testsuite
+                      '-XBUILD=Debug'],
                 error=STDOUT,
                 cwd=self.working_dir)
         self.result.actual_output += p.out
@@ -157,8 +161,8 @@ end %(name)s;""" % {'name': defaultname})
             # Some shells, when using completion, will add a final '/' after
             # directory names, so we end up running "./testsuite.py perfs/".
             # Handle this case as well.
-            if (self.test_env['test_name'] not in cmdline
-               and (self.test_env['test_name'] + '/') not in cmdline):
+            if (self.test_env['test_name'] not in cmdline and
+               (self.test_env['test_name'] + '/') not in cmdline):
                 self.result.set_status(
                     'DEAD', 'Must be specified on command line')
                 raise Disabled()

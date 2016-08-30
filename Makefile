@@ -8,6 +8,7 @@ all:
 
 # Run all tests, except manual ones
 test:
+	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=Debug
 	cd tests; python ./testsuite.py -j0 --enable-color
 
 # Run all tests with assertions, except manual ones
@@ -23,7 +24,11 @@ test_with_leaks:
 	cd tests; python ./testsuite.py -j0 --enable-color --leaks
 
 # Run manual tests
-perfs spark:
+perfs:
+	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=Production
+	cd tests; python ./testsuite.py -j0 --enable-color $@
+spark:
+	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=Debug
 	cd tests; python ./testsuite.py -j0 --enable-color $@
 
 # Create all project files, for use with GPS

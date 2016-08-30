@@ -1,6 +1,6 @@
 with "shared";
 library project Conts is
-   for Object_Dir use "obj";
+   for Object_Dir use "obj/" & Shared.Mode;
    for Source_Dirs use (".");
 
    for Library_Name use "conts";
