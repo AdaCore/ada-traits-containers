@@ -24,7 +24,7 @@
 pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Vectors.Generics;
-with Conts.Vectors.Storage.Bounded;
+with Conts.Vectors.Storage.Bounded_Definite;
 with Conts.Properties.SPARK;
 
 generic
@@ -36,8 +36,8 @@ package Conts.Vectors.Definite_Bounded with SPARK_Mode is
       (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    package Elements is new Conts.Elements.Definite (Element_Type);
-   package Storage is new Conts.Vectors.Storage.Bounded
-      (Elements => Elements.Traits);
+   package Storage is new Conts.Vectors.Storage.Bounded_Definite
+      (Elements => Elements);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 
    subtype Vector is Vectors.Vector;

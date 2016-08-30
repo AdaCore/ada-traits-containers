@@ -19,33 +19,32 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  The implementation for bounded list of elements.
---  Such a list allocates its nodes in an array, so that no memory allocation
---  is needed. The implementation therefore looks like a vector, but since we
---  need to be able to insert in the middle of the list in constant time, the
---  nodes need to store extra information.
+--  The implementation for bounded list of definite elements.
+--  This implementation does not perform any memory allocation.
+--  It is compatible with SPARK.
+--
+--  As opposed to some of the other list's storage packages, this package does
+--  not take a Base_Container formal parameter. This is for compatibility with
+--  SPARK, where it is not possible to extend a tagged type with new
+--  discriminants.
+--  As a result, a bounded list is always non-limited and non-controlled. This
+--  only works fine for a list of definite elements where no memory allocation
+--  occurs.
 
 pragma Ada_2012;
-with Conts.Elements;
+with Conts.Elements.Definite;
 
 generic
-   with package Elements is new Conts.Elements.Traits (<>);
-
-   type Container_Base_Type is abstract tagged limited private;
-   --  The base type for the container of nodes.
-   --  Since this type is eventually also used as the base type for the list
-   --  itself, this is a way to make lists either controlled or limited.
-
-package Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
+   with package Elements is new Conts.Elements.Definite (<>);
+package Conts.Lists.Storage.Bounded_Definite with SPARK_Mode is
 
    pragma Assertion_Policy
       (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
-   subtype Stored_Type is Elements.Stored_Type;
+   subtype Stored_Type is Elements.Traits.Stored;
 
    package Impl is
-      type Container (Capacity : Count_Type)
-         is abstract new Container_Base_Type with private;
+      type Container (Capacity : Count_Type) is abstract tagged private;
       type Node_Access is new Count_Type;
       Null_Node_Access : constant Node_Access := 0;
 
@@ -81,6 +80,8 @@ package Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
       --  See description in Conts.Lists.Nodes
 
    private
+      pragma SPARK_Mode (Off);
+
       type Node is record
          Element        : Stored_Type;
          Previous, Next : Node_Access := Null_Node_Access;
@@ -88,9 +89,7 @@ package Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
 
       type Nodes_Array is array (Count_Type range <>) of Node;
 
-      type Container (Capacity : Count_Type) is
-         abstract new Container_Base_Type
-      with record
+      type Container (Capacity : Count_Type) is abstract tagged record
          Free  : Integer := 0;   --  head of free nodes list
          --  For a negative value, its absolute value points to the first free
          --  element
@@ -101,9 +100,9 @@ package Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
 
    use Impl;
    package Traits is new Conts.Lists.Storage.Traits
-      (Elements     => Elements,
+      (Elements     => Elements.Traits,
        Container    => Impl.Container,
        Node_Access  => Impl.Node_Access,
        Null_Access  => Impl.Null_Node_Access,
        Allocate     => Allocate);
-end Conts.Lists.Storage.Bounded;
+end Conts.Lists.Storage.Bounded_Definite;

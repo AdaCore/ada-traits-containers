@@ -80,7 +80,7 @@ package Conts.Vectors.Storage with SPARK_Mode is
       --  The current capacity of the container
 
       with procedure Release_Element
-        (Self : in out Container'Class; Index : Count_Type);
+        (Self : in out Container'Class; Index : Count_Type) is null;
       --  Free the memory for the node stored at a specific Index.
       --  The element at that index will no longer be used afterward, but there
       --  is not need to mark it explicitly invalid in Self.

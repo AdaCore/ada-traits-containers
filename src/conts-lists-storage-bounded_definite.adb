@@ -21,7 +21,7 @@
 
 pragma Ada_2012;
 
-package body Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
+package body Conts.Lists.Storage.Bounded_Definite with SPARK_Mode => Off is
 
    package body Impl is
       --------------
@@ -119,27 +119,9 @@ package body Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
          --  Indices will remain the same
          New_Head := Old_Head;
          New_Tail := Old_Tail;
-
          Nodes.Free  := Source.Free;
-
-         --  We need to copy each of the elements.
-
-         if not Elements.Copyable then
-            N := Old_Head;
-            while N /= Null_Node_Access loop
-               declare
-                  Value : Node renames Source.Nodes (Count_Type (N));
-               begin
-                  Nodes.Nodes (Count_Type (N)) :=
-                     (Element  => Elements.Copy (Value.Element),
-                      Next     => Value.Next,
-                      Previous => Value.Previous);
-                  N := Value.Next;
-               end;
-            end loop;
-         end if;
       end Assign;
 
    end Impl;
 
-end Conts.Lists.Storage.Bounded;
+end Conts.Lists.Storage.Bounded_Definite;

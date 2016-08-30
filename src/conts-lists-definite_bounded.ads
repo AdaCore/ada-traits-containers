@@ -20,11 +20,12 @@
 ------------------------------------------------------------------------------
 
 --  Bounded controlled lists of constrained elements
+--  This package is compatible with SPARK.
 
 pragma Ada_2012;
 with Conts.Elements.Definite;
 with Conts.Lists.Generics;
-with Conts.Lists.Storage.Bounded;
+with Conts.Lists.Storage.Bounded_Definite;
 with Conts.Properties.SPARK;
 
 generic
@@ -37,8 +38,8 @@ package Conts.Lists.Definite_Bounded with SPARK_Mode is
 
    package Elements is new Conts.Elements.Definite
      (Element_Type, Free => Free);
-   package Storage is new Conts.Lists.Storage.Bounded
-      (Elements => Elements.Traits);
+   package Storage is new Conts.Lists.Storage.Bounded_Definite
+      (Elements => Elements);
    package Lists is new Conts.Lists.Generics (Storage.Traits);
 
    subtype Cursor is Lists.Cursor;

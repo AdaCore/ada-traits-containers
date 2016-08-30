@@ -19,38 +19,33 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This package describes the underlying storage strategy for a bounded vector
+--  The implementation for bounded vectors of definite elements.
+--  This implementation does not perform any memory allocation.
+--  It is compatible with SPARK.
 
 pragma Ada_2012;
-with Conts.Elements;
+with Conts.Elements.Definite;
 
 generic
-   with package Elements is new Conts.Elements.Traits (<>);
+   with package Elements is new Conts.Elements.Definite (<>);
+package Conts.Vectors.Storage.Bounded_Definite with SPARK_Mode is
 
-   type Container_Base_Type is abstract tagged limited private;
-   --  The base type for the container of nodes.
-   --  Since this type is eventually also used as the base type for the list
-   --  itself, this is a way to make lists either controlled or limited.
-
-package Conts.Vectors.Storage.Bounded with SPARK_Mode is
+   subtype Stored_Type is Elements.Traits.Stored;
 
    package Impl is
-      type Container (Capacity : Count_Type)
-         is abstract new Container_Base_Type with private;
+      type Container (Capacity : Count_Type) is abstract tagged private;
 
       function Max_Capacity (Self : Container'Class) return Count_Type
          is (Self.Capacity) with Inline;
       function Capacity (Self : Container'Class) return Count_Type
          is (Self.Capacity) with Inline;
-      procedure Release_Element
-        (Self : in out Container'Class; Index : Count_Type) with Inline;
       procedure Set_Element
         (Self    : in out Container'Class;
          Index   : Count_Type;
-         Element : Elements.Stored_Type) with Inline;
+         Element : Stored_Type) with Inline;
       function Get_Element
         (Self  : Container'Class;
-         Index : Count_Type) return Elements.Stored_Type with Inline;
+         Index : Count_Type) return Stored_Type with Inline;
       procedure Assign
         (Self                : in out Container'Class;
          Source              : Container'Class;
@@ -63,29 +58,26 @@ package Conts.Vectors.Storage.Bounded with SPARK_Mode is
 
    private
       pragma SPARK_Mode (Off);
-      type Elem_Array is array (Count_Type range <>) of Elements.Stored_Type;
+      type Elem_Array is array (Count_Type range <>) of Stored_Type;
 
-      type Container (Capacity : Count_Type) is
-         abstract new Container_Base_Type
-      with record
+      type Container (Capacity : Count_Type) is abstract tagged record
          Nodes : Elem_Array (Min_Index .. Capacity);
       end record;
 
       function Get_Element
         (Self  : Container'Class;
-         Index : Count_Type) return Elements.Stored_Type
+         Index : Count_Type) return Stored_Type
          is (Self.Nodes (Index));
    end Impl;
 
    package Traits is new Conts.Vectors.Storage.Traits
-     (Elements         => Elements,
+     (Elements         => Elements.Traits,
       Container        => Impl.Container,
       Max_Capacity     => Impl.Max_Capacity,
       Capacity         => Impl.Capacity,
-      Release_Element  => Impl.Release_Element,
       Set_Element      => Impl.Set_Element,
       Get_Element      => Impl.Get_Element,
       Assign           => Impl.Assign,
       Copy             => Impl.Copy);
 
-end Conts.Vectors.Storage.Bounded;
+end Conts.Vectors.Storage.Bounded_Definite;
