@@ -29,13 +29,14 @@ with Conts.Lists.Storage.Unbounded;
 
 generic
    type Element_Type (<>) is private;
+   with procedure Free (E : in out Element_Type) is null;
 package Conts.Lists.Indefinite_Unbounded is
 
    pragma Assertion_Policy
       (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
    package Elements is new Conts.Elements.Indefinite
-      (Element_Type, Pool => Conts.Global_Pool);
+      (Element_Type, Free => Free, Pool => Conts.Global_Pool);
    package Storage is new Conts.Lists.Storage.Unbounded
       (Elements            => Elements.Traits,
        Container_Base_Type => Ada.Finalization.Controlled,
