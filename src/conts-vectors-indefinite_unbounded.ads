@@ -22,6 +22,7 @@
 --  Unbounded controlled vectors of unconstrained elements
 
 pragma Ada_2012;
+with Ada.Finalization;
 with Conts.Elements.Indefinite;
 with Conts.Vectors.Generics;
 with Conts.Vectors.Storage.Unbounded;
@@ -29,7 +30,6 @@ with Conts.Vectors.Storage.Unbounded;
 generic
    type Index_Type is (<>);
    type Element_Type (<>) is private;
-   type Container_Base_Type is abstract tagged limited private;
    with procedure Free (E : in out Element_Type) is null;
 package Conts.Vectors.Indefinite_Unbounded is
 
@@ -40,7 +40,7 @@ package Conts.Vectors.Indefinite_Unbounded is
       (Element_Type, Free => Free, Pool => Conts.Global_Pool);
    package Storage is new Conts.Vectors.Storage.Unbounded
       (Elements            => Elements.Traits,
-       Container_Base_Type => Container_Base_Type,
+       Container_Base_Type => Ada.Finalization.Controlled,
        Resize_Policy       => Conts.Vectors.Resize_1_5);
    package Vectors is new Conts.Vectors.Generics (Index_Type, Storage.Traits);
 

@@ -26,7 +26,9 @@ pragma Ada_2012;
 
 with Conts.Cursors;
 with Conts.Properties.Indexed;
-with Conts.Vectors.Indefinite_Unbounded;
+with Conts.Elements.Indefinite;
+with Conts.Vectors.Generics;
+with Conts.Vectors.Storage.Unbounded;
 with Conts.Vectors.Definite_Unbounded;
 with Conts.Graphs.DFS;
 
@@ -125,11 +127,14 @@ package Conts.Graphs.Adjacency_List is
       procedure Release (V : in out Vertex_Record);
 
       --  Indefinite so that we can edit in place
-      package Vertex_Vectors is new Conts.Vectors.Indefinite_Unbounded
-        (Index_Type          => Vertex,
-         Element_Type        => Vertex_Record,
+      package Vertex_Elements is new Conts.Elements.Indefinite
+        (Vertex_Record, Free => Release, Pool => Conts.Global_Pool);
+      package Vertex_Storage is new Conts.Vectors.Storage.Unbounded
+        (Vertex_Elements.Traits,
          Container_Base_Type => Dummy_Record,
-         Free                => Release);
+         Resize_Policy       => Conts.Vectors.Resize_1_5);
+      package Vertex_Vectors is new Conts.Vectors.Generics
+        (Index_Type => Vertex, Storage => Vertex_Storage.Traits);
 
       type Graph is new Container_Base_Type with record
          Vertices : Vertex_Vectors.Vector;
