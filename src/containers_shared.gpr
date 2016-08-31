@@ -7,12 +7,6 @@ abstract project Containers_Shared is
    type Library_Kind_Type is ("relocatable", "static");
    Library_Kind : Library_Kind_Type := external ("LIBRARY_TYPE", "static");
 
-   So_Ext := ".dylib";
-
-   Boost_Include := ("-I/usr/include",
-                     "-I/opt/local/include");   --  OSX, macports
-   --  Install directory for Boost (for tests only)
-
    package Naming is
       for Implementation_Suffix ("C++") use ".cc";
       for Implementation_Suffix ("Python") use ".py";

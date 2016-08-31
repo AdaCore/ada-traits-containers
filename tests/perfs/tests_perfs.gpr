@@ -8,11 +8,18 @@ project Tests_Perfs is
    for Languages use ("Ada", "C++", "Python");
    for Main use ("main.adb");
 
+   --  Can be used to indicate the location of the Boost library
+   --  on the system.
+   BOOST := external("BOOST", "/usr/include");
+   Boost_Include := ("-I" & BOOST,
+                     "-I/opt/local/include");   --  OSX, macports
+   --  Install directory for Boost (for tests only)
+   --  It should contain all possible standard directories
+
    package Compiler extends Containers_Shared.Compiler is
       for Switches ("s-memory.adb") use ("-gnatg")
          & Compiler'Switches ("Ada");
-      for Switches ("C++") use Containers_Shared.Boost_Include
-         & Compiler'Switches ("C++");
+      for Switches ("C++") use Boost_Include & Compiler'Switches ("C++");
    end Compiler;
    package Builder extends Containers_Shared.Builder is
       for Global_Configuration_Pragmas use "gnat.adc";

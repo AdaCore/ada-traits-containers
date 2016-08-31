@@ -6,9 +6,6 @@ library project Containers is
    for Library_Name use "containers";
    for Library_Dir use "lib";
    for Library_Kind use Containers_Shared.Library_Kind;
-   for Library_Version use "lib" & Project'Library_Name
-      & Containers_Shared.So_Ext
-      & "." & Containers_Shared.Version;
 
    package Naming renames Containers_Shared.Naming;
    package Builder renames Containers_Shared.Builder;

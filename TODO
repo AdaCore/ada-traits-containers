@@ -376,9 +376,3 @@ http://ootips.org/yonat/4dev/smart-pointers.html
 * org-mode help
   *bold* /italic/ _underlined_  =code= ~verbatim~
   See http://orgmode.org/worg/org-tutorials/org4beginners.html
-
-#+BEGIN_SRC python
-   def foo:
-      if a:
-         pass
-#END_SRC
