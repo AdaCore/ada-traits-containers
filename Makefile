@@ -1,14 +1,26 @@
 BUILD=Production
 
+# In our automatic nightly builds, we want to consider the source
+# directory as read-only, and build in another directory.
+ifeq (${SOURCE_DIR},)
+GPR_CONTS=src/conts.gpr
+RBD=
+else
+GPR_CONTS=$(SOURCE_DIR)/src/conts.gpr
+RBD=--relocate-build-tree
+endif
+
 # Add support for passing extra switches to gprbuild, like -d
 GPRBUILD_OPTIONS=
 
+GPRBUILD=gprbuild ${RBD} -p -m -j0 ${GPRBUILD_OPTIONS}
+
 all:
-	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=${BUILD}
+	${GPRBUILD} -P${GPR_CONTS} -XBUILD=${BUILD}
 
 # Run all tests, except manual ones
 test:
-	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=Debug
+	${GPRBUILD} -XBUILD=Debug
 	cd tests; python ./testsuite.py -j0 --enable-color
 
 # Run all tests with assertions, except manual ones
@@ -25,10 +37,10 @@ test_with_leaks:
 
 # Run manual tests
 perfs:
-	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=Production
+	${GPRBUILD} -Psrc/conts -XBUILD=Production
 	cd tests; python ./testsuite.py -j0 --enable-color $@
 spark:
-	gprbuild -m -p -Psrc/conts -j0 ${GPRBUILD_OPTIONS} -XBUILD=Debug
+	${GPRBUILD} -Psrc/conts -XBUILD=Debug
 	cd tests; python ./testsuite.py -j0 --enable-color $@
 
 # Create all project files, for use with GPS
