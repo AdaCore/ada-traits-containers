@@ -75,17 +75,17 @@ class AbstractDriver(TestDriver):
         self.project = os.path.join(self.working_dir, defaultfile)
         self.project_is_tmp = True
         file(self.project, "w").write("""
-with "../../src/shared";
-with "../../src/conts";
+with "containers_shared";
+with "containers";
 with "gnatcoll";
 project %(name)s is
    for Source_Dirs use (".", "../shared/");
    for Main use ("main.adb");
    for Object_Dir use "obj";
-   package Compiler renames Shared.Compiler;
-   package Builder renames Shared.Builder;
-   package Binder renames Shared.Binder;
-   package Linker renames Shared.Linker;
+   package Compiler renames Containers_Shared.Compiler;
+   package Builder renames Containers_Shared.Builder;
+   package Binder renames Containers_Shared.Binder;
+   package Linker renames Containers_Shared.Linker;
 end %(name)s;""" % {'name': defaultname})
 
     def gprbuild(self):

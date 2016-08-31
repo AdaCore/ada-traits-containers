@@ -687,7 +687,8 @@ List("String",
 # Integer vectors
 
 p = " (Positive, Integer);"
-cp = " (Positive, Integer, Ada.Finalization.Controlled);"
+cp = " (Positive, Integer);"
+cpc = " (Positive, Integer, Ada.Finalization.Controlled);"
 lp = " (Positive, Integer);"
 
 Vector("Integer",
@@ -728,7 +729,7 @@ Vector("Integer",
        filename="indef_unbounded"
       ).gen(adaptor="Element")
 Vector("Integer",
-     "package Container is new Conts.Vectors.Definite_Unbounded" + cp,
+     "package Container is new Conts.Vectors.Definite_Unbounded" + cpc,
      "with Conts.Vectors.Definite_Unbounded;",
        unbounded=True,
        name="Def Unbounded",
@@ -754,7 +755,7 @@ Vector("Integer",
 # String vectors
 
 p = " (Positive, String);"
-cp = " (Positive, String, Ada.Finalization.Controlled);"
+cp = " (Positive, String);"
 lp = " (Positive, String);"
 
 Vector("String",

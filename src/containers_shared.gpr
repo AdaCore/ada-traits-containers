@@ -1,4 +1,4 @@
-abstract project Shared is
+abstract project Containers_Shared is
    Version := "0.1";
 
    type Build_Mode is ("Production", "Debug");
@@ -78,4 +78,4 @@ abstract project Shared is
          --  "-Wl,-flto"
          );
    end Linker;
-end Shared;
+end Containers_Shared;

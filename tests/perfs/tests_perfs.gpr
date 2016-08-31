@@ -1,5 +1,5 @@
-with "../../src/conts";
-with "../../src/shared";
+with "containers";
+with "containers_shared";
 with "gnatcoll";
 
 project Tests_Perfs is
@@ -8,16 +8,16 @@ project Tests_Perfs is
    for Languages use ("Ada", "C++", "Python");
    for Main use ("main.adb");
 
-   package Compiler extends Shared.Compiler is
+   package Compiler extends Containers_Shared.Compiler is
       for Switches ("s-memory.adb") use ("-gnatg")
          & Compiler'Switches ("Ada");
-      for Switches ("C++") use Shared.Boost_Include
+      for Switches ("C++") use Containers_Shared.Boost_Include
          & Compiler'Switches ("C++");
    end Compiler;
-   package Builder extends Shared.Builder is
+   package Builder extends Containers_Shared.Builder is
       for Global_Configuration_Pragmas use "gnat.adc";
    end Builder;
-   package Naming renames Shared.Naming;
-   package Binder renames Shared.Binder;
-   package Linker renames Shared.Linker;
+   package Naming renames Containers_Shared.Naming;
+   package Binder renames Containers_Shared.Binder;
+   package Linker renames Containers_Shared.Linker;
 end Tests_Perfs;

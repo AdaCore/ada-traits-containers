@@ -1,0 +1,17 @@
+with "containers_shared";
+library project Containers is
+   for Object_Dir use "obj/" & Containers_Shared.Mode;
+   for Source_Dirs use (".");
+
+   for Library_Name use "containers";
+   for Library_Dir use "lib";
+   for Library_Kind use Containers_Shared.Library_Kind;
+   for Library_Version use "lib" & Project'Library_Name
+      & Containers_Shared.So_Ext
+      & "." & Containers_Shared.Version;
+
+   package Naming renames Containers_Shared.Naming;
+   package Builder renames Containers_Shared.Builder;
+   package Compiler renames Containers_Shared.Compiler;
+   package Binder renames Containers_Shared.Binder;
+end Containers;
