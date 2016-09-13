@@ -376,3 +376,21 @@ http://ootips.org/yonat/4dev/smart-pointers.html
 * org-mode help
   *bold* /italic/ _underlined_  =code= ~verbatim~
   See http://orgmode.org/worg/org-tutorials/org4beginners.html
+
+* Notes from summer meeting 2016
+
+** Need a bags datastructure (multiset)
+** Generate documentation automatically for the API
+   Currently, understanding the API is complex
+** Containers as literals or aggregates
+** Should be distributed with GNAT
+   We can later on submit to ARG
+** Do we need tampering checks as in Ada2012 runtime ?
+   There are ideas floating around on how to implement these efficiently,
+   but no details yet
+** Have thread-safe data structures
+** Default values for formal parameters
+** Stream operations as separate algorithms on type
+   We do not want them by default, since they add significant amount of code
+   for each instantiation.
+** In first beta:  List/Vector/Map
