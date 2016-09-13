@@ -59,7 +59,8 @@ projects:
 	cd tests; python ./testsuite.py -c
 
 clean:
-	gprclean -P${GPR_ROOT} -r -q
+	${PPATH} gprclean -P${GPR_ROOT} -XBUILD=Debug -r -q
+	${PPATH} gprclean -P${GPR_ROOT} -XBUILD=Production -r -q
 	-rm -f tests/*/auto_*.gpr
 	-rm -rf tests/*/obj/
 
