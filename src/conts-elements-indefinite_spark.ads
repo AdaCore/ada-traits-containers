@@ -67,7 +67,7 @@ package Conts.Elements.Indefinite_SPARK with SPARK_Mode => On is
 
       type Element_Access is access all Element_Type;
 
-      for Element_Access'Storage_Pool use Pool.Pool.all;
+      for Element_Access'Storage_Pool use Pool.Pool;
 
       function To_Element_Access (E : Element_Type) return Element_Access
       is (new Element_Type'(E));

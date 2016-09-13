@@ -484,7 +484,7 @@ private
 
    type Slot_Table is array (Hash_Type range <>) of Slot;
    type Slot_Table_Access is access Slot_Table;
-   for Slot_Table_Access'Storage_Pool use Pool.Pool.all;
+   for Slot_Table_Access'Storage_Pool use Pool.Pool;
 
    type Cursor is record
       Index : Hash_Type := Hash_Type'Last;

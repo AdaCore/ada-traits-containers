@@ -40,7 +40,7 @@ generic
 package Conts.Elements.Indefinite is
 
    type Element_Access is access all Element_Type;
-   for Element_Access'Storage_Pool use Pool.Pool.all;
+   for Element_Access'Storage_Pool use Pool.Pool;
 
    type Constant_Reference_Type
      (Element : not null access constant Element_Type)

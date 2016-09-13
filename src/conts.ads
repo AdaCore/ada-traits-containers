@@ -53,7 +53,7 @@ package Conts with SPARK_Mode is
 
    generic
       type Storage_Pool is new Root_Storage_Pool with private;
-      Pool : access Storage_Pool;
+      Pool : in out Storage_Pool;
    package Pools with SPARK_Mode => Off is
    end Pools;
    --  This package provides a way to pass storage pools as a generic parameter
@@ -65,7 +65,7 @@ package Conts with SPARK_Mode is
 
    package Global_Pool is new Pools
       (Storage_Pool  => System.Pool_Global.Unbounded_No_Reclaim_Pool,
-       Pool => System.Pool_Global.Global_Pool_Object'Unrestricted_Access);
+       Pool => System.Pool_Global.Global_Pool_Object);
    --  The default storage pool used by the GNAT runtime (a direct use of
    --  malloc and free).
 

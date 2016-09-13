@@ -42,7 +42,7 @@ package Conts.Lists.Storage.Unbounded with SPARK_Mode => Off is
    subtype Nodes_Container is Container_Base_Type;
    type Node;
    type Node_Access is access Node;
-   for Node_Access'Storage_Pool use Pool.Pool.all;
+   for Node_Access'Storage_Pool use Pool.Pool;
 
    --  ??? Compiler crashes if we make this type private
    type Node is record

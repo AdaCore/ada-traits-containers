@@ -88,7 +88,7 @@ package Conts.Elements.Arrays with SPARK_Mode => Off is
       type Storage_Kind is (Short_Array, Long_Array);
 
       type Array_Access is access all Array_Type;
-      for Array_Access'Storage_Pool use Pool.Pool.all;
+      for Array_Access'Storage_Pool use Pool.Pool;
 
       type Stored_Array (Kind : Storage_Kind := Short_Array) is record
          case Kind is
