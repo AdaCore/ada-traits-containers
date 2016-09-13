@@ -112,9 +112,7 @@ package body Conts.Lists.Storage.Bounded_Definite with SPARK_Mode => Off is
           New_Head : out Node_Access;
           Old_Head : Node_Access;
           New_Tail : out Node_Access;
-          Old_Tail : Node_Access)
-      is
-         N : Node_Access;
+          Old_Tail : Node_Access) is
       begin
          --  Indices will remain the same
          New_Head := Old_Head;

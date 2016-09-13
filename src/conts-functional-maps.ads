@@ -73,11 +73,13 @@ package Conts.Functional.Maps with SPARK_Mode is
         and then Get (M2, K) = Get (M1, K))
         and (for all K of M2 => Mem (M1, K)));
 
+   pragma Warnings (Off, "unused variable ""K""");
    function Is_Empty (M : Map) return Boolean with
    --  A map is empty if it contains no key.
 
      Global => null,
      Post   => Is_Empty'Result = (for all K of M => False);
+   pragma Warnings (On, "unused variable ""K""");
 
    function Is_Add
      (M : Map; K : Key_Type; E : Element_Type; Result : Map) return Boolean

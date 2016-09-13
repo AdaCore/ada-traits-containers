@@ -65,11 +65,13 @@ package Conts.Functional.Sets with SPARK_Mode is
        "="'Result = ((for all E of S1 => Mem (S2, E))
                      and (for all E of S2 => Mem (S1, E)));
 
+   pragma Warnings (Off, "unused variable ""E""");
    function Is_Empty (S : Set) return Boolean with
    --  A set is empty if it contains no element.
 
      Global => null,
      Post   => Is_Empty'Result = (for all E of S => False);
+   pragma Warnings (On, "unused variable ""E""");
 
    function Is_Add (S : Set; E : Element_Type; Result : Set) return Boolean
    --  Returns True if Result is S augmented with E.
