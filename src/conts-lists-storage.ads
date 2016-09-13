@@ -79,6 +79,7 @@ package Conts.Lists.Storage with SPARK_Mode is
       with function Get_Previous
          (Self : Container'Class; Pos  : Node_Access) return Node_Access is <>;
       --  Get the next and previous elements for a node
+      --  Must return Null_Access when there is no such element.
 
       with procedure Set_Previous
          (Self     : in out Container'Class;

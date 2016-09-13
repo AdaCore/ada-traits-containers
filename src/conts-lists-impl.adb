@@ -142,11 +142,7 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
    function Next
      (Self : Base_List'Class; Position : Cursor) return Cursor is
    begin
-      if Position.Current = Null_Access then
-         return Position;
-      else
-         return (Current => Get_Next (Self, Position.Current));
-      end if;
+      return (Current => Get_Next (Self, Position.Current));
    end Next;
 
    ----------
