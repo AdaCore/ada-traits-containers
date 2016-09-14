@@ -93,6 +93,8 @@ package Conts.Algorithms is
       E         : Getters.Element)
      return Cursors.Cursor
      with Global => null;
+   --  Return the location of E within Self, or No_Element if it could not be
+   --  found.
 
    --------------
    -- Contains --
@@ -110,6 +112,7 @@ package Conts.Algorithms is
       E         : Getters.Element)
      return Boolean
      with Global => null;
+   --  True if E is found in Self
 
    ------------
    -- Equals --
@@ -124,5 +127,6 @@ package Conts.Algorithms is
       with function "=" (K1, K2 : Getters.Element) return Boolean is <>;
    function Equals (Left, Right  : Cursors.Container) return Boolean
      with Global => null;
+   --  True if Left and Right contain the same elements, in the same order.
 
 end Conts.Algorithms;

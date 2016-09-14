@@ -121,15 +121,10 @@ package body Conts.Algorithms is
       E         : Getters.Element)
      return Boolean
    is
-      C     : Cursors.Cursor := Cursors.First (Self);
+      function F is new Find (Cursors, Getters, "=");
+      use type Cursors.Cursor_Type;
    begin
-      while Cursors.Has_Element (Self, C) loop
-         if Getters.Get (Self, C) = E then
-            return True;
-         end if;
-         C := Cursors.Next (Self, C);
-      end loop;
-      return False;
+      return F (Self, E) /= Cursors.No_Element;
    end Contains;
 
    ------------
