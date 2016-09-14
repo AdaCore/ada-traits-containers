@@ -2,5 +2,10 @@ aggregate project Root is
 
    for Project_files use ("src/containers.gpr", "tests/**/*.gpr");
    for Project_Path use ("src/");
+   for Object_Dir use "src/obj";
+
+   package Ide is
+      for Xref_Database use "src/obj/gnatinspect.db";
+   end Ide;
 
 end Root;
