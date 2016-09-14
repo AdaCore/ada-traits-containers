@@ -34,12 +34,6 @@ can be edited with any text editor.
 ** TODO Implement the standard Ada containers on top of these
    We will likely need a =Check_Policy= formal parameter.
 
-** TODO Storage pools: can we pass a subprogram instead
-   Is there a way we could pass storage pools as a factory function as formal
-   parameter to other packages, rather than as a package ? This would allow
-   giving a default value, and would let users override this for their whole
-   application.
-
 ** MAYBE persistent data structures
    By implementing specific storage pools or node packages, we could have
    data structures directly mapped to files (perhaps via mmap) ?
@@ -56,6 +50,19 @@ can be edited with any text editor.
    take a range in parameter, so that we can apply operators like Take,
    to only keep the n first elements of the range, or Group_By.
    http://www.informit.com/articles/printerfriendly/1407357
+
+** TODO projections
+   the Adobe Source Libraries for C++ proposes the use of projections, as a
+   way to extra data from the Element_Type, so that the predicates in
+   algorithms can be shared more easily. For instance:
+        generic
+           type T is private;         --  a person for instance
+           type P is private use T;   --  the age for instance
+           with function "=" (E : T; Key : P) return Boolean is <>;
+           with function Project (E : T) return P is (E);
+        function Find (V : Vecs.Vector; E : P) return Vecs.Cursor;
+   so "=" applies to integers, and we can use this to find all persons aged
+   42 in the vector.
 
 * Task safe containers
 
@@ -142,6 +149,21 @@ can be edited with any text editor.
 ** TODO =Zip=
    Take values from multiple containers and create tuples
 
+** TODO =all_of=, =any_of=, =none_of=, =one_of=
+   Verify that a predicate is true for all elements in a container
+      All_Of (List, IsOdd'Access)
+
+** TODO =is_sorted=, =is_partitioned=, =partition_point=
+   See Boost::algorithms
+   For is_partitioned: all items that satisfy the predicate are at the
+   beginning of the sequence.
+
+** TODO =is_permutation=
+   See Boost::algorithms
+   Whether a sequence is a permutation of another (contains the same elements
+   possibly in different order). Predicate is used to compare the elements
+
+
 * Cursors
 
 ** TODO Should we have a property map that provides =Swap= ?
@@ -205,6 +227,10 @@ can be edited with any text editor.
 ** TODO: missing =Insert= primitive
    Need a Count parameter as well
 
+** TODO: resize strategy
+   Once the size of the vector reaches 4096 bytes, we should always resize it
+   to a multiple of 4096 bytes since this is the size of a memory page on the
+   system and will be slightly faster.
 
 * Strings
 
