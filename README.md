@@ -15,7 +15,7 @@ flexibility it proposes:
         variants optimized for specific types
 
   - [X] Pre and Post conditions, compatible with SPARK, so that some
-        variants of the containers can be proven.
+        variants of the containers can be used for proof.
 
   - [X] Highly efficient; the user has full control over memory
         allocations, checks, locks, ...

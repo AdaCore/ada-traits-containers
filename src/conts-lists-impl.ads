@@ -151,7 +151,8 @@ package Conts.Lists.Impl with SPARK_Mode is
 
    function Element (S : M.Sequence; I : Count_Type) return Element_Type
      renames M.Get;
-   --  ??? Do we need this subprogram, could we use M.Get everywhere instead ?
+   --  To improve readability of contracts, we rename the function used to
+   --  access an element in the model to Element.
 
    -----------------
    -- Subprograms --

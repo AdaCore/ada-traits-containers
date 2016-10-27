@@ -6,20 +6,20 @@ with Conts.Algorithms.SPARK;
 pragma Elaborate_All (Conts.Vectors.Indefinite_Unbounded_SPARK);
 
 package Use_Vectors with SPARK_Mode is
-   subtype Smaller is Integer range Integer'First + 1 .. Integer'Last;
-
    package Nested is
-      Lst : constant Integer;
+      function Id (X, F, L : Integer) return Integer
+        with Post => (if X in F .. L then Id'Result in F .. L);
    private
       pragma SPARK_Mode (Off);
-      function Id (X : Integer) return Integer is (X);
-      Lst : constant Integer := Id (Integer'Last);
+      function Id (X, F, L : Integer) return Integer is (X);
    end Nested;
 
-   First_Index : constant Smaller := 1;
-   Last_Index  : constant Integer := Nested.Lst;
+   subtype Smaller is Integer range Integer'First + 1 .. Integer'Last;
+   Fst : constant Smaller := Nested.Id (1, Integer'First + 1, Integer'Last);
+   subtype Bigger is Integer range Fst .. Integer'Last;
+   Lst : constant Bigger := Nested.Id (Integer'Last, Fst, Integer'Last);
 
-   subtype Index_Type is Integer range First_Index .. Last_Index;
+   subtype Index_Type is Integer range Fst .. Lst;
 
    type Element_Type is new Integer;
    package My_Vectors is new
