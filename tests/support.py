@@ -1,7 +1,7 @@
 from gnatpython.testsuite import Testsuite
 from gnatpython.testsuite.driver import TestDriver
 from gnatpython.testsuite.result import Result
-from gnatpython.ex import Run, STDOUT
+from gnatpython.ex import Run, STDOUT, PIPE
 from gnatpython.fileutils import mkdir, rm
 import os
 import platform
@@ -196,7 +196,21 @@ end %(name)s;""" % {'name': defaultname})
         return '\n'.join(result)
 
     def run_exec(self, cmds):
-        p = Run(cmds=cmds, error=STDOUT, cwd=self.working_dir)
+        options = self.global_env['options']
+        prefix = []
+        stdout = PIPE
+        if options.valgrind:
+            prefix = ['valgrind', '--max-stackframe=3800000']
+        elif options.leaks:
+            prefix = ['valgrind', '--leak-check=full',
+                      '--max-stackframe=3800000',
+                      '--show-reachable=yes']
+        elif options.gdb:
+            prefix = ['gdb', '--args']
+            stdout = None
+
+        p = Run(cmds=prefix + cmds, output=stdout, error=STDOUT,
+                cwd=self.working_dir)
         self.result.actual_output += self.resolve_backtraces(cmds[0], p.out)
         if p.status != 0:
             self.result.set_status('FAILED', 'Run failed')
@@ -267,17 +281,7 @@ class BuildAndExec(AbstractDriver):
 
         for e in execs:
             execname = os.path.join(self.working_dir, e)
-
-            options = self.global_env['options']
-            if options.valgrind:
-                self.run_exec([
-                    'valgrind', '--max-stackframe=3800000', execname])
-            elif options.leaks:
-                self.run_exec(['valgrind', '--leak-check=full',
-                               '--max-stackframe=3800000',
-                               '--show-reachable=yes', execname])
-            else:
-                self.run_exec([execname])
+            self.run_exec([execname])
 
 
 class Prove(AbstractDriver):
@@ -314,6 +318,13 @@ class ContainerTestsuite(Testsuite):
             default=False,
             action='store_true',
             help='If set, only create all missing projects, but do not run')
+
+        gr.add_option(
+            '--gdb',
+            default=False,
+            action='store_true',
+            help='Run tests with gdb. You should first compile with'
+            '"make BUILD=Debug" to get better source locations')
 
         gr.add_option(
             '--valgrind',
