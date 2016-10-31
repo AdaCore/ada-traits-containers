@@ -40,9 +40,9 @@ begin
           Elements        => Int_Vecs.Elements.Traits,
           Storage         => Int_Vecs.Storage.Traits,
           Vectors         => Int_Vecs.Vectors);
-      V1, V2 : Int_Vecs.Vector (20);
+      V1 : Int_Vecs.Vector (20);
    begin
-      T (V1, V2);
+      T (V1);
    end;
 
    Put_Line ("--- Definite Unbounded ---");
@@ -54,9 +54,9 @@ begin
           Elements        => Int_Vecs.Elements.Traits,
           Storage         => Int_Vecs.Storage.Traits,
           Vectors         => Int_Vecs.Vectors);
-      V1, V2 : Int_Vecs.Vector;
+      V1 : Int_Vecs.Vector;
    begin
-      T (V1, V2);
+      T (V1);
    end;
 
    Put_Line ("--- Indefinite Unbounded SPARK ---");
@@ -68,9 +68,9 @@ begin
           Elements        => Int_Vecs.Elements.Traits,
           Storage         => Int_Vecs.Storage.Traits,
           Vectors         => Int_Vecs.Vectors);
-      V1, V2 : Int_Vecs.Vector;
+      V1 : Int_Vecs.Vector;
    begin
-      T (V1, V2);
+      T (V1);
    end;
 
    Put_Line ("--- Indefinite Unbounded ---");
@@ -84,8 +84,8 @@ begin
           Elements        => Int_Vecs.Elements.Traits,
           Storage         => Int_Vecs.Storage.Traits,
           Vectors         => Int_Vecs.Vectors);
-      V1, V2 : Int_Vecs.Vector;
+      V1 : Int_Vecs.Vector;
    begin
-      T (V1, V2);
+      T (V1);
    end;
 end Main;

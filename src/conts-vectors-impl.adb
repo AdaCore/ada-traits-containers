@@ -20,7 +20,6 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-with Ada.Text_IO; use Ada.Text_IO;
 
 package body Conts.Vectors.Impl with SPARK_Mode => Off is
    use Conts.Vectors.Storage;

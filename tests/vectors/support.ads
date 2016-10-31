@@ -35,7 +35,7 @@ package Support is
       with package Vectors is new Conts.Vectors.Generics
          (Storage => Storage, Index_Type => Index_Type);
       with function Image (Self : Elements.Constant_Returned) return String;
-   procedure Test (V1, V2 : in out Vectors.Vector);
+   procedure Test (V1 : in out Vectors.Vector);
    --  Perform various tests.
    --  All vectors should be empty on input. This is used to handle bounded
    --  vectors.

@@ -20,9 +20,7 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
-with Ada.Finalization;
 with System.Assertions; use System.Assertions;
-with Conts.Vectors.Definite_Unbounded;
 with Asserts;           use Asserts;
 with Ada.Text_IO;       use Ada.Text_IO;
 
@@ -35,7 +33,7 @@ package body Support is
    -- Test --
    ----------
 
-   procedure Test (V1, V2 : in out Vectors.Vector) is
+   procedure Test (V1 : in out Vectors.Vector) is
       use Vectors;
       E : Integer;
    begin
