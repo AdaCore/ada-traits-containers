@@ -300,6 +300,15 @@ class ContainerTestsuite(Testsuite):
             action='store_true',
             help='Check for memory leaks in the tests')
 
+    def tear_up(self):
+        super(ContainerTestsuite, self).tear_up()
+
+        # Add local projects to the path. In the nightly tests, this is
+        # overridden by preseting the project path
+        os.environ['GPR_PROJECT_PATH'] = \
+            os.environ.get('GPR_PROJECT_PATH', '') + os.sep + \
+            os.path.join(self.global_env['root_dir'], '..', 'src')
+
     def tear_down(self):
         # Print the testsuite result on the terminal for the convenience
         # of developers.
