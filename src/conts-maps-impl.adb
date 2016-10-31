@@ -311,13 +311,17 @@ package body Conts.Maps.Impl with SPARK_Mode => Off is
       end if;
 
       C.Index := Self.Table'First;
-      while C.Index <= Self.Table'Last
-        and then Self.Table (C.Index).Kind /= Full
       loop
+         if C.Index > Self.Table'Last then
+            return No_Element;
+         end if;
+
+         if Self.Table (C.Index).Kind = Full then
+            return C;
+         end if;
+
          C.Index := C.Index + 1;
       end loop;
-
-      return C;
    end First;
 
    -----------------
