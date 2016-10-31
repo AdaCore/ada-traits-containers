@@ -371,7 +371,7 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
       else
          Storage.Set_Element (Self, L, Storage.Elements.Copy (R_Tmp));
          Storage.Elements.Release (R_Tmp);    --  No longer needed
-         Storage.Set_Element (Self, L, Storage.Elements.Copy (L_Tmp));
+         Storage.Set_Element (Self, R, Storage.Elements.Copy (L_Tmp));
          Storage.Elements.Release (L_Tmp);
       end if;
    end Swap;
