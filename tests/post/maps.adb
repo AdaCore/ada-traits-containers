@@ -24,6 +24,7 @@ pragma Ignore_Pragma (Assertion_Policy);
 with Conts; use Conts;
 with Conts.Maps.Indef_Indef_Unbounded_SPARK;
 with Ada.Strings.Hash;
+
 procedure Maps is
    package My_Maps is new
      Conts.Maps.Indef_Indef_Unbounded_SPARK
@@ -44,10 +45,8 @@ begin
    end loop;
 
    M.Resize (38);
-
-   M.Resize (11);
-
---     M.Resize (2); ??? change the precondition of Resize?
+   M.Resize (11);  --  Resize to bigger than number of elements
+   M.Resize (2);   --  Resize to smaller size
 
    M.Set (M.As_Key (M.First), 0);
 

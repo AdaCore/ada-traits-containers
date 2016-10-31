@@ -405,13 +405,18 @@ package body Conts.Maps.Impl with SPARK_Mode => Off is
       New_Size : Count_Type)
    is
       Size      : Hash_Type := Hash_Type (Min_Size);
+
+      --  We need at least Length elements
+      Min_New_Size : constant Hash_Type := Hash_Type'Max
+         (Hash_Type (New_Size), Hash_Type (Self.Used));
+
       Tmp       : Slot_Table_Access;
       Candidate : Hash_Type;
       Prob      : Probing;
    begin
       --  Find smallest valid size greater than New_Size
 
-      while Size < Hash_Type (New_Size) loop
+      while Size < Min_New_Size loop
          Size := Size * 2;
       end loop;
 

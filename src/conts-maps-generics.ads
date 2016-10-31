@@ -102,6 +102,8 @@ package Conts.Maps.Generics with SPARK_Mode is
    --  If you know you are going to insert n items, calling Resize (n) is
    --  likely to improve the performance by limiting the number of times the
    --  map will be resized during the insertions.
+   --  Resize will always keep a capacity greater than the number of elements
+   --  currently in the map.
 
    procedure Set
      (Self     : in out Base_Map'Class;
