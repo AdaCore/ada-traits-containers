@@ -20,6 +20,7 @@
 ------------------------------------------------------------------------------
 
 pragma Ada_2012;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Conts.Vectors.Impl with SPARK_Mode => Off is
    use Conts.Vectors.Storage;
@@ -369,10 +370,15 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
          end;
 
       else
-         Storage.Set_Element (Self, L, Storage.Elements.Copy (R_Tmp));
-         Storage.Elements.Release (R_Tmp);    --  No longer needed
-         Storage.Set_Element (Self, R, Storage.Elements.Copy (L_Tmp));
-         Storage.Elements.Release (L_Tmp);
+         declare
+            L2 : constant Stored_Type := Storage.Elements.Copy (L_Tmp);
+            R2 : constant Stored_Type := Storage.Elements.Copy (R_Tmp);
+         begin
+            Storage.Release_Element (Self, L);
+            Storage.Set_Element (Self, L, R2);
+            Storage.Release_Element (Self, R);
+            Storage.Set_Element (Self, R, L2);
+         end;
       end if;
    end Swap;
 

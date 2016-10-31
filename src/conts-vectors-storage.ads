@@ -99,6 +99,8 @@ package Conts.Vectors.Storage with SPARK_Mode is
           Pos  : Count_Type) return Elements.Stored_Type is <>;
       --  Return the element stored at the given position.
       --  Pos will always be a valid position within Self.
+      --  Set_Element should not release the element itself, this is done by
+      --  by the caller.
 
       with procedure Assign
         (Self                : in out Container'Class;
