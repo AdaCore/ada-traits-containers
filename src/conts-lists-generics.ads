@@ -68,6 +68,11 @@ package Conts.Lists.Generics with SPARK_Mode is
    --  Return the number of elements in the list.
    --  Complexity: O(n)  (in practice, constant)
 
+   function Is_Empty (Self : Base_List'Class) return Boolean
+      renames Impl.Is_Empty;
+   --  Whether the list is empty.
+   --  Complexity: O(1)
+
    function Capacity (Self : Base_List'Class) return Count_Type
      renames Impl.Capacity;
    --  Return the maximal number of elements in the list. This will be

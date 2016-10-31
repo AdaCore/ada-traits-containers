@@ -137,6 +137,9 @@ package body Conts.Lists.Storage.Bounded with SPARK_Mode => Off is
                   N := Value.Next;
                end;
             end loop;
+
+         else
+            Nodes.Nodes := Source.Nodes;
          end if;
       end Assign;
 

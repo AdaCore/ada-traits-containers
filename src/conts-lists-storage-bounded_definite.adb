@@ -118,6 +118,7 @@ package body Conts.Lists.Storage.Bounded_Definite with SPARK_Mode => Off is
          New_Head := Old_Head;
          New_Tail := Old_Tail;
          Nodes.Free  := Source.Free;
+         Nodes.Nodes := Source.Nodes;
       end Assign;
 
    end Impl;

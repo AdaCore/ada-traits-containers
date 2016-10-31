@@ -1,0 +1,65 @@
+------- Definite Bounded --------------
+list, element loop => 1
+list, element loop => 2
+list, element loop => 3
+list, element loop => 4
+list, cursor loop => 1
+list, cursor loop => 2
+list, cursor loop => 3
+list, cursor loop => 4
+assigned list, element loop => 1
+assigned list, element loop => 2
+assigned list, element loop => 3
+assigned list, element loop => 4
+------- Definite Bounded (limited) --------------
+list, element loop => 1
+list, element loop => 2
+list, element loop => 3
+list, element loop => 4
+list, cursor loop => 1
+list, cursor loop => 2
+list, cursor loop => 3
+list, cursor loop => 4
+assigned list, element loop => 1
+assigned list, element loop => 2
+assigned list, element loop => 3
+assigned list, element loop => 4
+------- Definite Unbounded --------------
+list, element loop => 1
+list, element loop => 2
+list, element loop => 3
+list, element loop => 4
+list, cursor loop => 1
+list, cursor loop => 2
+list, cursor loop => 3
+list, cursor loop => 4
+assigned list, element loop => 1
+assigned list, element loop => 2
+assigned list, element loop => 3
+assigned list, element loop => 4
+------- Indefinite Unbounded --------------
+list, element loop => 1
+list, element loop => 2
+list, element loop => 3
+list, element loop => 4
+list, cursor loop => 1
+list, cursor loop => 2
+list, cursor loop => 3
+list, cursor loop => 4
+assigned list, element loop => 1
+assigned list, element loop => 2
+assigned list, element loop => 3
+assigned list, element loop => 4
+------- Indefinite Unbounded SPARK --------------
+list, element loop => 1
+list, element loop => 2
+list, element loop => 3
+list, element loop => 4
+list, cursor loop => 1
+list, cursor loop => 2
+list, cursor loop => 3
+list, cursor loop => 4
+assigned list, element loop => 1
+assigned list, element loop => 2
+assigned list, element loop => 3
+assigned list, element loop => 4

@@ -18,6 +18,9 @@ value.
     --  in the test directory. Otherwise, a temporary "auto_<testname>.gpr"
     --  file is created and deleted on exit, unless "-k" is specified.
 
+    mains: ['mains.adb']
+    --  List of main units for the project
+
     manual: false
     --  If true, this test is not run automatically when "./testsuite.py"
     --  is run. It is only run when specified explicitly on the command
@@ -56,10 +59,12 @@ class Disabled(Exception):
 
 class AbstractDriver(TestDriver):
 
-    def create_project_if_needed(self):
+    def create_project_if_needed(self, mains):
         """
         Create a standard project if none exists in the test directory.
         `self.project` must be set
+
+        :param List(str) mains: list of main units
         """
         self.project_is_tmp = False
         fromenv = self.test_env.get('project')
@@ -81,13 +86,14 @@ with "containers";
 with "gnatcoll";
 project %(name)s is
    for Source_Dirs use (".", "../shared/");
-   for Main use ("main.adb");
+   for Main use (%(mains)s);
    for Object_Dir use "obj";
    package Compiler renames Containers_Shared.Compiler;
    package Builder renames Containers_Shared.Builder;
    package Binder renames Containers_Shared.Binder;
    package Linker renames Containers_Shared.Linker;
-end %(name)s;""" % {'name': defaultname})
+end %(name)s;""" % {'name': defaultname,
+                    'mains': ", ".join('"%s"' % m for m in mains)})
 
     def gprbuild(self):
         """
@@ -242,7 +248,8 @@ end %(name)s;""" % {'name': defaultname})
 
     def run(self):
         try:
-            self.create_project_if_needed()
+            self.create_project_if_needed(
+                mains=self.test_env.get('mains', ['main.adb']))
 
             if self.global_env['options'].create_projects:
                 self.result.set_status("DEAD", "only creating projects")

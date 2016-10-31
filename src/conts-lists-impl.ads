@@ -69,6 +69,11 @@ package Conts.Lists.Impl with SPARK_Mode is
           --  The length of a list is always smaller than its capacity
           Length'Result <= Capacity (Self);
 
+   function Is_Empty (Self : Base_List'Class) return Boolean
+      is (Length (Self) = 0)
+      with Inline;
+   --  See documentation in conts-lists-generics.ads
+
    ------------------
    -- Formal Model --
    ------------------

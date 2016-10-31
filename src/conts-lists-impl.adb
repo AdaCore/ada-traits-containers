@@ -55,6 +55,8 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
       Position : Cursor := (Current => Self.Head);
       R        : M.Sequence;
    begin
+      --  Can't use First, Next or Element here, since they depend
+      --  on Model for their postconditions
       while Position.Current /= Null_Access loop
          R := M.Add (R, Storage.Elements.To_Element
                      (Storage.Elements.To_Constant_Returned
