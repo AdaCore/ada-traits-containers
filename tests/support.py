@@ -4,6 +4,7 @@ from gnatpython.testsuite.result import Result
 from gnatpython.ex import Run, STDOUT
 from gnatpython.fileutils import mkdir, rm
 import os
+import platform
 
 """
 This file provides various test drivers.
@@ -167,9 +168,36 @@ end %(name)s;""" % {'name': defaultname})
                     'DEAD', 'Must be specified on command line')
                 raise Disabled()
 
+    def resolve_backtraces(self, executable, out):
+        """
+        Resolve GNAT backtraces in `out` to symbolic.
+
+        :param str executable: the binary
+        :return: the modified output that includes symbolic backtraces
+        """
+        result = []
+        next_is_backtrace = False
+        for line in out.splitlines():
+            result.append(line)
+            if 'Call stack traceback locations:' in line:
+                next_is_backtrace = True
+            elif next_is_backtrace:
+                next_is_backtrace = False
+
+                if platform.system() == 'Darwin':
+                    p = Run(['atos', '-o', executable] + line.split())
+                    result.append(p.out)
+                elif platform.system() == 'Linux':
+                    p = Run(['addr2line', '--functions', '--demangle=gnat',
+                             '--basenames', '--inlines', '-e', executable] +
+                            line.split())
+                    result.append(p.out)
+
+        return '\n'.join(result)
+
     def run_exec(self, cmds):
         p = Run(cmds=cmds, error=STDOUT, cwd=self.working_dir)
-        self.result.actual_output += p.out
+        self.result.actual_output += self.resolve_backtraces(cmds[0], p.out)
         if p.status != 0:
             self.result.set_status('FAILED', 'Run failed')
             raise BuildError()
