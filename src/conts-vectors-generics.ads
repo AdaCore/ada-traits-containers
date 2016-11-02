@@ -58,8 +58,6 @@ package Conts.Vectors.Generics with SPARK_Mode is
 
    function To_Count (Idx : Index_Type) return Count_Type
      renames Impl.To_Count;
-   function To_Index (Position : Cursor) return Index_Type
-     renames Impl.To_Index;
    --  Converts to or from an index type to an index into the actual underlying
    --  array.
 
@@ -192,10 +190,6 @@ package Conts.Vectors.Generics with SPARK_Mode is
      renames Impl.Next;
    --  Modifies Position in place.
 
-   function Element
-     (Self : Base_Vector'Class; Position : Index_Type)
-     return Constant_Returned_Type
-     renames Impl.Element;
    function Reference
      (Self : Base_Vector'Class; Position : Index_Type)
      return Returned_Type
@@ -213,16 +207,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
      is (Storage.Elements.To_Element (Element (Self, Position)))
      with
        Pre => Has_Element (Self, Position),
-       Post => As_Element'Result =
-         Element (Impl.Model (Self), Impl.To_Index (Position));
-   pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
-
-   function As_Element
-     (Self : Base_Vector'Class; Index : Index_Type) return Element_Type
-     is (Storage.Elements.To_Element (Element (Self, Index)))
-     with
-       Pre => Index <= Last (Self),
-       Post => As_Element'Result = Element (Impl.Model (Self), Index);
+       Post => As_Element'Result = Element (Impl.Model (Self), Position);
    pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
 
    ------------------

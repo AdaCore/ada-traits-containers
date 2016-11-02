@@ -54,17 +54,17 @@ package body Use_Vectors with SPARK_Mode is
       while Has_Element (V, Cu) loop
          pragma Loop_Invariant (Length (V) = Length (V)'Loop_Entry);
          pragma Loop_Invariant
-           (for all N in Index_Type'First .. To_Index (Cu) - 1 =>
+           (for all N in Index_Type'First .. Cu - 1 =>
                 Is_Incr (Element (Model (V)'Loop_Entry, N),
                          As_Element (V, N)));
          pragma Loop_Invariant
-           (for all N in To_Index (Cu) .. Last (V) =>
+           (for all N in Cu .. Last (V) =>
                 Element (Model (V)'Loop_Entry, N) =
                 As_Element (V, N));
          pragma Loop_Invariant
            (Valid_Cursors (V)'Loop_Entry = Valid_Cursors (V));
          if As_Element (V, Cu) < Element_Type'Last then
-            Replace_Element (V, To_Index (Cu), Element (V, Cu) + 1);
+            Replace_Element (V, Cu, Element (V, Cu) + 1);
          end if;
          Next (V, Cu);
       end loop;

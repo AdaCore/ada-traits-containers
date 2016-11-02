@@ -53,8 +53,6 @@ package Conts.Vectors.Indefinite_Unbounded is
    package Cursors renames Vectors.Cursors;
    package Maps renames Vectors.Maps;
 
-   function To_Index (Position : Cursor) return Index_Type
-     renames Vectors.To_Index;
    procedure Swap
      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
        renames Vectors.Swap;

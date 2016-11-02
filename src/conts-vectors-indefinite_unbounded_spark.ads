@@ -59,11 +59,9 @@ package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
    function Copy (Self : Vector'Class) return Vector'Class;
    --  Return a deep copy of Self
 
-   function To_Index (Position : Cursor) return Index_Type
-     renames Vectors.To_Index;
    procedure Swap
      (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)
-       renames Vectors.Swap;
+     renames Vectors.Swap;
 
    package Content_Models is new Conts.Properties.SPARK.Content_Models
         (Map_Type     => Vectors.Base_Vector'Class,

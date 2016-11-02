@@ -57,8 +57,8 @@ package Conts.Vectors.Impl with SPARK_Mode is
    --  Define the iterable aspect later, since this is not allowed when the
    --  parent type is a generic formal.
 
-   type Cursor is private;
-   No_Element : constant Cursor;
+   subtype Cursor is Extended_Index;
+   No_Element : constant Cursor := No_Index;
 
    Last_Count : constant Count_Type :=
      (if Index_Type'Pos (Index_Type'Last) < Index_Type'Pos (Index_Type'First)
@@ -92,14 +92,6 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Post   => Last'Result =
          Index_Type'Val ((Index_Type'Pos (Index_Type'First) - 1)
                          + Length (Self));
-
-   function To_Index (Position : Cursor) return Index_Type
-   --  Return the index corresponding to the cursor.
-   --  In vectors, cursors cannot change positions. They are associated with a
-   --  unique index by To_Index.
-     with
-       Global => null,
-       Pre    => Position /= No_Element;
 
    function To_Index (Position : Count_Type) return Extended_Index
    --  Converts from index into the actual array back to the index type
@@ -170,12 +162,12 @@ package Conts.Vectors.Impl with SPARK_Mode is
          --  Positions of cursors are smaller than the container's last index.
          and then
            (for all I of Valid_Cursors'Result =>
-              To_Index (I) in Index_Type'First .. Last (Self)
+              I in Index_Type'First .. Last (Self)
 
-         --  There is no more than one cursor per position in the container.
-         and then
-           (for all J of Valid_Cursors'Result =>
-              (if To_Index (I) = To_Index (J) then I = J)));
+              --  There is no more than one cursor per position in container
+              --  ??? Test seems strange below
+              and then
+                (for all J of Valid_Cursors'Result => (if I = J then I = J)));
 
    procedure Lift_Abstraction_Level (Self : Base_Vector'Class)
    --  Lift_Abstraction_Level is a ghost procedure that does nothing but
@@ -190,7 +182,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Post   =>
          (for all Elt of Model (Self) =>
             (for some I of Valid_Cursors (Self) =>
-                 M.Get (Model (Self), To_Index (I)) = Elt));
+                 M.Get (Model (Self), I) = Elt));
 
    use type M.Sequence;
    function Element
@@ -222,16 +214,6 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Global => null,
        Pre    => Position <= Last (Self);
 
-   function Element
-     (Self : Base_Vector'Class; Position : Cursor)
-     return Constant_Returned_Type
-   --  See documentation in conts-vectors-generics.ads
-     with
-       Global => null,
-       Pre    => Has_Element (Self, Position),
-       Post   => Storage.Elements.To_Element (Element'Result) =
-          Element (Model (Self), To_Index (Position));
-
    function Last_Element
      (Self : Base_Vector'Class) return Constant_Returned_Type
    --  See documentation in conts-vectors-generics.ads
@@ -247,11 +229,12 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Global         => null,
        Contract_Cases =>
          (Length (Self) = 0 => First'Result = No_Element,
-          others            => To_Index (First'Result) = Index_Type'First
+          others            => First'Result = Index_Type'First
           and then Has_Element (Self, First'Result));
 
    function Has_Element
      (Self : Base_Vector'Class; Position : Cursor) return Boolean
+     is (Position >= Index_Type'First and then Position <= Self.Last)
    --  See documentation in conts-vectors-generics.ads
      with
        Inline,
@@ -267,8 +250,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Global         => null,
        Pre            => Has_Element (Self, Position),
        Contract_Cases   =>
-         (To_Index (Position) < Last (Self) =>
-             To_Index (Next'Result) = Index_Type'Succ (To_Index (Position))
+         (Position < Last (Self) => Next'Result = Index_Type'Succ (Position)
              and then Has_Element (Self, Next'Result),
           others => Next'Result = No_Element);
 
@@ -279,8 +261,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Global => null,
        Pre    => Has_Element (Self, Position),
        Contract_Cases =>
-         (To_Index (Position) < Last (Self) =>
-             To_Index (Position) = Index_Type'Succ (To_Index (Position'Old))
+         (Position < Last (Self) => Position = Index_Type'Succ (Position'Old)
              and then Has_Element (Self, Position),
           others => Position = No_Element);
 
@@ -292,8 +273,8 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Global         => null,
        Pre            => Has_Element (Self, Position),
        Contract_Cases =>
-         (To_Index (Position) > Index_Type'First =>
-             To_Index (Previous'Result) = Index_Type'Pred (To_Index (Position))
+         (Position > Index_Type'First =>
+             Previous'Result = Index_Type'Pred (Position)
              and then Has_Element (Self, Previous'Result),
           others => Previous'Result = No_Element);
 
@@ -524,7 +505,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Inline,
        Pre'Class => Has_Element (Self, Position),
        Post      => Storage.Elements.To_Element (Element_Primitive'Result) =
-          Element (Model (Self), To_Index (Position));
+          Element (Model (Self), Position);
 
    function Has_Element_Primitive
      (Self : Base_Vector; Position : Cursor) return Boolean
@@ -554,22 +535,16 @@ private
    --  In case the list is a controlled type, but irrelevant when Self
    --  is not controlled.
 
-   type Cursor is record
-      Index   : Count_Type;
-   end record;
-
-   No_Element : constant Cursor :=
-     (Index => Conts.Vectors.Storage.Min_Index - 1);
+   No_Last : constant Count_Type := Conts.Vectors.Storage.Min_Index - 1;
+   --  Indicates that the vector is empty, when its Last index is No_Last
 
    type Base_Vector is new Storage.Container with record
-      Last  : Count_Type := No_Element.Index;
+      Last  : Count_Type := No_Last;
       --  Last assigned element
    end record;
 
    function Last (Self : Base_Vector'Class) return Extended_Index
      is (To_Index (Self.Last));
-   function To_Index (Position : Cursor) return Index_Type
-     is (To_Index (Position.Index));
 
    function To_Index (Position : Count_Type) return Extended_Index
      is (Index_Type'Val

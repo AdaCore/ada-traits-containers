@@ -110,7 +110,7 @@ package body Conts.Graphs.Adjacency_List is
       function Element (G : Graph; C : Vertex_Cursor) return Vertex is
          pragma Unreferenced (G);
       begin
-         return Vertex_Vectors.To_Index (C.Current);
+         return C.Current;
       end Element;
 
       -----------------

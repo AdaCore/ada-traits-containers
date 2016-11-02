@@ -34,13 +34,13 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    function Valid_Cursors (Self : Base_Vector'Class) return V_Set is
       R  : V.Set;
    begin
-      if Self.Last = No_Element.Index then
+      if Self.Last = No_Last then
          --  If the vector is empty, return an empty model.
          return V_Set'(Content => R);
       else
          --  otherwise return a cursor per valid index.
          for Idx in Min_Index .. Self.Last loop
-            R := V.Add (R, (Index => Idx));
+            R := V.Add (R, To_Index (Idx));
          end loop;
          return V_Set'(Content => R);
       end if;
@@ -53,7 +53,7 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    function Model (Self : Base_Vector'Class) return M.Sequence is
       R  : M.Sequence;
    begin
-      if Self.Last /= No_Element.Index then
+      if Self.Last /= No_Last then
          for Idx in Min_Index .. Self.Last loop
             R := M.Add
                (R,
@@ -77,36 +77,12 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
 
    function First (Self : Base_Vector'Class) return Cursor is
    begin
-      if Self.Last = No_Element.Index then
+      if Self.Last = No_Last then
          return No_Element;
       else
-         return (Index => Min_Index);
+         return To_Index (Min_Index);
       end if;
    end First;
-
-   -------------
-   -- Element --
-   -------------
-
-   function Element
-     (Self : Base_Vector'Class; Position : Cursor)
-     return Constant_Returned_Type is
-   begin
-      return Storage.Elements.To_Constant_Returned
-        (Storage.Get_Element (Self, Position.Index));
-   end Element;
-
-   -----------------
-   -- Has_Element --
-   -----------------
-
-   function Has_Element
-     (Self : Base_Vector'Class; Position : Cursor) return Boolean
-   is
-      pragma Unreferenced (Self);
-   begin
-      return Position.Index /= No_Element.Index;
-   end Has_Element;
 
    ----------
    -- Next --
@@ -115,8 +91,8 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    function Next
      (Self : Base_Vector'Class; Position : Cursor) return Cursor is
    begin
-      if Position.Index < Self.Last then
-         return (Index => Position.Index + 1);
+      if To_Count (Position) < Self.Last then
+         return Cursor'Succ (Position);
       else
          return No_Element;
       end if;
@@ -140,8 +116,8 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    is
       pragma Unreferenced (Self);
    begin
-      if Position.Index > Min_Index then
-         return (Index => Position.Index - 1);
+      if To_Count (Position) > Min_Index then
+         return Cursor'Pred (Position);
       else
          return No_Element;
       end if;
@@ -235,7 +211,7 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
 
       --  Deallocate all memory
       Storage.Resize (Self, 0, L, Force => True);
-      Self.Last := Min_Index - 1;
+      Self.Last := No_Last;
    end Clear;
 
    ------------

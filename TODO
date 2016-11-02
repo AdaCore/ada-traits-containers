@@ -202,11 +202,6 @@ can be edited with any text editor.
 * Vectors
 
 ** TODO circular buffer with Prepend operation
-** TODO can a cursor be implemented as an =Index_Type= directly ?
-   That would be more logical (removing one layer of abstraction), but
-   there is no convenient way to define =No_Element=, and =Next= will
-   raise an exception when moving past the current element.
-   This is no longer true now that we have extended_index
 
 ** TODO Optimize cursors
    We could avoid one test in forward_cursors, since both Has_Element and

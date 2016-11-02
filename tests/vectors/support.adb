@@ -81,6 +81,10 @@ package body Support is
                    & Image (V1.Element (C)));
       end loop;
 
+      Assert (V1.Has_Element (1), True, "has element on valid index");
+      Assert (V1.Has_Element (1000), False, "has element on invalid index");
+      Assert (V1.Has_Element (0), False, "has element on invalid index");
+
       -----------------------------------------
       -- Removing one element, back to empty --
       -----------------------------------------
