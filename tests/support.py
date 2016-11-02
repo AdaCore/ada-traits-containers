@@ -95,15 +95,17 @@ project %(name)s is
 end %(name)s;""" % {'name': defaultname,
                     'mains': ", ".join('"%s"' % m for m in mains)})
 
-    def gprbuild(self):
+    def gprbuild(self, mode='Debug'):
         """
         Runs gprbuild on `self.project`
+
+        :param str mode: the build mode, either Debug or Production
         """
         p = Run(cmds=['gprbuild', '-q', '-p', '-P', self.project,
 
                       # Don't want to use -gnatp, we need the checks for the
                       # testsuite
-                      '-XBUILD=Debug'],
+                      '-XBUILD=%s' % mode],
                 error=STDOUT,
                 cwd=self.working_dir)
         self.result.actual_output += p.out
@@ -276,11 +278,12 @@ class BuildAndExec(AbstractDriver):
     test.yaml should contains any of the following (the values given here are
     the default)::
         driver: 'build_and_exec'    # Mandatory
-        exec: 'obj/main'        # or a list
+        exec: 'obj/main'            # or a list
+        mode: 'Debug'               # build mode
     """
 
     def do_run(self):
-        self.gprbuild()
+        self.gprbuild(mode=self.test_env.get('mode', 'Debug'))
 
         execs = self.test_env.get('exec', 'obj/main')
         if not isinstance(execs, list):

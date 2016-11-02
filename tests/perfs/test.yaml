@@ -4,3 +4,4 @@ driver: 'build_and_exec'
 pre: ['python ./generate_test.py']
 manual: true
 project: 'tests_perfs.gpr'
+mode: 'Production'
