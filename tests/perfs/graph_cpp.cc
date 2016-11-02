@@ -2,7 +2,12 @@
 #include <utility>                   // for std::pair
 #include <algorithm>                 // for std::for_each
 #include <boost/graph/graph_traits.hpp>
+
+// Suppress warnings about deprecated functions
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/graph/adjacency_list.hpp>
+#pragma GCC diagnostic pop
+
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/strong_components.hpp>
 #include <creport.h>
