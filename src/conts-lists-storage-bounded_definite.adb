@@ -102,6 +102,18 @@ package body Conts.Lists.Storage.Bounded_Definite with SPARK_Mode => Off is
          Self.Nodes (Count_Type (N)).Next := Next;
       end Set_Next;
 
+      -----------------
+      -- Set_Element --
+      -----------------
+
+      procedure Set_Element
+        (Self : in out Impl.Container'Class;
+         N    : Node_Access;
+         E    : Stored_Type) is
+      begin
+         Self.Nodes (Count_Type (N)).Element := E;
+      end Set_Element;
+
       ------------
       -- Assign --
       ------------

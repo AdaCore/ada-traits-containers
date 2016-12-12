@@ -67,6 +67,10 @@ package Conts.Lists.Storage.Bounded_Definite with SPARK_Mode is
       procedure Set_Next
          (Self    : in out Impl.Container'Class;
           N, Next : Impl.Node_Access) with Inline;
+      procedure Set_Element
+        (Self : in out Impl.Container'Class;
+         N    : Node_Access;
+         E    : Stored_Type) with Inline;
       function Capacity (Self : Impl.Container'Class) return Count_Type
          is (Self.Capacity) with Inline;
       procedure Assign

@@ -1,0 +1,4 @@
+description: 'Basic test for lists'
+driver: 'build_and_exec'
+srcdirs: ['../lists_definite_bounded']
+baseline: '../lists_definite_bounded/test.out'

@@ -176,26 +176,96 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
 
    procedure Append
      (Self    : in out Base_List'Class;
-      Element : Element_Type)
+      Element : Element_Type;
+      Count   : Count_Type := 1)
    is
       N : Node_Access;
    begin
-      Allocate
-        (Self,
-         Storage.Elements.To_Stored (Element),
-         New_Node => N);
+      for C in 1 .. Count loop
+         Allocate
+           (Self,
+            Storage.Elements.To_Stored (Element),
+            New_Node => N);
 
-      if Self.Tail = Null_Access then
-         Self.Tail := N;
-         Self.Head := Self.Tail;
-      else
-         Set_Next (Self, Self.Tail, Next => N);
-         Set_Previous (Self, N, Previous => Self.Tail);
-         Self.Tail := N;
-      end if;
+         if Self.Tail = Null_Access then
+            Self.Tail := N;
+            Self.Head := Self.Tail;
+         else
+            Set_Next (Self, Self.Tail, Next => N);
+            Set_Previous (Self, N, Previous => Self.Tail);
+            Self.Tail := N;
+         end if;
+      end loop;
 
-      Self.Size := Self.Size + 1;
+      Self.Size := Self.Size + Count;
    end Append;
+
+   ------------
+   -- Insert --
+   ------------
+
+   procedure Insert
+     (Self    : in out Base_List'Class;
+      Before  : Cursor;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+   is
+      Prev : Node_Access;
+      N : Node_Access;
+   begin
+      if Before = No_Element then
+         Append (Self, Element, Count);
+      else
+         --  Insert the first one, which might become the new head
+
+         Allocate
+           (Self,
+            Storage.Elements.To_Stored (Element),
+            New_Node => N);
+
+         Prev := Get_Previous (Self, Before.Current);
+
+         if Prev = Null_Access then
+            Self.Head := N;
+         else
+            Set_Previous (Self, N, Previous => Prev);
+            Set_Next (Self, Prev, Next => N);
+         end if;
+
+         --  Then allocate remaining elements, which cannot become the head
+
+         for C in 2 .. Count loop
+            Prev := N;
+            Allocate
+              (Self,
+               Storage.Elements.To_Stored (Element),
+               New_Node => N);
+            Set_Previous (Self, N, Previous => Prev);
+            Set_Next (Self, Prev, Next => N);
+         end loop;
+
+         --  Set the final link
+
+         Set_Next (Self, N, Next => Before.Current);
+         Set_Previous (Self, Before.Current, Previous => N);
+
+         Self.Size := Self.Size + Count;
+      end if;
+   end Insert;
+
+   -------------------------
+   -- Replacement_Element --
+   -------------------------
+
+   procedure Replace_Element
+     (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
+   is
+      P : constant Node_Access := Position.Current;
+      E : Stored_Type := Get_Element (Self, P);
+   begin
+      Storage.Elements.Release (E);
+      Set_Element (Self, P, Storage.Elements.To_Stored (Element));
+   end Replace_Element;
 
    ------------
    -- Length --
@@ -244,27 +314,5 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
                       Self.Tail, Source.Tail);
       Self.Size := Source.Size;
    end Assign;
-
-   ------------
-   -- Insert --
-   ------------
-
-   procedure Insert
-     (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
-   is
-   begin
-      raise Program_Error with "Not implemented yet";
-   end Insert;
-
-   -------------------------
-   -- Replacement_Element --
-   -------------------------
-
-   procedure Replace_Element
-     (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
-   is
-   begin
-      raise Program_Error with "Not implemented yet";
-   end Replace_Element;
 
 end Conts.Lists.Impl;

@@ -60,7 +60,7 @@ package Conts.Lists.Storage with SPARK_Mode is
 
       with procedure Release_Node
          (Self : in out Container'Class; N : in out Node_Access) is null;
-      --  Free the memroy for a specific node.
+      --  Free the memory for a specific node.
       --  This function should not free the element itself, this has already
       --  been handled by the container (this is so that a null procedure can
       --  be passed in the common case).
@@ -80,6 +80,13 @@ package Conts.Lists.Storage with SPARK_Mode is
          (Self : Container'Class; Pos  : Node_Access) return Node_Access is <>;
       --  Get the next and previous elements for a node
       --  Must return Null_Access when there is no such element.
+
+      with procedure Set_Element
+        (Self     : in out Container'Class;
+         Pos      : Node_Access;
+         Element  : Elements.Stored_Type) is <>;
+      --  Replace the element at the given position.
+      --  This does not free the previous element.
 
       with procedure Set_Previous
          (Self     : in out Container'Class;

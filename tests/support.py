@@ -21,6 +21,12 @@ value.
     mains: ['mains.adb']
     --  List of main units for the project
 
+    gprwiths: []
+    --  Extra project dependencies
+
+    srcdirs: []
+    --  Extra source directories
+
     manual: false
     --  If true, this test is not run automatically when "./testsuite.py"
     --  is run. It is only run when specified explicitly on the command
@@ -59,12 +65,14 @@ class Disabled(Exception):
 
 class AbstractDriver(TestDriver):
 
-    def create_project_if_needed(self, mains):
+    def create_project_if_needed(self, mains, withs=[], srcdirs=[]):
         """
         Create a standard project if none exists in the test directory.
         `self.project` must be set
 
         :param List(str) mains: list of main units
+        :param List(str) withs: extra with clauses
+        :param List(str) srcdirs: extra source directories
         """
         self.project_is_tmp = False
         fromenv = self.test_env.get('project')
@@ -80,12 +88,14 @@ class AbstractDriver(TestDriver):
         defaultfile = defaultname.lower() + '.gpr'
         self.project = os.path.join(self.working_dir, defaultfile)
         self.project_is_tmp = True
+        srcdirs = [".", "../shared/"] + srcdirs
         file(self.project, "w").write("""
 with "containers_shared";
 with "containers";
 with "gnatcoll";
+%(with)s
 project %(name)s is
-   for Source_Dirs use (".", "../shared/");
+   for Source_Dirs use (%(src)s);
    for Main use (%(mains)s);
    for Object_Dir use "obj";
    package Compiler renames Containers_Shared.Compiler;
@@ -93,6 +103,8 @@ project %(name)s is
    package Binder renames Containers_Shared.Binder;
    package Linker renames Containers_Shared.Linker;
 end %(name)s;""" % {'name': defaultname,
+                    'with': "\n".join('with %s;' % w for w in withs),
+                    'src': ", ".join('"%s"' % s for s in srcdirs),
                     'mains': ", ".join('"%s"' % m for m in mains)})
 
     def gprbuild(self, mode='Debug'):
@@ -101,7 +113,9 @@ end %(name)s;""" % {'name': defaultname,
 
         :param str mode: the build mode, either Debug or Production
         """
-        p = Run(cmds=['gprbuild', '-q', '-p', '-P', self.project,
+        # Compile with -m, so that tests do not try to relink libcontainers,
+        # making parallel tests fail
+        p = Run(cmds=['gprbuild', '-q', '-m', '-p', '-P', self.project,
 
                       # Don't want to use -gnatp, we need the checks for the
                       # testsuite
@@ -251,7 +265,9 @@ end %(name)s;""" % {'name': defaultname,
     def run(self):
         try:
             self.create_project_if_needed(
-                mains=self.test_env.get('mains', ['main.adb']))
+                mains=self.test_env.get('mains', ['main.adb']),
+                withs=self.test_env.get('gprwiths', []),
+                srcdirs=self.test_env.get('srcdirs', []))
 
             if self.global_env['options'].create_projects:
                 self.result.set_status("DEAD", "only creating projects")

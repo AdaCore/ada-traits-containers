@@ -58,9 +58,22 @@ package Conts.Lists.Generics with SPARK_Mode is
    No_Element : constant Cursor := Impl.No_Element;
    use type Cursor;
 
-   procedure Append (Self : in out Base_List'Class; Element : Element_Type)
+   procedure Append
+     (Self    : in out Base_List'Class;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
      renames Impl.Append;
-   --  Append a new element to the list.
+   --  Append Count copies of Element to the list.
+   --  Complexity: O(1)
+
+   procedure Insert
+     (Self    : in out Base_List'Class;
+      Before  : Cursor;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+      renames Impl.Insert;
+   --  Insert Count copies of Element before the element at position Before.
+   --  If Before is No_Element, the copies are appended to the list.
    --  Complexity: O(1)
 
    function Length (Self : Base_List'Class) return Count_Type
@@ -122,6 +135,14 @@ package Conts.Lists.Generics with SPARK_Mode is
        Post => As_Element'Result = Element
           (Impl.Model (Self), Impl.P_Get (Impl.Positions (Self), Position));
    pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
+
+   procedure Replace_Element
+     (Self     : in out Base_List'Class;
+      Position : Cursor;
+      Element  : Element_Type)
+      renames Impl.Replace_Element;
+   --  If Position is a valid position in the container, it replaces the
+   --  element at that position with Element.
 
    --  ??? Should we provide a Copy function ?
    --  This cannot be provided in this generic package, since the type could

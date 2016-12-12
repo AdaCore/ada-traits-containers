@@ -276,21 +276,26 @@ package Conts.Lists.Impl with SPARK_Mode is
                 and P_Get (P2, I) = P_Get (P1, I))
            and (for all I of P2 => I = K or P_Mem (P1, I)));
 
-   procedure Append (Self : in out Base_List'Class; Element : Element_Type)
+   procedure Append
+     (Self    : in out Base_List'Class;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
    --  See documentation in conts-lists-generics.ads
      with
        Global => null,
-       Pre    => Length (Self) < Capacity (Self),
+       Pre    => Length (Self) + Count <= Capacity (Self),
        Post   => Capacity (Self) = Capacity (Self)'Old
-          and Length (Self) = Length (Self)'Old + 1
+          and Length (Self) = Length (Self)'Old + Count
 
           --  Positions contains a new mapping from the last cursor of Self to
           --  Length.
+          --  ??? Doesn't take Count into account
           and P_Is_Add
             (Positions (Self)'Old, Positions (Self),
              Last (Self), Length (Self))
 
-          --  Model contains a new element Element at the end.
+          --  Model contains Count new elements Element at the end.
+          --  ??? Doesn't take Count into account
           and M.Is_Add (Model (Self)'Old, Element, Model (Self));
 
    function M_Not_Until
@@ -339,38 +344,42 @@ package Conts.Lists.Impl with SPARK_Mode is
           and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
 
    procedure Insert
-     (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
-   --  Insert Element before the valid cursor Position in L.
+     (Self    : in out Base_List'Class;
+      Before  : Cursor;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+   --  See documentation in conts-lists-generics.ads
      with
        Global => null,
-       Pre    => Length (Self) < Capacity (Self)
-          and then Has_Element (Self, Position),
-       Post   => Length (Self) = Length (Self)'Old + 1
+       Pre    => Length (Self) + Count <= Capacity (Self)
+          and then (Before = No_Element or else Has_Element (Self, Before)),
+       Post   => Length (Self) = Length (Self)'Old + Count
           and Capacity (Self) = Capacity (Self)'Old
 
-          --  A new cursor has been inserted at position Position in Self.
+          --  A new cursor has been inserted at position Before in Self.
+          --  ??? This post doesn't take into account Count
           and P_Insert_Position
             (Positions (Self)'Old, Positions (Self),
-             Cut => P_Get (Positions (Self)'Old, Position))
+             Cut => P_Get (Positions (Self)'Old, Before))
 
-          --  The elements of Self located before Position are preserved.
+          --  The elements of Self located before Before are preserved.
           and M_Elements_Equal
              (S1  => Model (Self),
               S2  => Model (Self)'Old,
               Fst => 1,
-              Lst => P_Get (Positions (Self)'Old, Position) - 1)
+              Lst => P_Get (Positions (Self)'Old, Before) - 1)
 
-          --  Other elements are shifted by 1.
+          --  Other elements are shifted by Count.
           and M_Elements_Equal
             (S1     => Model (Self),
              S2     => Model (Self)'Old,
-             Fst    => P_Get (Positions (Self)'Old, Position) + 1,
+             Fst    => P_Get (Positions (Self)'Old, Before) + Count,
              Lst    => Length (Self),
              Offset => -1)
 
-          --  Element is stored at the previous position of Position in L.
+          --  Element is stored at the previous position of Before in L.
           and Impl.Element
-            (Model (Self), P_Get (Positions (Self)'Old, Position)) = Element;
+            (Model (Self), P_Get (Positions (Self)'Old, Before)) = Element;
 
    procedure Replace_Element
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)

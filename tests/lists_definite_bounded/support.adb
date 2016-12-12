@@ -22,10 +22,12 @@
 pragma Ada_2012;
 with Asserts;              use Asserts;
 with Ada.Text_IO;          use Ada.Text_IO;
+with System.Assertions;    use System.Assertions;
 
 package body Support is
 
    use Lists;
+   use Testsuite_Asserts;
    use Asserts.Booleans;
    use Asserts.Counts;
 
@@ -80,6 +82,57 @@ package body Support is
          Put_Line ("assigned list, element loop =>" & Image (E));
       end loop;
 
+      ------------
+      -- Insert --
+      ------------
+
+      L2.Clear;
+      L2.Insert (No_Element, 1, Count => 3);
+      Assert (L2.Length, 3, "length after inserting 3 elements at tail");
+      for E of L2 loop
+         Put_Line ("list, after insert in empty =>" & Image (E));
+      end loop;
+
+      L2.Insert (No_Element, 2, Count => 2);
+      Assert (L2.Length, 5, "length after inserting 2 elements at tail");
+      for E of L2 loop
+         Put_Line ("list, after insert =>" & Image (E));
+      end loop;
+
+      L2.Insert (L2.First, 3);
+      Assert (L2.Length, 6, "length after inserting 1 elements at head");
+      for E of L2 loop
+         Put_Line ("list, after insert at head =>" & Image (E));
+      end loop;
+
+      L2.Insert (L2.Next (L2.First), 4, Count => 2);
+      Assert (L2.Length, 8, "length after inserting 2 elements in middle");
+      for E of L2 loop
+         Put_Line ("list, after insert in middle =>" & Image (E));
+      end loop;
+
+      --  ??? What happens if we pass a cursor in the wrong list ?
+      --  We currently get a contract case error, but we should be getting
+      --  a better error message.
+      --  L2.Insert (L1.First, 5);
+
+      ---------------------
+      -- Replace_Element --
+      ---------------------
+
+      L2.Replace_Element (L2.First, 10);
+      for E of L2 loop
+         Put_Line ("list, after replace_element =>" & Image (E));
+      end loop;
+
+      begin
+         L2.Replace_Element (No_Element, 11);
+         Assert_Failed
+            ("Expected precondition failure when replacing no_element");
+      exception
+         when Assert_Failure =>
+            null;
+      end;
    end Test;
 
 end Support;

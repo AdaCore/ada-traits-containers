@@ -114,6 +114,20 @@ package body Conts.Lists.Storage.Unbounded with SPARK_Mode => Off is
       N.Next := Next;
    end Set_Next;
 
+   -----------------
+   -- Set_Element --
+   -----------------
+
+   procedure Set_Element
+     (Self : in out Nodes_Container'Class;
+      N    : Node_Access;
+      E    : Elements.Stored_Type)
+   is
+      pragma Unreferenced (Self);
+   begin
+      N.Element := E;
+   end Set_Element;
+
    ------------
    -- Assign --
    ------------

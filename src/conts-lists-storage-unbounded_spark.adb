@@ -174,6 +174,19 @@ package body Conts.Lists.Storage.Unbounded_SPARK with SPARK_Mode is
       begin
          Self.Nodes (Count_Type (N)).Previous := Previous;
       end Set_Previous;
+
+      -----------------
+      -- Set_Element --
+      -----------------
+
+      procedure Set_Element
+        (Self : in out Nodes_List'Class;
+         N    : Node_Access;
+         E    : Elements.Stored_Type) is
+      begin
+         Self.Nodes (Count_Type (N)).Element := E;
+      end Set_Element;
+
    end Private_Nodes_List;
 
 end Conts.Lists.Storage.Unbounded_SPARK;
