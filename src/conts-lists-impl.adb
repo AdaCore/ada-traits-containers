@@ -285,8 +285,8 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
 
       for C in 1 .. Count loop
          E := Get_Element (Self, N);
-         Storage.Elements.Release (E);
          N2 := Get_Next (Self, N);
+         Storage.Elements.Release (E);
          Storage.Release_Node (Self, N);
          N := N2;
          Self.Size := Self.Size - 1;

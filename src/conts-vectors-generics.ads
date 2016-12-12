@@ -120,6 +120,15 @@ package Conts.Vectors.Generics with SPARK_Mode is
    --  Append Count copies of Element to the vector, increasing the capacity
    --  as needed.
 
+   procedure Insert
+     (Self    : in out Base_Vector'Class;
+      Before  : Index_Type;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+      renames Impl.Insert;
+   --  Insert Count copies of Element starting at position before.
+   --  Complexity: O(n)
+
    procedure Replace_Element
      (Self     : in out Base_Vector'Class;
       Index    : Index_Type;
@@ -140,9 +149,12 @@ package Conts.Vectors.Generics with SPARK_Mode is
      renames Impl.Clear;
    --  Remove all contents from the vector.
 
-   procedure Delete (Self : in out Base_Vector'Class; Index : Index_Type)
+   procedure Delete
+     (Self  : in out Base_Vector'Class;
+      Index : Index_Type;
+      Count : Count_Type := 1)
      renames Impl.Delete;
-   --  Remove an element from the vector.
+   --  Remove Count elements, starting at Index.
    --  Unless you are removing the last element (see Delete_Last), this is an
    --  inefficient operation since it needs to copy all the elements after
    --  the one being removed.

@@ -71,16 +71,29 @@ package body Conts.Vectors.Storage.Unbounded with SPARK_Mode => Off is
         (Self                   : Nodes_Array_Access;
          Source                 : Nodes_Array_Access;
          Source_From, Source_To : Count_Type;
-         Self_From              : Count_Type) is
+         Self_From              : Count_Type)
+      is
+         Self_To : Count_Type;
       begin
          if Elements.Copyable then
             Self (Self_From .. Self_From + Source_To - Source_From) :=
               Source (Source_From .. Source_To);
          else
-            for J in Source_From .. Source_To loop
-               Self (Self_From + J - Source_From) :=
-                 Elements.Copy (Source (J));
-            end loop;
+            Self_To := Self_From + Source_To - Source_From;
+
+            --  If the ranges overlap, the order of the loop is important
+            if Self = Source and then Source_To > Self_To then
+               for J in Source_From .. Source_To loop
+                  Self (Self_From + J - Source_From) :=
+                    Elements.Copy (Source (J));
+               end loop;
+
+            else
+               for J in reverse Source_From .. Source_To loop
+                  Self (Self_From + J - Source_From) :=
+                    Elements.Copy (Source (J));
+               end loop;
+            end if;
          end if;
       end Internal_Copy;
 

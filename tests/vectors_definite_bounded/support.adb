@@ -35,6 +35,25 @@ package body Support is
 
    procedure Test (V1 : in out Vectors.Vector) is
       use Vectors;
+
+      procedure Dump (V : Vectors.Vector; Msg : String);
+      --  Dump the contents of V on stdout
+
+      ----------
+      -- Dump --
+      ----------
+
+      procedure Dump (V : Vectors.Vector; Msg : String) is
+      begin
+         Put (Msg);
+         Put (": [");
+         for E of V loop
+            Put (Image (E));
+            Put (", ");
+         end loop;
+         Put_Line ("]");
+      end Dump;
+
       E : Integer;
    begin
       --------------------
@@ -55,9 +74,7 @@ package body Support is
             null;  --  expected
       end;
 
-      for E2 of V1 loop
-         Put_Line ("Empty vector, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "element loop");
       for C in V1 loop
          Put_Line ("Empty vector, cursor loop =>" & Image (V1.Element (C)));
       end loop;
@@ -73,9 +90,7 @@ package body Support is
       Assert (Elements.To_Elem (V1.Last_Element), 1,
               "last element of one-element-vector");
 
-      for E2 of V1 loop
-         Put_Line ("one-element vector, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "one-element vector");
       for C in V1 loop
          Put_Line ("one-element vector, cursor loop =>"
                    & Image (V1.Element (C)));
@@ -107,12 +122,7 @@ package body Support is
       Assert (Elements.To_Elem (V1.Last_Element), 10,
               "last element of large vector");
 
-      for E2 of V1 loop
-         Put_Line ("vector, element loop =>" & Image (E2));
-      end loop;
-      for C in V1 loop
-         Put_Line ("vector, cursor loop =>" & Image (V1.Element (C)));
-      end loop;
+      Dump (V1, "after append");
 
       -----------------------------
       -- Deleting a few elements --
@@ -126,10 +136,7 @@ package body Support is
       Assert (V1.Is_Empty, False, "is_empty after delete");
       Assert (Elements.To_Elem (V1.Last_Element), 9,
               "last element after delete");
-
-      for E2 of V1 loop
-         Put_Line ("vector after delete, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "after delete");
 
       begin
          V1.Delete (10);  --  invalid
@@ -138,6 +145,13 @@ package body Support is
          when Assert_Failure =>
             null;   --  expected
       end;
+
+      V1.Delete (5, Count => 10);
+      Assert (V1.Length, 4, "after delete 10 elements at end");
+      Dump (V1, "delete 10 elements at end");
+
+      V1.Append (8);
+      V1.Append (9);
 
       -----------------------
       -- Swapping elements --
@@ -148,19 +162,14 @@ package body Support is
       Assert (V1.Is_Empty, False, "is_empty after swap");
       Assert (Elements.To_Elem (V1.Last_Element), 2,
               "last_element after swap");
-      for E2 of V1 loop
-         Put_Line ("vector after swap, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "after swap");
 
       V1.Swap (1, 1);    --  swapping same element
       Assert (V1.Length, 6, "length after swap same element");
       Assert (V1.Is_Empty, False, "is_empty after swap same element");
       Assert (Elements.To_Elem (V1.Last_Element), 2,
               "last_element after swap same element");
-      for E2 of V1 loop
-         Put_Line ("vector after swap same element, element loop =>"
-                   & Image (E2));
-      end loop;
+      Dump (V1, "after swap same element");
 
       begin
          V1.Swap (10000, 1);     --  invalid first index
@@ -188,10 +197,7 @@ package body Support is
       Assert (V1.Is_Empty, False, "is_empty after replace");
       Assert (Elements.To_Elem (V1.Last_Element), 600,
               "last_element after replace");
-
-      for E2 of V1 loop
-         Put_Line ("vector after replace, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "after replace");
 
       begin
          V1.Replace_Element (10000, 20);
@@ -219,34 +225,26 @@ package body Support is
       Assert (V1.Is_Empty, False, "is_empty after resize");
       Assert (Elements.To_Elem (V1.Last_Element), 1,
               "last_element after resize");
-      for E2 of V1 loop
-         Put_Line ("vector after resize, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "after resize");
 
       --  resize to bigger size
       V1.Resize (Length => 6, Element => 2);
       Assert (V1.Length, 6, "length after resize2");
       Assert (Elements.To_Elem (V1.Last_Element), 2,
               "last_element after resize2");
-      for E2 of V1 loop
-         Put_Line ("vector after resize2, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "after resize (2)");
 
       --  resize to smaller size
       V1.Resize (Length => 3, Element => 3);
       Assert (V1.Length, 3, "length after resize3");
       Assert (Elements.To_Elem (V1.Last_Element), 1,
               "last_element after resize3");
-      for E2 of V1 loop
-         Put_Line ("vector after resize3, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "after resize (3)");
 
       --  resize to 0
       V1.Resize (Length => 0, Element => 3);
       Assert (V1.Length, 0, "length after resize4");
-      for E2 of V1 loop
-         Put_Line ("vector after resize4, element loop =>" & Image (E2));
-      end loop;
+      Dump (V1, "after resize (4)");
 
       ---------------
       -- Shrinking --
@@ -261,6 +259,32 @@ package body Support is
       Assert (V1.Length, 20, "length after shrink");
       Assert (Elements.To_Elem (V1.Last_Element), 20,
               "last_element after shrink");
+
+      ------------
+      -- Insert --
+      ------------
+
+      V1.Clear;
+
+      V1.Insert (Before => No_Element, Element => 1, Count => 3);
+      Assert (V1.Length, 3, "length after insert in empty");
+      Dump (V1, "after insert in empty");
+
+      V1.Insert (Before => No_Element, Element => 4, Count => 2);
+      Assert (V1.Length, 5, "length after insert at end");
+      Dump (V1, "after insert at end");
+
+      V1.Insert (Before => 1, Element => 2, Count => 2);
+      Assert (V1.Length, 7, "length after insert at head");
+      Dump (V1, "after insert at head");
+
+      begin
+         V1.Insert (Before => 60, Element => 3);
+         Assert_Failed ("Can't insert at invalid location");
+      exception
+         when Assert_Failure =>
+            null;
+      end;
    end Test;
 
 end Support;

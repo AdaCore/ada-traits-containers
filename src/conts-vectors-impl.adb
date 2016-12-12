@@ -198,6 +198,44 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
       Self.Last := Self.Last + Count;
    end Append;
 
+   ------------
+   -- Insert --
+   ------------
+
+   procedure Insert
+     (Self    : in out Base_Vector'Class;
+      Before  : Extended_Index;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+   is
+   begin
+      if Before = No_Element then
+         Self.Append (Element, Count);
+      else
+         declare
+            L : constant Count_Type := Self.Last;
+            B : constant Count_Type := To_Count (Before);
+         begin
+            if L + Count > Self.Capacity then
+               Storage.Resize (Self, L + Count, L, Force => False);
+            end if;
+
+            Storage.Copy
+              (Self, Source => Self,
+               Source_From  => B,
+               Source_To    => L,
+               Self_From    => B + Count);
+
+            for J in B .. B + Count - 1 loop
+               Storage.Set_Element
+                 (Self, J, Storage.Elements.To_Stored (Element));
+            end loop;
+
+            Self.Last := Self.Last + Count;
+         end;
+      end if;
+   end Insert;
+
    -----------
    -- Clear --
    -----------
@@ -218,16 +256,26 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    -- Delete --
    ------------
 
-   procedure Delete (Self : in out Base_Vector'Class; Index : Index_Type) is
+   procedure Delete
+     (Self  : in out Base_Vector'Class;
+      Index : Index_Type;
+      Count : Count_Type := 1)
+   is
       Idx : constant Count_Type := To_Count (Index);
+      Actual : constant Count_Type :=
+        Count_Type'Min (Count, Self.Last - Idx + 1);
    begin
-      Storage.Release_Element (Self, Idx);
+      for C in 0 .. Actual - 1 loop
+         Storage.Release_Element (Self, Idx + C);
+      end loop;
+
       Storage.Copy
         (Self, Source => Self,
-         Source_From  => Idx + 1,
+         Source_From  => Idx + Actual,
          Source_To    => Self.Last,
          Self_From    => Idx);
-      Self.Last := Self.Last - 1;
+
+      Self.Last := Self.Last - Actual;
    end Delete;
 
    -----------------

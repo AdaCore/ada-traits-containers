@@ -362,7 +362,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
      (Self    : in out Base_Vector'Class;
       Element : Element_Type;
       Count   : Count_Type := 1)
-   --  Append Count copies of Element to the vector.
+     --  See documentation in conts-vectors-generics.ads
      with
        Global => null,
        Pre    => Length (Self) <= Max_Capacity (Self) - Count,
@@ -379,6 +379,42 @@ package Conts.Vectors.Impl with SPARK_Mode is
                                       Fst => Index_Type'Succ (Last (Self)'Old),
                                       Lst => Last (Self),
                                       E   => Element);
+
+   procedure Insert
+     (Self    : in out Base_Vector'Class;
+      Before  : Extended_Index;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+   --  See documentation in conts-vectors-generics.ads
+     with
+       Global  => null,
+       Pre     => Length (Self) + Count <= Max_Capacity (Self)
+          and then (Before = No_Element or else Has_Element (Self, Before)),
+       Post    =>
+          Length (Self) = Length (Self)'Old + Count
+          and Max_Capacity (Self) = Max_Capacity (Self)'Old
+
+          --  Elements before Before have not been modified
+          and M_Elements_Equal
+            (S1   => Model (Self),
+             S2   => Model (Self)'Old,
+             Fst  => Index_Type'First,
+             Lst  => Index_Type'Pred (Before))
+
+         --  Then the new elements
+         and M_Elements_Consts
+            (Model (Self)'Old,
+             Fst  => Before,
+             Lst  => Index_Type'Val (Index_Type'Pos (Before) + Count),
+             E    => Element)
+
+         --  Elements after are unchanged
+         and M_Elements_Shifted
+            (S1     => Model (Self),
+             S2     => Model (Self)'Old,
+             Fst    => Before,
+             Lst    => Last (Self)'Old,
+             Offset => Count);
 
    procedure Assign
      (Self : in out Base_Vector'Class; Source : Base_Vector'Class)
@@ -410,37 +446,45 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
    function M_Elements_Shifted
      (S1, S2   : M.Sequence;
-      Fst, Lst : Index_Type)
+      Fst, Lst : Index_Type;
+      Offset   : Count_Type := 1)
       return Boolean
-   --  ??? Missing documentation
+   --  The slice from Fst to Lst of S1 has been shifted by Offset in S2.
      with Ghost,
        Pre  => Lst <= M.Last (S1) and Lst < M.Last (S2),
        Post =>
-         --  The slice from Fst to Lst of S1 has been shifted by 1 in S2.
          M_Elements_Shifted'Result =
          (for all I in Fst .. Lst => Element (S1, I) =
-                Element (S2, Index_Type'Succ (I)));
+                Element (S2, Index_Type'Val (Index_Type'Pos (I) + Offset)));
    pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Shifted);
 
-   procedure Delete (Self : in out Base_Vector'Class; Index : Index_Type)
+   procedure Delete
+     (Self  : in out Base_Vector'Class;
+      Index : Index_Type;
+      Count : Count_Type := 1)
    --  See documentation in conts-vectors-generics.ads
      with
        Global => null,
        Pre    => Index <= Last (Self),
-       Post   => Length (Self) = Length (Self)'Old - 1
+       Post   =>
+          --  Removed at least one element, at most Count
+          Length (Self) < Length (Self)'Old
+          and Length (Self) >= Length (Self)'Old - Count
+
           --  Elements located before Index are preserved.
-          and then M_Elements_Equal
+          and M_Elements_Equal
             (S1  => Model (Self),
              S2  => Model (Self)'Old,
              Fst => Index_Type'First,
              Lst => Index_Type'Pred (Index))
 
           --  Elements located after Index are shifted.
-          and then M_Elements_Shifted
+          and M_Elements_Shifted
             (S1  => Model (Self),
              S2  => Model (Self)'Old,
              Fst => Index,
-             Lst => Last (Self));
+             Lst => Last (Self),
+             Offset => Count);
 
    procedure Delete_Last (Self : in out Base_Vector'Class)
    --  See documentation in conts-vectors-generics.ads
@@ -609,9 +653,10 @@ private
 
    function M_Elements_Shifted
      (S1, S2   : M.Sequence;
-      Fst, Lst : Index_Type)
+      Fst, Lst : Index_Type;
+      Offset   : Count_Type := 1)
       return Boolean
      is (for all I in Fst .. Lst => Element (S1, I) =
-          Element (S2, Index_Type'Succ (I)));
+          Element (S2, Index_Type'Val (Index_Type'Pos (I) + Offset)));
 
 end Conts.Vectors.Impl;
