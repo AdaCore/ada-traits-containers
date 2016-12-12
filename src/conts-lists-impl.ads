@@ -343,6 +343,41 @@ package Conts.Lists.Impl with SPARK_Mode is
            --  Cut.
           and (for all I of P2 => P_Mem (P1, I) or P_Get (P2, I) = Cut));
 
+   procedure Delete
+     (Self     : in out Base_List'Class;
+      Position : in out Cursor;
+      Count    : Count_Type := 1)
+   --  See documentation in conts-lists-generics.ads
+     with
+       Global => null,
+       Pre    => Has_Element (Self, Position),
+       Post   =>
+          --  We removed at least one element
+          Length (Self) <= Length (Self)'Old - 1
+
+          --  and no more than Count
+          and Length (Self) >= Length (Self)'Old - Count
+
+          --  The elements of Self located before Position are preserved.
+          and M_Elements_Equal
+            (S1  => Model (Self),
+             S2  => Model (Self)'Old,
+             Fst => 1,
+             Lst => P_Get (Positions (Self)'Old, Position) - 1)
+
+          --  The elements after are also preserved
+          and M_Elements_Equal
+            (S1     => Model (Self),
+             S2     => Model (Self)'Old,
+             Fst    => P_Get (Positions (Self)'Old, Position),
+             Lst    => Length (Self)'Old,
+             Offset => Count)
+
+          --  Position is left after the deleted items
+          and (not Has_Element (Self, Position)
+               or else P_Get (Positions (Self)'Old, Position) + Count =
+                P_Get (Positions (Self), Position));
+
    procedure Insert
      (Self    : in out Base_List'Class;
       Before  : Cursor;

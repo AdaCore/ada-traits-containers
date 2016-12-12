@@ -31,6 +31,24 @@ package body Support is
    use Asserts.Booleans;
    use Asserts.Counts;
 
+   procedure Dump (L : Lists.List; Msg : String);
+   --  Display the contents of the list on stdout
+
+   ----------
+   -- Dump --
+   ----------
+
+   procedure Dump (L : Lists.List; Msg : String) is
+   begin
+      Put (Msg);
+      Put ("=[");
+      for E of L loop
+         Put (Image (E));
+         Put (',');
+      end loop;
+      Put_Line ("]");
+   end Dump;
+
    ----------
    -- Test --
    ----------
@@ -63,10 +81,7 @@ package body Support is
 
       Assert (L1.Length, 4, "length of list of 10 elements");
       Assert (L1.Is_Empty, False, "list of 10 elements is empty ?");
-
-      for E of L1 loop
-         Put_Line ("list, element loop =>" & Image (E));
-      end loop;
+      Dump (L1, "element loop");
       for C in L1 loop
          Put_Line ("list, cursor loop =>" & Image (L1.Element (C)));
       end loop;
@@ -78,9 +93,7 @@ package body Support is
       L2.Clear;
       L2.Assign (Source => L1);
       Assert (L2.Length, L1.Length, "lengths after assign");
-      for E of L2 loop
-         Put_Line ("assigned list, element loop =>" & Image (E));
-      end loop;
+      Dump (L2, "assigned list, element loop");
 
       ------------
       -- Insert --
@@ -89,27 +102,19 @@ package body Support is
       L2.Clear;
       L2.Insert (No_Element, 1, Count => 3);
       Assert (L2.Length, 3, "length after inserting 3 elements at tail");
-      for E of L2 loop
-         Put_Line ("list, after insert in empty =>" & Image (E));
-      end loop;
+      Dump (L2, "after insert in empty");
 
       L2.Insert (No_Element, 2, Count => 2);
       Assert (L2.Length, 5, "length after inserting 2 elements at tail");
-      for E of L2 loop
-         Put_Line ("list, after insert =>" & Image (E));
-      end loop;
+      Dump (L2, "after insert");
 
       L2.Insert (L2.First, 3);
       Assert (L2.Length, 6, "length after inserting 1 elements at head");
-      for E of L2 loop
-         Put_Line ("list, after insert at head =>" & Image (E));
-      end loop;
+      Dump (L2, "after insert at head");
 
       L2.Insert (L2.Next (L2.First), 4, Count => 2);
       Assert (L2.Length, 8, "length after inserting 2 elements in middle");
-      for E of L2 loop
-         Put_Line ("list, after insert in middle =>" & Image (E));
-      end loop;
+      Dump (L2, "after insert in middle");
 
       --  ??? What happens if we pass a cursor in the wrong list ?
       --  We currently get a contract case error, but we should be getting
@@ -121,9 +126,7 @@ package body Support is
       ---------------------
 
       L2.Replace_Element (L2.First, 10);
-      for E of L2 loop
-         Put_Line ("list, after replace_element =>" & Image (E));
-      end loop;
+      Dump (L2, "after replace_element");
 
       begin
          L2.Replace_Element (No_Element, 11);
@@ -132,6 +135,45 @@ package body Support is
       exception
          when Assert_Failure =>
             null;
+      end;
+
+      ------------
+      -- Delete --
+      ------------
+
+      declare
+         C : Cursor := L2.First;
+         C2 : constant Cursor := L2.Next (C);
+      begin
+         L2.Delete (C, Count => 1);
+         Assert (L2.Length, 7, "length after delete head");
+         if C /= C2 then
+            Assert_Failed ("Cursor should have moved to second element");
+         end if;
+         Dump (L2, "after delete head");
+      end;
+
+      declare
+         C : Cursor := L2.First;
+         C2 : constant Cursor := L2.Next (L2.Next (C));
+      begin
+         L2.Delete (C, Count => 2);
+         Assert (L2.Length, 5, "length after delete 2 at head");
+         if C /= C2 then
+            Assert_Failed ("Cursor should have moved to third element");
+         end if;
+         Dump (L2, "after delete 2 at head");
+      end;
+
+      declare
+         C : Cursor := L2.Last;
+      begin
+         L2.Delete (C, Count => 20);
+         Assert (L2.Length, 4, "length after delete tail");
+         if C /= No_Element then
+            Assert_Failed ("Cursor should be no_element");
+         end if;
+         Dump (L2, "after delete at tail");
       end;
    end Test;
 

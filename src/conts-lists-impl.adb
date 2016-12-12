@@ -268,6 +268,45 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
    end Replace_Element;
 
    ------------
+   -- Delete --
+   ------------
+
+   procedure Delete
+     (Self     : in out Base_List'Class;
+      Position : in out Cursor;
+      Count    : Count_Type := 1)
+   is
+      N    : Node_Access := Position.Current;
+      N2   : Node_Access;
+      Prev : constant Node_Access := Get_Previous (Self,  N);
+      E    : Stored_Type;
+   begin
+      --  Find first element the range
+
+      for C in 1 .. Count loop
+         E := Get_Element (Self, N);
+         Storage.Elements.Release (E);
+         N2 := Get_Next (Self, N);
+         Storage.Release_Node (Self, N);
+         N := N2;
+         Self.Size := Self.Size - 1;
+         exit when N = Null_Access;
+      end loop;
+
+      if Prev = Null_Access then
+         Self.Head := N;
+      else
+         Set_Next (Self, Prev, N);
+      end if;
+
+      if N /= Null_Access then
+         Set_Previous (Self, N, Prev);
+      end if;
+
+      Position.Current := N;
+   end Delete;
+
+   ------------
    -- Length --
    ------------
 

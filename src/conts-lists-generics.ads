@@ -125,6 +125,8 @@ package Conts.Lists.Generics with SPARK_Mode is
    procedure Next (Self : Base_List'Class; Position : in out Cursor)
      renames Impl.Next;
 
+   function "=" (Left, Right : Cursor) return Boolean renames Impl."=";
+
    use type Element_Type;
 
    function As_Element
@@ -143,6 +145,16 @@ package Conts.Lists.Generics with SPARK_Mode is
       renames Impl.Replace_Element;
    --  If Position is a valid position in the container, it replaces the
    --  element at that position with Element.
+
+   procedure Delete
+     (Self     : in out Base_List'Class;
+      Position : in out Cursor;
+      Count    : Count_Type := 1)
+     renames Impl.Delete;
+   --  Delete Count elements starting at Position, or all the elements starting
+   --  at Position if there are fewer than Count elements starting at
+   --  Position).
+   --  Finally, sets Position to the first item after the deleted ones.
 
    --  ??? Should we provide a Copy function ?
    --  This cannot be provided in this generic package, since the type could
