@@ -175,7 +175,7 @@ package Conts.Adaptors is
       function Previous (Self : Vector; Position : Cursor) return Cursor
          is (Vectors.Previous (Position)) with Inline;
 
-      function "-" (Left, Right : Extended_Index) return Integer
+      function Distance (Left, Right : Extended_Index) return Integer
          is (Integer (Vectors."-" (Left, Right)));
       function "+" (Left : Extended_Index; N : Integer) return Extended_Index
          is (Vectors."+" (Left, Extended_Index (N)));
@@ -223,7 +223,7 @@ package Conts.Adaptors is
       function Previous (Self : Vector; Position : Cursor) return Cursor
          is (Vectors.Previous (Position)) with Inline;
 
-      function "-" (Left, Right : Extended_Index) return Integer
+      function Distance (Left, Right : Extended_Index) return Integer
          is (Integer (Vectors."-" (Left, Right)));
       function "+" (Left : Extended_Index; N : Integer) return Extended_Index
          is (Vectors."+" (Left, Extended_Index (N)));
@@ -275,7 +275,7 @@ package Conts.Adaptors is
       function Previous (Self : Vector; Position : Cursor) return Cursor
          is (Vectors.Previous (Position)) with Inline;
 
-      function "-" (Left, Right : Extended_Index) return Integer
+      function Distance (Left, Right : Extended_Index) return Integer
          is (Integer (Vectors."-" (Left, Right)));
       function "+" (Left : Extended_Index; N : Integer) return Extended_Index
          is (Vectors."+" (Left, Extended_Index (N)));
@@ -522,7 +522,7 @@ package Conts.Adaptors is
       function Element
          (Self : Array_Type; Position : Index_Type) return Element_Type
          is (Self (Position)) with Inline;
-      function "-" (Left, Right : Index_Type) return Integer
+      function Distance (Left, Right : Index_Type) return Integer
          is (Index_Type'Pos (Left) - Index_Type'Pos (Right)) with Inline;
       function "+"
         (Left : Index_Type; N : Integer) return Index_Type
@@ -535,7 +535,7 @@ package Conts.Adaptors is
             No_Element     => No_Index,
             First          => First,
             Last           => Last,
-            "-"            => "-",
+            Distance       => Distance,
             "+"            => "+");
          package Bidirectional renames Random_Access.Bidirectional;
          package Forward renames Bidirectional.Forward;

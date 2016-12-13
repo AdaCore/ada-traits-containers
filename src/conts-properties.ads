@@ -87,6 +87,10 @@ package Conts.Properties is
       subtype Map is Map_Type;
       subtype Key is Key_Type;
       subtype Element is Element_Type;
+
+      function Value
+        (M : Map_Type; K : Key_Type) return Element_Type renames Get;
+      --  ??? Make visible to users of the package
    end Read_Only_Maps;
 
    -------------------
@@ -106,6 +110,10 @@ package Conts.Properties is
       subtype Key is Key_Type;
       subtype Element is Element_Type;
 
+      function Value
+        (M : Map_Type; K : Key_Type) return Element_Type renames Get;
+      --  ??? Make visible to users of the package
+
       package As_Read_Only is new Read_Only_Maps (Map, Key, Element);
    end Maps;
 
@@ -123,6 +131,10 @@ package Conts.Properties is
    package Position_Models is
       subtype Map is Map_Type;
       subtype Key is Key_Type;
+
+      function Value
+        (M : Model_Type; K : Key_Type) return Index_Type renames Get;
+      --  ??? Make visible to users of the package
    end Position_Models;
 
    -----------------------------

@@ -51,6 +51,13 @@ can be edited with any text editor.
    to only keep the n first elements of the range, or Group_By.
    http://www.informit.com/articles/printerfriendly/1407357
 
+** TODO concepts
+   Algorithms could take fewer parameters if we define concepts like C++
+   (see http://www.stroustrup.com/good_concepts.pdf). For instance, a
+   Sortable concept.
+   (Might not be needed with Ada though, which already has a clear way
+   to specify the API for generics).
+
 ** TODO projections
    the Adobe Source Libraries for C++ proposes the use of projections, as a
    way to extra data from the Element_Type, so that the predicates in
@@ -134,9 +141,30 @@ can be edited with any text editor.
 * Algorithms
 
 ** TODO =Sort=
+   Implement some multi-threaded algorithms
+
+** TODO provide partial instantiations
+   Our containers should provide partial instantiations of the algorithms.
+   This will make user's code simpler, and have no cost in object size since
+   those partial generics do not result in actual object code.
+   Ada obviously doesn't provide such partial instantiation though, so we
+   would have to find yet another naming scheme for this:
+
+   generic
+      type Element_Type is private;
+   package Vectors.Definite_Unbounded is
+      generic
+         with function "<" (Left, Right : Element_Type) return Boolean is <>;
+      package Sort is
+         procedure Quicksort is new Conts.Algorithms.Quicksort
+           (Cursors.Random_Access, Maps.Element, "<", Swap => Swap);
+      end Sort;
+      --  Users then have to use    Sort.Quicksort.
+   end Vectors.Definite_Unbounded;
 
 ** TODO =Equal=
    Compares two containers, ignore order when relevant.
+
 ** TODO =Find= with predicate
    Find the first item (or key for a map) that matches a given predicate,
    and possibly continue searching from that point.
@@ -153,7 +181,7 @@ can be edited with any text editor.
    Verify that a predicate is true for all elements in a container
       All_Of (List, IsOdd'Access)
 
-** TODO =is_sorted=, =is_partitioned=, =partition_point=
+** TODO =is_partitioned=, =partition_point=
    See Boost::algorithms
    For is_partitioned: all items that satisfy the predicate are at the
    beginning of the sequence.

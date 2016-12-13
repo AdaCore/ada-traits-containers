@@ -92,6 +92,186 @@ package body Conts.Algorithms is
       end loop;
    end Shuffle;
 
+   --------------------
+   -- Insertion_Sort --
+   --------------------
+
+   procedure Insertion_Sort (Self : in out Cursors.Container) is
+      C  : Cursors.Index := Cursors.First (Self);
+   begin
+      if Cursors.Has_Element (Self, C) then
+         C := Cursors.Next (Self, C);
+         while Cursors.Has_Element (Self, C) loop
+            declare
+               Elem : constant Getters.Element := Getters.Get (Self, C);
+               D, E : Cursors.Index;
+            begin
+               E := C;
+               loop
+                  D := Cursors.Previous (Self, E);
+                  exit when not Cursors.Has_Element (Self, D)
+                    or else "<" (Getters.Get (Self, D), Elem);
+                  Swap (Self, E, D);
+                  E := D;
+               end loop;
+            end;
+
+            C := Cursors.Next (Self, C);
+         end loop;
+      end if;
+   end Insertion_Sort;
+
+   ----------------
+   -- Shell_Sort --
+   ----------------
+
+   procedure Shell_Sort (Self : in out Cursors.Container) is
+      --  See https://en.wikipedia.org/wiki/Shellsort
+
+      First : constant Cursors.Index := Cursors.First (Self);
+      C     : Cursors.Index;
+   begin
+      for Gap of reverse Gaps loop
+         --  Do a gapped insertion sort for this gap size.
+         --  The first gap elements are already in gap order.
+
+         C := Cursors.Add (First, Gap);
+         while Cursors.Has_Element (Self, C) loop
+            declare
+               Elem : constant Getters.Element := Getters.Get (Self, C);
+               D, E : Cursors.Index;
+            begin
+               E := C;
+               loop
+                  D := Cursors."+" (E, -Gap);
+                  exit when "<" (Getters.Get (Self, D), Elem);
+                  Swap (Self, E, D);
+                  exit when Cursors.Distance (D, First) < Gap;
+                  E := D;
+               end loop;
+            end;
+
+            C := Cursors.Next (Self, C);
+         end loop;
+      end loop;
+   end Shell_Sort;
+
+   ----------------------------------
+   -- Ranged_Random_Access_Cursors --
+   ----------------------------------
+
+   package body Ranged_Random_Access_Cursors is
+
+      ----------
+      -- Swap --
+      ----------
+
+      procedure Swap (Self : in out Rg; Left, Right :  Cursors.Index) is
+      begin
+         Base_Swap (Self.Base.all, Left, Right);
+      end Swap;
+
+   end Ranged_Random_Access_Cursors;
+
+   ---------------
+   -- Quicksort --
+   ---------------
+
+   procedure Quicksort (Self : in out Cursors.Container) is
+      package Ranges is new Ranged_Random_Access_Cursors
+        (Cursors, Getters, Swap);
+      procedure Shell is new Shell_Sort
+        (Ranges.Cursors, Ranges.Getters, "<", Ranges.Swap);
+
+      procedure Recurse (Low, High : Cursors.Index);
+      procedure Recurse (Low, High : Cursors.Index) is
+         Dist : Integer;
+         L    : Cursors.Index := Low;
+         H    : Cursors.Index := High;
+         Left, Right : Cursors.Index;
+      begin
+         loop
+            Dist := Cursors.Dist (H, L);
+            exit when Dist <= 0;
+
+            if Dist < Threshold then
+               declare
+                  S : Ranges.Rg := Ranges.Subset
+                    (Self'Unrestricted_Access, L, H);
+               begin
+                  Shell (S);
+               end;
+               return;
+            end if;
+
+            Left := L;
+            Right := H;
+
+            declare
+               Pivot : constant Getters.Element :=
+                 Getters.Value (Self, Cursors.Add (L, Dist / 2));
+            begin
+               --  ??? Should handle cases where the element is equal to the
+               --  pivot, to avoid the worst case where the sequences contains
+               --  only equal items.
+
+               loop
+                  while "<" (Getters.Value (Self, Left), Pivot) loop
+                     Left := Cursors.Next (Self, Left);
+                  end loop;
+
+                  while "<" (Pivot, Getters.Value (Self, Right)) loop
+                     Right := Cursors.Previous (Self, Right);
+                  end loop;
+
+                  exit when Cursors.Dist (Right, Left) <= 0;
+
+                  Swap (Self, Right, Left);
+                  Left := Cursors.Next (Self, Left);
+                  Right := Cursors.Previous (Self, Right);
+               end loop;
+            end;
+
+            --  Recurse for smaller sequence, and tail recursion for longer
+            --  one. Do not keep pivot on the stack while recursing.
+            if Cursors.Dist (Right, L) > Cursors.Dist (H, Right) then
+               Recurse (Cursors.Next (Self, Right), H);
+               H := Right;  --  loop on L..Right
+            else
+               Recurse (L, Right);
+               L := Cursors.Next (Self, Right);  --  loop on Right+1 .. H
+            end if;
+         end loop;
+      end Recurse;
+
+   begin
+      Recurse (Cursors.First_Index (Self), Cursors.Last_Index (Self));
+   end Quicksort;
+
+   ---------------
+   -- Is_Sorted --
+   ---------------
+
+   function Is_Sorted (Self : Cursors.Container) return Boolean is
+      Prev  : Cursors.Cursor := Cursors.First (Self);
+      C     : Cursors.Cursor;
+   begin
+      if not Cursors.Has_Element (Self, Prev) then
+         return True;  --  an empty sequence is always sorted
+      end if;
+
+      C := Cursors.Next (Self, Prev);
+
+      while Cursors.Has_Element (Self, C) loop
+         if Getters.Get (Self, C) < Getters.Get (Self, Prev) then
+            return False;
+         end if;
+         Prev := C;
+         C := Cursors.Next (Self, C);
+      end loop;
+      return True;
+   end Is_Sorted;
+
    ----------
    -- Find --
    ----------
@@ -138,13 +318,13 @@ package body Conts.Algorithms is
       R_First : constant Cursors.Index_Type := Cursors.First (Right);
       R_Last  : constant Cursors.Index_Type := Cursors.Last (Right);
    begin
-      if L_Last - L_First /= R_Last - R_First then
+      if Distance (L_Last, L_First) /= Distance (R_Last, R_First) then
          return False;
       end if;
 
       for L in L_First .. L_Last loop
          if Getters.Get (Left, L) /=
-            Getters.Get (Right, R_First + (L - L_First))
+            Getters.Get (Right, R_First + Distance (L, L_First))
          then
             return False;
          end if;

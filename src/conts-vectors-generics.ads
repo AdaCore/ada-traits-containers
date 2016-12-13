@@ -260,17 +260,21 @@ package Conts.Vectors.Generics with SPARK_Mode is
    package Cursors is
       function Index_First (Self : Base_Vector'Class) return Index_Type
         is (Index_Type'First) with Inline;
-      function "-" (Left, Right : Index_Type) return Integer
+      function Distance (Left, Right : Index_Type) return Integer
         is (Integer (To_Count (Left)) - Integer (To_Count (Right)))
         with Pre =>
           Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
           and then
           Right in Index_Type'First .. Impl.To_Index (Impl.Last_Count);
-      function "+" (Left : Index_Type; N : Integer) return Index_Type
+
+      function "+" (Left : Index_Type; N : Integer) return Extended_Index
         is (Impl.To_Index (Count_Type (Integer (To_Count (Left)) + N)))
-        with Pre =>
+      with Pre =>
+          --  N could be negative to move backward, and we must return
+          --  Extended_Index'First if Left is already on first element
           Left in Index_Type'First .. Impl.To_Index (Impl.Last_Count)
-          and then N in Integer (1 - To_Count (Left)) ..
+        and then N in Integer
+            (Extended_Index'Pos (Extended_Index'First) - To_Count (Left)) ..
             Integer (Impl.Last_Count - To_Count (Left));
 
       package Random_Access is new Conts.Cursors.Random_Access_Cursors
@@ -279,7 +283,7 @@ package Conts.Vectors.Generics with SPARK_Mode is
          No_Element     => Impl.No_Index,
          First          => Index_First,
          Last           => Last,
-         "-"            => "-",
+         Distance       => Distance,
          "+"            => "+");
       package Bidirectional is new Conts.Cursors.Bidirectional_Cursors
         (Container_Type => Base_Vector'Class,

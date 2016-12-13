@@ -102,7 +102,7 @@ package Conts.Cursors with SPARK_Mode is
       --  is more convenient for algorithms (for instance to select random
       --  elements in the container).
 
-      with function "-" (Left, Right : Index_Type) return Integer is <>;
+      with function Distance (Left, Right : Index_Type) return Integer is <>;
       --  Return the number of elements between the two positions.
 
       with function "+"
@@ -112,6 +112,17 @@ package Conts.Cursors with SPARK_Mode is
    package Random_Access_Cursors is
       subtype Container is Container_Type;
       subtype Index     is Index_Type;
+
+      function Dist
+        (Left, Right : Index_Type) return Integer renames Distance;
+      function Add (Left : Index_Type; N : Integer) return Index_Type
+         renames "+";
+      function First_Index (Self : Container_Type) return Index_Type
+         renames First;
+      function Last_Index (Self : Container_Type) return Index_Type
+         renames Last;
+      --  Make visible to users of the package
+      --  ??? Why is this necessary in Ada.
 
       function "-" (Left : Index_Type; N : Integer) return Index_Type
         is (Left + (-N)) with Inline;

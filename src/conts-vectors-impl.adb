@@ -385,12 +385,8 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
       --  Since we will only keep one copy of the elements in the end, we
       --  should test Movable here, not Copyable.
       if Storage.Elements.Movable then
-         declare
-            Tmp : constant Stored_Type := L_Tmp;
-         begin
-            Storage.Set_Element (Self, L, R_Tmp);
-            Storage.Set_Element (Self, R, Tmp);
-         end;
+         Storage.Set_Element (Self, L, R_Tmp);
+         Storage.Set_Element (Self, R, L_Tmp);
 
       else
          declare
