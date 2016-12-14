@@ -48,6 +48,10 @@ procedure Vectors is
          V.Append (I);
       end loop;
 
+      for I in 5 .. 10 loop
+         V.Insert (10, I);
+      end loop;
+
       V.Reserve_Capacity (20);
 
       V.Shrink_To_Fit;
@@ -80,6 +84,12 @@ procedure Vectors is
       V.Clear;
 
       V.Append (10, 40);
+
+      V.Delete (V.Last - 1, 40);
+
+      V.Insert (15, 10, 40);
+
+      V.Delete (15, 40);
 
       for E of S loop
          pragma Assert (E in 1 .. 10);
@@ -103,6 +113,10 @@ procedure Vectors is
          V.Append (I);
       end loop;
 
+      for I in 5 .. 10 loop
+         V.Insert (10, I);
+      end loop;
+
       V.Reserve_Capacity (20);
 
       V.Shrink_To_Fit;
@@ -135,6 +149,12 @@ procedure Vectors is
       V.Clear;
 
       V.Append (10, 40);
+
+      V.Delete (V.Last - 1, 40);
+
+      V.Insert (15, 10, 40);
+
+      V.Delete (15, 40);
 
       for E of S loop
          pragma Assert (E in 1 .. 10);

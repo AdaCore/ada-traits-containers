@@ -27,25 +27,6 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
    pragma Assertion_Policy
       (Pre => Suppressible, Ghost => Suppressible, Post => Ignore);
 
-   -------------------
-   -- Valid_Cursors --
-   -------------------
-
-   function Valid_Cursors (Self : Base_Vector'Class) return V_Set is
-      R  : V.Set;
-   begin
-      if Self.Last = No_Last then
-         --  If the vector is empty, return an empty model.
-         return V_Set'(Content => R);
-      else
-         --  otherwise return a cursor per valid index.
-         for Idx in Min_Index .. Self.Last loop
-            R := V.Add (R, To_Index (Idx));
-         end loop;
-         return V_Set'(Content => R);
-      end if;
-   end Valid_Cursors;
-
    -----------
    -- Model --
    -----------
@@ -64,12 +45,6 @@ package body Conts.Vectors.Impl with SPARK_Mode => Off is
       end if;
       return R;
    end Model;
-
-   -------------------------
-   -- Lift_Abstract_Level --
-   -------------------------
-
-   procedure Lift_Abstraction_Level (Self : Base_Vector'Class) is null;
 
    -----------
    -- First --

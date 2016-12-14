@@ -47,7 +47,6 @@ package Conts.Vectors.Definite_Bounded with SPARK_Mode is
    package Maps renames Vectors.Maps;
 
    subtype Element_Sequence is Vectors.Impl.M.Sequence with Ghost;
-   subtype Cursor_Set is Vectors.Impl.V_Set with Ghost;
 
    procedure Swap
       (Self : in out Cursors.Forward.Container; Left, Right : Index_Type)

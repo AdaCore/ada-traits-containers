@@ -2,6 +2,7 @@ pragma Ada_2012;
 with Conts;         use Conts;
 
 package body Use_Vectors with SPARK_Mode is
+   pragma Unevaluated_Use_Of_Old (Allow);
 
    procedure Incr_All (V1 : My_Bounded_100; V2 : in out My_Bounded_100) is
       Lst : Index_Type'Base := My_Bounded_Vectors.Vectors.Last (V1);
@@ -61,8 +62,6 @@ package body Use_Vectors with SPARK_Mode is
            (for all N in Cu .. Last (V) =>
                 Element (Model (V)'Loop_Entry, N) =
                 As_Element (V, N));
-         pragma Loop_Invariant
-           (Valid_Cursors (V)'Loop_Entry = Valid_Cursors (V));
          if As_Element (V, Cu) < Element_Type'Last then
             Replace_Element (V, Cu, Element (V, Cu) + 1);
          end if;
@@ -106,8 +105,6 @@ package body Use_Vectors with SPARK_Mode is
    begin
       for Current in Fst .. Lst loop
          pragma Loop_Invariant (Length (V) = Length (V)'Loop_Entry);
-         pragma Loop_Invariant
-           (Valid_Cursors (V) = Valid_Cursors (V)'Loop_Entry);
          pragma Loop_Invariant
            (for all I in Fst .. Current - 1 =>
                 As_Element (V, I) = 0);
@@ -176,9 +173,6 @@ package body Use_Vectors with SPARK_Mode is
 
    procedure From_Higher_To_Lower (V : Vector) is null;
 
-   procedure From_Lower_To_Higher (V : Vector) is
-   begin
-      Impl.Lift_Abstraction_Level (V);
-   end From_Lower_To_Higher;
+   procedure From_Lower_To_Higher (V : Vector) is null;
 
 end Use_Vectors;

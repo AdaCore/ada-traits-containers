@@ -169,6 +169,7 @@ package Conts.Lists.Impl with SPARK_Mode is
      with
        Inline,
        Global => null,
+       Pre    => Position = No_Element or P_Mem (Positions (Self), Position),
        Post   => Has_Element'Result = P_Mem (Positions (Self), Position);
    pragma Annotate (GNATprove, Inline_For_Proof, Entity => Has_Element);
 
@@ -188,7 +189,7 @@ package Conts.Lists.Impl with SPARK_Mode is
      with
        Inline,
        Global         => null,
-       Pre            => Has_Element (Self, Position),
+       Pre            => P_Mem (Positions (Self), Position),
        Contract_Cases =>
          (P_Get (Positions (Self), Position) = Length (Self) =>
                 Next'Result = No_Element,
@@ -202,7 +203,7 @@ package Conts.Lists.Impl with SPARK_Mode is
      with
        Inline,
        Global         => null,
-       Pre            => Has_Element (Self, Position),
+       Pre            => P_Mem (Positions (Self), Position),
        Contract_Cases =>
          (P_Get (Positions (Self), Position) = 1 =>
                 Previous'Result = No_Element,
@@ -216,7 +217,7 @@ package Conts.Lists.Impl with SPARK_Mode is
      with
        Inline,
        Global => null,
-       Pre    => Has_Element (Self, Position),
+       Pre    => P_Mem (Positions (Self), Position),
        Contract_Cases =>
          (Impl.P_Get (Impl.Positions (Self), Position) = Length (Self) =>
                 Position = No_Element,
@@ -240,7 +241,7 @@ package Conts.Lists.Impl with SPARK_Mode is
      with
        Inline,
        Global => null,
-       Pre    => Has_Element (Self, Position),
+       Pre    => P_Mem (Positions (Self), Position),
        Post   =>
           --  Query Positions to get the position of Position in Self and use
           --  it to fetch the corresponding element in Model.
@@ -276,42 +277,22 @@ package Conts.Lists.Impl with SPARK_Mode is
                 and P_Get (P2, I) = P_Get (P1, I))
            and (for all I of P2 => I = K or P_Mem (P1, I)));
 
-   procedure Append
-     (Self    : in out Base_List'Class;
-      Element : Element_Type;
-      Count   : Count_Type := 1)
-   --  See documentation in conts-lists-generics.ads
-     with
-       Global => null,
-       Pre    => Length (Self) + Count <= Capacity (Self),
-       Post   => Capacity (Self) = Capacity (Self)'Old
-          and Length (Self) = Length (Self)'Old + Count
-
-          --  Positions contains a new mapping from the last cursor of Self to
-          --  Length.
-          --  ??? Doesn't take Count into account
-          and P_Is_Add
-            (Positions (Self)'Old, Positions (Self),
-             Last (Self), Length (Self))
-
-          --  Model contains Count new elements Element at the end.
-          --  ??? Doesn't take Count into account
-          and M.Is_Add (Model (Self)'Old, Element, Model (Self));
-
-   function M_Not_Until
-     (S : M.Sequence; Lst : Positive_Count_Type; E : Element_Type)
+   function M_Elements_Cst
+     (S        : M.Sequence;
+      Fst, Lst : Count_Type;
+      E        : Element_Type)
      return Boolean
+   --  Every element of the slice from Fst to Lst in S is E.
      with
        Ghost,
        Pre  => Lst <= M.Length (S),
-       Post =>
-          --  E is not in S until Lst.
-          M_Not_Until'Result =
-            (for all I in 1 .. Lst => Element (S, I) /= E);
+       Post => M_Elements_Cst'Result =
+         (for all I in Fst .. Lst => Element (S, I) = E);
+   pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Cst);
 
    function M_Elements_Equal
      (S1, S2   : M.Sequence;
-      Fst, Lst : Positive_Count_Type;
+      Fst, Lst : Count_Type;
       Offset   : Count_Type'Base := 0)
      return Boolean
    --  The slice from Fst to Lst in S1 has been shifted by Offset in S2.
@@ -323,6 +304,51 @@ package Conts.Lists.Impl with SPARK_Mode is
          (for all I in Fst .. Lst =>
             Element (S1, I) = Element (S2, I + Offset));
    pragma Annotate (GNATprove, Inline_For_Proof, M_Elements_Equal);
+
+   procedure Append
+     (Self    : in out Base_List'Class;
+      Element : Element_Type;
+      Count   : Count_Type := 1)
+   --  See documentation in conts-lists-generics.ads
+     with
+       Global         => null,
+       Pre            => Length (Self) <= Capacity (Self) - Count,
+       Post           => Capacity (Self) = Capacity (Self)'Old
+          and Length (Self) = Length (Self)'Old + Count,
+       Contract_Cases =>
+       (Count = 1 =>
+          --  Positions contains a new mapping from the last cursor of Self to
+          --  Length.
+          P_Is_Add
+            (Positions (Self)'Old, Positions (Self),
+             Last (Self), Length (Self))
+
+          --  Model contains Count new elements Element at the end.
+          and M.Is_Add (Model (Self)'Old, Element, Model (Self)),
+        others    =>
+
+          --  Elements already in Self are preserved
+          M_Elements_Equal (S1     => Model (Self)'Old,
+                            S2     => Model (Self),
+                            Fst    => 1,
+                            Lst    => Length (Self)'Old)
+
+          --  Other elements are set to E
+          and M_Elements_Cst (S   => Model (Self),
+                              Fst => Length (Self)'Old + 1,
+                              Lst => Length (Self),
+                              E   => Element));
+
+   function M_Not_Until
+     (S : M.Sequence; Lst : Positive_Count_Type; E : Element_Type)
+     return Boolean
+     with
+       Ghost,
+       Pre  => Lst <= M.Length (S),
+       Post =>
+          --  E is not in S until Lst.
+          M_Not_Until'Result =
+            (for all I in 1 .. Lst => Element (S, I) /= E);
 
    function P_Insert_Position
      (P1, P2 : P_Map; Cut : Positive_Count_Type) return Boolean
@@ -349,9 +375,9 @@ package Conts.Lists.Impl with SPARK_Mode is
       Count    : Count_Type := 1)
    --  See documentation in conts-lists-generics.ads
      with
-       Global => null,
-       Pre    => Has_Element (Self, Position),
-       Post   =>
+       Global       => null,
+       Pre          => P_Mem (Positions (Self), Position),
+       Post         =>
           --  We removed at least one element
           Length (Self) <= Length (Self)'Old - 1
 
@@ -363,20 +389,35 @@ package Conts.Lists.Impl with SPARK_Mode is
             (S1  => Model (Self),
              S2  => Model (Self)'Old,
              Fst => 1,
-             Lst => P_Get (Positions (Self)'Old, Position) - 1)
+             Lst => P_Get (Positions (Self)'Old, Position'Old) - 1),
+     Contract_Cases =>
 
-          --  The elements after are also preserved
-          and M_Elements_Equal
-            (S1     => Model (Self),
-             S2     => Model (Self)'Old,
-             Fst    => P_Get (Positions (Self)'Old, Position),
-             Lst    => Length (Self)'Old,
-             Offset => Count)
+     --  If there are less than Count Elements after Position
+     (Length (Self) - Count <= P_Get (Positions (Self), Position) =>
 
-          --  Position is left after the deleted items
-          and (not Has_Element (Self, Position)
-               or else P_Get (Positions (Self)'Old, Position) + Count =
-                P_Get (Positions (Self), Position));
+        --  Self is cut at Position
+        Length (Self) = P_Get (Positions (Self)'Old, Position'Old) - 1
+
+      --  Position is No_Element
+      and Position = No_Element,
+
+      --  Otherwise, Count elements have been erased after Position
+      others                                                      =>
+        Length (Self) = Length (Self)'Old - Count
+
+      and P_Mem (Positions (Self), Position)
+
+      --  The elements located after Position + Count are preserved
+      and M_Elements_Equal
+        (S1     => Model (Self),
+         S2     => Model (Self)'Old,
+         Fst    => P_Get (Positions (Self), Position),
+         Lst    => Length (Self),
+         Offset => Count)
+
+      --  Position is set to the next element
+      and P_Get (Positions (Self)'Old, Position'Old) =
+        P_Get (Positions (Self), Position));
 
    procedure Insert
      (Self    : in out Base_List'Class;
@@ -385,20 +426,41 @@ package Conts.Lists.Impl with SPARK_Mode is
       Count   : Count_Type := 1)
    --  See documentation in conts-lists-generics.ads
      with
-       Global => null,
-       Pre    => Length (Self) + Count <= Capacity (Self)
-          and then (Before = No_Element or else Has_Element (Self, Before)),
-       Post   => Length (Self) = Length (Self)'Old + Count
-          and Capacity (Self) = Capacity (Self)'Old
+       Global         => null,
+       Pre            => Length (Self) <= Capacity (Self) - Count
+          and then (Before = No_Element
+                    or else P_Mem (Positions (Self), Before)),
+       Post           => Length (Self) = Length (Self)'Old + Count
+          and Capacity (Self) = Capacity (Self)'Old,
+       Contract_Cases =>
+       (Before = No_Element =>
 
-          --  A new cursor has been inserted at position Before in Self.
-          --  ??? This post doesn't take into account Count
-          and P_Insert_Position
-            (Positions (Self)'Old, Positions (Self),
-             Cut => P_Get (Positions (Self)'Old, Before))
+          --  The elements of Self are preserved.
+          M_Elements_Equal
+             (S1  => Model (Self),
+              S2  => Model (Self)'Old,
+              Fst => 1,
+              Lst => Length (Self)'Old)
+
+        and
+          (if Count = 1
+           then
+
+               --  A new cursor has been inserted at the end of Self
+               P_Insert_Position
+                 (Positions (Self)'Old, Positions (Self),
+                  Cut => Length (Self)'Old + 1)
+
+               --  Element is stored at the end of Self.
+             and Impl.Element
+               (Model (Self), Length (Self)'Old + 1) = Element
+           else
+             (for all I in Length (Self)'Old + 1 .. Length (Self)
+              => Impl.Element (Model (Self), I) = Element)),
+        others              =>
 
           --  The elements of Self located before Before are preserved.
-          and M_Elements_Equal
+          M_Elements_Equal
              (S1  => Model (Self),
               S2  => Model (Self)'Old,
               Fst => 1,
@@ -406,21 +468,33 @@ package Conts.Lists.Impl with SPARK_Mode is
 
           --  Other elements are shifted by Count.
           and M_Elements_Equal
-            (S1     => Model (Self),
-             S2     => Model (Self)'Old,
-             Fst    => P_Get (Positions (Self)'Old, Before) + Count,
-             Lst    => Length (Self),
-             Offset => -1)
+            (S1     => Model (Self)'Old,
+             S2     => Model (Self),
+             Fst    => P_Get (Positions (Self)'Old, Before),
+             Lst    => Length (Self)'Old,
+             Offset => Count)
+          and
+          (if Count = 1
+           then
 
-          --  Element is stored at the previous position of Before in L.
-          and Impl.Element
-            (Model (Self), P_Get (Positions (Self)'Old, Before)) = Element;
+               --  A new cursor has been inserted at position Before in Self
+               P_Insert_Position
+                 (Positions (Self)'Old, Positions (Self),
+                  Cut => P_Get (Positions (Self)'Old, Before))
+
+               --  Element is stored at the previous position of Before in L.
+             and Impl.Element
+               (Model (Self), P_Get (Positions (Self)'Old, Before)) = Element
+           else
+             (for all I in P_Get (Positions (Self)'Old, Before) ..
+                P_Get (Positions (Self)'Old, Before) + Count - 1
+              => Impl.Element (Model (Self), I) = Element)));
 
    procedure Replace_Element
      (Self : in out Base_List'Class; Position : Cursor; Element : Element_Type)
      with
        Global => null,
-       Pre    => Has_Element (Self, Position),
+       Pre    => P_Mem (Positions (Self), Position),
        Post   => Capacity (Self) = Capacity (Self)'Old
           and Length (Self) = Length (Self)'Old
 
@@ -444,7 +518,7 @@ package Conts.Lists.Impl with SPARK_Mode is
      is (Element (Self, Position))
      with
        Inline,
-       Pre'Class => Has_Element (Self, Position),
+       Pre'Class => P_Mem (Positions (Self), Position),
        Post => Storage.Elements.To_Element (Element_Primitive'Result) =
           Element (Model (Self), P_Get (Positions (Self), Position));
 
@@ -454,7 +528,9 @@ package Conts.Lists.Impl with SPARK_Mode is
      is (Has_Element (Self, Position))
      with
        Inline,
-       Post => Has_Element_Primitive'Result =
+       Pre'Class => Position = No_Element
+            or P_Mem (Positions (Self), Position),
+       Post      => Has_Element_Primitive'Result =
           P_Mem (Positions (Self), Position);
    pragma Annotate (GNATprove, Inline_For_Proof, Has_Element_Primitive);
 
@@ -467,7 +543,7 @@ package Conts.Lists.Impl with SPARK_Mode is
      is (Next (Self, Position))
      with
        Inline,
-       Pre'Class => Has_Element (Self, Position);
+       Pre'Class => P_Mem (Positions (Self), Position);
 
 private
    pragma SPARK_Mode (Off);
@@ -540,9 +616,16 @@ private
      return Boolean
      is (for all I in 1 .. Lst => Element (S, I) /= E);
 
+   function M_Elements_Cst
+     (S        : M.Sequence;
+      Fst, Lst : Count_Type;
+      E        : Element_Type)
+      return Boolean
+    is (for all I in Fst .. Lst => Element (S, I) = E);
+
    function M_Elements_Equal
      (S1, S2   : M.Sequence;
-      Fst, Lst : Positive_Count_Type;
+      Fst, Lst : Count_Type;
       Offset   : Count_Type'Base := 0)
       return Boolean
      is (for all I in Fst .. Lst =>

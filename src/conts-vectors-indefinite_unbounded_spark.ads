@@ -52,7 +52,6 @@ package Conts.Vectors.Indefinite_Unbounded_SPARK with SPARK_Mode is
    package Maps renames Vectors.Maps;
 
    subtype Element_Sequence is Vectors.Impl.M.Sequence with Ghost;
-   subtype Cursor_Set is Vectors.Impl.V_Set with Ghost;
 
    use type Element_Sequence;
 

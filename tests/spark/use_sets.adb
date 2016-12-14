@@ -1,4 +1,5 @@
 package body Use_Sets with SPARK_Mode is
+   pragma Unevaluated_Use_Of_Old (Allow);
 
    function My_Find (S : My_Sets.Set; E : Element_Type) return Cursor is
       Cu : Cursor := First (S);

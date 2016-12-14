@@ -27,7 +27,6 @@
 pragma Ada_2012;
 with Conts.Vectors.Storage;
 with Conts.Functional.Sequences;
-with Conts.Functional.Sets;
 
 generic
    type Index_Type is (<>);
@@ -120,25 +119,6 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   type V_Set is private with Ghost,
-     Iterable => (First => V_Iter_First,
-                  Has_Element => V_Iter_Has_Element,
-                  Next => V_Iter_Next,
-                  Element => V_Iter_Element);
-
-   type V_Private_Cursor is private with Ghost;
-   function V_Iter_First (S : V_Set) return V_Private_Cursor with Ghost;
-   function V_Iter_Next
-      (S : V_Set; C : V_Private_Cursor) return V_Private_Cursor with Ghost;
-   function V_Iter_Has_Element
-      (S : V_Set; C : V_Private_Cursor) return Boolean with Ghost;
-   function V_Iter_Element (S : V_Set; C : V_Private_Cursor) return Cursor
-     with Ghost;
-
-   function V_Mem (S : V_Set; C : Cursor) return Boolean with Ghost;
-   pragma Annotate (GNATprove, Iterable_For_Proof, "Contains", V_Mem);
-   --  ??? Missing doc
-
    package M is new Conts.Functional.Sequences
      (Index_Type   => Index_Type,
       Element_Type => Element_Type);
@@ -150,39 +130,6 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Ghost,
        Global => null,
        Post   => M.Length (Model'Result) = Length (Self);
-
-   function Valid_Cursors (Self : Base_Vector'Class) return V_Set
-   --  Valid_Cursors is the set of cursors that are valid in Self.
-   --  No need to store their position in Self as it can be retrieved with
-   --  To_Index.
-     with
-       Ghost,
-       Global => null,
-       Post   => not V_Mem (Valid_Cursors'Result, No_Element)
-         --  Positions of cursors are smaller than the container's last index.
-         and then
-           (for all I of Valid_Cursors'Result =>
-              I in Index_Type'First .. Last (Self)
-
-              --  There is no more than one cursor per position in container
-              --  ??? Test seems strange below
-              and then
-                (for all J of Valid_Cursors'Result => (if I = J then I = J)));
-
-   procedure Lift_Abstraction_Level (Self : Base_Vector'Class)
-   --  Lift_Abstraction_Level is a ghost procedure that does nothing but
-   --  assume that we can access to the same elements by iterating over
-   --  positions or cursors.
-   --  This information is not generally useful except when switching from
-   --  a lowlevel, cursor aware view of a container, to a highlevel position
-   --  based view.
-     with
-       Ghost,
-       Global => null,
-       Post   =>
-         (for all Elt of Model (Self) =>
-            (for some I of Valid_Cursors (Self) =>
-                 M.Get (Model (Self), I) = Elt));
 
    use type M.Sequence;
    function Element
@@ -239,7 +186,8 @@ package Conts.Vectors.Impl with SPARK_Mode is
      with
        Inline,
        Global => null,
-       Post   => Has_Element'Result = V_Mem (Valid_Cursors (Self), Position);
+       Post   => Has_Element'Result =
+                           (Position in Index_Type'First .. Self.Last);
    pragma Annotate (GNATprove, Inline_For_Proof, Entity => Has_Element);
 
    function Next
@@ -286,8 +234,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Global => null,
        Pre    => Capacity <= Max_Capacity (Self),
        Post   => Length (Self) = Length (Self)'Old
-          and then Model (Self) = Model (Self)'Old
-          and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old;
+          and then Model (Self) = Model (Self)'Old;
 
    procedure Shrink_To_Fit (Self : in out Base_Vector'Class)
    --  Resize the vector to fit its number of elements.
@@ -295,8 +242,7 @@ package Conts.Vectors.Impl with SPARK_Mode is
      with
        Global => null,
        Post   => Length (Self) = Length (Self)'Old
-          and then Model (Self) = Model (Self)'Old
-          and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old;
+          and then Model (Self) = Model (Self)'Old;
 
    function M_Elements_Equal
      (S1, S2 : M.Sequence;
@@ -388,11 +334,10 @@ package Conts.Vectors.Impl with SPARK_Mode is
    --  See documentation in conts-vectors-generics.ads
      with
        Global  => null,
-       Pre     => Length (Self) + Count <= Max_Capacity (Self)
+       Pre     => Length (Self) <= Max_Capacity (Self) - Count
           and then (Before = No_Element or else Has_Element (Self, Before)),
        Post    =>
           Length (Self) = Length (Self)'Old + Count
-          and Max_Capacity (Self) = Max_Capacity (Self)'Old
 
           --  Elements before Before have not been modified
           and M_Elements_Equal
@@ -403,15 +348,15 @@ package Conts.Vectors.Impl with SPARK_Mode is
 
          --  Then the new elements
          and M_Elements_Consts
-            (Model (Self)'Old,
+            (Model (Self),
              Fst  => Before,
-             Lst  => Index_Type'Val (Index_Type'Pos (Before) + Count),
+             Lst  => Index_Type'Val (Index_Type'Pos (Before) + Count - 1),
              E    => Element)
 
          --  Elements after are unchanged
          and M_Elements_Shifted
-            (S1     => Model (Self),
-             S2     => Model (Self)'Old,
+            (S1     => Model (Self)'Old,
+             S2     => Model (Self),
              Fst    => Before,
              Lst    => Last (Self)'Old,
              Offset => Count);
@@ -438,7 +383,6 @@ package Conts.Vectors.Impl with SPARK_Mode is
        Global => null,
        Pre    => Index <= Last (Self),
        Post   => Length (Self) = Length (Self)'Old
-          and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old
           and then
             (if Index <= Last (Self)
              then M.Is_Set (Model (Self)'Old, Index, New_Item, Model (Self))
@@ -464,27 +408,35 @@ package Conts.Vectors.Impl with SPARK_Mode is
       Count : Count_Type := 1)
    --  See documentation in conts-vectors-generics.ads
      with
-       Global => null,
-       Pre    => Index <= Last (Self),
-       Post   =>
-          --  Removed at least one element, at most Count
-          Length (Self) < Length (Self)'Old
-          and Length (Self) >= Length (Self)'Old - Count
+       Global         => null,
+       Pre            => Index <= Last (Self),
+       Post           =>
 
           --  Elements located before Index are preserved.
-          and M_Elements_Equal
+          M_Elements_Equal
             (S1  => Model (Self),
              S2  => Model (Self)'Old,
              Fst => Index_Type'First,
-             Lst => Index_Type'Pred (Index))
+             Lst => Index_Type'Pred (Index)),
 
-          --  Elements located after Index are shifted.
-          and M_Elements_Shifted
-            (S1  => Model (Self),
-             S2  => Model (Self)'Old,
-             Fst => Index,
-             Lst => Last (Self),
-             Offset => Count);
+       --  If there are less than Count elements after Index, they are all
+       --  erased.
+       Contract_Cases =>
+       (Count - 1 >= Index_Type'Pos (Last (Self)) - Index_Type'Pos (Index) =>
+              Length (Self) =
+              Index_Type'Pos (Index) - Index_Type'Pos (Index_Type'First),
+
+        --  Otherwise, Count elements are removed
+        others                                                             =>
+          Length (Self) = Length (Self)'Old - Count
+
+        --  Elements located after Index are shifted.
+        and M_Elements_Shifted
+          (S1  => Model (Self),
+           S2  => Model (Self)'Old,
+           Fst => Index,
+           Lst => Last (Self),
+           Offset => Count));
 
    procedure Delete_Last (Self : in out Base_Vector'Class)
    --  See documentation in conts-vectors-generics.ads
@@ -526,9 +478,6 @@ package Conts.Vectors.Impl with SPARK_Mode is
           and then Element (Model (Self), Right) =
              Element (Model (Self)'Old, Left)
 
-          --  Valid cursors are preserved
-          and then Valid_Cursors (Self) = Valid_Cursors (Self)'Old
-
           --  Elements that have not been swapped are preserved.
           and then M_Elements_Equal_Except
             (S1 => Model (Self),
@@ -557,8 +506,8 @@ package Conts.Vectors.Impl with SPARK_Mode is
      is (Has_Element (Self, Position))
      with
        Inline,
-       Post => Has_Element_Primitive'Result =
-          V_Mem (Valid_Cursors (Self), Position);
+   Post => Has_Element_Primitive'Result =
+                  (Position in Index_Type'First .. Self.Last);
    pragma Annotate (GNATprove, Inline_For_Proof, Has_Element_Primitive);
 
    function Next_Primitive
@@ -604,30 +553,6 @@ private
    ------------------
    -- Formal Model --
    ------------------
-
-   package V is new Conts.Functional.Sets
-     (Element_Type => Cursor);
-   --  This instance should be ghost but it is not currently allowed by the RM.
-   --  See P523-006
-
-   type V_Set is record
-      Content : V.Set;
-   end record;
-
-   type V_Private_Cursor is new V.Private_Key;
-
-   function V_Iter_First (S : V_Set) return V_Private_Cursor
-     is (V_Private_Cursor (V.Iter_First (S.Content)));
-   function V_Iter_Next
-     (S : V_Set; C : V_Private_Cursor) return V_Private_Cursor
-     is (V_Private_Cursor (V.Iter_Next (S.Content, V.Private_Key (C))));
-   function V_Iter_Has_Element
-     (S : V_Set; C : V_Private_Cursor) return Boolean
-     is (V.Iter_Has_Element (S.Content, V.Private_Key (C)));
-   function V_Iter_Element (S : V_Set; C : V_Private_Cursor) return Cursor
-     is (V.Iter_Element (S.Content, V.Private_Key (C)));
-   function V_Mem (S : V_Set; C : Cursor) return Boolean
-     is (V.Mem (S.Content, C));
 
    function M_Elements_Consts
      (S   : M.Sequence;

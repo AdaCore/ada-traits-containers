@@ -33,7 +33,6 @@ package Use_Vectors with SPARK_Mode is
    use type My_Vectors.Cursor;
    use My_Vectors.Vectors;
    use type My_Vectors.Element_Sequence;
-   use all type My_Vectors.Cursor_Set;
 
    subtype My_Bounded is My_Bounded_Vectors.Vector;
    subtype My_Bounded_100 is My_Bounded_Vectors.Vector (100);
@@ -70,8 +69,7 @@ package Use_Vectors with SPARK_Mode is
      Post => Length (V) = Length (V)'Old
      and (for all N in Index_Type'First .. Last (V) =>
               Is_Incr (Element (Model (V)'Old, N),
-                       As_Element (V, N)))
-     and Valid_Cursors (V)'Old = Valid_Cursors (V);
+                       As_Element (V, N)));
    --  Same as before except that we use cursors instead of indexes in the
    --  specification.
 
@@ -102,8 +100,7 @@ package Use_Vectors with SPARK_Mode is
 
    with
      Pre  => Lst <= Last (V) and then Fst <= Lst,
-     Post => Valid_Cursors (V) = Valid_Cursors (V)'Old
-     and (for all I in Index_Type'First .. Last (V) =>
+     Post => (for all I in Index_Type'First .. Last (V) =>
               (if I in Fst .. Lst
                then As_Element (V, I) = 0
                else As_Element (V, I) = Element (Model (V)'Old, I)));

@@ -11,7 +11,7 @@ package Use_Lists with SPARK_Mode is
      Conts.Lists.Indefinite_Unbounded_SPARK (Element_Type => Element_Type);
    package My_Bounded_Lists is new
      Conts.Lists.Definite_Bounded (Element_Type => Element_Type);
-   use type My_Lists.Cursor;
+
    use My_Lists.Lists;
    use type My_Lists.Element_Sequence;
    use all type My_Lists.Cursor_Position_Map;
@@ -92,7 +92,7 @@ package Use_Lists with SPARK_Mode is
    --  Replace every element between Fst and Lst with 0.
 
    with
-     Pre  => Has_Element (L, Fst) and then Has_Element (L, Lst)
+     Pre  => P_Mem (Positions (L), Fst) and then P_Mem (Positions (L), Lst)
      and then P_Get (Positions (L), Lst) >=
        P_Get (Positions (L), Fst),
      Post => Positions (L) = Positions (L)'Old
@@ -109,7 +109,8 @@ package Use_Lists with SPARK_Mode is
    --  Insert 0 Count times just before Cu.
 
    with
-     Pre  => Has_Element (L, Cu) and Count_Type'Last - Count >= Length (L),
+     Pre  => P_Mem (Positions (L), Cu)
+     and Count_Type'Last - Count >= Length (L),
      Post => Length (L) = Length (L)'Old + Count
      and (for all I in 1 .. P_Get (Positions (L)'Old, Cu) - 1 =>
             Element (Model (L), I) =

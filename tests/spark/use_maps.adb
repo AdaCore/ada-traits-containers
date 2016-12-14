@@ -1,4 +1,5 @@
 package body Use_Maps with SPARK_Mode is
+   pragma Unevaluated_Use_Of_Old (Allow);
 
    function My_Find (S : My_Maps.Map; K : Positive) return Cursor is
       Cu : Cursor := First (S);

@@ -133,7 +133,7 @@ package Conts.Lists.Generics with SPARK_Mode is
      (Self : Base_List'Class; Position : Cursor) return Element_Type
      is (Storage.Elements.To_Element (Element (Self, Position)))
      with
-       Pre  => Has_Element (Self, Position),
+       Pre  => Impl.P_Mem (Impl.Positions (Self), Position),
        Post => As_Element'Result = Element
           (Impl.Model (Self), Impl.P_Get (Impl.Positions (Self), Position));
    pragma Annotate (GNATprove, Inline_For_Proof, As_Element);
@@ -179,7 +179,7 @@ package Conts.Lists.Generics with SPARK_Mode is
      is (Element (Self, Position))
      with
        Inline,
-       Pre'Class => Has_Element (Self, Position);
+       Pre'Class => Impl.P_Mem (Impl.Positions (Self), Position);
 
    -----------
    -- Model --

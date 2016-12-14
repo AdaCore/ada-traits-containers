@@ -1,5 +1,7 @@
 pragma Ada_2012;
 package body Use_Lists with SPARK_Mode is
+   pragma Unevaluated_Use_Of_Old (Allow);
+
    function My_Find (L : List; E : Element_Type) return Cursor is
       Cu : Cursor := First (L);
    begin

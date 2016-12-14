@@ -301,6 +301,8 @@ package body Conts.Lists.Impl with SPARK_Mode => Off is
 
       if N /= Null_Access then
          Set_Previous (Self, N, Prev);
+      else
+         Self.Tail := Prev;
       end if;
 
       Position.Current := N;

@@ -9,6 +9,7 @@ package Use_Sets with SPARK_Mode is
    use My_Sets.Impl;
    use My_Sets.Impl.M;
    use My_Sets.Impl.E;
+   pragma Unevaluated_Use_Of_Old (Allow);
 
    function My_Contains (S : My_Sets.Set; E : Element_Type) return Boolean is
      (Find (S, E) /= No_Element) with
