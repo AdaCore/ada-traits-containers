@@ -43,6 +43,14 @@ Boost Graph Library (http://www.boost.org).
 You must also download and install the
 [GNAT Components Collection](http://libre.adacore.com).
 
+Finally, in order to run the testsuite, you need to install GNATpython and
+PyYAML in your Python2 environment. You can install both with the following
+command:
+
+```sh
+pip install -r REQUIREMENTS.txt
+```
+
 Once this is done, modify the [shared.gpr](src/shared.gpr) file.
 Set the variable ```Boost_Include''' to point to the install prefix
 for Boost:
