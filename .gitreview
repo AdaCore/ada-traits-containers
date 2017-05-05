@@ -1,5 +1,5 @@
 [gerrit]
 host = git.adacore.com
-project = containers
+project = ada-traits-containers
 defaultbranch = master
 defaultremote = origin
