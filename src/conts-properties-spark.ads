@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---                     Copyright (C) 2016-2016, AdaCore                     --
+--                     Copyright (C) 2016-2017, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -41,7 +41,7 @@ package Conts.Properties.SPARK is
       with function Get (M : Model_Type; I : Index_Type) return Element_Type;
       with function First return Index_Type;
       with function Last (M : Model_Type) return Index_Type;
-   package Content_Models is
+   package Content_Models with Ghost is
       subtype Map is Map_Type;
       subtype Element is Element_Type;
    end Content_Models;
