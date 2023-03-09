@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2016-2017, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 --  This package describes the concept of property models. They are used to

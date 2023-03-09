@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2016-2016, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 --  An implementation of property maps that can be used when the key

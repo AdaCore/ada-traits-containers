@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2001-2016, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 --  This is the default implementation of this package

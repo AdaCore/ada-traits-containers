@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2015-2016, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 --  The following packages are used to describe some types of nodes that can be

@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2015-2016, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 --  A special kind of elements that store nothing.

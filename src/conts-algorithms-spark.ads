@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2016-2016, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 --  This package provides wrappers around SPARK compatible algorithms of

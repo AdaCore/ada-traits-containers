@@ -1,7 +1,7 @@
 --
 --  Copyright (C) 2016, AdaCore
 --
---  SPDX-License-Identifier: Apache-2.0
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
 
 --  Maps indexed by definite elements (integers for instance), containing
