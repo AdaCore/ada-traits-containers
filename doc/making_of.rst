@@ -296,7 +296,7 @@ number of elements::
    generic
       with package Elements is new Elements_Policy (<>);
    package Bounded_Storage is
-      type Node is new Integer range 1 .. 1000;
+      type Node is new Integer range 0 .. 1000;
       Unset : constant Node := 0;
       type Element_Array is array (Node) of Elements.Stored;
       type Container is tagged record
